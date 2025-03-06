@@ -1,0 +1,20 @@
+[project]
+name = "uph"
+authors = [
+    { name = "Abdo Mohammed Ruzaqi", email = "ruzaqi@gmail.com"}
+]
+description = "Unified Party Hub (UPH) is a Frappe-based extension for ERPNext designed to centralize and organize all party-related entities in a structured hierarchy. It introduces the Party Master, a tree-based Doctype that serves as a single source of truth for managing different party types (Customers, Suppliers, Employees, Shareholders, etc.), allowing businesses to efficiently support multi-currencies business transacition classify and track relationships."
+requires-python = ">=3.10"
+readme = "README.md"
+dynamic = ["version"]
+dependencies = [
+    # "frappe~=15.0.0" # Installed and managed by bench.
+]
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+# These dependencies are only installed when developer mode is enabled
+[tool.bench.dev-dependencies]
+# package_name = "~=1.1.0"
