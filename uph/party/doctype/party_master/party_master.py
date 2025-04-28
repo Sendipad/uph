@@ -244,6 +244,7 @@ class PartyMaster(NestedSet):
 
     def on_update(self):
         self.create_primary_contact()
+        self.create_primary_address()
         key='pm_parties_{0}'.format(self.name)
         if frappe.cache.get_value(key):
             frappe.cache.delete_value(key)
@@ -259,6 +260,16 @@ class PartyMaster(NestedSet):
             self.db_set("email_id", self.email_id)
     
     
+    def create_primary_address(self):
+        from frappe.contacts.doctype.address.address import get_address_display
+
+        if self.flags.is_new_doc and self.get("address_line1"):
+            address = make_address(self)
+            address_display = get_address_display(address.name)
+
+            self.db_set("customer_primary_address", address.name)
+            self.db_set("primary_address", address_display)
+
     def on_trash(self):
         if self.total_linked_party > 0 or (
             lp := self.fetched_linked_party() is not None
