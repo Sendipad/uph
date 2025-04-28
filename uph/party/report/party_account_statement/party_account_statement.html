@@ -1,0 +1,46 @@
+{% var current_party_master = null; %}
+{% for (var i = 0; i < data.length; i++) { %}
+  
+  {% if (Object.keys(data[i]).length === 0) { %}
+    <!-- Divider row -->
+    <hr style="border: 1px dashed grey;">
+  {% continue; %}
+  {% } %}
+  
+  {% if (data[i].party_master !== current_party_master) { %}
+    {% if (current_party_master !== null) { %}
+      </tbody></table> <!-- Close previous table -->
+      <br>
+    {% } %}
+
+    <!-- New Table for new Party Master -->
+    <h4>{%= data[i].party_master %} - {%= data[i].party_name %}</h4>
+    <table class="table table-bordered" style="margin-bottom: 15px;">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Debit</th>
+          <th>Credit</th>
+          <th>Balance</th>
+        </tr>
+      </thead>
+      <tbody>
+
+    {% current_party_master = data[i].party_master; %}
+  {% } %}
+
+  <!-- Data Row -->
+  <tr {% if (data[i].is_opening) { %} style="background-color: bisque; font-weight: bold;" {% } %}>
+    <td>{%= frappe.datetime.str_to_user(data[i].posting_date) %}</td>
+    <td style="text-align:right">{%= format_currency(data[i].debit || 0, "INR") %}</td>
+    <td style="text-align:right">{%= format_currency(data[i].credit || 0, "INR") %}</td>
+    <td style="text-align:right">
+      {%= format_currency((data[i].debit || 0) - (data[i].credit || 0), "INR") %}
+    </td>
+  </tr>
+
+{% } %}
+
+{% if (current_party_master !== null) { %}
+  </tbody></table> <!-- Close the last open table -->
+{% } %}
