@@ -789,7 +789,7 @@ def get_linked_parties_with_analytic_list(party_master, party=None, party_type="
     if party_analytic_accountings:
         result['party_analytic_accountings'] = party_analytic_accountings
     return result
-
+#It is better to create a report to get all static 
 @frappe.whitelist()
 def get_totals_number_unlinked_parties(filters=None):
     ptype = frappe.get_all("Party Type")
@@ -836,16 +836,7 @@ def assign_party_master_for_selection(old_party_master, new_party_master, select
         doc.set("party_master", new_party_master)
         doc.save()
 
-#This will Cache result for link field popup values
-def get_set_cached_pm_list(reference_doctype,action='get',value=None):
-    key='_pm_list{0}'.format(frappe.scrub(reference_doctype))
-    cache=frappe.cache()
-    if action=='get':
-        return cache.get_value(key)
-    if value :
-        cache.set_value(key,value,expires_in_sec=3600)
-        
-        
+
 
 
 
