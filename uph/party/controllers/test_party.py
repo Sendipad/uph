@@ -539,50 +539,6 @@ def _get_linked_transactional_doctype():
     return r
 
 
-@frappe.whitelist()
-def check_party_master_duplicates(
-    party_master, doctype, posting_date, current_name=None, doc=None
-):
-    """Check for duplicates with safe comparison"""
-
-    filters = {
-        "party_master": party_master,
-        "posting_date": posting_date,
-        "docstatus": ["!=", 2],
-    }
-
-    if current_name:
-        filters["name"] = ["!=", current_name]
-
-    potential_dups = frappe.get_all(doctype, fields=["name"], filters=filters, limit=5)
-
-    duplicates = []
-    if doc and potential_dups:
-        meta = frappe.get_meta(doctype)
-        child_tables = [
-            df.fieldname for df in meta.get("fields", []) if df.fieldtype == "Table"
-        ]
-        current_doc = frappe._dict(doc)
-
-        for dup in potential_dups:
-            existing_doc = frappe.get_doc(doctype, dup.name)
-            comparison = compare_documents(
-                current_doc, existing_doc, meta, child_tables
-            )
-
-            if comparison["is_duplicate"]:
-                duplicates.append(
-                    {
-                        "name": dup.name,
-                        "owner": existing_doc.owner,
-                        "posting_date": existing_doc.posting_date,
-                        "total": existing_doc.grand_total,
-                        "matches": comparison["matches"],
-                    }
-                )
-
-    return {"duplicates": duplicates}
-
 
 def compare_documents(current_doc, existing_doc, meta, child_tables):
     """Safe document comparison with defaults"""
@@ -644,46 +600,6 @@ def normalize_child_table(items):
         )
     except Exception:
         return []
-
-
-@frappe.whitelist()
-def check_duplicate_voucher_party_master(
-    party_master, doctype, posting_date, current_name=None, doc=None
-):
-    pfn = get_mapped_fieldnames(doctype, "party_fieldname")
-    total_fn = get_mapped_fieldnames(doctype, "total_fieldname")
-    filters = {
-        "party_master": party_master,
-        "posting_date": posting_date,
-        "docstatus": ["!=", 2],
-    }
-
-    if current_name:
-        filters["name"] = ["!=", current_name]
-    fields = ["name", "owner"]
-    if pfn:
-        fields.append(pfn)
-    if total_fn:
-
-        fields.append(total_fn)
-
-    duplicates = frappe.get_all(
-        doctype,
-        fields=fields,
-        filters=filters,
-        limit=5,  # Limit to 5 results for performance
-    )
-
-    if duplicates and not doc:
-        for d in duplicates or []:
-            if d.get(pfn):
-                d["party"] = d.get(pfn, "")
-            if d.get(total_fn):
-
-                d["total"] = d.get(total_fn, 0)
-
-    return {"duplicates": duplicates}
-
 
 @frappe.whitelist()
 def allow_duplicate_submission(doctype, name):
