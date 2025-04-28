@@ -226,13 +226,7 @@ class PartyMaster(NestedSet):
             count += frappe.db.count(dt, filters={"party_master": self.name})
         self.total_linked_party = count
 
-    def set_pm_in_party_doc(self):
-        if frappe.flags.in_import and len(self.get("linked_party")) > 0:
-            self.validate_linked_parties()
-            for p in self.get("linked_party"):
-                set_party_master_on_party(
-                    self.name, p.get("party_type"), p.get("party")
-                )
+    #Not Required Anymore since will not used actual linked_parties table to store Actual Data
 
     def set_missing_values(self):
         if not self.is_primary_role and not self.primary_party_master:
