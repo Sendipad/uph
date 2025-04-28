@@ -213,6 +213,7 @@ class PartyMaster(NestedSet):
             self.tax_category = ""
             self.tax_withholding_category = ""
             self.represents_company = ""
+            self.portal_users=[]
 
     def set_total_linked_party(self):
         party_type_roles = [x.get("party_type_role") for x in self.roles]
@@ -269,89 +270,6 @@ class PartyMaster(NestedSet):
             self.db_set('party_number',newdn)
             
   
-
-    def sync_linked_parties(self):
-        if self.get("__islocal") and not self.linked_party:
-            return
-        list_parties = frappe.db.get_all(
-            "Party Master Parties", filters={"parent": self.name}
-        )
-        if len(list_parties) != 0:
-            if self.linked_party is None or len(self.linked_party) == 0:
-                for d in list_parties:
-                    party = frappe.get_doc(d.get("party_type"), d.get("party"))
-                    party.party_master = ""
-                    party.save()
-                    self.remove("linked_party", d.name)
-            elif self.linked_party is not None and len(self.linked_party) > 0:
-                to_add, to_remove = [], []
-                for p in self.linked_party:
-                    party = p.party
-                    exist = frappe.db.get_doc("Party Master Parties", party.name)
-                    if exist is None:
-                        party_doc = frappe.get_doc(d.party_type, party)
-                        party_doc.master_party = self.name
-                        party_doc.save()
-                    elif exist is not None and exist.party != p.party:
-                        party_doc = frappe.get_doc(d.party_type, party)
-                        party_doc.master_party = self.name
-                        party_doc.save()
-
-    def add_linked_party_to_table(self, party):
-        if party.get("doctype") != self.party_type:
-            return frappe.throw(
-                _("Only Parties of Type {0} are allowed with this Party Master").format(
-                    self.party_type
-                )
-            )
-        for_currency = "{0}".format(
-            party.get("default_currency")
-            if party.get("doctype") != "Employee"
-            else party.get("salary_currency")
-        )
-        self.append(
-            "linked_party",
-            {
-                "party": party.get("name"),
-                "default_currency": for_currency,
-                "party_type": self.party_type,
-            },
-        )
-        self.save()
-
-    def update_linked_party_table(self, party):
-        party_doc = frappe.get_doc(self.party_type, party)
-
-        def update_table(currency):
-            self.append(
-                "linked_party",
-                {
-                    "party_type": self.party_type,
-                    "party": party,
-                    "default_currency": currency,
-                },
-            )
-
-        if party is not None and self.party_type in ["Customer", "Supplier"]:
-            currency = frappe.get_value(self.party_type, party, "default_currency")
-            update_table(currency)
-        elif party_doc.get("doctype") == "Employee":
-            currency = frappe.get_value("Employee", party, "salary_currency")
-            update_table(currency)
-        if frappe.flags.in_import or not party_doc.get("__islocal"):
-            party_doc.party_master = self.name
-            party_doc.save()
-
-    def apply_linked_party_change(self, previous_party_master, party):
-        if previous_party_master and party:
-            pr_pm = frappe.get_doc("Party Master", previous_party_master)
-            if pr_pm.linked_party is not None:
-                for x in pr_pm.linked_party:
-                    if x.get("party") == party.get("name"):
-                        pr_pm.remove("linked_party", x)
-                        pr_pm.flags.pass_sync_change_to_parties = True
-                        pr_pm.save()
-                        return
 
     @frappe.whitelist()
     def update_linked_parties_details(self):
