@@ -249,13 +249,22 @@ class PartyMaster(NestedSet):
                     primary_role.save()
 
     def on_update(self):
+        self.create_primary_contact()
         key='pm_parties_{0}'.format(self.name)
         if frappe.cache.get_value(key):
             frappe.cache.delete_value(key)
         if self.disabled:
             self.status = "Disabled"
         self.set_total_linked_party()
-
+    
+    def create_primary_contact(self):
+        if not self.party_primary_contact and (self.mobile_no or self.email_id):
+            contact = make_contact(self)
+            self.db_set("party_primary_contact", contact.name)
+            self.db_set("mobile_no", self.mobile_no)
+            self.db_set("email_id", self.email_id)
+    
+    
     def on_trash(self):
         if self.total_linked_party > 0 or (
             lp := self.fetched_linked_party() is not None
