@@ -1,0 +1,109 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-13 18:00:42.176759",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "party_master_name",
+  "column_break_ehlo",
+  "is_numbering_mandatory",
+  "linked_party_naming_rule_sec",
+  "customer_naming_rule",
+  "column_break_xvwi",
+  "supplier_naming_rule",
+  "section_break_xwge",
+  "is_party_master_mandatory",
+  "section_break_jjkm",
+  "document_type"
+ ],
+ "fields": [
+  {
+   "default": "Naming Series Prefixed By Parent",
+   "fieldname": "party_master_name",
+   "fieldtype": "Select",
+   "label": "Party Naming By",
+   "options": "Party Name\nAuto Name\nNaming Series Prefixed By Parent\nParty Name and Party Type\nNaming Series"
+  },
+  {
+   "fieldname": "column_break_ehlo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_numbering_mandatory",
+   "fieldtype": "Check",
+   "label": "Is Numbering Mandatory for Group"
+  },
+  {
+   "description": "New Created Customer/Supplier from Party Master will follows these rule ",
+   "fieldname": "linked_party_naming_rule_sec",
+   "fieldtype": "Section Break",
+   "label": "Targeted Parties Naming Rule"
+  },
+  {
+   "description": "This will override naming of Customer if Party Master selected.\n* It is recommended to set naming as Party Master-Default Currency",
+   "fieldname": "customer_naming_rule",
+   "fieldtype": "Select",
+   "label": "Customer Naming Rule",
+   "options": "Auto Name\nCustomer Name\nNaming Series\nParty Master\nParty Master-Default Currency"
+  },
+  {
+   "fieldname": "column_break_xvwi",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Party Master-Default Currency",
+   "description": "This will override naming of Supplier if Party Master selected.\n* It is recommended to set naming as Party Master-Default Currency",
+   "fieldname": "supplier_naming_rule",
+   "fieldtype": "Select",
+   "label": "Supplier Naming Rule",
+   "options": "Auto Name\nSupplier Name\nNaming Series\nParty Master\nParty Master-Default Currency"
+  },
+  {
+   "fieldname": "section_break_xwge",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_party_master_mandatory",
+   "fieldtype": "Check",
+   "label": "Is Party Master Mandatory"
+  },
+  {
+   "fieldname": "section_break_jjkm",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Table",
+   "label": "Document Type",
+   "options": "Party Master Settings DocType"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-03-27 01:00:27.546693",
+ "modified_by": "Administrator",
+ "module": "Party",
+ "name": "Party Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

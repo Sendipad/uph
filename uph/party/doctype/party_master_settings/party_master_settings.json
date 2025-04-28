@@ -1,0 +1,75 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-04-05 17:27:20.040931",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "party_type_rules_section",
+  "party_types",
+  "doctype_fields_mapping_section",
+  "document_types",
+  "party_master_to_party_sync_fields_section",
+  "party_master_fields"
+ ],
+ "fields": [
+  {
+   "fieldname": "doctype_fields_mapping_section",
+   "fieldtype": "Section Break",
+   "label": "DocType Fields Mapping"
+  },
+  {
+   "fieldname": "document_types",
+   "fieldtype": "Table",
+   "label": "Document Types",
+   "options": "Party Master Settings DocType"
+  },
+  {
+   "fieldname": "party_master_to_party_sync_fields_section",
+   "fieldtype": "Section Break",
+   "label": "Party Master To Party Sync Fields"
+  },
+  {
+   "fieldname": "party_master_fields",
+   "fieldtype": "Table",
+   "label": "Party Master Fields",
+   "options": "Party Master Settings DocField"
+  },
+  {
+   "fieldname": "party_type_rules_section",
+   "fieldtype": "Section Break",
+   "label": "Party Type Rules"
+  },
+  {
+   "fieldname": "party_types",
+   "fieldtype": "Table",
+   "label": "Party Types",
+   "options": "Party Master Settings Party Type"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-04-09 16:13:15.186054",
+ "modified_by": "Administrator",
+ "module": "Party",
+ "name": "Party Master Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

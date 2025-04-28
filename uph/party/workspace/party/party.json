@@ -1,0 +1,76 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"H5LxFvYEKA\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Party</span>\",\"col\":12}},{\"id\":\"tdFgjIJi9N\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Linked Customer\",\"col\":4}},{\"id\":\"X8kzPuQelG\",\"type\":\"paragraph\",\"data\":{\"text\":\"Shortcut\",\"col\":12}},{\"id\":\"OzLkXuOaxN\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Master Tree\",\"col\":3}},{\"id\":\"fUVazcPEvW\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"id\":\"43-JXQ1is6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Supplier\",\"col\":3}},{\"id\":\"Xi-8cQBQVc\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b></b></span><b>Reports &amp; Masters</b>\",\"col\":4}},{\"id\":\"XhrHRmOmCJ\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Settings</b></span>\",\"col\":5}},{\"id\":\"2uD7tNPpez\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Settings\",\"col\":3}},{\"id\":\"EU6-wS68dR\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Accounting Ledger\",\"col\":3}}]",
+ "creation": "2025-04-23 14:56:48.972543",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "customer",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Party",
+ "links": [],
+ "modified": "2025-04-27 16:46:50.502530",
+ "modified_by": "Administrator",
+ "module": "Party",
+ "name": "Party",
+ "number_cards": [
+  {
+   "label": "Total Linked Customer",
+   "number_card_name": "Total Customer"
+  }
+ ],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 9.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Party Settings",
+   "link_to": "Party Master Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "format": "{} Not Linked",
+   "label": "Customer",
+   "link_to": "Customer",
+   "stats_filter": "[[\"Customer\",\"party_master\",\"is\",\"not set\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "format": "{} Not Linked",
+   "label": "Supplier",
+   "link_to": "Supplier",
+   "stats_filter": "[[\"Supplier\",\"party_master\",\"is\",\"not set\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Party Accounting Ledger",
+   "link_to": "Party Accounting Ledger",
+   "report_ref_doctype": "GL Entry",
+   "type": "Report"
+  },
+  {
+   "color": "Cyan",
+   "doc_view": "Tree",
+   "label": "Party Master Tree",
+   "link_to": "Party Master",
+   "stats_filter": "[[\"Party Master\",\"is_group\",\"=\",0,false],[\"Party Master\",\"disabled\",\"=\",0,false]]",
+   "type": "DocType"
+  }
+ ],
+ "title": "Party"
+}

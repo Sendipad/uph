@@ -1,0 +1,748 @@
+{
+ "actions": [],
+ "allow_events_in_timeline": 1,
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "autoname",
+ "color": "blue",
+ "creation": "2024-07-14 18:05:11.900706",
+ "default_view": "Tree",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "dashboard_tab",
+  "parties",
+  "details_tab",
+  "section_break_4hqz",
+  "naming_series",
+  "type",
+  "salutation",
+  "party_name",
+  "parent_party_master",
+  "party_number",
+  "lft",
+  "rgt",
+  "old_parent",
+  "mobile_no",
+  "total_linked_party",
+  "account_manager",
+  "column_break_sqyz",
+  "is_group",
+  "party_type",
+  "group_type",
+  "party_type_group",
+  "has_secondary_role_party",
+  "primary_party_master",
+  "territory",
+  "title",
+  "image",
+  "gender",
+  "roles",
+  "section_break_ulyl",
+  "default_currency",
+  "is_internal_party",
+  "represents_company",
+  "companies",
+  "column_break_hllf",
+  "default_price_list",
+  "section_break_legal_identity",
+  "national_id",
+  "passport_number",
+  "business_registration_number",
+  "column_break_legal_identity",
+  "legal_entity_type",
+  "date_of_establishment",
+  "section_break_nrbo",
+  "disputed_reasons",
+  "section_break_mnpu",
+  "party_details",
+  "column_break_slaa",
+  "language",
+  "industry",
+  "market_segment",
+  "contacts_information_tab",
+  "column_break_mzed",
+  "contact_html",
+  "column_break_14",
+  "address_html",
+  "primary_address_and_contact_detail",
+  "party_primary_contact",
+  "email_id",
+  "column_break_26",
+  "party_primary_address",
+  "primary_address",
+  "tab_3_tab",
+  "section_break_eydo",
+  "payment_terms",
+  "credit_limits",
+  "section_break_zygi",
+  "accounts",
+  "tax_tab",
+  "tax_id",
+  "column_break_jsug",
+  "tax_category",
+  "tax_withholding_category",
+  "portal_users_tab",
+  "portal_users",
+  "settings_tab",
+  "is_primary_role",
+  "is_frozen",
+  "disabled",
+  "status",
+  "column_break_ihcs",
+  "enable_selling",
+  "enable_buying",
+  "section_break_wnss",
+  "enforce_party_analaytic_accounting_selection"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_4hqz",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "lft",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Left",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "rgt",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Right",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "default": "0",
+   "description": "Only leaf nodes Party Master are allowed to be linked in transactional Party\n\n",
+   "fieldname": "is_group",
+   "fieldtype": "Check",
+   "label": "Is Group",
+   "search_index": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "old_parent",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Old Parent",
+   "options": "Party Master"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "parent_party_master",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Parent Party Master",
+   "link_filters": "[[\"Party Master\",\"is_group\",\"=\",1]]",
+   "mandatory_depends_on": "eval:!doc.is_group",
+   "options": "Party Master"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fetch_from": "parent_party_master.party_type",
+   "fetch_if_empty": 1,
+   "fieldname": "party_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "label": "Party Type",
+   "mandatory_depends_on": "eval:doc.is_group==0",
+   "options": "Party Type",
+   "search_index": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "party_name",
+   "fieldtype": "Data",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Party Name",
+   "no_copy": 1,
+   "read_only_depends_on": "eval:!doc.__islocal ",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "depends_on": "eval:doc.__islocal",
+   "fieldname": "party_number",
+   "fieldtype": "Data",
+   "label": "Party Number",
+   "mandatory_depends_on": "eval:doc.is_group",
+   "no_copy": 1,
+   "read_only_depends_on": "eval:!doc.__islocal",
+   "unique": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "depends_on": "eval:doc.party_type=='Customer'|| doc.party_type=='Supplier'",
+   "fetch_from": "parent_party_master.group_type",
+   "fetch_if_empty": 1,
+   "fieldname": "group_type",
+   "fieldtype": "Link",
+   "label": "Group Type",
+   "link_filters": "[[\"DocType\",\"name\",\"in\",[\"Customer Group\",\"Supplier Group\"]]]",
+   "options": "DocType",
+   "read_only_depends_on": "eval:doc.party_type=='Customer'|| doc.party_type=='Supplier'"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "depends_on": "eval:doc.group_type &&(doc.party_type=='Customer'|| doc.party_type=='Supplier')",
+   "fetch_from": "parent_party_master.party_type_group",
+   "fetch_if_empty": 1,
+   "fieldname": "party_type_group",
+   "fieldtype": "Dynamic Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Party Type Group",
+   "options": "group_type"
+  },
+  {
+   "fieldname": "column_break_sqyz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:!doc.is_group",
+   "fieldname": "has_secondary_role_party",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "label": "Has Secondary Role Party",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_internal_party",
+   "fieldtype": "Check",
+   "label": "Is Internal Party"
+  },
+  {
+   "depends_on": "is_internal_party",
+   "fieldname": "represents_company",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Represents Company",
+   "options": "Company",
+   "unique": 1
+  },
+  {
+   "depends_on": "eval:!doc.is_group",
+   "fieldname": "territory",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Territory",
+   "oldfieldname": "territory",
+   "oldfieldtype": "Link",
+   "options": "Territory",
+   "print_hide": 1,
+   "search_index": 1
+  },
+  {
+   "depends_on": "represents_company",
+   "fieldname": "companies",
+   "fieldtype": "Table",
+   "label": "Allowed To Transact With",
+   "options": "Allowed To Transact With"
+  },
+  {
+   "fieldname": "default_currency",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Default Currency",
+   "no_copy": 1,
+   "options": "Currency"
+  },
+  {
+   "fieldname": "default_price_list",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Default Price List",
+   "options": "Price List"
+  },
+  {
+   "fieldname": "language",
+   "fieldtype": "Link",
+   "label": "Print Language",
+   "options": "Language"
+  },
+  {
+   "fieldname": "column_break_14",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval: !doc.__islocal",
+   "fieldname": "address_html",
+   "fieldtype": "HTML",
+   "label": "Address HTML",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payment_terms",
+   "fieldtype": "Link",
+   "label": "Default Payment Terms Template",
+   "options": "Payment Terms Template"
+  },
+  {
+   "fieldname": "market_segment",
+   "fieldtype": "Link",
+   "label": "Market Segment",
+   "options": "Market Segment"
+  },
+  {
+   "fieldname": "industry",
+   "fieldtype": "Link",
+   "label": "Industry",
+   "options": "Industry Type"
+  },
+  {
+   "depends_on": "eval:!doc.is_group&&!doc.is_primary_role",
+   "fieldname": "primary_party_master",
+   "fieldtype": "Link",
+   "label": "Primary Party Master",
+   "link_filters": "[[\"Party Master\",\"is_group\",\"=\",0],[\"Party Master\",\"party_type\",\"!=\",\"eval:doc.party_type\"]]",
+   "no_copy": 1,
+   "options": "Party Master"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_mnpu",
+   "fieldtype": "Section Break",
+   "label": "More Details"
+  },
+  {
+   "fieldname": "section_break_ulyl",
+   "fieldtype": "Section Break",
+   "label": "Defaults"
+  },
+  {
+   "depends_on": "eval:!doc.is_group",
+   "fieldname": "contacts_information_tab",
+   "fieldtype": "Tab Break",
+   "label": "Contacts Information"
+  },
+  {
+   "depends_on": "eval: !doc.__islocal",
+   "fieldname": "contact_html",
+   "fieldtype": "HTML",
+   "label": "Contact HTML",
+   "oldfieldtype": "HTML",
+   "read_only": 1
+  },
+  {
+   "description": "Select, to make the party searchable with these fields",
+   "fieldname": "primary_address_and_contact_detail",
+   "fieldtype": "Section Break",
+   "label": "Primary Address and Contact"
+  },
+  {
+   "description": "Reselect, if the chosen contact is edited after save",
+   "fieldname": "party_primary_contact",
+   "fieldtype": "Link",
+   "label": "Party Primary Contact",
+   "options": "Contact"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fetch_from": "party_primary_contact.mobile_no",
+   "fieldname": "mobile_no",
+   "fieldtype": "Read Only",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "label": "Mobile No",
+   "options": "Mobile",
+   "print_width": "100",
+   "search_index": 1
+  },
+  {
+   "fetch_from": "party_primary_contact.email_id",
+   "fieldname": "email_id",
+   "fieldtype": "Read Only",
+   "label": "Email Id",
+   "options": "Email"
+  },
+  {
+   "fieldname": "column_break_26",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Reselect, if the chosen address is edited after save",
+   "fieldname": "party_primary_address",
+   "fieldtype": "Link",
+   "label": "Party Primary Address",
+   "options": "Address"
+  },
+  {
+   "fieldname": "primary_address",
+   "fieldtype": "Text",
+   "label": "Primary Address",
+   "read_only": 1
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "in_list_view": 1,
+   "label": "Title"
+  },
+  {
+   "fieldname": "column_break_mzed",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "depends_on": "eval:!doc.is_group",
+   "fieldname": "is_primary_role",
+   "fieldtype": "Check",
+   "label": "Is Primary Role"
+  },
+  {
+   "fieldname": "tab_3_tab",
+   "fieldtype": "Tab Break",
+   "label": "Accounting"
+  },
+  {
+   "depends_on": "eval:!doc.is_group",
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "in_preview": 1,
+   "label": "Type",
+   "options": "\nCompany\nIndividual\nPartnership"
+  },
+  {
+   "fieldname": "column_break_hllf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:!doc.is_group",
+   "fieldname": "image",
+   "fieldtype": "Attach Image",
+   "label": "Image"
+  },
+  {
+   "description": "Statutory info and other general information about your Party\n\n",
+   "fieldname": "party_details",
+   "fieldtype": "Text",
+   "in_list_view": 1,
+   "label": "Party Details"
+  },
+  {
+   "default": "{party_number}",
+   "depends_on": "eval:doc.__islocal",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "{party_number}\n.{parent_party_master}.\nPM-{party_name}",
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "section_break_eydo",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:!doc.is_group",
+   "fieldname": "total_linked_party",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Total Linked Party",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "tax_tab",
+   "fieldtype": "Tab Break",
+   "label": "Tax"
+  },
+  {
+   "fieldname": "tax_id",
+   "fieldtype": "Data",
+   "label": "Tax ID"
+  },
+  {
+   "fieldname": "column_break_jsug",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tax_category",
+   "fieldtype": "Link",
+   "label": "Tax Category",
+   "options": "Tax Category"
+  },
+  {
+   "fieldname": "tax_withholding_category",
+   "fieldtype": "Link",
+   "label": "Tax Withholding Category",
+   "options": "Tax Withholding Category"
+  },
+  {
+   "fieldname": "portal_users_tab",
+   "fieldtype": "Tab Break",
+   "label": "Portal Users"
+  },
+  {
+   "fieldname": "portal_users",
+   "fieldtype": "Table",
+   "label": "Party Portal Users",
+   "options": "Portal User"
+  },
+  {
+   "fieldname": "settings_tab",
+   "fieldtype": "Tab Break",
+   "label": "Settings"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_frozen",
+   "fieldtype": "Check",
+   "label": " Is Frozen"
+  },
+  {
+   "default": "0",
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled"
+  },
+  {
+   "fieldname": "column_break_slaa",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_zygi",
+   "fieldtype": "Section Break"
+  },
+  {
+   "description": " Mention if not default account and advanced Account is Used.\n Account Must be of Group where it has child accounts for each Currency",
+   "fieldname": "accounts",
+   "fieldtype": "Table",
+   "label": "Account Group",
+   "options": "Party Master Accounts"
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Active\nDisabled\nClosed\nCredit Hold\nDelinquent\nDisputed\nDormant\nWrite-Off\nApproved\nOn Hold\nUnder Review\nTerminated\nSuspended",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_nrbo",
+   "fieldtype": "Section Break"
+  },
+  {
+   "depends_on": "eval:doc.status==\"Disputed\"",
+   "fieldname": "disputed_reasons",
+   "fieldtype": "Text",
+   "label": "Disputed Reasons",
+   "mandatory_depends_on": "eval:doc.status==\"Disputed\""
+  },
+  {
+   "depends_on": "eval:doc.type != 'Company'",
+   "fieldname": "gender",
+   "fieldtype": "Link",
+   "label": "Gender",
+   "options": "Gender"
+  },
+  {
+   "depends_on": "eval:doc.type !=\"Company\"",
+   "fieldname": "salutation",
+   "fieldtype": "Link",
+   "label": "Salutation",
+   "options": "Salutation"
+  },
+  {
+   "fieldname": "details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Details"
+  },
+  {
+   "depends_on": "eval:doc.party_type==\"Customer\"",
+   "fieldname": "credit_limits",
+   "fieldtype": "Table",
+   "label": "Credit Limits",
+   "options": "Customer Credit Limit"
+  },
+  {
+   "depends_on": "eval:doc.has_secondary_role_party",
+   "fieldname": "roles",
+   "fieldtype": "Table MultiSelect",
+   "in_filter": 1,
+   "in_standard_filter": 1,
+   "label": "Party Type Roles",
+   "options": "Party Master Role"
+  },
+  {
+   "fieldname": "column_break_ihcs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_selling",
+   "fieldtype": "Check",
+   "label": "Enable Selling"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_buying",
+   "fieldtype": "Check",
+   "label": "Enable Buying"
+  },
+  {
+   "fieldname": "section_break_wnss",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "enforce_party_analaytic_accounting_selection",
+   "fieldtype": "Check",
+   "label": "Enforce Party Analaytic Accounting Selection"
+  },
+  {
+   "fieldname": "dashboard_tab",
+   "fieldtype": "Tab Break",
+   "label": "Dashboard"
+  },
+  {
+   "depends_on": "eval:!doc.is_group&&doc.type",
+   "fieldname": "section_break_legal_identity",
+   "fieldtype": "Section Break",
+   "label": "Legal Identity"
+  },
+  {
+   "depends_on": "eval:doc.type == 'Individual'",
+   "description": "Government-issued ID for individuals",
+   "fieldname": "national_id",
+   "fieldtype": "Data",
+   "label": "National ID",
+   "unique": 1
+  },
+  {
+   "depends_on": "eval:doc.type == 'Individual'",
+   "description": "Optional passport number for international parties",
+   "fieldname": "passport_number",
+   "fieldtype": "Data",
+   "label": "Passport Number"
+  },
+  {
+   "depends_on": "eval:doc.type == 'Company'",
+   "description": "Company registration or incorporation number",
+   "fieldname": "business_registration_number",
+   "fieldtype": "Data",
+   "label": "Business Registration Number"
+  },
+  {
+   "fieldname": "column_break_legal_identity",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:!doc.is_group",
+   "description": "Formal classification of the party",
+   "fieldname": "legal_entity_type",
+   "fieldtype": "Select",
+   "label": "Legal Entity Type",
+   "options": "\nSole Proprietor\nPartnership\nCorporation\nLLC\nNGO\nFreelancer\nGovernment\nIndividual\nOther"
+  },
+  {
+   "description": "Birthdate for individuals or incorporation date for companies",
+   "fieldname": "date_of_establishment",
+   "fieldtype": "Date",
+   "label": "Date"
+  },
+  {
+   "fieldname": "account_manager",
+   "fieldtype": "Link",
+   "label": "Account Manager",
+   "options": "User"
+  },
+  {
+   "fieldname": "parties",
+   "fieldtype": "Table",
+   "label": "Parties",
+   "options": "Party Master Parties",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "image_field": "image",
+ "is_calendar_and_gantt": 1,
+ "is_tree": 1,
+ "links": [],
+ "modified": "2025-04-28 15:38:05.311622",
+ "modified_by": "Administrator",
+ "module": "Party",
+ "name": "Party Master",
+ "naming_rule": "By script",
+ "nsm_parent_field": "parent_party_master",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Master Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Purchase Master Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "row_format": "Dynamic",
+ "search_fields": "party_name,mobile_no,party_details,territory,party_number",
+ "show_name_in_global_search": 1,
+ "show_preview_popup": 1,
+ "show_title_field_in_link": 1,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title",
+ "track_changes": 1
+}

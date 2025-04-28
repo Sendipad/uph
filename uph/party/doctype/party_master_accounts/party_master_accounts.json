@@ -1,0 +1,54 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-24 21:42:26.649480",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "account",
+  "advance_account"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "label": "Company",
+   "link_filters": "[]",
+   "options": "Company"
+  },
+  {
+   "fieldname": "account",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "label": "Account",
+   "link_filters": "[[\"Account\",\"disabled\",\"=\",0],[\"Account\",\"company\",\"=\",\"eval:doc.company\"],[\"Account\",\"is_group\",\"=\",1],[\"Account\",\"account_type\",\"in\",[\"Receivable\",\"Payable\",null]]]",
+   "options": "Account"
+  },
+  {
+   "fieldname": "advance_account",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "label": "Advance Account",
+   "link_filters": "[[\"Account\",\"company\",\"=\",\"eval:doc.company\"],[\"Account\",\"is_group\",\"=\",1],[\"Account\",\"disabled\",\"=\",0],[\"Account\",\"account_type\",\"in\",[\"Receivable\",\"Payable\",null]]]",
+   "options": "Account"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-01-25 17:34:41.201558",
+ "modified_by": "Administrator",
+ "module": "Party",
+ "name": "Party Master Accounts",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

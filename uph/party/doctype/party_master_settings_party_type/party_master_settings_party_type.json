@@ -1,0 +1,66 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-04-09 16:00:36.891456",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "party_type",
+  "column_break_dwtb",
+  "reqd",
+  "allowed",
+  "rule_fieldname"
+ ],
+ "fields": [
+  {
+   "fieldname": "party_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Party Type",
+   "options": "Party Type",
+   "set_only_once": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_dwtb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "reqd",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Mandatory"
+  },
+  {
+   "default": "0",
+   "description": "Checking This will allow multi Party of the same Type to link to the same Party Master",
+   "fieldname": "allowed",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Allow Multi Party"
+  },
+  {
+   "depends_on": "eval:doc.allowed==1",
+   "description": "This Could be Currency Fieldname ",
+   "fieldname": "rule_fieldname",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Field name uniqueness Rule"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-04-10 20:39:38.691090",
+ "modified_by": "Administrator",
+ "module": "Party",
+ "name": "Party Master Settings Party Type",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

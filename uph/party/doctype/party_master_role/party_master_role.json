@@ -1,0 +1,32 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-03-03 23:34:43.128125",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "party_type_role"
+ ],
+ "fields": [
+  {
+   "fieldname": "party_type_role",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Party Type Role",
+   "options": "Party Type",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-03-04 01:10:07.678173",
+ "modified_by": "Administrator",
+ "module": "Party",
+ "name": "Party Master Role",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
