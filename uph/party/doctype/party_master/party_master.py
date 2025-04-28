@@ -267,7 +267,7 @@ class PartyMaster(NestedSet):
             address = make_address(self)
             address_display = get_address_display(address.name)
 
-            self.db_set("customer_primary_address", address.name)
+            self.db_set("party_primary_address", address.name)
             self.db_set("primary_address", address_display)
 
     def on_trash(self):
@@ -901,7 +901,7 @@ def make_address(args, is_primary_address=1, is_shipping_address=1):
 			title=_("Missing Values Required"),
 		)
 
-	party_name_key = "customer_name" if args.doctype == "Customer" else "supplier_name"
+	party_name_key = "party_name" 
 
 	address = frappe.get_doc(
 		{
