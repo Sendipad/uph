@@ -1,27 +1,55 @@
+<h2 class="text-center" style="font-weight: bold;">{%= __("Statement of Account") %}</h2>
+{% if (filters.cost_center || filters.branch) { %}
+<h4 class="text-center">
+    {%= filters.cost_center || filters.branch %}
+</h4>
+{% } %}
+<h2 class="text-center" style="color: blue; font-weight:bold">
+    {%= filters.full_name %}
+</h2>
+<h5 class="text-center" style="font-weight: bold;color:red">
+    {%= __("From")%} :
+    {%= frappe.datetime.str_to_user(filters.from_date) %} &nbsp
+    {%= __("to") %} :
+    {%= frappe.datetime.str_to_user(filters.to_date) %}
+</h5>
+<hr>
+
+
 {% var current_party_master = null; %}
 {% for (var i = 0; i < data.length; i++) { %}
-  
+
   {% if (Object.keys(data[i]).length === 0) { %}
     <!-- Divider row -->
     <hr style="border: 1px dashed grey;">
   {% continue; %}
   {% } %}
-  
+
   {% if (data[i].party_master !== current_party_master) { %}
     {% if (current_party_master !== null) { %}
       </tbody></table> <!-- Close previous table -->
-      <br>
     {% } %}
 
-    <!-- New Table for new Party Master -->
-    <h4>{%= data[i].party_master %} - {%= data[i].party_name %}</h4>
-    <table class="table table-bordered" style="margin-bottom: 15px;">
+    {% if (current_party_master !== null) { %}
+      <div style="page-break-before: always;"></div>
+    {% } %}
+
+    <!-- New Party Table -->
+    <table class="table table-bordered" style="margin-bottom: 15px; page-break-inside: auto;">
       <thead>
         <tr>
-          <th>Date</th>
-          <th>Debit</th>
-          <th>Credit</th>
-          <th>Balance</th>
+          <th colspan="8" style="text-align: center; font-size: 14px;">
+            {%= data[i].party_master %} - {%= data[i].party_name %}
+          </th>
+        </tr>
+        <tr class="text-center" style="background-color: rgba(211, 202, 202, 0.603);">
+          <th style="width: 8%">{%= __("Date") %}</th>
+          <th style="width: 9%">{%= __("Voucher Type & No") %}</th>
+          <th style="width: 31%">{%= __("Remarks") %}</th>
+          <th style="width: 8%">{%= __("Branch|Cost Center") %}</th>
+          <th style="width: 10%">{%= __("Debit") %}</th>
+          <th style="width: 10%">{%= __("Credit") %}</th>
+          <th style="width: 13%">{%= __("The Balance") %}</th>
         </tr>
       </thead>
       <tbody>
@@ -31,16 +59,43 @@
 
   <!-- Data Row -->
   <tr {% if (data[i].is_opening) { %} style="background-color: bisque; font-weight: bold;" {% } %}>
-    <td>{%= frappe.datetime.str_to_user(data[i].posting_date) %}</td>
-    <td style="text-align:right">{%= format_currency(data[i].debit || 0, "INR") %}</td>
-    <td style="text-align:right">{%= format_currency(data[i].credit || 0, "INR") %}</td>
-    <td style="text-align:right">
-      {%= format_currency((data[i].debit || 0) - (data[i].credit || 0), "INR") %}
+    <td> {%= frappe.datetime.str_to_user(data[i].posting_date) %} </td>
+
+    <td style="text-align:center; direction:rtl; font-size:9px;">
+      {%= __(data[i].voucher_type) %}<br>{%= data[i].voucher_no %}
     </td>
+
+    <td style="white-space:normal; font-size:9px; line-height: 12px;">
+      {%= data[i].remarks %}
+    </td>
+
+    <td>
+      {% if (data[i].cost_center) { %}
+        {%= __(data[i].cost_center) %}
+      {% } else { %}
+        {%= __(data[i].branch) %}
+      {% } %}
+      {% if (data[i].party_analytic_accounting) { %}
+        <br>{%= data[i].party_analytic_accounting %}
+      {% } %}
+    </td>
+
+    <td style="text-align:right; color:{%= (data[i].debit > 0) ? '#000' : '#141414' %};">
+      {%= format_currency(data[i].debit, data[i].currency) %}
+    </td>
+
+    <td style="text-align:right; color:{%= (data[i].credit > 0) ? '#000' : '#313131' %};">
+      {%= format_currency(data[i].credit, data[i].currency) %}
+    </td>
+
+    <td style="text-align:right; color:#000;">
+      {%= format_currency(data[i].balance, data[i].currency) %}
+    </td>
+
   </tr>
 
 {% } %}
 
 {% if (current_party_master !== null) { %}
-  </tbody></table> <!-- Close the last open table -->
+  </tbody></table> <!-- Close last open table -->
 {% } %}
