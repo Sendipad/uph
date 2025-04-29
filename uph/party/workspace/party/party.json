@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"H5LxFvYEKA\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Party</span>\",\"col\":12}},{\"id\":\"tdFgjIJi9N\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Linked Customer\",\"col\":4}},{\"id\":\"X8kzPuQelG\",\"type\":\"paragraph\",\"data\":{\"text\":\"Shortcut\",\"col\":12}},{\"id\":\"OzLkXuOaxN\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Master Tree\",\"col\":3}},{\"id\":\"fUVazcPEvW\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"id\":\"43-JXQ1is6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Supplier\",\"col\":3}},{\"id\":\"Xi-8cQBQVc\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b></b></span><b>Reports &amp; Masters</b>\",\"col\":4}},{\"id\":\"XhrHRmOmCJ\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Settings</b></span>\",\"col\":5}},{\"id\":\"2uD7tNPpez\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Settings\",\"col\":3}},{\"id\":\"EU6-wS68dR\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Accounting Ledger\",\"col\":3}}]",
+ "content": "[{\"id\":\"H5LxFvYEKA\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Party</span>\",\"col\":12}},{\"id\":\"tdFgjIJi9N\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Linked Customer\",\"col\":4}},{\"id\":\"X8kzPuQelG\",\"type\":\"paragraph\",\"data\":{\"text\":\"Shortcut\",\"col\":12}},{\"id\":\"OzLkXuOaxN\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Master Tree\",\"col\":3}},{\"id\":\"fUVazcPEvW\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"id\":\"43-JXQ1is6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Supplier\",\"col\":3}},{\"id\":\"Xi-8cQBQVc\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b></b></span><b>Reports &amp; Masters</b>\",\"col\":4}},{\"id\":\"XhrHRmOmCJ\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Settings</b></span>\",\"col\":5}},{\"id\":\"2uD7tNPpez\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Settings\",\"col\":3}},{\"id\":\"EU6-wS68dR\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Accounting Ledger\",\"col\":3}},{\"id\":\"CPxkqKS269\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Account Statement\",\"col\":3}}]",
  "creation": "2025-04-23 14:56:48.972543",
  "custom_blocks": [],
  "docstatus": 0,
@@ -13,7 +13,7 @@
  "is_hidden": 0,
  "label": "Party",
  "links": [],
- "modified": "2025-04-27 16:46:50.502530",
+ "modified": "2025-04-29 14:47:31.745808",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party",
@@ -60,6 +60,14 @@
    "doc_view": "List",
    "label": "Party Accounting Ledger",
    "link_to": "Party Accounting Ledger",
+   "report_ref_doctype": "GL Entry",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Account Statement",
+   "link_to": "Party Account Statement",
    "report_ref_doctype": "GL Entry",
    "type": "Report"
   },

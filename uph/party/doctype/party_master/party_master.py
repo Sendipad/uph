@@ -188,7 +188,6 @@ class PartyMaster(NestedSet):
             title = title + "({0})".format(_(self.party_type))
         self.title = title
         self.set_total_linked_party()
-        self.set_pm_in_party_doc()
         self.set_missing_values()
 
     def set_missing_value(self):
@@ -248,8 +247,7 @@ class PartyMaster(NestedSet):
         key='pm_parties_{0}'.format(self.name)
         if frappe.cache.get_value(key):
             frappe.cache.delete_value(key)
-        if self.disabled:
-            self.status = "Disabled"
+    
         self.set_total_linked_party()
     
     def create_primary_contact(self):
