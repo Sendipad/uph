@@ -4,25 +4,46 @@
 frappe.query_reports["Party Account Statement"] = {
 	filters: [
 		{
-		  fieldname: "company",
-		  label: __("Company"),
-		  fieldtype: "Link",
-		  options: "Company",
-		  default: frappe.defaults.get_user_default("Company"),
-		  reqd: 1,
-		},
-		{
-		  fieldname: "party_master",
-		  label: __("Party"),
-		  fieldtype: "MultiSelectList",
-		  options: "Party Master",
-		  get_data: (txt) => {
-			let group = frappe.query_report.get_filter_value("is_group");
-			return frappe.db.get_link_options("Party Master", txt, {
-			  is_group: group,
-			});
+			fieldname: "party_name",
+			fieldtype: "Data",
+			hidden: 1,
+			label: __("Party Name"),
+			default: "",
 		  },
-		},
+		  {
+			fieldname: "company",
+			label: __("Company"),
+			fieldtype: "Link",
+			options: "Company",
+			default: frappe.defaults.get_user_default("Company"),
+			reqd: 1,
+		  },
+		  {
+			fieldname: "party_master",
+			label: __("Party"),
+			fieldtype: "MultiSelectList",
+			options: "Party Master",
+			get_data: (txt) => {
+			  let group = frappe.query_report.get_filter_value("is_group");
+			  return frappe.db.get_link_options("Party Master", txt, {
+				is_group: group,
+			  });
+			},
+			on_change: function () {
+			  let parties = frappe.query_report.get_filter_value("party_master") || [];
+			  
+			  if (parties.length === 0) {
+				frappe.query_report.set_filter_value("party_name", "");
+			  } else {
+				frappe.db.get_value('Party Master', parties[0], 'party_name', (value) => {
+				  if (value && value.party_name) {
+					frappe.query_report.set_filter_value("party_name", value.party_name);
+				  }
+				});
+			  }
+			},
+		  },
+		  
 		{
 		  fieldname: "from_date",
 		  label: __("Start Date"),
