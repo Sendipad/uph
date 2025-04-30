@@ -180,6 +180,8 @@ class PartyMaster(NestedSet):
             self.flags.update_party_number = True
         if self.flags.update_party_number:
             self.numbering()
+        if old and self.party_number !=old.party_number and not self.flags.update_party_number:
+            frappe.throw(_("You are not allowed to Change Party Number"))
         if len(self.roles) > 0 and self.has_secondary_role_party == 0:
             self.has_secondary_role_party = 1
         title = "{0}".format(self.party_name)

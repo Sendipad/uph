@@ -1,7 +1,5 @@
 frappe.ui.form.on("Party Master", {
   setup: function (frm) {
-    console.log("Setup", get_counts_unlinked_parties(frm));
-   
   },
   onload: function(frm) {
     frm.set_query('roles', () => {
@@ -12,6 +10,35 @@ frappe.ui.form.on("Party Master", {
       };
     });
   },
+  parent_party_master: function (frm) {
+    if (frm.doc.parent_party_master) {
+        frm.toggle_display('party_number', !frm.is_new());
+        frm.refresh_field('party_number');
+
+        if (frm.doc.parent_party_master) {
+            let value = {
+                parent: frm.doc.parent_party_master
+            };
+
+            if (frm.doc.is_group) {
+                value.is_group = 1;
+            }
+
+            frappe.call({
+                method: 'uph.party.doctype.party_master.party_master.get_next_party_master_number',
+                args: value,
+                debounce: 100,
+                callback: (r) => {
+                    if (r.message) {
+                        frm.set_value("party_number", r.message);
+                        frm.refresh_field('party_number');
+
+                      }
+                }
+            });
+        }
+    }
+},
     update_button(frm) {
     if (frm.is_new()) {
       return;
@@ -142,9 +169,11 @@ frappe.ui.form.on("Party Master", {
     }
 },
   refresh: function (frm) {
+    frm.old_parent=frm.doc.parent_party_master||null;
    
     if(!frm.is_new()){
-      
+      frm.set_df_property('parent_party_master','read_only',1);
+      frm.set_df_property('party_number','read_only',1);
         frm.add_custom_button(__('Create Party'), () => {
             // Get unique party types from doc and roles
             let party_type = [frm.doc.party_type];
