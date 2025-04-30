@@ -122,8 +122,9 @@ class PartyMaster(NestedSet):
     
     def numbering(self):
         # Skip if party_number is already set and not flagged for update
-        if not self.flags.update_party_number and self.party_number and not frappe.db.exists(self.doctype, {'party_number': self.party_number}):
-            return  
+        if not self.flags.update_party_number:
+            return
+
 
         # Ensure root group node has a party number
         if not self.parent_party_master and not self.party_number:
@@ -175,9 +176,10 @@ class PartyMaster(NestedSet):
     def before_save(self):
         frappe.cache.hdel(uph.make_key("Party Master.parties"),self.name)
         old = self.get_doc_before_save()
-        if old and self.parent_party_master!=old.parent_party_master:
-            self.flags.update_party_number=True
-        self.numbering()
+        if old and self.parent_party_master != old.parent_party_master:
+            self.flags.update_party_number = True
+        if self.flags.update_party_number:
+            self.numbering()
         if len(self.roles) > 0 and self.has_secondary_role_party == 0:
             self.has_secondary_role_party = 1
         title = "{0}".format(self.party_name)
@@ -275,7 +277,7 @@ class PartyMaster(NestedSet):
             frappe.throw(
                 _("Cannot delete Party Master that is linked to other Parties")
             )
-
+        
     def after_rename(self, olddn, newdn, merge=False):
         if olddn==self.party_number:
             self.party_number=newdn
@@ -525,21 +527,21 @@ def get_next_party_master_number(parent=None,is_group=0):
         return str(cint(parent_number) + increment).zfill(4)
 
     # Non-group logic
-    else:
-        max_suffix = frappe.db.sql(
-                """
-                SELECT IFNULL(MAX(CAST(SUBSTRING(party_number, %(start)s) AS UNSIGNED)), 0)
-                FROM `tabParty Master`
-                WHERE parent_party_master = %(parent)s AND is_group = 0 AND party_number LIKE %(prefix)s
-                """,
-                {
-                    'parent': parent,
-                    'prefix': parent_number + '%',
-                    'start': len(parent_number) + 1  # 1-based indexing in SQL
-                }
-            )[0][0]
-        new_suffix = cint(max_suffix) + 1
-        return parent_number+ str(new_suffix).zfill(5)
+    
+    max_suffix = frappe.db.sql(
+            """
+            SELECT IFNULL(MAX(CAST(SUBSTRING(party_number, %(start)s) AS UNSIGNED)), 0)
+            FROM `tabParty Master`
+            WHERE parent_party_master = %(parent)s AND is_group = 0 AND party_number LIKE %(prefix)s
+            """,
+            {
+                'parent': parent,
+                'prefix': parent_number + '%',
+                'start': len(parent_number) + 1  # 1-based indexing in SQL
+            }
+        )[0][0]
+    new_suffix = cint(max_suffix) + 1
+    return parent_number+ str(new_suffix).zfill(5)
 
 @frappe.whitelist()
 def create_party_from_party_master(source_name, target_doctype,save=None,target_doc=None,rule_field_value=None):

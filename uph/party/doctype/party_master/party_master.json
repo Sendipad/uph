@@ -178,7 +178,6 @@
    "label": "Party Number",
    "mandatory_depends_on": "eval:doc.is_group",
    "no_copy": 1,
-   "read_only_depends_on": "eval:!doc.__islocal",
    "unique": 1
   },
   {
@@ -679,7 +678,7 @@
  "is_calendar_and_gantt": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2025-04-28 15:38:05.311622",
+ "modified": "2025-04-30 16:00:16.991452",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party Master",
