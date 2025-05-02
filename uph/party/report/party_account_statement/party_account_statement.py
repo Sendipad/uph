@@ -16,7 +16,7 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
     get_accounting_dimensions,
     get_dimension_with_children,
 )
-
+from uph.party.controllers.queries import get_counts_of_unposted_or_cancelled_vouchers
 
 def execute(filters=None):
     filters = frappe._dict(filters or {})
@@ -128,41 +128,40 @@ def get_party_master(filters):
 
 def get_data(filters, party_master):
     data = []
+
+    # Handle party type selection
     party_type = filters.get("party_type", [])
     if not party_type or "All" in party_type:
         filters["party_type"] = uph.get_party_type_list()
+
     partylist = get_party_master_parties_db(
         party_master, all_roles=False, roles=filters.party_type
     )
     filters.party = [x.party for x in partylist]
+
     dimension = ["cost_center", "project"] + get_accounting_dimensions(as_list=True)
 
     opening, entries = query_gl(filters, dimension)
+
     opening_map = {
         (row.get("party"), row.get("party_type")): row
-        for row in opening
-        if row.get("type") == "Opening"
+        for row in opening if row.get("type") == "Opening"
     }
+
     current_totals = {
         (row.get("party"), row.get("party_type")): row
-        for row in opening
-        if row.get("type") == "Current"
+        for row in opening if row.get("type") == "Current"
     }
+
     # Group entries by party
     party_entries = {}
     for entry in entries:
-        party_entries.setdefault(
-            (entry.get("party"), entry.get("party_type")), []
-        ).append(entry)
+        party_entries.setdefault((entry.get("party"), entry.get("party_type")), []).append(entry)
 
-    group_by_vn = (
-        True if filters.get("group_by") == "Group by Voucher (Consolidated)" else False
-    )
-    hide_equal = (
-        True if "Hide Equals Voucher" in filters.get("display_options") else False
-    )
-
-    def prepare_entries(key, party_master, balance, balance_in_cc,party_name):
+    group_by_vn = filters.get("group_by") == "Group by Voucher (Consolidated)"
+    hide_equal = "Hide Equals Voucher" in filters.get("display_options", [])
+    hide_warning= "Hide Warnings Message" in filters.get("display_options", [])
+    def prepare_entries(key, party_master, balance, balance_in_cc, party_name):
         entries = party_entries.get(key, [])
         if not entries:
             return balance, balance_in_cc
@@ -184,35 +183,32 @@ def get_data(filters, party_master):
                     row['debit'] += debit
                     row['credit'] += credit
                     row['balance'] += (debit - credit)
-                    balance=row.get('balance',0)
+                    balance = row['balance']
 
                     if filters.get("in_company_currency"):
                         row['debit_in_cc'] += debit_in_cc
                         row['credit_in_cc'] += credit_in_cc
                         row['balance_in_cc'] += (debit_in_cc - credit_in_cc)
-                        balance_in_cc=row.get('balance_in_cc')
-                    # After merging, check if debit == credit
+                        balance_in_cc = row['balance_in_cc']
+
                     if hide_equal and row['debit'] == row['credit']:
                         data.pop(last_index)
                         last_index -= 1
                         last_vn = None
                     continue
-
                 else:
                     balance += (debit - credit)
                     balance_in_cc += (debit_in_cc - credit_in_cc)
-
                     new_row = {
                         **entry,
                         "balance": balance,
                         "balance_in_cc": balance_in_cc,
                         "party_master": party_master,
-                        "party_name":party_name,
+                        "party_name": party_name,
                     }
                     data.append(new_row)
                     last_vn = current_vn
                     last_index = len(data) - 1
-
             else:
                 balance += (debit - credit)
                 balance_in_cc += (debit_in_cc - credit_in_cc)
@@ -222,8 +218,7 @@ def get_data(filters, party_master):
                     "balance": balance,
                     "balance_in_cc": balance_in_cc,
                     "party_master": party_master,
-                    "party_name":party_name,
-
+                    "party_name": party_name,
                 }
 
                 if hide_equal and new_row['debit'] == new_row['credit']:
@@ -233,37 +228,33 @@ def get_data(filters, party_master):
 
         return balance, balance_in_cc
 
-        # If not group_by_vn
-        for entry in party_entries.get(key, []):
-            debit = entry.get("debit") or 0
-            credit = entry.get("credit") or 0
-            debit_in_cc = entry.get("debit_in_cc") or 0
-            credit_in_cc = entry.get("credit_in_cc") or 0
+    # Collect unposted/cancelled voucher info
+    gl_voucher_counts = get_counts_of_unposted_or_cancelled_vouchers(
+        filters.get('company'),
+        party_master=None,
+        is_party_gl_effected=1
+    )
+    unposted_voucher = {}
+    for vc in gl_voucher_counts:
+        unposted_voucher.setdefault(vc.get('party_master'), []).append(vc)
 
-            balance += debit - credit
-            balance_in_cc += debit_in_cc - credit_in_cc
+    last_pm = None
+    cached_warning_row = None
 
-            entry.update(
-                {
-                    "balance": balance,
-                    "balance_in_cc": balance_in_cc,
-                    "party_master": party_master,
-                    "party_name": party_name,
-                }
-            )
-            data.append(entry)
-
-        return balance, balance_in_cc
-
-    # Final data processing
     for party in partylist:
+        current_pm = party.get("party_master")
+
+        # Flush warning if party_master has changed
+        if last_pm and current_pm != last_pm and cached_warning_row:
+            data.append(cached_warning_row)
+            cached_warning_row = None
+
         key = (party.get("party"), party.get("party_type"))
         open_row = opening_map.get(key, {})
         open_balance = open_row.get("balance", 0) or 0
         balance_in_cc = open_row.get("balance_in_cc", 0) or 0
-        if open_balance != 0 or (
-            filters.get("in_company_currency") and balance_in_cc != 0
-        ):
+
+        if open_balance != 0 or (filters.get("in_company_currency") and balance_in_cc != 0):
             row = {**open_row}
             row.update(
                 {
@@ -274,9 +265,10 @@ def get_data(filters, party_master):
                 }
             )
             data.append(row)
+
         total_balance, total_balance_in_cc = prepare_entries(
             key,
-            party.get("party_master"),
+            current_pm,
             balance=open_balance,
             balance_in_cc=balance_in_cc,
             party_name=party.get("party_name"),
@@ -289,29 +281,50 @@ def get_data(filters, party_master):
                     "debit": totals.get("total_debit", 0),
                     "credit": totals.get("total_credit", 0),
                     **party,
-                    "remarks": "Current Period Totals",
-                    "current_balance": (
-                        totals.get("debit", 0) - totals.get("credit", 0)
-                    ),
+                    "remarks": _("Current Period Totals"),
+                    "current_balance": totals.get("debit", 0) - totals.get("credit", 0),
                     "balance": total_balance,
                     "opening": open_balance,
                 }
             )
-        if total_balance:
-            data.extend(
-                [
-                    {
-                        **party,
-                        "credit" if total_balance < 0 else "debit": abs(total_balance),
-                        # "debit_in_cc" if total_balance_in_cc>0 else "credit_in_cc":abs(total_balance_in_cc),
-                        "remarks": _("Closing (Opening + Total)"),
-                        "bold": 1,
-                    },
-                    {},
-                ]
-            )
-    return data
 
+        if total_balance:
+            closing_row = {
+                **party,
+                "credit" if total_balance < 0 else "debit": abs(total_balance),
+                "remarks": _("Closing (Opening + Total)"),
+                "bold": 1,
+            }
+            if filters.get("in_company_currency"):
+                closing_row[
+                    "credit_in_cc" if total_balance_in_cc < 0 else "debit_in_cc"
+                ] = abs(total_balance_in_cc)
+            data.append(closing_row)
+
+        # Cache warning for this party_master if it changed
+        if current_pm != last_pm and not hide_warning:
+            warnings = unposted_voucher.get(current_pm, [])
+            if warnings:
+                msg = _("Unposted Vouchers:")
+                for d in warnings:
+                    if d.get("draft_count"):
+                        msg += f'{_(d.get("doctype"))}: {d.get("draft_count")} {_("Draft")} '
+                    if d.get("cancelled_count"):
+                        msg += f'{d.get("cancelled_count")} {_("Cancelled")} '
+                cached_warning_row = {
+                    "party_name":party.get('party_name'),
+                    "party_master": current_pm,
+                    "remarks": msg.strip(),
+                    "warning":1,
+                }
+
+        last_pm = current_pm
+
+    # Final flush of last warning
+    if cached_warning_row:
+        data.append(cached_warning_row)
+
+    return data
 
 def query_gl(filters, dimension):
     import pypika.terms

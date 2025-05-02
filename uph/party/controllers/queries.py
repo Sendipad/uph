@@ -530,3 +530,233 @@ def _get_roles_for_pm(party_master):
     if query:
         roles.extend(query)
     return roles
+
+@frappe.whitelist()
+def test(company):
+    return get_counts_of_unposted_or_cancelled_vouchers(company,party_master=['132000012','130100002'])
+
+@frappe.whitelist()
+def get_counts_of_unposted_or_cancelled_vouchers(company, party_master=None, is_party_gl_effected=0):
+    import json
+
+    if not company:
+        return []
+
+    db_type = frappe.db.db_type  # 'mariadb' or 'postgres'
+
+    def quote(name):
+        return f'"{name}"' if db_type == "postgres" else f'`{name}`'
+
+    # Safely normalize party_master
+    if not party_master:
+        party_master = []
+    elif isinstance(party_master, (str, int)):
+        party_master = [str(party_master)]
+    elif isinstance(party_master, str) and party_master.strip().startswith("["):
+        try:
+            party_master = json.loads(party_master)
+        except Exception:
+            party_master = [party_master]
+
+    gl_voucher_type = get_party_master_settings_not_single_document_types_as_dict()
+
+    gl_voucher_type_as_parent_child = {
+        v["parent_doctype"]: v["document_type"]
+        for v in gl_voucher_type.values()
+        if v.get("parent_doctype") and v.get("document_type")
+    }
+
+    if is_party_gl_effected:
+        gl_voucher_type_as_parent_child = {
+            v["parent_doctype"]: v["document_type"]
+            for v in gl_voucher_type.values()
+            if v.get("is_party_gl_effected") == 1
+        }
+
+    all_queries = []
+    all_values = []
+
+    if party_master:
+        placeholder_string = ", ".join(["%s"] * len(party_master))
+        party_filter = f"AND party_master IN ({placeholder_string})"
+    else:
+        party_filter = "AND party_master IS NOT NULL"
+
+    for parent, child in gl_voucher_type_as_parent_child.items():
+        is_parent = parent == child
+        parent_table = quote(f"tab{parent}")
+        child_table = quote(f"tab{child}")
+
+        if is_parent:
+            query = f"""
+                SELECT
+                    party_master,
+                    '{parent}' AS doctype,
+                    SUM(IF(docstatus = 0, 1, 0)) AS draft_count,
+                    SUM(IF(docstatus = 2 AND name NOT IN (
+                        SELECT amended_from FROM {parent_table} WHERE amended_from IS NOT NULL
+                    ), 1, 0)) AS cancelled_count
+                FROM {parent_table}
+                WHERE company = %s {party_filter}
+                GROUP BY party_master
+                HAVING draft_count > 0 OR cancelled_count > 0
+            """
+            all_queries.append(query)
+            all_values.append([company] + party_master)
+
+        else:
+            query = f"""
+                SELECT
+                    child.party_master,
+                    '{parent}' AS doctype,
+                    SUM(IF(parent.docstatus = 0, 1, 0)) AS draft_count,
+                    SUM(IF(parent.docstatus = 2 AND parent.name NOT IN (
+                        SELECT amended_from FROM {parent_table} WHERE amended_from IS NOT NULL
+                    ), 1, 0)) AS cancelled_count
+                FROM {child_table} AS child
+                JOIN {parent_table} AS parent ON parent.name = child.parent
+                WHERE parent.company = %s {party_filter}
+                GROUP BY child.party_master
+                HAVING draft_count > 0 OR cancelled_count > 0
+            """
+            all_queries.append(query)
+            all_values.append([company] + party_master)
+
+    union_query = "\nUNION ALL\n".join(all_queries)
+
+    flattened_values = []
+    for vals in all_values:
+        flattened_values.extend(vals)
+
+    result = frappe.db.sql(union_query, flattened_values, as_dict=True)
+    return result
+
+
+
+@frappe.whitelist()
+def make_warning_for_not_submitted_voucher(party_master, as_count=False):
+    # Get document type configurations
+    gl_voucher_type = get_party_master_settings_not_single_document_types_as_dict()
+
+    # Set of doctypes where GL effect is enabled
+    gl_effected_voucher = {
+        k.get('parent_doctype') for k in gl_voucher_type.values()
+        if k.get('is_party_gl_effected') == 1
+    }
+
+    # Get all draft and cancelled-but-not-amended documents for the party master
+    documents = _get_draft_and_cancelled_not_amended_documents(party_master)
+
+    result = {}
+
+    for d in documents:
+        party = d["party_master"]
+        doctype = d["doctype"]
+
+        if party not in result:
+            result[party] = {
+                "is_party_gl_effected": {},
+                "rest_voucher": {}
+            }
+
+        group = "is_party_gl_effected" if doctype in gl_effected_voucher else "rest_voucher"
+
+        if as_count:
+            result[party][group][doctype] = result[party][group].get(doctype, 0) + 1
+        else:
+            result[party][group].setdefault(doctype, []).append(d["name"])
+
+    return result
+
+@frappe.whitelist()
+def _get_draft_and_cancelled_not_amended_documents(party_master,company=None,period=None):
+    documents = get_party_master_settings_not_single_document_types_as_dict()
+
+    document_types = {
+        key: doc for key, doc in documents.items()
+        if key == doc.get('document_type')
+    }
+
+    queries = []
+    params = []
+
+    is_filtering = bool(party_master)
+    party_master = [party_master] if isinstance(party_master, str) else party_master or []
+
+    for doctype, meta in document_types.items():
+        is_child = doctype != meta.get('parent_doctype')
+        parent_doctype = meta.get('parent_doctype')
+        table = f"`tab{doctype}`"
+        parent_table = f"`tab{parent_doctype}`"
+        docname = "name" if not is_child else "parent as name"
+
+        # Amendment filtering
+        if not is_child:
+            amended_filter = f"""
+                AND name NOT IN (
+                    SELECT amended_from FROM {table} WHERE amended_from IS NOT NULL
+                )
+            """
+        else:
+            amended_filter = f"""
+                AND parent NOT IN (
+                    SELECT amended_from FROM {parent_table} WHERE amended_from IS NOT NULL
+                    )
+            """
+
+        # Party filter
+        if is_filtering:
+            placeholders = ", ".join(["%s"] * len(party_master))
+            party_filter = f"AND party_master IN ({placeholders})"
+            local_params = party_master
+        else:
+            party_filter = "AND party_master IS NOT NULL"
+            local_params = []
+
+        query = f"""
+            SELECT {docname}, docstatus, party_master, '{parent_doctype}' AS doctype
+            FROM {table}
+            WHERE (
+                {("docstatus = 0 OR (docstatus = 2 " + amended_filter + ")")}
+            )
+            {party_filter}
+        """
+        queries.append(query)
+        params.extend(local_params)
+
+    if not queries:
+        return []
+
+    full_query = " UNION ALL ".join(queries) + " ORDER BY party_master, doctype"
+    return frappe.db.sql(full_query, params, as_dict=True)
+
+
+def get_party_master_settings_not_single_document_types_as_dict():
+    key = uph.make_key("Party Master Settings.document_types")
+    result = frappe.cache.hget(key, "not_single_as_dict")
+    if result:
+        return result
+
+    result = {}
+    document_types = frappe.get_all(
+        'Party Master Settings DocType',
+        filters={'parent': 'Party Master Settings'},
+        fields=[
+            'document_type', 'parent_doctype', 'enabled', 'document_categories',
+            'reqd', 'is_dynamic_party_type', 'party_fieldname', 'party_type',
+            'party_master_custom_field','is_party_gl_effected'
+        ]
+    )
+
+    for d in document_types:
+        meta = frappe.get_meta(d.get('parent_doctype'))
+        same = d.get('document_type') == d.get('parent_doctype')
+        if not meta.issingle:
+            result[d['document_type']] = d
+            if not same:
+                result[d['parent_doctype']] = d
+
+    frappe.cache.hset(key, "not_single_as_dict", result)
+    return result
+
+        

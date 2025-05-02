@@ -18,7 +18,8 @@
   "party_fieldname",
   "party_type",
   "party_type_fieldname",
-  "party_master_custom_field"
+  "party_master_custom_field",
+  "is_party_gl_effected"
  ],
  "fields": [
   {
@@ -120,13 +121,20 @@
   {
    "fieldname": "column_break_brmi",
    "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Check If this DocType has Direct effect on Party General Ledger",
+   "fieldname": "is_party_gl_effected",
+   "fieldtype": "Check",
+   "label": "Is Party GL effected"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-04-06 22:37:32.584548",
+ "modified": "2025-05-01 21:59:06.313328",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party Master Settings DocType",

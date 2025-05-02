@@ -76,6 +76,10 @@ frappe.query_reports["Party Account Statement"] = {
 		  label: __("Display Options"),
 		  fieldtype: "MultiSelectList",
 		  options: [
+			{label:__("Hide Warnings Message"),
+				description:__("Will Hide Warnings Message about Unposted Vouchers"),
+				value:"Hide Warnings Message",
+			},
 			{
 			  label: __("Show Cancelled Entries"),
 			  description: __("Will show cancelled GL Entry"),

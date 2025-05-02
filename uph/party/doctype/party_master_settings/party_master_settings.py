@@ -7,6 +7,7 @@ from uph.party.controllers.party import (on_update_document_types_clear_cache)
 import frappe
 from frappe import _
 from frappe.model.document import Document
+import uph
 
 
 class PartyMasterSettings(Document):
@@ -29,6 +30,8 @@ class PartyMasterSettings(Document):
 		self.validate_document_types()
 		self.validate_party_master_fields_options()
 	def on_update(self):
+		frappe.cache.delete_key(uph.make_key(f"{self.doctype}.party_types"))
+		frappe.cache.delete_key(uph.make_key(f"{self.doctype}.document_types"))
 		self.create_pm_fields_on_party_doctype()
 		self.sync_update_to_doctype_fields()
 

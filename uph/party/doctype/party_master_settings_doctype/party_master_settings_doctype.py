@@ -19,6 +19,7 @@ class PartyMasterSettingsDocType(Document):
 		document_type: DF.Link
 		enabled: DF.Check
 		is_dynamic_party_type: DF.Check
+		is_party_gl_effected: DF.Check
 		is_system_generated: DF.Check
 		parent: DF.Data
 		parent_doctype: DF.Link | None
