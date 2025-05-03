@@ -241,7 +241,7 @@ frappe.query_reports["Party Account Statement"] = {
 	  "formatter": function(value, row, column, data, default_formatter) {
 			value = default_formatter(value, row, column, data);
 			if (column.fieldname == "voucher_subtype" && data && data.voucher_subtype) {
-				value = __(value);
+				value = __(value,"Voucher Type");
 			}
 			if (column.fieldname == "party_type" && data && data.party_type) {
 				value = __(value);
