@@ -202,6 +202,7 @@ def get_data(filters, party_master):
                     new_row = {
                         **entry,
                         "balance": balance,
+                        #"voucher_subtype":_(entry.get('voucher_subtype'),context="Voucher Type"),
                         "balance_in_cc": balance_in_cc,
                         "party_master": party_master,
                         "party_name": party_name,

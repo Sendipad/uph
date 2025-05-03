@@ -267,4 +267,8 @@ frappe.query_reports["Party Account Statement"] = {
 	};
 	
 erpnext.utils.add_dimensions("Party Account Statement", 9);
-	
+
+
+__("Pay", "Voucher Type");
+__("Receive", "Voucher Type");
+__("Journal Entry", "Voucher Type");

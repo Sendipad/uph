@@ -64,7 +64,7 @@
   {% if (data[i].party_master !== current_party_master) { %}
     {% if (current_party_master !== null) { %}
       </tbody></table>
-      <p class="text-right text-muted">وقت طباعة التقرير : {%=
+      <p class="text-right text-muted">وقت الطباعه  : {%=
         frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>
       {% if (data[i - 1] && data[i - 1].warning) { %}
         <div class="alert-warning">
