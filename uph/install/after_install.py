@@ -5,7 +5,7 @@ from frappe import _
 from uph.party.utils import get_transactional_doctype_list_to_add_pm,get_party_field_in_doctype
 from uph.party.doctype.party_master_settings.party_master_settings import setup_initial_document_type,setup_party_master_mapping_fields
 def after_install():
-    setup_initial_document_type()
+    setup_initial_document_types()
     setup_party_master_mapping_fields()
     
 def post_install():

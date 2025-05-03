@@ -8,6 +8,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 import uph
+from frappe.core.doctype.has_role.has_role import HasRole
 
 
 class PartyMasterSettings(Document):
@@ -150,11 +151,12 @@ class PartyMasterSettings(Document):
 			
 			
 	def validate_document_types(self):
+
 		self.flags.document_types_same=False
 		if self.is_child_table_same('document_types'):
 			self.flags.document_types_same=True
 			return 
-		if not frappe.session.user == "Administrator" and not frappe.has_role("System Manager"):
+		if frappe.session.user != "Administrator" and "System Manager" not in frappe.get_roles():
       			frappe.throw(_("Only System Managers are allowed to update this settings."), frappe.PermissionError)
 		doctypes = set()
 		for d in self.document_types:
@@ -380,7 +382,10 @@ def get_default_doctypes(doctype=None,field_properity=None):
     if field_properity:
         return doctype.get(field_properity,None)
     return doctype
-def setup_initial_document_type(force_reset=False, update_exist=True):
+def setup_initial_document_types():
+    doctypes=[
+		{""}
+	]
     docs=get_default_doctypes()
     settings = frappe.get_doc('Party Master Settings')
     for doc, options in docs.items():

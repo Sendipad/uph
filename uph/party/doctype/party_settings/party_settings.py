@@ -24,9 +24,9 @@ class PartySettings(Document):
 		supplier_naming_rule: DF.Literal["Auto Name", "Supplier Name", "Naming Series", "Party Master", "Party Master-Default Currency"]
 	# end: auto-generated types
 	
-	def validate_document_type(self):
+	def validate_document_types(self):
 		if not self.document_type:
-			setup_initial_document_type(self, force_reset=True)
+			setup_initial_document_type()
 
 		doctypes = set()
 

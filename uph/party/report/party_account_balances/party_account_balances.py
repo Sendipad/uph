@@ -29,7 +29,7 @@ def execute(filters=None):
     return columns, data
 
 def get_data(filters):
-    GL=Doctype('GL Entry')
+    GL=DocType('GL Entry')
 
 def get_columns(fields, company_currency):
     columns = [

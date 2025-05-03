@@ -261,7 +261,8 @@ def get_data(filters, party_master):
                     "debit" if open_balance > 0 else "credit": abs(open_balance),
                     **party,
                     "remarks": _("Opening Balance"),
-                    "is_opening": 1,
+                    "rowtype": "Opening Balance",
+                    "status":_("Dr") if open_balance>0 else _("Cr")
                 }
             )
             data.append(row)
@@ -281,10 +282,11 @@ def get_data(filters, party_master):
                     "debit": totals.get("total_debit", 0),
                     "credit": totals.get("total_credit", 0),
                     **party,
-                    "remarks": _("Current Period Totals"),
+                    "remarks": _("Current Period Total"),
                     "current_balance": totals.get("debit", 0) - totals.get("credit", 0),
                     "balance": total_balance,
                     "opening": open_balance,
+                    "rowtype":"Current Period Total"
                 }
             )
 
@@ -294,6 +296,9 @@ def get_data(filters, party_master):
                 "credit" if total_balance < 0 else "debit": abs(total_balance),
                 "remarks": _("Closing (Opening + Total)"),
                 "bold": 1,
+                "rowtype":"Closing Balance",
+                "status":_("Dr") if total_balance>0 else _("Cr"),
+                "balance": total_balance,
             }
             if filters.get("in_company_currency"):
                 closing_row[
@@ -305,7 +310,7 @@ def get_data(filters, party_master):
         if current_pm != last_pm and not hide_warning:
             warnings = unposted_voucher.get(current_pm, [])
             if warnings:
-                msg = _("Unposted Vouchers:")
+                msg = _("On Hold Vouchers:")
                 for d in warnings:
                     if d.get("draft_count"):
                         msg += f'{_(d.get("doctype"))}: {d.get("draft_count")} {_("Draft")} '
