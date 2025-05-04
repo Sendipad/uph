@@ -233,8 +233,9 @@ class PartyMasterSettings(Document):
     				frappe.db.add_index(d, ['party_master'])
 
 
+
 def create_party_master_on_document_types(document_types=None):
-    cf = {
+    base_cf = {
         'fieldname': 'party_master',
         'fieldtype': 'Link',
         'options': 'Party Master',
@@ -245,66 +246,90 @@ def create_party_master_on_document_types(document_types=None):
         'in_standard_filter': 1,
         'bold': 1,
         'allow_in_quick_entry': 1,
-        'insert_after': 'company',
         'search_index': 1,
-        'read_only_depends_on': '',
         'read_only': 0,
         'fetch_if_empty': 0,
-        'fetch_from': '',
-        'depends_on': '',
-        'mandatory_depends_on': '',
         'allow_on_submit': 0,
-        #'is_system_generated':1,
     }
+    def get_safe_insert_after(fieldnames, meta, preferred_fields):
+        for fname in preferred_fields:
+            df = meta.get_field(fname)
+            if df and not frappe.db.exists("Custom Field", {"dt": meta.name, "fieldname": fname}):
+                return fname
+        for df in meta.fields:
+            if not frappe.db.exists("Custom Field", {"dt": meta.name, "fieldname": df.fieldname}):
+                return df.fieldname
+    return "company"
 
     setting = frappe.get_doc('Party Master Settings')
-    all_doc_types = {x.get('document_type') for x in setting.document_types}
+    all_doc_types = {row.document_type for row in setting.document_types}
 
     if document_types and isinstance(document_types, str) and document_types in all_doc_types:
         document_types = [document_types]
-
-    if not document_types:
+    elif not document_types:
         document_types = all_doc_types
 
     custom_fields = {}
 
-    for d in document_types:
-        meta = frappe.get_meta(d)
+    for doctype in document_types:
+        meta = frappe.get_meta(doctype)
         fieldnames = [
             df.fieldname for df in meta.fields
             if df.fieldtype not in ("Column Break", "Section Break", "Tab Break")
         ]
 
-        party_fieldname = frappe.get_doc(
-            'Party Master Settings DocType',
-            {'document_type': d, 'parent': 'Party Master Settings'},
-            'party_fieldname'
-        ).party_fieldname
-        custom_field = cf.copy()
-        insert_after = None
-        if meta.issingle:
-            custom_field.update({
-				'in_list_view': 0,
-				'in_standard_filter': 0,
-				'bold': 0,
-				'allow_in_quick_entry': 0,
-				'search_index': 0,
-			})
-        if party_fieldname and party_fieldname in fieldnames:
+        # Avoid inserting after a deleted or custom field
+        if 'party_master' in fieldnames:
+            fieldnames.remove('party_master')
+
+        # Get settings for this doctype
+        setting_row = next(
+            (row for row in setting.document_types if row.document_type == doctype),
+            None
+        )
+        party_fieldname = setting_row.party_fieldname if setting_row else None
+        party_type_fieldname = setting_row.get('party_type_fieldname') if setting_row else None
+
+        # Build insert_after preference list
+        preferred_fields = []
+        if party_type_fieldname and party_type_fieldname in fieldnames:
+            idx = fieldnames.index(party_type_fieldname)
+            if idx > 0:
+                preferred_fields.append(fieldnames[idx - 1])
+        elif party_fieldname and party_fieldname in fieldnames:
             idx = fieldnames.index(party_fieldname)
             if idx > 0:
-                prev_field = fieldnames[idx - 1]
-                if prev_field == "party_type" and idx > 1:
-                    insert_after = fieldnames[idx - 2]
-                else:
-                    insert_after = prev_field
-        if not insert_after and 'naming_series' in fieldnames:
-            insert_after = 'naming_series'
-        custom_field["insert_after"] = insert_after
-        custom_fields[d] = custom_field
+                preferred_fields.append(fieldnames[idx - 1])
+
+        preferred_fields += ['naming_series', 'company']
+
+        insert_after = get_safe_insert_after(fieldnames, meta, preferred_fields)
+
+        # Build custom field
+        custom_field = base_cf.copy()
+        custom_field['insert_after'] = insert_after
+
+        if meta.issingle:
+            custom_field.update({
+                'in_list_view': 0,
+                'in_standard_filter': 0,
+                'bold': 0,
+                'allow_in_quick_entry': 0,
+                'search_index': 0,
+            })
+
+        custom_fields[doctype] = custom_field
 
     if custom_fields:
         create_custom_fields(custom_fields, update=True)
+        for dt in custom_fields:
+            docs=frappe.get_all('DocType Layout', {'document_type':dt})
+            if docs:
+                for d in docs:
+                    doc=frappe.get_doc('DocType Layout',d.name)
+                    doc.sync_fields()
+                    doc.save()
+                    
 
 
 def create_custom_party_master_field(docfield, update=False, field_properity=None):

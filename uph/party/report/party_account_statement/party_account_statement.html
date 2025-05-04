@@ -64,14 +64,14 @@
   {% if (data[i].party_master !== current_party_master) { %}
     {% if (current_party_master !== null) { %}
       </tbody></table>
-      <p class="text-right text-muted">وقت الطباعه  : {%=
-        frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>
+     
       {% if (data[i - 1] && data[i - 1].warning) { %}
         <div class="alert-warning">
           {%= data[i - 1].remarks %}
         </div>
       {% } %}
-
+      <p class="text-right text-muted">وقت الطباعه  : {%=
+        frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>
       <div style="page-break-before: always;"></div>
       <h2 class="title">{%= __("Statement of Account") %}</h2>
       {% if (filters.cost_center || filters.branch) { %}
