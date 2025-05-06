@@ -68,5 +68,11 @@ frappe.query_reports["Chronological Party Ledger"] = {
 		}
 	
 		return value;
+	},
+	onload: function (report) {
+		report.page.add_inner_button(__("Party Account Statement"), function () {
+			var filters = report.get_values();
+			frappe.set_route("query-report", "Party Account Statement", { company: filters.company ,party_master: [filters.party_master]});
+		});
 	}
 };

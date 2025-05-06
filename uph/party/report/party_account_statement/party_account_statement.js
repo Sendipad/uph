@@ -270,10 +270,15 @@ frappe.query_reports["Party Account Statement"] = {
 			return value;
 		},
 		onload: function (report) {
+			report.page.add_inner_button(__("Chronological Party Ledger"), function () {
+				var filters = report.get_values();
+				frappe.set_route("query-report", "Chronological Party Ledger", { company: filters.company,party_master: filters.party_master, });
+			},__("View"));
 			report.page.add_inner_button(__("Account Balance Summary"), function () {
 				var filters = report.get_values();
 				frappe.set_route("query-report", "Party Account Balances", { company: filters.company,party_master: filters.party_master, });
-			});
+			},__("View"));
+		
 		},
 	
 	

@@ -255,7 +255,11 @@ frappe.query_reports["Party Account Balances"] = {
 		onload: function (report) {
 			report.page.add_inner_button(__("Party Account Statement"), function () {
 				var filters = report.get_values();
-				frappe.set_route("query-report", "Party Account Statement", { company: filters.company });
+				frappe.set_route("query-report", "Party Account Statement", { company: filters.company ,party_master: filters.party_master, });
+			},__("View"));
+			report.page.add_inner_button(__("Chronological Party Ledger"), function () {
+				var filters = report.get_values();
+				frappe.set_route("query-report", "Chronological Party Ledger", { company: filters.company,party_master: filters.party_master, });
 			},__("View"));
 		},
 	
