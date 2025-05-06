@@ -272,6 +272,13 @@ frappe.ui.form.on("Party Master", {
     
 
 
+      frm.add_custom_button(__("Account Statement"),()=>{
+        frappe.route_options = {
+          party_master: frm.doc.name,
+        };
+        frappe.set_route("query-report", "Party Account Statement");
+      },__("View"));
+
       frm.add_custom_button(__("Parties"),(doc)=>{
         let child_table=get_child_table();
         let parties_dialog_fields = [
@@ -306,7 +313,7 @@ frappe.ui.form.on("Party Master", {
             }
           }
         });
-      });
+      },__('View'));
     }
     frm.events.update_button(frm);
     frm.set_query("default_customer", function (doc) {

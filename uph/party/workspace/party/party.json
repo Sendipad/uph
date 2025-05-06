@@ -36,7 +36,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Reports",
-   "link_count": 2,
+   "link_count": 3,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -60,9 +60,19 @@
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Timeline Account Statement",
+   "link_count": 0,
+   "link_to": "Chronological Party Ledger",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2025-04-30 14:53:41.745232",
+ "modified": "2025-05-06 22:12:27.021868",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party",

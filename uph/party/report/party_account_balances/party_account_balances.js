@@ -18,24 +18,15 @@ frappe.query_reports["Party Account Balances"] = {
 			fieldtype: "MultiSelectList",
 			options: "Party Master",
 			get_data: (txt) => {
-			  let group = frappe.query_report.get_filter_value("is_group");
-			  return frappe.db.get_link_options("Party Master", txt, {
-				is_group: group,
-			  });
-			},
-			on_change: function () {
-			  let parties = frappe.query_report.get_filter_value("party_master") || [];
+				const is_group = frappe.query_report.get_filter_value("is_group");
+				const filters = {};
+				if (is_group !== undefined && is_group !== null) {
+				  filters.is_group = is_group ? 1 : 0;
+				}
+				return frappe.db.get_link_options("Party Master", txt, filters);
+			  },
 			  
-			  if (parties.length === 0) {
-				frappe.query_report.set_filter_value("party_name", "");
-			  } else {
-				frappe.db.get_value('Party Master', parties[0], 'party_name', (value) => {
-				  if (value && value.party_name) {
-					frappe.query_report.set_filter_value("party_name", value.party_name);
-				  }
-				});
-			  }
-			},
+			
 		  },
 		  
 	
@@ -47,35 +38,25 @@ frappe.query_reports["Party Account Balances"] = {
 		  default: frappe.datetime.get_today(),
 		  reqd: 1,
 		},
-			
-		
-		
-	
+
 		{
-		  fieldname: "group_by",
-		  label: __("Group by"),
+		  fieldname: "ordered_as",
+		  label: __("Order Balance:"),
 		  fieldtype: "Select",
 		  options: [
 			"",
 			{
-			  label: __("Default ordering"),
-			  description: __("Party Master --> Party & Party Type->Posting Date"),
-			  value: "Default",
+			  label: __("Vertical"),
+			  description: __("Will show Party Master By Role balances in all Currencies in a vertical format"),
+			  value: "Vertical",
 			},
 			{
-			  label: __("Group by Voucher (Consolidated)"),
-			  value: "Group by Voucher (Consolidated)",
+			  label: __("Horizontal"),
+			  value: "Horizontal",
 			},
-			{
-			  label: __("Group by Account"),
-			  value: "Group by Account",
-			},
-			{
-			  label: __("Group by Party"),
-			  value: "Group by Party",
-			},
+			
 		  ],
-		  default: "Group by Voucher (Consolidated)",
+		  default: "Vertical",
 		},
 	
 		{
@@ -252,35 +233,30 @@ frappe.query_reports["Party Account Balances"] = {
 
 	  ],
 	
-	  "formatter": function(value, row, column, data, default_formatter) {
-			value = default_formatter(value, row, column, data);
-			if (column.fieldname == "voucher_subtype" && data && data.voucher_subtype) {
-				value = __(value);
-			}
-			if (column.fieldname == "party_type" && data && data.party_type) {
-				value = __(value);
-			}
-			if (data =={}) {
-				value = "";
-	
-			}
-			if (data && data.bold) {
-				value = "<span style='font-size:bold'>" + value.bold() + "</span>";
-	
-			}
-			if (data && data.is_opening==1){
-				value = "<span style='color:blue'>" + value + "</span>";
-			}
-			if (data && data.ending){
-				value = "<span style='color:red'>" + value + "</span>";
-			}
-			return value;
-		},
+"formatter": function(value, row, column, data, default_formatter) {
+    if (column.fieldtype === "Currency") {
+        const currency = column.fieldname;
+        const symbol = frappe.model.get_value(":Currency", currency, "symbol") || currency;
+        const formatted = format_currency(value, currency);
+
+        if (value > 0) {
+            return `<span style="color:red;">&#9650;</span> <b>${formatted}</b>`;
+        } else if (value < 0) {
+            return `<span style="color:green;">&#9660;</span> ${formatted}`;
+        } else {
+            return "0";
+        }
+    }else if(column.fieldname==='party_type'){
+		return __(value);
+	}
+
+    return default_formatter(value, row, column, data);
+},
 		onload: function (report) {
 			report.page.add_inner_button(__("Party Account Statement"), function () {
 				var filters = report.get_values();
 				frappe.set_route("query-report", "Party Account Statement", { company: filters.company });
-			});
+			},__("View"));
 		},
 	
 	};

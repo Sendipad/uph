@@ -226,6 +226,54 @@ def usage_counts_on_reference_doctype(doctype,cached=True):
        result = [row[0] for row in top_used] if top_used else []
        frappe.cache.set_value(key, result, expires_in_sec=86400)
     return result or []
+
+
+def get_leaf_party_master_list_from_any_node(filters):
+    if not filters or not filters.get("party_master"):
+        return None
+    group_party_master=frappe.db.get_all('Party Master',filters={'is_group':1,'disabled':0},pluck='name')
+    party_master=[]
+    parents=set()
+    
+    if isinstance(filters.get('party_master'),str) :
+        filters['party_master']=[party_master]
+    for p in filters.get('party_master'):
+        if p not in group_party_master:
+            party_master.append(p)
+            continue
+        parents.add(p)
+    if not parents:
+        return party_master
+
+    def collect_all_group_children(current_parents):
+        found_new = True
+        while found_new:
+            found_new = False
+            child_groups = frappe.db.get_all(
+                "Party Master",
+                filters={
+                    "parent_party_master": ["in", list(current_parents)],
+                    "is_group": 1,
+                },
+                fields=["name"],
+            )
+            for child in child_groups:
+                if child.name not in current_parents:
+                    current_parents.add(child.name)
+                    found_new = True
+        return current_parents
+
+    all_group_names = collect_all_group_children(parents)
+
+    # Now fetch all non-group (leaf) parties under any of the group names collected
+    party_master.extend(frappe.db.get_all(
+        "Party Master",
+        filters={"parent_party_master": ["in", list(all_group_names)], "is_group": 0},
+        pluck="name",
+    ))
+
+    return party_master
+
 @frappe.whitelist()
 def get_party_master_parties(party_master, party_type=None,cached=True):
     
@@ -268,12 +316,14 @@ def get_roles_for_pm(party_master):
         return []
     
     # Check if roles are already cached
-    key = uph.get_cached_key('roles')
-    roles = frappe.cache.get_value(key, party_master)
+    key = uph.make_key('Party Master.roles')
+    roles = frappe.cache.hget(key, party_master)
     if not roles:
         roles=_get_roles_for_pm(party_master)
-        uph.update_cached('roles',party_master,roles)
+        frappe.cache.hset(key,party_master,roles)
     return roles
+
+
 @frappe.whitelist()
 def get_party_master_parties_db(party_master, all_roles=False, roles=None):
     if not all_roles and not roles and isinstance(party_master, str):
@@ -288,7 +338,7 @@ def get_party_master_parties_db(party_master, all_roles=False, roles=None):
     if queries:
         final_query = queries[0]
         for q in queries[1:]:
-            final_query = final_query.union(q)
+            final_query = final_query.union_all(q)  # Use union_all for UNION ALL
 
         final_query = (
             final_query
@@ -759,4 +809,3 @@ def get_party_master_settings_not_single_document_types_as_dict():
     frappe.cache.hset(key, "not_single_as_dict", result)
     return result
 
-        

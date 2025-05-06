@@ -24,24 +24,31 @@ frappe.query_reports["Party Account Statement"] = {
 			fieldtype: "MultiSelectList",
 			options: "Party Master",
 			get_data: (txt) => {
-			  let group = frappe.query_report.get_filter_value("is_group");
-			  return frappe.db.get_link_options("Party Master", txt, {
-				is_group: group,
-			  });
-			},
-			on_change: function () {
-			  let parties = frappe.query_report.get_filter_value("party_master") || [];
+				const is_group = frappe.query_report.get_filter_value("is_group");
+				const filters = {};
+				if (is_group !== undefined && is_group !== null) {
+				  filters.is_group = is_group ? 1 : 0;
+				}
+				return frappe.db.get_link_options("Party Master", txt, filters);
+			  },			  
+			  on_change: function () {
+				let parties = frappe.query_report.get_filter_value("party_master") || [];
 			  
-			  if (parties.length === 0) {
-				frappe.query_report.set_filter_value("party_name", "");
-			  } else {
-				frappe.db.get_value('Party Master', parties[0], 'party_name', (value) => {
-				  if (value && value.party_name) {
-					frappe.query_report.set_filter_value("party_name", value.party_name);
+				if (parties.length === 0) {
+				  frappe.query_report.set_filter_value("party_name", "");
+				} else {
+				  let party = parties[0];
+				  if (typeof party === "object" && party.value) {
+					party = party.value;
 				  }
-				});
-			  }
-			},
+			  
+				  frappe.db.get_value('Party Master', party, 'party_name', (value) => {
+					if (value && value.party_name) {
+					  frappe.query_report.set_filter_value("party_name", value.party_name);
+					}
+				  });
+				}
+			  },
 		  },
 		  
 		{
@@ -261,6 +268,12 @@ frappe.query_reports["Party Account Statement"] = {
 				value = "<span style='color:red'>" + value + "</span>";
 			}
 			return value;
+		},
+		onload: function (report) {
+			report.page.add_inner_button(__("Account Balance Summary"), function () {
+				var filters = report.get_values();
+				frappe.set_route("query-report", "Party Account Balances", { company: filters.company,party_master: filters.party_master, });
+			});
 		},
 	
 	

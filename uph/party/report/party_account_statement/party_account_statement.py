@@ -1,5 +1,8 @@
 # Copyright (c) 2025, Abdo Mohammed Ruzaqi and contributors
 # For license information, please see license.txt
+from collections import defaultdict
+from datetime import datetime
+
 import frappe
 from uph.party.controllers.queries import (
     get_party_master_parties,
@@ -24,7 +27,9 @@ def execute(filters=None):
     party_master = get_party_master(filters)
     columns = get_columns(filters)
     data = get_data(filters, party_master)
-    return columns, data, None, None
+    chart =get_timeline_chart_by_currency(data,from_date=filters.get('from_date'))
+
+    return columns, data, None, chart
 
 
 def validate_set_filters(filters):
@@ -81,7 +86,8 @@ def validate_set_filters(filters):
 def get_party_master(filters):
     if not filters or not filters.get("party_master"):
         return None
-
+    
+    group_party_master=frappe.db.get_all('Party Master',filters={'is_group':1,'disabled':0},pluck='name')
     if not filters.get("is_group"):
         return (
             [filters["party_master"]]
@@ -125,6 +131,88 @@ def get_party_master(filters):
 
     return leaf_parties
 
+def get_timeline_chart_by_currency(data, from_date=None):
+
+    # Structure: currency -> month -> net change
+    currency_month_map = defaultdict(lambda: defaultdict(float))
+    all_months = set()
+
+    if isinstance(from_date, str):
+        from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
+
+    for entry in data:
+        currency = entry.get("currency")
+        if not currency:
+            continue
+
+        raw_date = entry.get("posting_date")
+        if not raw_date and entry.get('rowtype') == "Opening Balance":
+            raw_date = from_date
+        if not raw_date:
+            continue
+
+        if isinstance(raw_date, str):
+            date_obj = datetime.strptime(raw_date, "%Y-%m-%d").date()
+        else:
+            date_obj = raw_date
+
+        month = date_obj.strftime("%Y-%m")
+        all_months.add(month)
+
+        change = entry.get("debit", 0) - entry.get("credit", 0)
+        currency_month_map[currency][month] += change
+
+    sorted_months = sorted(all_months)
+    labels = sorted_months
+
+    datasets = []
+
+    for currency, month_map in currency_month_map.items():
+        cumulative_balance = 0
+        line_values = []
+        debit_values = []
+        credit_values = []
+
+        for month in sorted_months:
+            # Add balance before applying this month's change
+            line_values.append(round(cumulative_balance, 2))
+
+            change = month_map.get(month, 0)
+            if change >= 0:
+                debit_values.append(round(change, 2))
+                credit_values.append(0)
+            else:
+                debit_values.append(0)
+                credit_values.append(round(abs(change), 2))
+
+            cumulative_balance += change
+
+        datasets.extend([
+            {
+                "name": _("{0} - {1}").format(_(currency),_('Debit')),
+                "values": debit_values,
+                "chartType": "bar"
+            },
+            {
+                "name": _("{0} - {1}").format(_(currency),_('Credit')),
+                "values": credit_values,
+                "chartType": "bar"
+            },
+            {
+                "name": _("{0} - {1}").format(_(currency),_('Balance')),
+                "values": line_values,
+                "chartType": "line"
+            }
+        ])
+
+    return {
+        "data": {
+            "labels": labels,
+            "datasets": datasets
+        },
+        "type": "axis-mixed",
+        "colors": ["#F582E8", "#A64AC9", "#00BFFF"] * len(currency_month_map)
+    }
 
 def get_data(filters, party_master):
     data = []
@@ -154,10 +242,11 @@ def get_data(filters, party_master):
     }
 
     # Group entries by party
-    party_entries = {}
+        
+    party_entries = defaultdict(list)
     for entry in entries:
-        party_entries.setdefault((entry.get("party"), entry.get("party_type")), []).append(entry)
-
+        party_entries[(entry.get("party"), entry.get("party_type"))].append(entry)
+        
     group_by_vn = filters.get("group_by") == "Group by Voucher (Consolidated)"
     hide_equal = "Hide Equals Voucher" in filters.get("display_options", [])
     hide_warning= "Hide Warnings Message" in filters.get("display_options", [])
@@ -345,49 +434,53 @@ def query_gl(filters, dimension):
     from_date = filters.get("from_date")
     period_condition = GL.posting_date.between(from_date, filters.get("to_date"))
 
-    def get_totals_opening_and_current():
+    def get_totals_opening_and_current(base_conditions):
+        """
+        Optimized function to fetch opening and current totals with improved SQL query performance.
+        """
         total_fields = [
             GL.party_type,
             GL.party,
             fn.Sum(GL.debit_in_account_currency).as_("total_debit"),
             fn.Sum(GL.credit_in_account_currency).as_("total_credit"),
             (
-                fn.Sum(GL.debit_in_account_currency)
-                - fn.Sum(GL.credit_in_account_currency)
+                fn.Sum(GL.debit_in_account_currency) - fn.Sum(GL.credit_in_account_currency)
             ).as_("balance"),
             GL.account_currency.as_("currency"),
         ]
+
         if filters.get("in_company_currency"):
-            total_fields.extend(
-                [
-                    fn.Sum(GL.debit).as_("debit_in_cc"),
-                    fn.Sum(GL.credit).as_("credit_in_cc"),
-                    (fn.Sum(GL.debit) - fn.Sum(GL.credit)).as_("balance_in_cc"),
-                ]
-            )
-        opening = (
+            total_fields.extend([
+                fn.Sum(GL.debit).as_("debit_in_cc"),
+                fn.Sum(GL.credit).as_("credit_in_cc"),
+                (fn.Sum(GL.debit) - fn.Sum(GL.credit)).as_("balance_in_cc"),
+            ])
+
+        # Opening totals query
+        opening_query = (
             frappe.qb.from_(GL)
             .select(*total_fields, ConstantColumn("Opening").as_("type"))
-            .where((conditions) & (GL.posting_date < from_date))
+            .where(base_conditions & (GL.posting_date < from_date))
             .groupby(GL.party, GL.party_type)
             .having(
-                fn.Sum(GL.debit_in_account_currency)
-                - fn.Sum(GL.credit_in_account_currency)
-                != 0
+                fn.Sum(GL.debit_in_account_currency) - fn.Sum(GL.credit_in_account_currency) != 0
             )
         )
-        between_period = (
+
+        # Current totals query
+        current_query = (
             frappe.qb.from_(GL)
             .select(*total_fields, ConstantColumn("Current").as_("type"))
-            .where((conditions) & (period_condition))
+            .where(base_conditions & (GL.posting_date.between(from_date, filters.get("to_date"))))
             .groupby(GL.party, GL.party_type)
             .having(
-                fn.Sum(GL.debit_in_account_currency)
-                - fn.Sum(GL.credit_in_account_currency)
-                != 0
+                fn.Sum(GL.debit_in_account_currency) - fn.Sum(GL.credit_in_account_currency) != 0
             )
         )
-        final_query = opening.union(between_period)
+
+        # Combine queries using UNION ALL for better performance
+        final_query = opening_query.union_all(current_query)
+
         return final_query.run(as_dict=True)
 
     if filters.party:
@@ -396,16 +489,18 @@ def query_gl(filters, dimension):
 
     if "show_cancelled_entries" not in display_options:
         conditions &= GL.is_cancelled == 0
-    if filters.get("voucher_no_not_in"):
-        conditions &= ~GL.voucher_no.isin(filters.get("voucher_no_not_in"))
-
+   
     if filters.get("account"):
         conditions &= GL.account.isin(filters.get("account"))
     for df in dimension:
         if filters.get(df):
             conditions &= GL[df].isin(filters.get(df))
 
-    total_query = get_totals_opening_and_current()
+    total_query = get_totals_opening_and_current(conditions)
+    entry_condition=conditions
+    if filters.get("voucher_no_not_in"):
+        entry_condition &= ~GL.voucher_no.isin(filters.get("voucher_no_not_in"))
+
     fields = [
         GL.name.as_("entry"),
         GL.debit_in_account_currency.as_("debit"),
@@ -436,7 +531,7 @@ def query_gl(filters, dimension):
         )
 
     gl_query = (
-        frappe.qb.from_(GL).select(*fields).where((conditions) & (period_condition))
+        frappe.qb.from_(GL).select(*fields).where((entry_condition) & (period_condition))
     )
     if filters.get("group_by") == "Group by Voucher (Consolidated)":
         gl_query.groupby(GL.party_type, GL.party, GL.voucher_type, GL.voucher_no)
@@ -605,3 +700,14 @@ def get_columns(filters):
         
 
     return columns
+
+
+def string_to_hsl(s):
+    # FNV-1a Hash (lightweight, consistent)
+    hash_val = 2166136261
+    for c in s:
+        hash_val ^= ord(c)
+        hash_val *= 16777619
+        hash_val &= 0xFFFFFFFF  # keep it 32-bit
+    hue = hash_val % 360
+    return f"hsl({hue}, 60%, 85%)"  # 85% lightness keeps it readable
