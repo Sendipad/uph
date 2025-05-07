@@ -1,4 +1,4 @@
-name: CI
+name: CI for Frappe App
 
 on:
   push:
@@ -6,107 +6,57 @@ on:
       - develop
   pull_request:
 
-concurrency:
-  group: develop-uph-${{ github.event.number }}
-  cancel-in-progress: true
-
 jobs:
-  tests:
+  test:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-    name: Server
 
     services:
-      redis-cache:
-        image: redis:alpine
-        ports:
-          - 13000:6379
-      redis-queue:
-        image: redis:alpine
-        ports:
-          - 11000:6379
       mariadb:
         image: mariadb:10.6
         env:
           MYSQL_ROOT_PASSWORD: root
         ports:
           - 3306:3306
-        options: --health-cmd="mariadb-admin ping" --health-interval=5s --health-timeout=2s --health-retries=3
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
 
     steps:
-      - name: Clone
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Setup Node
+      - name: Install Node.js and Yarn
         uses: actions/setup-node@v3
         with:
-          node-version: 18
-          check-latest: true
+          node-version: '18'
 
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/*requirements.txt', '**/pyproject.toml', '**/setup.py', '**/setup.cfg') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-            ${{ runner.os }}-
-
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: 'echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT'
-
-      - uses: actions/cache@v4
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-
-      - name: Install MariaDB Client
-        run: sudo apt-get update && sudo apt-get install -y mariadb-client
-
-      - name: Setup
+      - name: Install dependencies
         run: |
+          sudo apt update
+          sudo apt install -y redis-server xvfb libmysqlclient-dev
           pip install frappe-bench
-          bench init --skip-redis-config-generation --skip-assets --python "$(which python)" ~/frappe-bench
-          mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL character_set_server = 'utf8mb4'"
-          mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL collation_server = 'utf8mb4_unicode_ci'"
+          bench init frappe-bench --skip-redis --python python3.10
+          cd frappe-bench
 
-      - name: Install
-        working-directory: /home/runner/frappe-bench
-        run: |
-          pip install frappe==15.68.0 erpnext==15.60.2
-          bench get-app uph $GITHUB_WORKSPACE
-          bench setup requirements --dev
-          bench new-site --db-root-password root --admin-password admin test_site
-          bench --site test_site install-app uph
+          bench get-app --branch version-15 frappe https://github.com/frappe/frappe
+          bench get-app --branch version-15 erpnext https://github.com/frappe/erpnext
+          bench get-app --branch version-15 uph https://github.com/Sendipad/uph
+
+          bench new-site test.local --mariadb-root-password root --admin-password admin
+          bench --site test.local install-app frappe
+          bench --site test.local install-app erpnext
+          bench --site test.local install-app uph
+
           bench build
-        env:
-          CI: 'Yes'
-
-      - name: Enable Memory Overcommit
-        run: |
-          sysctl vm.overcommit_memory=1
-          echo 'vm.overcommit_memory=1' >> /etc/sysctl.conf
-          sysctl -p
-
-      - name: Verify Python and Node Modules
-        run: |
-          python -c "import frappe; import erpnext"
-          yarn --version
 
       - name: Run Tests
-        working-directory: /home/runner/frappe-bench
         run: |
-          bench --site test_site set-config allow_tests true
-          bench --site test_site run-tests --app uph
-        env:
-          TYPE: server
+          cd frappe-bench
+          bench --site test.local run-tests --app uph
