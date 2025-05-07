@@ -85,10 +85,18 @@ jobs:
           mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL character_set_server = 'utf8mb4'"
           mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL collation_server = 'utf8mb4_unicode_ci'"
 
-      - name: Install ERPNext
+      - name: Switch to Frappe Version 15
         working-directory: /home/runner/frappe-bench
         run: |
-          bench get-app erpnext --branch version-15  # Install ERPNext
+          # Switch to the correct Frappe version (15.x)
+          bench switch-to-branch version-15 frappe
+          bench upgrade --no-cache
+
+      - name: Install ERPNext Version 15
+        working-directory: /home/runner/frappe-bench
+        run: |
+          # Install ERPNext version 15 (ensure it matches Frappe version)
+          bench get-app erpnext --branch version-15
 
       - name: Install uph app
         working-directory: /home/runner/frappe-bench
