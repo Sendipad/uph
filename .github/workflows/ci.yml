@@ -67,18 +67,39 @@ jobs:
         id: yarn-cache-dir-path
         run: 'echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT'
 
-      - uses: actions/cache@v4
-        id: yarn-cache
+      - name: Cache yarn
+        uses: actions/cache@v4
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
-    
+
+      - name: Cache Bench Init
+        id: cache-bench
+        uses: actions/cache@v4
+        with:
+          path: ~/frappe-bench
+          key: ${{ runner.os }}-bench-v15-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-bench-v15-
+
+      - name: Cache node_modules and assets
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/frappe-bench/apps/frappe/node_modules
+            ~/frappe-bench/sites/assets
+            ~/frappe-bench/sites/.build
+          key: ${{ runner.os }}-frappe-assets-${{ hashFiles('**/package.json', '**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-frappe-assets-
+
       - name: Install MariaDB Client
         run: sudo apt-get update && sudo apt-get install -y mariadb-client
 
       - name: Setup Frappe Bench
+        if: steps.cache-bench.outputs.cache-hit != 'true'
         run: |
           pip install frappe-bench
           bench init --skip-redis-config-generation --skip-assets --python "$(which python)" ~/frappe-bench
@@ -88,14 +109,12 @@ jobs:
       - name: Switch to Frappe Version 15
         working-directory: /home/runner/frappe-bench
         run: |
-          # Switch to the correct Frappe version (15.x)
           bench switch-to-branch version-15 frappe
-          bench update --patch  # This will update the repository and apply any database changes
+          bench update --patch
 
       - name: Install ERPNext Version 15
         working-directory: /home/runner/frappe-bench
         run: |
-          # Install ERPNext version 15 (ensure it matches Frappe version)
           bench get-app erpnext --branch version-15
 
       - name: Install uph app
@@ -104,7 +123,7 @@ jobs:
           bench get-app uph $GITHUB_WORKSPACE
           bench setup requirements --dev
           bench new-site --db-root-password root --admin-password admin test_site
-          bench --site test_site install-app erpnext  # Ensure ERPNext is installed on the site
+          bench --site test_site install-app erpnext
           bench --site test_site install-app uph
           bench build
         env:
