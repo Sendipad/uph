@@ -38,8 +38,8 @@ class PartyMasterSettings(Document):
 
 
 	def create_pm_fields_on_party_doctype(self):
-		 if not getattr(self, '_doc_before_save', None):
-			 return
+		if not getattr(self, '_doc_before_save', None):
+			return
 
 		if self.is_child_table_same('party_types') or frappe.flags.in_install:
 			return
