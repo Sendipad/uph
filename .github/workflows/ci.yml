@@ -1,4 +1,4 @@
-name: CI for Frappe App
+name: CI
 
 on:
   push:
@@ -15,10 +15,16 @@ jobs:
         image: redis:alpine
         ports:
           - 13000:6379
+        options: >-
+          --requirepass yourpassword
+          --protected-mode no
       redis-queue:
         image: redis:alpine
         ports:
           - 11000:6379
+        options: >-
+          --requirepass yourpassword
+          --protected-mode no
       mariadb:
         image: mariadb:10.6
         env:
@@ -30,7 +36,7 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
-          
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -50,11 +56,12 @@ jobs:
           echo "vm.overcommit_memory=1" | sudo tee -a /etc/sysctl.conf
           sudo sysctl -p
 
-      - name: Clean up MySQL Data
+      - name: Ensure MySQL Service is Running
         run: |
           sudo systemctl stop mysql || true
           sudo rm -rf /var/lib/mysql/*
           sudo systemctl start mysql
+          sudo systemctl status mysql || journalctl -xeu mysql.service
 
       - name: Clean up existing frappe-bench
         run: |
