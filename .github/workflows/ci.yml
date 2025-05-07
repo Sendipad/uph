@@ -15,15 +15,17 @@ jobs:
         image: redis:alpine
         ports:
           - 13000:6379
+        env:
+          REDIS_PASSWORD: yourpassword
         options: >-
-          --requirepass yourpassword
           --protected-mode no
       redis-queue:
         image: redis:alpine
         ports:
           - 11000:6379
+        env:
+          REDIS_PASSWORD: yourpassword
         options: >-
-          --requirepass yourpassword
           --protected-mode no
       mariadb:
         image: mariadb:10.6
