@@ -38,7 +38,7 @@ class PartyMasterSettings(Document):
 
 
 	def create_pm_fields_on_party_doctype(self):
-		if self.is_child_table_same('party_types'):
+		if self.is_child_table_same('party_types') or frappe.flags.in_install:
 			return
 
 		party_types = [x.get('party_type') for x in self.party_types]
