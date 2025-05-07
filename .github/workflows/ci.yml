@@ -83,7 +83,7 @@ jobs:
       - name: Install
         working-directory: /home/runner/frappe-bench
         run: |
-          pip install frappe==15.0.0 erpnext==15.0.0
+          pip install frappe==15.68.0 erpnext==15.60.2
           bench get-app uph $GITHUB_WORKSPACE
           bench setup requirements --dev
           bench new-site --db-root-password root --admin-password admin test_site
