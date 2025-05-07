@@ -90,7 +90,7 @@ jobs:
         run: |
           # Switch to the correct Frappe version (15.x)
           bench switch-to-branch version-15 frappe
-          bench upgrade --no-cache
+          bench update --no-assets  # This will update the repository and apply any database changes
 
       - name: Install ERPNext Version 15
         working-directory: /home/runner/frappe-bench
