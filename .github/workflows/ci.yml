@@ -46,22 +46,22 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt update
-          sudo apt install -y redis-server xvfb libmysqlclient-dev
-          pip install frappe-bench
-          bench init frappe-bench --skip-redis --python python3.10
-          cd frappe-bench
+           sudo apt update
+           sudo apt install -y redis-server xvfb libmysqlclient-dev
+           pip install frappe-bench
+           bench init frappe-bench --skip-assets --python python3.10
+           cd frappe-bench
 
-          bench get-app --branch version-15 frappe https://github.com/frappe/frappe
-          bench get-app --branch version-15 erpnext https://github.com/frappe/erpnext
-          bench get-app --branch version-15 uph https://github.com/Sendipad/uph
+           bench get-app --branch version-15 frappe https://github.com/frappe/frappe
+           bench get-app --branch version-15 erpnext https://github.com/frappe/erpnext
+           bench get-app --branch version-15 uph https://github.com/Sendipad/uph
 
-          bench new-site test.local --mariadb-root-password root --admin-password admin
-          bench --site test.local install-app frappe
-          bench --site test.local install-app erpnext
-          bench --site test.local install-app uph
+           bench new-site test.local --mariadb-root-password root --admin-password admin
+           bench --site test.local install-app frappe
+           bench --site test.local install-app erpnext
+           bench --site test.local install-app uph
 
-          bench build
+           bench build
 
       - name: Run Tests
         run: |
