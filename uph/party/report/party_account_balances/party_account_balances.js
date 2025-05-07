@@ -196,7 +196,7 @@ frappe.query_reports["Party Account Balances"] = {
 	let currency;
 	if (column.fieldtype==="Currency"){
 		let currency; 
-		if(frappe.query_report.get_filter_value("arrange_balances") !== "Horizontal" ){
+		if(frappe.query_report.get_filter_value("arrange_balances") !== "Horizontal" &&column.fieldname!=="balance_in_cc"){
 			currency=data.currency;
 		}else{
       currency = column.options;
@@ -212,7 +212,7 @@ frappe.query_reports["Party Account Balances"] = {
       }
     }
 
-    if (column.fieldname === "party_type") {
+    if (column.fieldname === "party_type" ||column.fieldname==="status") {
       return __(value);
     }
 	return default_formatter(value, row, column, data);

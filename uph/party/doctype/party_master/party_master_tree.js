@@ -3,29 +3,53 @@ frappe.provide("frappe.treeview_settings");
 frappe.treeview_settings["Party Master"] = {
   breadcrumb: "Party",
   title: __("Chart of Party"),
-  get_tree_root: true,
-  onload: function (treeview) {
-    function expand_node(node, level) {
-      if (level > 3) return; // Stop at level 3
+  root_label: "Party Master",
+  get_tree_nodes: "uph.party.doctype.party_master.party_master.get_children",
+  ignore_fields: ["parent_party_master"],
+  on_get_node: function (nodes, deep = false) {
+    if (frappe.boot.user.can_read.indexOf("GL Entry") == -1) return;
 
-      frappe.db
-        .get_list("Party Master", {
-          filters: { parent_party_master: node.data.value },
-          fields: ["name"],
-        })
-        .then((children) => {
-          if (children.length > 0) {
-            node.toggle(); // Expand node
-            setTimeout(() => {
-              node.children.forEach((child) => expand_node(child, level + 1));
-            }, 500); // Delay for smooth expansion
-          }
-        });
+    let party_master = [];
+    if (deep) {
+      // in case of `get_all_nodes`
+      party_master = nodes.reduce((pm, node) => [...pm, ...node.data], []);
+    } else {
+      accounts = nodes;
     }
 
-    setTimeout(() => {
-      treeview.root_node.children.forEach((child) => expand_node(child, 1));
-    }, 1000);
+    const get_balances = frappe.call({
+      method: "uph.party.doctype.party_master.party_master.get_party_master_balances",
+      args: {
+        name: party_master,
+        company: cur_tree.args.company,
+      },
+    });
+
+    get_balances.then((r) => {
+      console.log("new", r);
+      if (!r.message || r.message.length == 0) return;
+
+      for (let pm of r.message) {
+        const node = cur_tree.nodes && cur_tree.nodes[pm.name];
+        if (!node || node.is_root) continue;
+
+        // show Dr if positive since balance is calculated as debit - credit else show Cr
+        node.parent && node.parent.find(".balance-area").remove();
+
+        // Iterate over the balances for each party master
+        const balance_text = pm.balances
+          .map((balance) => {
+            const dr_or_cr = balance.amount >= 0 ? "Dr" : "Cr";
+            return `${format_currency(Math.abs(balance.amount), balance.currency)} ${__(dr_or_cr)}`;
+          })
+          .join(" / ");
+
+        // Insert the balance information before the node's list
+        $(
+          `<span class="balance-area pull-right">${balance_text}</span>`
+        ).insertBefore(node.$ul);
+      }
+    });
   },
   filters: [
     {
@@ -36,73 +60,37 @@ frappe.treeview_settings["Party Master"] = {
       default: erpnext.utils.get_tree_default("company"),
     },
   ],
-  
-  fields: [
-    {
-      fieldtype: "Data",
-      fieldname: "party_name",
-      label: __("Party Name"),
-      reqd: 1,
-    },
 
-    {
-      fieldtype: "Data",
-      fieldname: "party_number",
-      mandatory_depends_on: "eval:doc.is_group",
-      label: __("Party Number"),
-      description: __(
-        "If not Group Type You can leave it empty" ),
-    },
-    {
-      fieldtype: "Check",
-      fieldname: "is_group",
-      label: __("Is Group"),
-      description: __(
-        "Further accounts can be made under Groups, but entries can be made against non-Groups"
-      ),
-    },
-    {
-      fieldtype: "Select",
-      fieldname: "party_type",
-      label: __("Party Type"),
-      options: ["Customer", "Supplier", "Employee", "Shareholder"].join("\n"),
-    },
-    {
-      fieldtype: "Link",
-      fieldname: "parent_party_master",
-      label: __("Parent Party"),
-      options: "Party Master",
-      filters:{is_group:1},
-      
-    },
-    // Add your custom fields below
-  ],
+  // Customizing the toolbar to remove 'Delete' and 'Rename' actions
   toolbar: [
-		{
-			label: __("Add Child"),
-			click: function (node,btn) {
-        let parent=node.data.value;
-        frappe.ui.form.make_quick_entry("Party Master", null, (dialog)=>{
-          dialog.set_value("parent_party_master", parent);
-          dialog.set_value("is_group", 0);
-        }, );
+    {
+      label: __("Add Child"),
+      click: function (node) {
+        frappe.ui.form.make_quick_entry("Party Master", null, (doc) => {
+          doc.set_value("parent_party_master", node.data.value);
+        });
       },
-      
-			btnClass: "hidden-xs",
-		},
-		{
-			
-			label: __("View Ledger"),
-			click: function (node, btn) {
-				frappe.route_options = {
-					from_date: erpnext.utils.get_fiscal_year(frappe.datetime.get_today(), true)[1],
-					to_date: erpnext.utils.get_fiscal_year(frappe.datetime.get_today(), true)[2],
-		
-				};
-				frappe.set_route("query-report", "General Ledger");
-			},
-			btnClass: "hidden-xs",
-		},
-	],
-	extend_toolbar: true,
+      btnClass: "hidden-xs",
+    },
+    {
+      label: __("View Ledger"),
+      click: function (node) {
+        frappe.route_options = {
+          from_date: erpnext.utils.get_fiscal_year(
+            frappe.datetime.get_today(),
+            true
+          )[1],
+          to_date: erpnext.utils.get_fiscal_year(
+            frappe.datetime.get_today(),
+            true
+          )[2],
+        };
+        frappe.set_route("query-report", "Party Account Statement");
+      },
+      btnClass: "hidden-xs",
+    },
+  ],
+
+
+  extend_toolbar: true,
 };

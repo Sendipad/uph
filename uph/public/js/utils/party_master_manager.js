@@ -10,22 +10,33 @@ frappe.ui.form.PartyMasterQuickEntryForm = class PartyMasterQuickEntryForm exten
   set_meta_and_mandatory_fields(){
     super.set_meta_and_mandatory_fields();
     this.mandatory.forEach(field=>{
-      if(field.fieldname=='party_type'){
-        field.fieldtype="Select";
-        field.options=Object.keys(frappe.boot.party_account_types);
-        field.onchange=()=>{
-          let party_type=cur_dialog.doc.party_type;
-          if (party_type=='Customer'){
-            cur_dialog.set_value("group_type","Customer Group");
-          }else if(party_type=='Supplier'){
-            cur_dialog.set_value("group_type","Supplier Group");
-        }else{
-          cur_dialog.set_value("group_type","");
-
-        }
-        cur_dialog.refresh_field("group_type");
-      }
-        field.description=__("This will be the Primary Role for This Party");
+      if (field.fieldname === "party_type") {
+        field.fieldtype = "Link"; // ✅ Match the DocType
+        field.options = "Party Type"; // Link to a custom DocType or use static list via get_query
+      
+        field.get_query = function () {
+          return {
+            filters: {
+              name: ["in", Object.keys(frappe.boot.party_account_types)]
+            }
+          };
+        };
+      
+        field.onchange = () => {
+          const party_type = cur_dialog.doc.party_type;
+          if (party_type === "Customer") {
+            cur_dialog.set_value("group_type", "Customer Group");
+          } else if (party_type === "Supplier") {
+            cur_dialog.set_value("group_type", "Supplier Group");
+          } else {
+            cur_dialog.set_value("group_type", "");
+          }
+          cur_dialog.refresh_field("group_type");
+        };
+      
+        field.read_only = 0; // Make sure it's editable
+        field.hidden = 0;
+        field.description = __("This will be the Primary Role for This Party");
       }else if(field.fieldname=="party_name"){
         field.description=__("A Unique Party Name Must be filled");
         field.onchange=()=>{
@@ -178,163 +189,3 @@ frappe.ui.form.PartyMasterQuickEntryForm = class PartyMasterQuickEntryForm exten
 		return variant_fields;
 	}
 };
-/*
-frappe.provide("uph.party_master");
-uph.party_master = {
-  get_fields: function (frm) {
-    const meta = frappe.get_meta(frm.doctype);
-    return meta.fields
-      .filter(
-        (df) =>
-          (df.reqd || df.allow_in_quick_entry) &&
-          !df.read_only &&
-          !df.is_virtual &&
-          !["Tab Break", "Column Break", "Section Break"].includes(df.fieldtype)
-      )
-      .map((df) => ({
-        fieldtype: df.fieldtype,
-        fieldname: df.fieldname,
-        label: df.label,
-        options: df.options,
-        reqd: df.reqd,
-        description: df.description,
-      }));
-  },
-
-  ovride_fields: function(frm) {
-    let fields = this.get_fields(frm);
-    
-    // Modify party_type field
-    fields = fields.map(df => {
-        if (df.fieldname === 'party_type') {
-            return {
-                ...df,
-                fieldtype: 'Select',
-                options: Object.keys(frappe.boot.party_account_types || {}),
-                default: 'Customer',
-                description: __('Select a primary Role type of party')
-            };
-        }
-        return df;
-    });
-    fields = fields.map(df => {
-      if (df.fieldname === 'party_number') {
-          return {
-              ...df,
-              description: __('Set a unique party number if It is not Group leave it'),
-              on_change: (value) => this.handle_party_name_change(value, frm)
-          };
-      }
-      return df;
-  });
-    // Add on_change property to party_name
-    fields = fields.map(df => {
-        if (df.fieldname === 'party_name') {
-            return {
-                ...df,
-                on_change: (value) => this.handle_party_name_change(value, frm)
-            };
-        }
-        return df;
-    });
-
-    return fields;
-},
-
-handle_party_name_change: function(value, frm) {
-    if (!value) return;
-
-    frappe.call({
-        method: 'uph.party.controllers.party.check_similar_party_name',
-        args: { party_name: value },
-        callback: (r) => {
-            if (r.message.exists) {
-                frappe.msgprint({
-                    title: __('Duplicate Found'),
-                    indicator: 'orange',
-                    message: __('Similar party already exists: {0}', [r.message.similar_name])
-                });
-            }
-        }
-    });
-},
-
-quick_entry: function(frm, predefined_data = {}) {
-  const fields = this.ovride_fields(frm);
-  const dialog = new frappe.ui.Dialog({
-      title: __('Quick Create Party'),
-      fields: fields,
-      size:'xtra-large',
-      primary_action: values => {
-        dialog.disable_primary_action();
-
-        // Create new party doc
-        const doc = {
-          doctype: frm.doctype,
-          ...values,
-        };
-
-        frappe.db
-          .insert(doc)
-          .then((new_doc) => {
-            dialog.hide();
-            frappe.show_alert(
-              {
-                message: __("{0} created successfully", [new_doc.name]),
-                indicator: "green",
-              },
-              5
-            );
-
-            // Refresh form if open
-            if (cur_frm && cur_frm.doctype === frm.doctype) {
-              cur_frm.reload_doc();
-            }
-          })
-          .catch((err) => {
-            frappe.msgprint({
-              title: __("Error"),
-              indicator: "red",
-              message: __("Could not create party: {0}", [err.message]),
-            });
-          })
-          .finally(() => {
-            dialog.enable_primary_action();
-          });
-      },
-    });
-
-    // Add custom styling
-    dialog.$wrapper.addClass("party-quick-entry-dialog");
-
-    // Show mandatory fields first
-    dialog.fields_list.forEach((field) => {
-      if (field.df.reqd) {
-        field.$wrapper.addClass("reqd-field-highlight");
-      }
-    });
-  // Set predefined values after dialog renders
-  dialog.show().then(() => {
-      // 1. Set field defaults from predefined_data
-      Object.entries(predefined_data).forEach(([fieldname, value]) => {
-          const field = dialog.get_field(fieldname);
-          if (field) {
-              field.set_value(value);
-          }
-      });
-
-      // 2. Attach on_change handlers (existing logic)
-      fields.forEach(df => {
-          if (df.on_change) {
-              const field = dialog.get_field(df.fieldname);
-              if (field) {
-                  field.$input.on('input', () => df.on_change(field.get_value()));
-              }
-          }
-      });
-  });
-
-  return dialog;
-},
-
-};*/

@@ -38,7 +38,7 @@ from frappe.query_builder.custom import ConstantColumn
 from uph.party.utils import get_mapped_fieldnames
 from uph.party.controllers.party import get_party_type_validation_rule
 import uph
-from uph.party.controllers.queries import get_party_master_parties
+from uph.party.controllers.queries import get_party_master_parties,get_party_master_parties_db
 
 class PartyMaster(NestedSet):
     # begin: auto-generated types
@@ -273,9 +273,7 @@ class PartyMaster(NestedSet):
             self.db_set("primary_address", address_display)
 
     def on_trash(self):
-        if self.total_linked_party > 0 or (
-            lp := self.fetched_linked_party() is not None
-        ):
+        if self.total_linked_party > 0 or get_party_master_parties(self.name):
             frappe.throw(
                 _("Cannot delete Party Master that is linked to other Parties")
             )
@@ -488,9 +486,84 @@ class PartyMaster(NestedSet):
                         ),
                         alert=1,
                     )
+@frappe.whitelist()
+def get_party_master_balances(company):
+    from collections import defaultdict
+    from frappe.query_builder import DocType, functions as fn
+
+    cache_key = f"UPH:Party Master Tree Balances::{company}"
+
+    # Use cache if available
+    if cached := frappe.cache.get_value(cache_key):
+        return cached
+
+    GL = DocType("GL Entry")
+    parties=get_party_master_parties_db(party_master=None)
+    # Get (party_type, party) -> party_master map
+    party_map = {(p["party_type"], p["party"]): p["party_master"] for p in parties}
+
+    balances = (
+        frappe.qb.from_(GL)
+        .select(
+            GL.party,
+            GL.party_type,
+            GL.account_currency.as_("currency"),
+            (fn.Sum(GL.debit_in_account_currency) - fn.Sum(GL.credit_in_account_currency)).as_("balance")
+        )
+        .where((GL.company == company) & GL.party.isnotnull())
+        .groupby(GL.party, GL.party_type)
+    ).run(as_dict=True)
+
+    party_balances = defaultdict(list)
+
+    for entry in balances:
+        key = (entry["party_type"], entry["party"])
+        party_master = party_map.get(key)
+        if not party_master or not entry["balance"]:
+            continue
+        party_balances[party_master].append({
+            "currency": entry["currency"],
+            "amount": entry["balance"]
+        })
+    
+    result = [{"name": k, "balances": v} for k, v in party_balances.items()]
+    frappe.cache.set_value(cache_key, result, expires_in_sec=300)
+    return result
 
 
-#Ok    
+@frappe.whitelist()
+def get_children(doctype, parent=None, company=None, **filters):
+    filters = filters or {}
+
+    # Remove frontend-added keys that don't exist in the DocType
+    for key in ["cmd", "is_root"]:
+        filters.pop(key, None)
+
+    if parent:
+        filters["parent_party_master"] = parent
+    else:
+        filters["parent_party_master"] = ""
+
+    party_masters = frappe.get_all(
+        "Party Master",
+        filters=filters,
+        fields=["name", "is_group", "party_type", "party_name"],
+        order_by="name"
+    )
+
+    return [
+        {
+            "value": d.name,
+            "title": d.party_name or d.name,
+            "expandable": d.is_group,
+            "is_group": d.is_group,
+            "party_type": d.party_type,
+            "party_name": d.party_name,
+        }
+        for d in party_masters
+    ]
+
+
 @frappe.whitelist()
 def get_next_party_master_number(parent=None,is_group=0):
     """

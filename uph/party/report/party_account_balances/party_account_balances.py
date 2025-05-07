@@ -29,7 +29,7 @@ def execute(filters=None):
     )
     build_filters(filters)
     data, fields = get_data(filters)
-    columns = get_columns(fields, filters.get("company_currency"))
+    columns = get_columns(fields, filters)
     return columns, data
 
 
@@ -53,19 +53,25 @@ def get_data(filters):
         where_conditions &= GL.party.isin(in_parties)
     elif not parties:
         where_conditions &= GL.party.isnotnull()
-    balances = (
-        frappe.qb.from_(GL)
-        .select(
-            GL.party,
+    fields=[ GL.party,
             GL.party_type,
             GL.account_currency.as_("currency"),
             (
                 (
                     fn.Sum(GL.debit_in_account_currency)
                     - fn.Sum(GL.credit_in_account_currency)
-                ).as_("balance")
-            ),
-            fn.Max(GL.posting_date).as_("posting_date"),
+                ).as_("balance")),fn.Max(GL.posting_date).as_("posting_date"),]
+    if filters.in_company_currency:
+        fields.append( (
+                (
+                    fn.Sum(GL.debit)
+                    - fn.Sum(GL.credit)
+                ).as_("balance_in_cc")))
+    balances = (
+        frappe.qb.from_(GL)
+        .select(
+           
+            *fields,
         )
         .where(where_conditions)
         .groupby(GL.party, GL.party_type)
@@ -100,14 +106,19 @@ def get_data(filters):
             pm_dict = copy(pm_detail)
             pm_dict["party_type"] = party_type
             posting_date = []
+            balance_in_cc=0
             for e in entries:
                 currency = e.get("currency")
                 pm_dict[currency] = e.get("balance")
+                if filters.in_company_currency:
+                    balance_in_cc+=e.get('balance_in_cc')
                 if e.get("posting_date"):
                     posting_date.append(
                         "{0} : {1}".format(_(currency), e.get("posting_date"))
                     )
             pm_dict["posting_date"] = ", ".join(posting_date)
+            if filters.in_company_currency:
+                pm_dict['balance_in_cc']=balance_in_cc
             data.append(pm_dict)
 
     return data, columns
@@ -135,7 +146,7 @@ def get_party_master_informations_as_dict(filters):
     return {pm.get("party_master"): pm for pm in party_master}
 
 
-def get_columns(fields, company_currency):
+def get_columns(fields, filters):
     columns = [
         {"fieldname": "party_type", "label": _("Party Type"), "fieldtytpe": "Data"},
         {
@@ -180,13 +191,14 @@ def get_columns(fields, company_currency):
             ]
         )
 
-    if company_currency:
+    if filters.in_company_currency:
+        company_currency = filters.company_currency
         columns.append(
             {
                 "fieldname": "balance_in_cc",
                 "label": _("Balance ({0})").format(_(company_currency)),
-                "fieldtype": "Link",
-                "options": "Currency",
+                "fieldtype": "Currency",
+                "options": company_currency,
             }
         )
     return columns + [
