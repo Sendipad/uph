@@ -38,11 +38,6 @@ jobs:
       - name: Clone
         uses: actions/checkout@v3
 
-      - name: Find tests
-        run: |
-          echo "Finding tests"
-          grep -rn "def test" > /dev/null
-
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
@@ -74,7 +69,7 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
-    
+
       - name: Install MariaDB Client
         run: sudo apt-get update && sudo apt-get install -y mariadb-client
 
@@ -88,7 +83,7 @@ jobs:
       - name: Install
         working-directory: /home/runner/frappe-bench
         run: |
-          pip install erpnext  # Ensure erpnext is installed
+          pip install frappe==15.0.0 erpnext==15.0.0
           bench get-app uph $GITHUB_WORKSPACE
           bench setup requirements --dev
           bench new-site --db-root-password root --admin-password admin test_site
@@ -105,7 +100,7 @@ jobs:
 
       - name: Verify Python and Node Modules
         run: |
-          python -c "import erpnext"
+          python -c "import frappe; import erpnext"
           yarn --version
 
       - name: Run Tests
