@@ -11,6 +11,14 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
+      redis-cache:
+            image: redis:alpine
+            ports:
+              - 13000:6379
+      redis-queue:
+            image: redis:alpine
+            ports:
+              - 11000:6379
       mariadb:
         image: mariadb:10.6
         env:
@@ -22,7 +30,6 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
