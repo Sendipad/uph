@@ -542,7 +542,7 @@ def _get_linked_transactional_doctype():
 
 
 def compare_documents(current_doc, existing_doc, meta, child_tables):
-    """Safe document comparison with defaults"""
+   
     comparison = {"is_duplicate": True, "matches": {"parent": [], "children": {}}}
 
     # Parent field comparison
@@ -583,7 +583,7 @@ def compare_documents(current_doc, existing_doc, meta, child_tables):
 
 
 def normalize_child_table(items):
-    """Safe child table normalization"""
+   
     try:
         return sorted(
             [
@@ -604,14 +604,13 @@ def normalize_child_table(items):
 
 @frappe.whitelist()
 def allow_duplicate_submission(doctype, name):
-    """Allow duplicate submission with safety checks"""
+   
     try:
         if not frappe.has_permission(doctype, "submit", doc=name):
             frappe.throw(_("Insufficient Permissions"), frappe.PermissionError)
 
         doc = frappe.get_doc(doctype, name)
-        doc.flags.ignore_duplicate_check = True
-        doc.submit()
+        doc.flags.ignore_duplicate_check = True        doc.submit()
         frappe.db.commit()
         return True
     except Exception as e:
@@ -621,189 +620,4 @@ def allow_duplicate_submission(doctype, name):
             reference_name=name,
         )
         return False
-
-
-@frappe.whitelist()
-@frappe.validate_and_sanitize_search_inputs
-def query_party_master(doctype, txt, searchfield, start, page_len, filters):
-    return get_query(doctype, txt, searchfield, start, page_len, filters)
-
-
-# Add this to your Python API
-@frappe.whitelist()
-def filter_parties_by_type(doctype, txt, searchfield, start, page_len, filters):
-    return frappe.db.sql(
-        """
-        SELECT name, party_type, currency 
-        FROM `tabParty` 
-        WHERE 
-            party_master = %(party_master)s AND
-            party_type = %(party_type)s AND
-            disabled = 0
-        ORDER BY name
-    """,
-        {
-            "party_master": filters.get("party_master"),
-            "party_type": filters.get("party_type"),
-        },
-    )
-
-
-@frappe.whitelist()
-def get_party_master_details_with_parties(party_master, party_type=None):
-    result = frappe._dict()
-    if not party_master:
-        frappe.throw(_("Party Master is missing"))
-
-    pm = frappe.get_doc("Party Master", party_master)
-    # result.update(pm.as_dict())
-
-    # Add explicit defaults
-    result.default_customer = pm.get("default_customer")
-    result.default_supplier = pm.get("default_supplier")
-
-    # Get party roles
-    party_roles = [pm.party_type]
-    if pm.has_secondary_role_party:
-        party_roles.extend([r.party_type_role for r in pm.roles])
-    result.party_type_roles = party_roles
-
-    # Validate requested party type
-    if party_type and party_type not in party_roles:
-        frappe.throw(_("This Party Master has no {0} Role").format(_(party_type)))
-
-    # Get parties
-    party_type = party_type or party_roles
-    if isinstance(party_type, str):
-        party_type = [party_type]
-
-    result.parties = []
-    for pt in party_type:
-        result.parties.extend(_get_parties_for_party_master(pm.name, pt))
-
-    return result
-
-
-def _get_parties_for_party_master(party_master, party_type):
-    field_mapped = get_mapped_fieldnames(
-        party_type, ["party_name_fieldname", "currency_fieldname"]
-    )
-
-    if not field_mapped or len(field_mapped) < 2:
-        frappe.throw(_("Field mapping for {0} is incorrect").format(party_type))
-
-    pnfn, cf = field_mapped
-    fields = ["name"] + [f for f in field_mapped if f]
-
-    data = frappe.get_all(
-        party_type, filters={"party_master": party_master}, fields=fields
-    )
-
-    for d in data:
-        d["party_type"] = party_type
-        if pnfn:
-            d["party_name"] = d.get(pnfn)
-        if cf:
-            d["currency"] = d.get(cf)
-
-    return data
-
-
-# deprecated
-def validate_party_master_has_role(party_master, role=None):
-    pm = frappe.get_doc("Party Master", party_master)
-    result = False
-    if pm.party_type == role:
-        return True
-    if role and pm.party_type != role and pm.has_secondary_role:
-        for d in pm.roles:
-            if d.party_type_role == role:
-                result = True
-                break
-    return result
-
-
-@frappe.whitelist()
-def validate_pm_matches_on_frm(
-    party_master, party=None, party_type=None, party_fieldname=None, doctype=None
-):
-    result = {}
-
-    # If party_type is not provided, try to fetch from mapped fieldnames
-    if not party_type and doctype:
-        party_type = get_mapped_fieldnames(doctype, "party_type")
-
-    # Validate that party_type is set if required
-    isdynmic = get_mapped_fieldnames(doctype, "isdynmic")
-    if not party_type and doctype and not isdynmic:
-        frappe.throw(_("Must set Party Type First"))
-
-    # Set default party_fieldname if not provided
-    if not party_fieldname:
-        party_fieldname = get_mapped_fieldnames(doctype, "party_fieldname") or "party"
-
-    # Check if Party Master exists
-    if party_master:
-        if not frappe.db.exists("Party Master", party_master):
-            frappe.throw(_("Party Master {0} does not exist").format(party_master))
-
-        # Fetch parties linked to this master
-        parties = get_parties(party_master=party_master, fromdb=True)
-
-        # Find the matching party
-        party_value = next(
-            (
-                p
-                for p in parties
-                if p["name"] == party
-                and (not party_type or p["party_type"] == party_type)
-            ),
-            None,
-        )
-
-        if party_value is None:
-            frappe.throw(_("Party is not linked To Party Master"))
-
-        # If party_type is required but not allowed to have secondary roles
-        if party_type and not frappe.db.get_value(
-            "Party Master", party_master, "has_secondary_role"
-        ):
-            valide_role = validate_party_master_has_role(party_master, party_type)
-
-            # If dynamic and role is not valid, clear party_type
-            if isdynmic and not valide_role:
-                result["party_type"] = None
-
-            # If valid and party exists, update result
-            elif isdynmic and valide_role and party_type and party:
-                if not frappe.db.exists(party_type, party):
-                    result[party_fieldname] = party_value
-                elif party_master != frappe.db.get_value(
-                    party_type, party, "party_master"
-                ):
-                    result[party_fieldname] = party_value
-
-    return result
-
-
-Party_Master_Settings = "Party Settings"
-PARTY_TYPE = ["Customer", "Supplier", "Employee", "ShareHolder"]
-Error_msg = {
-    "NonExistPartyMaster": _("This Party Master {0} Does Not Exist"),
-    "Mandatory": _(
-        "Party Master Is Mandatory /n<small> You can go to Party Setting and Uncheck Mandatory</small>"
-    ),
-    "AssignedAlert": _("Party Master {0} has been fetched from {1} and Assigned"),
-    "NotMatchedPMP": _(
-        "{0} {1} UnLinked to Party Master {2}"
-    ),  # party_type,party ,party-master
-    "PAA_Mandatory": _(
-        "This Party Master {0} Has Enforce Party Analytic Accounting Check"
-    ),
-    "PartyNotExist": _("This {0} {1} Does Not Exist"),
-    "DuplicateTransactionExist": _("Party Master {0} has Duplicate {1} {2} {3}"),
-    "DuplicateCurrencyForParty": _(
-        "This Party Master {0} has Linked {1} {2} with Currency {3}"
-    ),  # PM,party_type,party,Currency
-}
 """
