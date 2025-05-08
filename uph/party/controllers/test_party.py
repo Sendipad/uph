@@ -30,7 +30,6 @@ def test_update_transactional_doc():
 
 
 def test_update_transactional_docs(party_doc):
-    """Debugging version of update_transactional_docs to check SQL queries."""
     
     frappe.log_error(f"🔹 Starting update_transactional_docs for Party Master: {party_doc.party_master}")
     party_master=party_doc.party_master
