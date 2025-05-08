@@ -1,3 +1,5 @@
+
+"""
 import frappe
 from uph.party.controllers.party import update_transactional_docs,get_parties 
 
@@ -805,3 +807,4 @@ Error_msg = {
         "This Party Master {0} has Linked {1} {2} with Currency {3}"
     ),  # PM,party_type,party,Currency
 }
+"""
