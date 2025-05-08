@@ -21,7 +21,12 @@ def get_data():
                 "items": ["Party Analytic Accounting", "Customer","Supplier","Employee"]
             }
         ],
-        
+          "reports": [
+            {
+                'label': 'Reports',
+                'items': ['Party Account Statement','Party Account Balances','Chronological Party Ledger'],
+            }
+        ]
            
         }
     

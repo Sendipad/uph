@@ -14,6 +14,8 @@ const PURCHASE_DOCTYPES = [
   "Purchase Invoice",
 ];
 let uphdialog = null;
+
+
 uph.party = {
   show_party_selection_dialog_callback: function (
     frm,
@@ -171,6 +173,88 @@ uph.party = {
         }
       },
     });
+  },
+  create_party_for_party_master_dialog: function(frm) {
+    let party_type = [frm.doc.party_type];
+  
+    if (frm.doc.roles?.length > 0) {
+      party_type = [...new Set([frm.doc.party_type, ...frm.doc.roles.map(role => role.party_type_role)])];
+    }
+  
+    const dialog = new frappe.ui.Dialog({
+      title: __("Create Party As"),
+      fields: [
+        {
+          fieldname: "party_type",
+          fieldtype: "Select",
+          label: __("Select Party Type"),
+          options: party_type,
+          reqd: 1,
+          onchange() {
+            const selected = dialog.get_value('party_type');
+            const showCurrency = ['Customer', 'Supplier'].includes(selected);
+            dialog.set_df_property("default_currency", "hidden", !showCurrency);
+            dialog.set_df_property("default_currency", "reqd", showCurrency ? 1 : 0);
+          }
+        },
+        {
+          fieldname: "default_currency",
+          fieldtype: "Select",
+          label: __("Default Currency"),
+          options: erpnext.get_presentation_currency_list() || [],
+        },
+        {
+          fieldname: "save",
+          fieldtype: "Check",
+          label: __("Save"),
+          default: 0,
+          description: __("Check this if you want to save the party without routing to Edit")
+        }
+      ],
+      primary_action_label: __("Edit Before Save"),
+      primary_action(values) {
+        const args = {
+          source_name: frm.doc.name,
+          target_doctype: values.party_type,
+          rule_field_value: values.default_currency,
+          save: values.save || false
+        };
+  
+        frappe.call({
+          method: 'uph.party.doctype.party_master.party_master.create_party_from_party_master',
+          args,
+          callback(r) {
+            if (!r.exc && r.message) {
+              dialog.hide();
+  
+              if (values.save) {
+                frappe.msgprint({ message: __("Party Created Successfully"), alert: true });
+                frm.reload_doc();
+              } else {
+                const doc = r.message;
+                if (doc.__islocal || doc.__unsaved || doc.name?.startsWith("new-")) {
+                  frappe.model.with_doctype(doc.doctype, () => {
+                    const new_doc = frappe.model.get_new_doc(doc.doctype);
+                    Object.keys(doc).forEach(key => {
+                      if (key !== 'name' && key !== 'doctype') {
+                        new_doc[key] = doc[key];
+                      }
+                    });
+                    frappe.set_route("Form", doc.doctype, new_doc.name);
+                  });
+                } else {
+                  frappe.model.sync([doc]);
+                  frappe.set_route("Form", doc.doctype, doc.name);
+                }
+              }
+            }
+          }
+        });
+      }
+    });
+  
+    dialog.set_value("party_type", frm.doc.party_type);
+    dialog.show();
   },
   get_fieldnames: function (frm) {
     if (SALES_DOCTYPES.includes(frm.doc.doctype)) {

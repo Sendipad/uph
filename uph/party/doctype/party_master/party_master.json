@@ -548,14 +548,14 @@
    "mandatory_depends_on": "eval:doc.status==\"Disputed\""
   },
   {
-   "depends_on": "eval:doc.type != 'Company'",
+   "depends_on": "eval:doc.type !=\"Company\"&&!doc.is_group",
    "fieldname": "gender",
    "fieldtype": "Link",
    "label": "Gender",
    "options": "Gender"
   },
   {
-   "depends_on": "eval:doc.type !=\"Company\"",
+   "depends_on": "eval:doc.type !=\"Company\"&&!doc.is_group",
    "fieldname": "salutation",
    "fieldtype": "Link",
    "label": "Salutation",
@@ -609,6 +609,7 @@
    "label": "Enforce Party Analaytic Accounting Selection"
   },
   {
+   "depends_on": "eval:!doc.is_group",
    "fieldname": "dashboard_tab",
    "fieldtype": "Tab Break",
    "label": "Dashboard"
@@ -678,7 +679,7 @@
  "is_calendar_and_gantt": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2025-04-30 16:00:16.991452",
+ "modified": "2025-05-08 19:55:14.458433",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party Master",

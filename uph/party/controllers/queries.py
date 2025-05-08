@@ -333,7 +333,9 @@ def get_party_master_parties_db(party_master, all_roles=False, roles=None):
 
     queries = []
     for r in roles:
-        queries.append(build_fetch_parties_query(r, party_master))
+        doctype = r[0] if isinstance(r, (tuple, list)) else r
+
+        queries.append(build_fetch_parties_query(doctype, party_master))
 
     if queries:
         final_query = queries[0]

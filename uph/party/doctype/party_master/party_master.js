@@ -1,47 +1,50 @@
 frappe.ui.form.on("Party Master", {
-  setup: function (frm) {
+  setup(frm) {
+    frm.set_query('roles', () => ({
+      filters: {
+        name: ["!=", frm.doc.party_type]
+      }
+    }));
   },
-  onload: function(frm) {
-    frm.set_query('roles', () => {
-      return {
-        filters: {
-          name: ["!=",frm.doc.party_type]
+
+  onload(frm) {
+    frm.set_query('roles', () => ({
+      filters: {
+        name: ["!=", frm.doc.party_type]
+      }
+    }));
+  },
+
+  parent_party_master(frm) {
+    if (!frm.doc.parent_party_master) return;
+
+    frm.toggle_display('party_number', !frm.is_new());
+    frm.refresh_field('party_number');
+
+    const args = {
+      parent: frm.doc.parent_party_master,
+      ...(frm.doc.is_group && { is_group: 1 })
+    };
+
+    frappe.call({
+      method: 'uph.party.doctype.party_master.party_master.get_next_party_master_number',
+      args,
+      debounce: 100,
+      callback: (r) => {
+        if (r.message) {
+          frm.set_value("party_number", r.message);
         }
-      };
+      }
     });
   },
-  parent_party_master: function (frm) {
-    if (frm.doc.parent_party_master) {
-        frm.toggle_display('party_number', !frm.is_new());
-        frm.refresh_field('party_number');
 
-        if (frm.doc.parent_party_master) {
-            let value = {
-                parent: frm.doc.parent_party_master
-            };
-
-            if (frm.doc.is_group) {
-                value.is_group = 1;
-            }
-
-            frappe.call({
-                method: 'uph.party.doctype.party_master.party_master.get_next_party_master_number',
-                args: value,
-                debounce: 100,
-                callback: (r) => {
-                    if (r.message) {
-                        frm.set_value("party_number", r.message);
-                        frm.refresh_field('party_number');
-
-                      }
-                }
-            });
-        }
-    }
-},
-    update_button(frm) {
-    if (frm.is_new()) {
-      return;
+  update_button(frm) {
+    if (frm.is_new()) return;
+    if(!frm.doc.has_secondary_role_party){
+      frm.add_custom_button(__('Add Secondary Roles'), () => {
+        open_secondary_roles_dialog(frm);
+      }, __('Action'));
+      
     }
     if (frm.doc.total_linked_party) {
       frm.add_custom_button(
@@ -50,20 +53,18 @@ frappe.ui.form.on("Party Master", {
         __("Action")
       );
     }
+
     const count = get_counts_unlinked_parties();
     if (count[frm.doc.party_type] > 0) {
       frm.page.set_primary_action(__("Fetch Existing Parties"), () =>
-        frm.events.build_parties_dialog(frm, (action = "to_assign"))
+        frm.events.build_parties_dialog(frm, "to_assign")
       );
-
-      //console.log("just Started",filter);
     }
   },
- 
 
-  build_parties_dialog: function (frm, action) {
-    let child_table=get_child_table();
-    let parties_dialog_fields = [
+  build_parties_dialog(frm, action) {
+    const child_table = get_child_table();
+    const parties_dialog_fields = [
       {
         label: __("Parties"),
         fieldname: "parties",
@@ -73,272 +74,163 @@ frappe.ui.form.on("Party Master", {
         cannot_add_rows: true,
       },
     ];
-    let to_party_master = {
-      label: __("To Party Master"),
-      fieldname: "to_party_master",
-      fieldtype: "Link",
-      options: "Party Master",
-      reqd: 1,
-    };
-    let filter = []; /*
-    party_type=[frm.doc.party_type];*/
 
-    if (action == "to_assign") {
-      filter.push(["party_master", "is", "not set"]);
-    } else if (action == "to_reassign") {
-      parties_dialog_fields.push(to_party_master);
-      filter.push(["party_master", "=", frm.doc.name]);
+    const filters = [];
+
+    if (action === "to_assign") {
+      filters.push(["party_master", "is", "not set"]);
+    } else if (action === "to_reassign") {
+      parties_dialog_fields.push({
+        label: __("To Party Master"),
+        fieldname: "to_party_master",
+        fieldtype: "Link",
+        options: "Party Master",
+        reqd: 1,
+      });
+      filters.push(["party_master", "=", frm.doc.name]);
     }
+
     frm.call({
       doc: frm.doc,
       method: "fetch_parties_list",
-      args: { filters: filter },
-      callback: function (r) {
-        if (r.message) {
-          parties_dialog_fields[0].data = r.message;
-          parties_dialog_fields[0].get_data = function () {
-            return r.message;
-          };
-          let d = new frappe.ui.Dialog({
-            title: __("Parties Allocations"),
-            fields: parties_dialog_fields,
-            size: "large",
-            primary_action_label: "Linking Parties",
-            primary_action(values) {
-              let selections = values.parties.filter((x) => x.__checked);
-              let selection_map = [];
-              if (selections.length > 0) {
-                let new_party_master =
-                  action === "to_reassign"
-                    ? values.to_party_master
-                    : frm.doc.name;
-                selection_map = [
-                  ...selections.map(function (elem) {
-                    return {
-                      new_party_master: new_party_master,
-                      party_type: elem.party_type,
-                      party: elem.party,
-                    };
-                  }),
-                ];
+      args: { filters },
+      callback: (r) => {
+        if (!r.message) return;
 
-                let old_party_master = frm.doc.name;
-                console.log(selection_map);
-                frm.call({
-                  doc: frm.doc,
-                  method: "assign_new_party_master_for_parties",
-                  args: { selections: selection_map },
-                  callback: function (r) {
-                    if (!r.exc) {
-                      frappe.msgprint(__("Parties successfully linked!"));
-                      d.hide();
-                      frm.reload_doc(); // Refresh the document
-                    } else {
-                      frappe.msgprint(
-                        __("Something went wrong. Please check console.")
-                      );
-                      console.error(r.exc);
-                    }
-                  },
-                });
-              } else {
-                frappe.msgprint(__("No Selection"));
+        parties_dialog_fields[0].data = r.message;
+        parties_dialog_fields[0].get_data = () => r.message;
+
+        const d = new frappe.ui.Dialog({
+          title: __("Parties Allocations"),
+          fields: parties_dialog_fields,
+          size: "large",
+          primary_action_label: "Linking Parties",
+          primary_action(values) {
+            const selections = values.parties.filter(x => x.__checked);
+            if (!selections.length) {
+              frappe.msgprint(__("No Selection"));
+              return;
+            }
+
+            const new_party_master = action === "to_reassign" ? values.to_party_master : frm.doc.name;
+            const selection_map = selections.map(elem => ({
+              new_party_master,
+              party_type: elem.party_type,
+              party: elem.party,
+            }));
+
+            frm.call({
+              doc: frm.doc,
+              method: "assign_new_party_master_for_parties",
+              args: { selections: selection_map },
+              callback: (r) => {
+                if (!r.exc) {
+                  frappe.msgprint(__("Parties successfully linked!"));
+                  d.hide();
+                  frm.reload_doc();
+                } else {
+                  frappe.msgprint(__("Something went wrong. Please check console."));
+                  console.error(r.exc);
+                }
               }
-            },
-          });
+            });
+          },
+        });
 
-          d.show();
-        }
+        d.show();
       },
     });
   },
-  after_save: function (frm) {
+
+  after_save(frm) {
     if (frm.doc.reference_doctype && frm.doc.reference_docname) {
-        frappe.run_serially([
-            () => frappe.set_route("Form", frm.doc.reference_doctype, frm.doc.reference_docname),
-            () => frappe.timeout(1), // Small delay to ensure navigation completes
-            () => {
-                frappe.model.set_value(frm.doc.reference_doctype, frm.doc.reference_docname, "party_master", frm.doc.name);
-                
-                // Ensure the reference doctype is in party_account_types before saving
-                if (Object.keys(frappe.boot.party_account_types).includes(frm.doc.reference_doctype)) {
-                    cur_frm.save();
-                }
-            }
-        ]);
+      frappe.run_serially([
+        () => frappe.set_route("Form", frm.doc.reference_doctype, frm.doc.reference_docname),
+        () => frappe.timeout(1),
+        () => {
+          frappe.model.set_value(frm.doc.reference_doctype, frm.doc.reference_docname, "party_master", frm.doc.name);
+          if (Object.keys(frappe.boot.party_account_types).includes(frm.doc.reference_doctype)) {
+            cur_frm.save();
+          }
+        }
+      ]);
     }
-},
-  refresh: function (frm) {
-    frm.old_parent=frm.doc.parent_party_master||null;
-   
-    if(!frm.is_new()){
-      frm.set_df_property('parent_party_master','read_only',1);
-      frm.set_df_property('party_number','read_only',1);
-        frm.add_custom_button(__('Create Party'), () => {
-            // Get unique party types from doc and roles
-            let party_type = [frm.doc.party_type];
-            if (frm.doc.roles && frm.doc.roles.length > 0) {
-                party_type = [...new Set([frm.doc.party_type, ...frm.doc.roles.map(role => role.party_type_role)])];
-            }
-    
-            const dialog = new frappe.ui.Dialog({
-                title: __("Create Party As"),
-                fields: [
-                    {
-                        fieldname: "party_type",
-                        fieldtype: "Select",
-                        label: __("Select Party Type"),
-                        options: party_type,
-                        reqd: 1,
-                        onchange: function () {
-                            const selected = dialog.get_value('party_type');
-                            const showCurrency = ['Customer', 'Supplier'].includes(selected);
-                            dialog.set_df_property("default_currency", "hidden", !showCurrency);
-                            dialog.set_df_property("default_currency", "reqd", showCurrency ? 1 : 0);
-                        }
-                    },
-                    {
-                        fieldname: "default_currency",
-                        fieldtype: "Select",
-                        label: __("Default Currency"),
-                        options: erpnext.get_presentation_currency_list() || [],
-                        //hidden: 1
-                    },
-                    {
-                        fieldname: "save",
-                        fieldtype: "Check",
-                        label: __("Save"),
-                        default: 0,
-                        description: __("Check this if you want to save the party without routing to Edit")
-                    }
-                ],
-                primary_action_label: __("Edit Before Save"),
-                primary_action(values) {
-                    const args = {
-                        source_name: frm.doc.name,
-                        target_doctype: values.party_type,
-                        rule_field_value: values.default_currency,
-                      };
-                      if(values.save){
-                        args.save=true;
-                      }
-                    console.log("args", args);
-                    frappe.call({
-                        method: 'uph.party.doctype.party_master.party_master.create_party_from_party_master',
-                        args: args,
-                        callback(r) {
-                          if (!r.exc && r.message) {
-                              dialog.hide();
-                      
-                              if (values.save) {
-                                  frappe.msgprint({message:__("Party Created Successfully"), alert : true,});
-                                  frm.reload_doc();
-                                } else {
-                                  const doc = r.message;
-                      
-                                  // If doc is local (not saved)
-                                  if (doc.__islocal || doc.__unsaved || doc.name?.startsWith("new-")) {
-                                      frappe.model.with_doctype(doc.doctype, () => {
-                                          // Create a new local doc
-                                          const new_doc = frappe.model.get_new_doc(doc.doctype);
-                      
-                                          // Assign fields from server response
-                                          Object.keys(doc).forEach(key => {
-                                              if (key !== 'name' && key !== 'doctype') {
-                                                  new_doc[key] = doc[key];
-                                              }
-                                          });
-                      
-                                          // Set route to the new unsaved doc
-                                          frappe.set_route("Form", doc.doctype, new_doc.name);
-                                      });
-                                  } else {
-                                      // Already saved — can route directly
-                                      frappe.model.sync([doc]);
-                                      frappe.set_route("Form", doc.doctype, doc.name);
-                                  }
-                              }
-                          }
-                      }
-                    });
-                }
-            });
-    
-            dialog.set_value("party_type", frm.doc.party_type);
-           
-            dialog.show();
-        },__('Action'));
-    
-    
+  },
 
+  refresh(frm) {
+    if (frm.doc.is_group) {
+      frm.dashboard.hide();
+    } else {
+      frm.dashboard.show();
+    }
+    frm.old_parent = frm.doc.parent_party_master || null;
 
-      frm.add_custom_button(__("Account Statement"),()=>{
+    if (!frm.is_new()) {
+      frm.set_df_property('parent_party_master', 'read_only', 1);
+      frm.set_df_property('party_number', 'read_only', 1);
+
+      frm.add_custom_button(__('Create Party'), () => {
+        uph.party.create_party_for_party_master_dialog(frm);
+      }, __('Action'));
+
+      frm.add_custom_button(__("Account Statement"), () => {
         frappe.route_options = {
           party_master: frm.doc.name,
         };
         frappe.set_route("query-report", "Party Account Statement");
-      },__("View"));
+      }, __("View"));
 
-      frm.add_custom_button(__("Parties"),(doc)=>{
-        let child_table=get_child_table();
-        let parties_dialog_fields = [
-          {
-            label: __("Parties"),
-            fieldname: "parties",
-            fieldtype: "Table",
-            read_only: 1,
-            editable:false,
-            fields: child_table,
-            cannot_add_rows: true,
-          },
-        ];
-        let party_master=cur_frm.doc.name;
+      frm.add_custom_button(__("Parties"), () => {
+        const child_table = get_child_table();
+        const parties_dialog_fields = [{
+          label: __("Parties"),
+          fieldname: "parties",
+          fieldtype: "Table",
+          read_only: 1,
+          editable: false,
+          fields: child_table,
+          cannot_add_rows: true,
+        }];
+
         frappe.call({
-          method:"uph.party.controllers.queries.get_party_master_parties",
-          args:{party_master:party_master},
-          callback:function(r){
-            if(r.message){
+          method: "uph.party.controllers.queries.get_party_master_parties",
+          args: { party_master: frm.doc.name },
+          callback: function (r) {
+            if (r.message) {
               parties_dialog_fields[0].data = r.message;
-              parties_dialog_fields[0].get_data = function () {
-                return r.message;
-              };
-              let d = new frappe.ui.Dialog({
+              parties_dialog_fields[0].get_data = () => r.message;
+              new frappe.ui.Dialog({
                 title: __("Parties"),
                 fields: parties_dialog_fields,
-                size: "large",
-                //primary_action_label: "Linking Parties",
-               
-              });
-              d.show();
+                size: "large"
+              }).show();
             }
           }
         });
-      },__('View'));
+      }, __('View'));
     }
+
     frm.events.update_button(frm);
-    frm.set_query("default_customer", function (doc) {
-      return {
-        filters: { party_master: frm.doc.name },
-      };
-    });
-    frm.set_query("default_supplier", function (doc) {
-      return {
-        filters: { party_master: frm.doc.name },
-      };
-    });
 
-    frm.toggle_display('roles',frm.doc.has_secondary_role_party===1);
-    
+    frm.set_query("default_customer", () => ({
+      filters: { party_master: frm.doc.name }
+    }));
 
-    
-  },
+    frm.set_query("default_supplier", () => ({
+      filters: { party_master: frm.doc.name }
+    }));
+
+    frm.toggle_display('roles', frm.doc.has_secondary_role_party === 1);
+  }
 });
 
+// Utility Functions
 function update_button(frm) {
   const count = get_counts_unlinked_parties();
-  let button = [];
+  let buttons = [];
+
   if (count[frm.doc.party_type] > 0) {
-    button.push({
+    buttons.push({
       label: __("Fetch Exist{}", [frm.doc.party_type]),
       filters: {
         party_type: frm.doc.party_type,
@@ -346,110 +238,92 @@ function update_button(frm) {
       },
     });
   }
-  if (frm.doc.has_secondary_role_party && frm.doc.roles.lenght > 0) {
-    frm.doc.roles.forEach((element) => {
-      if (count[element.party_type_role] > 0) {
-        button.push({
-          label: __("Fetch Exist{}", [element.party_type_role]),
+
+  if (frm.doc.has_secondary_role_party && frm.doc.roles.length > 0) {
+    frm.doc.roles.forEach(role => {
+      if (count[role.party_type_role] > 0) {
+        buttons.push({
+          label: __("Fetch Exist{}", [role.party_type_role]),
           filters: {
-            party_type: element.party_type,
+            party_type: role.party_type,
             party_master: frm.doc.name,
           },
         });
       }
     });
-    console.log("buttons:", button);
-    if (button.length == 1) {
-      frm.page.set_primary_action(button[0].label, function (frm) {
-        fetch_exist_parties(frm, (filters = button[0].filters));
+
+    if (buttons.length === 1) {
+      frm.page.set_primary_action(buttons[0].label, () => {
+        fetch_exist_parties(frm, buttons[0].filters);
       });
     } else {
-      button.forEach((b) => {
-        frm.add_custom_button(
-          b.label,
-          function (frm) {
-            fetch_exist_parties(frm, (filters = b.filters));
-          },
-          __("Fetch From :")
-        );
+      buttons.forEach(btn => {
+        frm.add_custom_button(btn.label, () => {
+          fetch_exist_parties(frm, btn.filters);
+        }, __("Fetch From :"));
       });
     }
   }
 }
+
 function fetch_exist_parties(frm, filters, method) {
-  () => {
-    if (!method && filters) {
-      method =
-        "uph.party.doctype.party_master.party_master.get_unset_parties_list";
-    }
-    const d = new frappe.ui.form.MultiSelectDialog({
-      doctype: frm.doc.doctype,
-      target: frm,
-      setters: {
+  method = method || "uph.party.doctype.party_master.party_master.get_unset_parties_list";
+
+  const dialog = new frappe.ui.form.MultiSelectDialog({
+    doctype: frm.doc.doctype,
+    target: frm,
+    setters: {
+      party_type: filters.party_type,
+    },
+    add_filters_group: 1,
+    get_query() {
+      return {
+        query: method,
+        filters: {
+          party_master: frm.doc.name,
+          unset: 1,
+          party_type: filters.party_type,
+        },
+      };
+    },
+    action(selections) {
+      const data = selections.map(name => ({
+        name,
         party_type: filters.party_type,
-      },
-      add_filters_group: 1, // `columns` is removed (not supported)
+      }));
 
-      get_query() {
-        return {
-          query: method,
-          filters: {
-            party_master: frm.doc.name,
-            unset: 1,
-            party_type: filters.party_type,
-          },
-        };
-      },
-
-      action(selections) {
-        console.log("Selected:", selections);
-
-        let data = selections.map((r) => ({
-          name: r, // `selections` only returns names
-          party_type: filters.party_type, // Assuming `party_type` is static
-        }));
-
-        // Fetch additional fields
-        frappe.call({
-          method: "set_party_master",
-          doc: frm.doc,
-          args: { data: data }, // Corrected format
-          callback: function (response) {
-            console.log("Server Response:", response);
-
-            // Refresh linked field
-            frm.refresh_field("linked_party");
-
-            // Hide dialog after operation completes
-            d.dialog.hide();
-          },
-        });
-      },
-    });
-  };
-}
-function get_counts_unlinked_parties(frm, party_type) {
-  if (frappe.boot.unlinked_parties_counts) {
-    console.log(frappe.boot.unlinked_parties_count);
-    return frappe.boot.unlinked_parties_counts;
-  } else {
-    frappe.call({
-      method:
-        "uph.party.doctype.party_master.party_master.get_totals_number_unlinked_parties",
-      filters: {},
-      callback: function (response) {
-        console.log("Totals Ublinked Parties:", response);
-        if (response) {
-          frappe.boot.unlinked_parties_counts = response["message"];
-          console.log("Boot infor:", frappe.boot.unlinked_parties_counts);
+      frappe.call({
+        method: "set_party_master",
+        doc: frm.doc,
+        args: { data },
+        callback(response) {
+          frm.refresh_field("linked_party");
+          dialog.dialog.hide();
         }
-      },
-    });
-  }
+      });
+    },
+  });
 }
 
-function get_child_table(){
-  return  [
+function get_counts_unlinked_parties() {
+  if (frappe.boot.unlinked_parties_counts) {
+    return frappe.boot.unlinked_parties_counts;
+  }
+
+  frappe.call({
+    method: "uph.party.doctype.party_master.party_master.get_totals_number_unlinked_parties",
+    callback: function (response) {
+      if (response.message) {
+        frappe.boot.unlinked_parties_counts = response.message;
+      }
+    }
+  });
+
+  return {};
+}
+
+function get_child_table() {
+  return [
     {
       label: __("Party"),
       fieldname: "party",
@@ -477,9 +351,56 @@ function get_child_table(){
       label: __("Currency"),
       fieldname: "currency",
       fieldtype: "Link",
-      read_only: 1,
       in_list_view: 1,
-
-    },
+      read_only: 1,
+    }
   ];
+}
+function open_secondary_roles_dialog(frm) {
+
+  const dialog = new frappe.ui.Dialog({
+    title: __("Add Secondary Role Parties"),
+    fields: [
+      {
+        label: __("Roles"),
+        fieldname: "roles",
+        fieldtype: "Table MultiSelect",
+        options: "Party Master Role",
+        reqd: 1,
+        get_data: () => {
+          return new Promise((resolve) => {
+            frappe.call({
+              method: "frappe.client.get_list",
+              args: {
+                doctype: "Party Master Role",
+                fields: ["party_type_role"],
+                filters: {
+                  party_type_role: ["!=", frm.doc.party_type]
+                },
+                limit_page_length: 100
+              },
+              callback: (r) => {
+                resolve(r.message);
+              }
+            });
+          });
+        }
+      }
+    ],
+    size: 'large',
+    primary_action_label: __("Add"),
+    primary_action(values) {
+      if (!values.roles || !values.roles.length) {
+        frappe.msgprint(__("Please select at least one role."));
+        return;
+      }
+      frm.set_value("has_secondary_role_party", 1);
+
+      frm.set_value("roles", values.roles);
+      dialog.hide();
+      frm.refresh_field("roles");
+    }
+  });
+
+  dialog.show();
 }

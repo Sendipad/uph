@@ -43,8 +43,7 @@ from uph.party.boot import get_pm_doctypes
 import uph
 from frappe import _
 
-# from uph.party.doctype.party_master_settings.party_master_settings import get_doctypes_functional_fields_mapping_as_dict,get_document_type_mapping_with_party_master,get_party_type_validation_rule
-from uph.party.controllers.queries import get_party_master_parties
+from uph.party.controllers.queries import get_party_master_parties, get_roles_for_pm
 
 
 ###################### Caching##############################################
@@ -126,71 +125,72 @@ Here is the Master validation function
     
     
 """
-
-
 def validate_party_master_on_document_types(doc, method=None):
-    doctype = doc.doctype
     mapping = get_doctypes_functional_fields_mapping_as_dict()
+    doctype = doc.doctype
+
     if (
         frappe.flags.in_patch
         or frappe.flags.in_install
         or frappe.flags.in_migrate
         or frappe.flags.in_import
         or frappe.flags.in_setup_wizard
-        or doc.doctype not in mapping
+        or doctype not in mapping
     ):
         return
-    parent_meta = frappe.get_meta(doc.doctype)
-    if parent_meta.issingle:
-        return
-    mapping = mapping.get(doc.doctype)
-    reqd = mapping.get("reqd")
-    party_fieldname = mapping.get("party_fieldname")
-    party_type_fieldname = mapping.get("party_type_fieldname")
-    meta = frappe.get_meta(mapping.get("document_type"))
-    field = meta.get_field(party_fieldname)
-    fetch_if_not_exist = True if not field.get("reqd") else False
 
-    ischild = mapping.get("document_type") != doc.doctype
+    map_conf = mapping.get(doctype)
+    if not map_conf:
+        return
+
+    document_type = map_conf.get("document_type")
+    is_child = document_type != doctype
+    party_field = map_conf.get("party_fieldname")
+    party_type_field = map_conf.get("party_type_fieldname")
+    meta = frappe.get_meta(document_type)
+    fetch_if_not_exist = not meta.get_field(party_field).reqd
     alert_msg = []
 
-    def validate(d):
-        party_type = mapping.get("party_type") or d.get(party_type_fieldname)
-        party = d.get(party_fieldname)
+    def set_or_validate_party_master(d):
+        party = d.get(party_field)
+        party_type = map_conf.get("party_type") or d.get(party_type_field)
         party_master = d.get("party_master")
-        new_party_master = frappe.db.get_value(party_type, party, "party_master")
-        if ischild or fetch_if_not_exist and (not party_type and not party):
+
+        if not (party and party_type):
             return
-        if party and party_type:
-            if (
-                not party_master or party_master != new_party_master
-            ) and fetch_if_not_exist:
-                d.party_master = new_party_master
-                alert_msg.append(
-                    _("Party Master {0} has been set to {1} automatically").format(
-                        new_party_master if not None else _("Un Set"), d.doctype
-                    )
-                )
-                return
-            if not party_master or party_master != new_party_master:
-                frappe.throw(
-                    _(
-                        "Party Master is Mandatory Or Maybe this is Not the corrected Party Master for {0}"
-                    ).format(party)
-                )
 
-    if ischild:
-        docs = doc.get_all_children()
-        docs = [d for d in docs if d.get("doctype") == mapping.get("document_type")]
-        for d in docs:
-            validate(d)
-        return
-    validate(doc)
-    if alert_msg:
-        for msg in alert_msg:
-            frappe.msgprint(title=_("Party Master Reset"), msg=msg, alert=1)
-    return
+        new_party_master = frappe.db.get_value(party_type, party, "party_master")
+        should_autoset = (
+            not party_master
+            and new_party_master
+            and (
+                fetch_if_not_exist
+                or getattr(doc.flags, "ignore_validate", False)
+                or frappe.flags.in_test
+            )
+        )
 
+        if should_autoset:
+            d.party_master = new_party_master
+            alert_msg.append(
+                _("Party Master for {0} set to {1} automatically").format(
+                    d.doctype, new_party_master
+                )
+            )
+        elif not party_master or party_master != new_party_master:
+            frappe.throw(
+                _("Party Master mismatch or missing for Party {0} ({1})").format(party, party_type)
+            )
+
+    if is_child:
+        for d in doc.get_all_children():
+            if d.doctype == document_type:
+                set_or_validate_party_master(d)
+    else:
+        set_or_validate_party_master(doc)
+
+    for msg in alert_msg:
+        frappe.msgprint(title=_("Party Master Auto-set"), msg=msg, alert=1)
 
 
 def validate_party_master_on_target_party_type(doc, method):
@@ -198,29 +198,34 @@ def validate_party_master_on_target_party_type(doc, method):
         frappe.flags.in_patch
         or frappe.flags.in_install
         or frappe.flags.in_migrate
-        #or frappe.flags.in_import
+        # or frappe.flags.in_import
         or frappe.flags.in_setup_wizard
         or doc.doctype not in uph.get_party_type_list()
     ):
         return
-    party_type_rule = get_party_type_validation_rule(doc.doctype)
+    party_type_rule = get_party_type_validation_rule(party_type=doc.doctype)
     old_doc = doc.get_doc_before_save()
     old_party_master = old_doc.get("party_master") if old_doc else None
-    is_default_for_party_master=doc.is_default_for_party_master
-    old_is_default_for_party_master=old_doc.get('is_default_for_party_master') if old_doc else None
-    if  doc.party_master and is_default_for_party_master!=old_is_default_for_party_master:
+    is_default_for_party_master = doc.is_default_for_party_master
+    old_is_default_for_party_master = (
+        old_doc.get("is_default_for_party_master") if old_doc else None
+    )
+    if (
+        doc.party_master
+        and is_default_for_party_master != old_is_default_for_party_master
+    ):
         if is_default_for_party_master:
-            reset_default_on_party_master(doc.name,doc.doctype,doc.party_master)
+            reset_default_on_party_master(doc.name, doc.doctype, doc.party_master)
 
         frappe.cache.hdel(uph.make_key("Party Master.parties"), doc.party_master)
 
     if doc.party_master and old_party_master == doc.party_master:
         return
-    if (
-        doc.party_master
-        and not frappe.db.exists("Party Master", doc.party_master)
+    if doc.party_master and (
+        not frappe.db.exists("Party Master", doc.party_master)
         or not is_valide_party_master_to_party(doc.party_master, doc.doctype)
     ):
+
         frappe.throw(
             _(
                 "Party Master {0} Could be not Exists or is group or has not Role of {1} or not enabled"
@@ -233,18 +238,17 @@ def validate_party_master_on_target_party_type(doc, method):
             ).format(_(doc.doctype))
         )
     party_master = doc.party_master
-    filters = {"party_master": ["=",party_master],
-               "name":["!=",doc.name]
-               }
+    filters = {"party_master": ["=", party_master], "name": ["!=", doc.name]}
     rule_fieldname = get_party_type_validation_rule(doc.doctype).get("rule_fieldname")
     if rule_fieldname:
-        filters.update({rule_fieldname: ["=",doc.get(rule_fieldname)]})
-    if frappe.db.exists(doc.doctype, filters):
+        filters.update({rule_fieldname: ["=", doc.get(rule_fieldname)]})
+    existing = frappe.get_value(doc.doctype, filters, "name")
+    if existing:
         frappe.throw(
             title=_("Duplicate Exists"),
             msg=_("Party Master {0} has a Party {1} with {2}").format(
                 party_master,
-                frappe.get_doc(doc.doctype,filters).name,
+                existing,
                 doc.get(rule_fieldname) if rule_fieldname else "",
             ),
         )
@@ -253,11 +257,12 @@ def validate_party_master_on_target_party_type(doc, method):
         if party_master:
             frappe.cache.hdel(uph.make_key("Party Master.parties"), doc.party_master)
 
-        
-
         if doc.get("party_master") != old_party_master:
             if old_party_master is not None:
-                frappe.cache.hdel(uph.make_key("Party Master.parties"), old_party_master)
+                frappe.cache.hdel(
+                    uph.make_key("Party Master.parties"), old_party_master
+                )
+                update_linked_party_to_party_master_count(old_doc, add_dec=-1)
 
             frappe.enqueue(
                 on_change_party_master_update_transactional_document_types,
@@ -266,10 +271,11 @@ def validate_party_master_on_target_party_type(doc, method):
                 enqueue_after_commit=True,
             )
 
-    if method=="on_trash" and doc.party_master:
-        pm=frappe.get_doc('Party Master',doc.party_master)
-        pm.add_comment("Comment",_("Party : {0} Has been deleted").format(doc.name))
+    if method == "on_trash" and doc.party_master:
+        pm = frappe.get_doc("Party Master", doc.party_master)
+        pm.add_comment("Comment", _("Party : {0} Has been deleted").format(doc.name))
         frappe.cache.hdel(uph.make_key("Party Master.parties"), doc.party_master)
+
 
 def is_valide_party_master_to_party(party_master, role):
     if isinstance(party_master, str):
@@ -282,7 +288,7 @@ def is_valide_party_master_to_party(party_master, role):
     return True
 
 
-def reset_default_on_party_master(party,party_type,party_master):
+def reset_default_on_party_master(party, party_type, party_master):
     defaults = frappe.get_list(
         party_type,
         filters={"party_master": party_master, "is_default_for_party_master": 1},
@@ -367,6 +373,7 @@ def on_change_party_master_update_transactional_document_types(party, commit=Tru
     if commit:
         frappe.db.commit()
 
+
 def _update_party_master_field_on_exists_transactional_document_types(
     doctype,
     party_fieldname,
@@ -406,6 +413,7 @@ def _update_party_master_field_on_exists_transactional_document_types(
 
     return count
 
+
 # This will be called on insert new Document type in Party Master Setting and it has Exist documents
 def update_exists_docs_on_new_document_type_insert(document_type):
     mapping_all = get_doctypes_functional_fields_mapping_as_dict()
@@ -434,6 +442,44 @@ def update_exists_docs_on_new_document_type_insert(document_type):
     fieldname = mapping.get("party_fieldname")
 
 
+def update_linked_party_to_party_master_count(party_master, add_dec=None):
+    from frappe.model.document import Document
+
+    doc = None
+
+    if isinstance(party_master, Document) and party_master.doctype == "Party Master":
+        doc = party_master
+        if doc.is_new():
+            doc.total_linked_party = add_dec or 0
+            return
+    elif isinstance(party_master, str):
+        if not frappe.db.exists("Party Master", party_master):
+            return
+        doc = frappe.get_cached_doc("Party Master", party_master)
+    else:
+        return
+
+    if add_dec is None:
+        roles = [doc.party_type]
+        if doc.has_secondary_role_party:
+            roles.extend([x.get("party_type_role") for x in doc.get("roles")])
+        total = 0
+
+        if roles:
+            queries = [
+                f"SELECT COUNT(name) FROM `tab{r}` WHERE party_master='{doc.name}' AND docstatus!=2"
+                for r in roles
+            ]
+            combined_query = " UNION ALL ".join(queries)
+            counts = frappe.db.sql(combined_query)
+
+            total = sum(row[0] for row in counts)
+
+        doc.db_set("total_linked_party", total)
+        return
+
+    current_count = doc.total_linked_party or 0
+    doc.db_set("total_linked_party", current_count + add_dec)
 
 
 @frappe.whitelist()
@@ -455,8 +501,6 @@ def set_party_as_default_for_party_master(
     doc = frappe.get_doc(party_type, party)
     doc.set("is_default_for_party_master", value)
     doc.save()
-
-
 
 
 @frappe.whitelist()
@@ -496,4 +540,3 @@ def check_duplicate_voucher_party_master(
                 d["total"] = d.get(total_fn, 0)
 
     return {"duplicates": duplicates}
-
