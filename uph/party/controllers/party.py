@@ -323,15 +323,7 @@ def run_sync_party_master_change_queue():
     party_name = local.get("party")
     doc = frappe.get_doc(party_type, party_name)
 
-    """ 
-    party_names=[local.get('party')]
-    if not party_name and party_type:
-        party_name=frappe.db.get_all(party_type,filters={'party_master':new},pluck='name')
-    for p in party_name:
-        doc=frappe.get_doc(party_type,p)
-        frappe.enqueue(update_transactional_docs, party_doc=doc, queue="short")
-    """
-
+    
 
 def on_change_party_master_update_transactional_document_types(party, commit=True):
     changes = []
