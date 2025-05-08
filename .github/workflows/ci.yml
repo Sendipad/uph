@@ -133,6 +133,6 @@ jobs:
         working-directory: /home/runner/frappe-bench
         run: |
           bench --site test_site set-config allow_tests true
-          bench --site test_site run-tests --app uph
+          bench --site test_site run-tests --app uph --skip-test-records
         env:
           TYPE: server
