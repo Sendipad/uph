@@ -15,4 +15,3 @@ Scalability & Customization: Easily extendable to fit unique business needs with
 
 gpl-3.0
 
-test
