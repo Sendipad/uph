@@ -76,27 +76,52 @@ frappe.treeview_settings["Party Master"] = {
 	},
 
   toolbar: [
-    {
-      label: __("Add Child"),
-      click: function (node) {
-        frappe.ui.form.make_quick_entry("Party Master", null, (doc) => {
-          doc.set_value("parent_party_master", node.data.value);
-        });
-      },
-      btnClass: "hidden-xs",
+  {
+    label: __("Add Child"),
+    condition: function (node) {
+      return node.expandable;
     },
-    {
-      label: __("View Ledger"),
-      click: function (node) {
-        frappe.route_options = {
-          party_master:node.label,
-          company: cur_tree.args.company,
-        };
-        frappe.set_route("query-report", "Party Account Statement");
-      },
-      btnClass: "hidden-xs",
+    click: function (node) {
+      frappe.ui.form.make_quick_entry("Party Master", null, (doc) => {
+        doc.set_value("parent_party_master", node.data.value);
+      });
     },
-  ],
+    btnClass: "hidden-xs",
+  },
+  {
+    label: __("Edit"),
+    click: function (node) {
+      frappe.set_route("Form", "Party Master", node.value);
+    },
+    btnClass: "hidden-xs",
+  },
+  /*{
+    label: __("Create Linked Party Type"),
+    condition: function (node) {
+      return !node.expandable;
+    },
+    click: function (node) {
+      if (uph && uph.party && typeof uph.party.create_party_for_party_master_dialog === "function") {
+        uph.party.create_party_for_party_master_dialog(node);
+      } else {
+        frappe.msgprint("Client function not found: uph.party.create_party_for_party_master_dialog");
+      }
+    },
+    btnClass: "hidden-xs",
+  },*/
+  {
+    label: __("View Ledger"),
+    click: function (node) {
+      frappe.route_options = {
+        party_master: node.label,
+        company: cur_tree.args.company,
+      };
+      frappe.set_route("query-report", "Party Account Statement");
+    },
+    btnClass: "hidden-xs",
+  },
+],
 
-  extend_toolbar: true,
+
+  extend_toolbar: false,
 };
