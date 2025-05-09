@@ -15,7 +15,6 @@ const PURCHASE_DOCTYPES = [
 ];
 let uphdialog = null;
 
-
 uph.party = {
   show_party_selection_dialog_callback: function (
     frm,
@@ -98,7 +97,7 @@ uph.party = {
           let selected_party = default_party || parties[0];
 
           uphdialog.set_value("party_name", "");
-          uphdialog.set_value("party",selected_party.party);
+          uphdialog.set_value("party", selected_party.party);
           uphdialog.fields_dict.party.df.onchange = function () {
             let selected_party = uphdialog.get_value("party");
             let party_data = parties.find((p) => p.party === selected_party);
@@ -174,13 +173,18 @@ uph.party = {
       },
     });
   },
-  create_party_for_party_master_dialog: function(frm) {
+  create_party_for_party_master_dialog: function (frm) {
     let party_type = [frm.doc.party_type];
-  
+
     if (frm.doc.roles?.length > 0) {
-      party_type = [...new Set([frm.doc.party_type, ...frm.doc.roles.map(role => role.party_type_role)])];
+      party_type = [
+        ...new Set([
+          frm.doc.party_type,
+          ...frm.doc.roles.map((role) => role.party_type_role),
+        ]),
+      ];
     }
-  
+
     const dialog = new frappe.ui.Dialog({
       title: __("Create Party As"),
       fields: [
@@ -191,11 +195,15 @@ uph.party = {
           options: party_type,
           reqd: 1,
           onchange() {
-            const selected = dialog.get_value('party_type');
-            const showCurrency = ['Customer', 'Supplier'].includes(selected);
+            const selected = dialog.get_value("party_type");
+            const showCurrency = ["Customer", "Supplier"].includes(selected);
             dialog.set_df_property("default_currency", "hidden", !showCurrency);
-            dialog.set_df_property("default_currency", "reqd", showCurrency ? 1 : 0);
-          }
+            dialog.set_df_property(
+              "default_currency",
+              "reqd",
+              showCurrency ? 1 : 0
+            );
+          },
         },
         {
           fieldname: "default_currency",
@@ -208,8 +216,10 @@ uph.party = {
           fieldtype: "Check",
           label: __("Save"),
           default: 0,
-          description: __("Check this if you want to save the party without routing to Edit")
-        }
+          description: __(
+            "Check this if you want to save the party without routing to Edit"
+          ),
+        },
       ],
       primary_action_label: __("Edit Before Save"),
       primary_action(values) {
@@ -217,26 +227,34 @@ uph.party = {
           source_name: frm.doc.name,
           target_doctype: values.party_type,
           rule_field_value: values.default_currency,
-          save: values.save || false
+          save: values.save || false,
         };
-  
+
         frappe.call({
-          method: 'uph.party.doctype.party_master.party_master.create_party_from_party_master',
+          method:
+            "uph.party.doctype.party_master.party_master.create_party_from_party_master",
           args,
           callback(r) {
             if (!r.exc && r.message) {
               dialog.hide();
-  
+
               if (values.save) {
-                frappe.msgprint({ message: __("Party Created Successfully"), alert: true });
+                frappe.msgprint({
+                  message: __("Party Created Successfully"),
+                  alert: true,
+                });
                 frm.reload_doc();
               } else {
                 const doc = r.message;
-                if (doc.__islocal || doc.__unsaved || doc.name?.startsWith("new-")) {
+                if (
+                  doc.__islocal ||
+                  doc.__unsaved ||
+                  doc.name?.startsWith("new-")
+                ) {
                   frappe.model.with_doctype(doc.doctype, () => {
                     const new_doc = frappe.model.get_new_doc(doc.doctype);
-                    Object.keys(doc).forEach(key => {
-                      if (key !== 'name' && key !== 'doctype') {
+                    Object.keys(doc).forEach((key) => {
+                      if (key !== "name" && key !== "doctype") {
                         new_doc[key] = doc[key];
                       }
                     });
@@ -248,11 +266,11 @@ uph.party = {
                 }
               }
             }
-          }
+          },
         });
-      }
+      },
     });
-  
+
     dialog.set_value("party_type", frm.doc.party_type);
     dialog.show();
   },
@@ -610,7 +628,7 @@ uph.party = {
         }
       }
     );
-    this.check_duplicate_party_master(frm);
+    this.check_duplicate_voucher_for_party_master(frm);
   },
 
   finalize_pm_details: function (frm, pm_details) {
@@ -786,16 +804,18 @@ uph.party = {
       frm.is_single_party_type = false;
     }
     frm.in_show_party_selections = false;
-
+    frm.sCheckingDuplicate = false;
     this.party_master_query(frm);
     this.party_analytic_accounting_query(frm);
   },
-  check_duplicate_party_master: function (
+  check_duplicate_voucher_for_party_master: function (
     frm,
     triggered_before_submit = false
   ) {
-    if (!frm.doc.party_master || !frm.doc.posting_date) return;
+    if (frm.isCheckingDuplicate)return;
 
+    if (!frm.doc.party_master || !frm.doc.posting_date) return;
+    frm.isCheckingDuplicate = true;
     let args = {
       party_master: frm.doc.party_master,
       doctype: frm.doc.doctype,
@@ -901,6 +921,7 @@ uph.party = {
                     }
                   }
                   d.hide();
+                  frm.isCheckingDuplicate = false;
                 },
               });
               d.show();
@@ -921,7 +942,7 @@ uph.party = {
   },
 };
 /*
-    check_duplicate_party_master: function(frm, triggered_before_submit = false) {
+    check_duplicate_voucher_for_party_master: function(frm, triggered_before_submit = false) {
         if (!frm.doc.party_master || !frm.doc.posting_date) return;
 
         frappe.call({
@@ -1080,7 +1101,7 @@ frappe.ui.add_css(`
 `);*/
 
 /*
-    check_duplicate_party_master: function(frm, triggered_before_submit = false) {
+    check_duplicate_voucher_for_party_master: function(frm, triggered_before_submit = false) {
         if (!frm.doc.party_master || !frm.doc.posting_date) return;
     
         let args = {
