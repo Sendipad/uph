@@ -1,7 +1,14 @@
 ## Unified Party Hub
-![UPH Logo by Ruzaqi Abdo](https://github.com/user-attachments/assets/424defe6-b5cc-4f77-aa94-7d74c67ff7cc)
 
-# 🚀  Unified Party Hub (UPH)
+<div align="center">
+    <a href="https://github.com/Sendipad/uph/wiki">
+	<img src="https://github.com/user-attachments/assets/424defe6-b5cc-4f77-aa94-7d74c67ff7cc" alt="UPH Logo By Abdo" height="80px" width="80xp"/>
+    </a>
+    <h2>Unified Party Hub (UPH)</h2>
+    <p align="center">
+        <p>Powerful, Intuitive and Open-Source For ERPNext</p>
+    </p>
+
 
 
 A powerful extension for ERPNext that brings centralized, hierarchical party management to your enterprise resource planning system—similar to Oracle’s Trading Community Architecture (TCA).
