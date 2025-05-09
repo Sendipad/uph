@@ -39,14 +39,10 @@ Generate advanced hierarchical reports based on party relationships.
 
 # 🚀 Usage
 Install the App:
-
-bash
-نسخ
-تحرير
-bench get-app unified_party_hub https://github.com/your-org/unified_party_hub
-bench install-app unified_party_hub
-Access Party Master:
-
+```
+bench get-app unified_party_hub https://github.com/Sendipad/uph
+bench install-app uph
+```
 Go to Unified Party Hub > Party Master in your ERPNext dashboard.
 
 Start creating party nodes and defining relationships.
