@@ -9,9 +9,8 @@
         <p>Powerful, Intuitive and Open-Source For ERPNext</p>
     </p>
 
-
-
-A powerful extension for ERPNext that brings centralized, hierarchical party management to your enterprise resource planning system—similar to Oracle’s Trading Community Architecture (TCA).
+</div>
+A powerful ,Innovative and a foundational data model in ERP System that provides a unified and flexible way to manage party information—such as customers, suppliers, ..etc, and other business entities for ERPNext that brings centralized, hierarchical party management to your enterprise .
 
 ### Other Languages
 - [Arabic (العربية)](README.ar.md) 🇸🇦
