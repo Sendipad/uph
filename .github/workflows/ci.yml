@@ -19,7 +19,7 @@ jobs:
 
       # Step 2: Set up Frappe environment and run tests using the Frappe Shared Action
       - name: Set up Frappe environment and run tests
-        uses: frappe/frappe/actions/setup-frappe@v15
+        uses: frappe/frappe/.github/workflows/_base-server-tests.yml@develop
         with:
           app_name: "uph" # Replace with your app name
           site_name: "test.local" # Replace with your site name
