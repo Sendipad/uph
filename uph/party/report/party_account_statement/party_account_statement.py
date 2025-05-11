@@ -5,29 +5,27 @@ from datetime import datetime
 
 import frappe
 from uph.party.controllers.queries import (
-    get_party_master_parties,
     get_party_master_parties_db,
+    get_leaf_party_master_list_from_any_node,
 )
 from frappe import _
-from frappe.query_builder import Criterion, CustomFunction, DocType, functions as fn
-from frappe import qb, scrub
-from frappe.query_builder.functions import Concat, Locate, Sum, Coalesce, Count
-from frappe.utils import nowdate, today, unique, add_months
+from frappe.query_builder import DocType, functions as fn
+
 import uph
 from frappe.query_builder.custom import ConstantColumn
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
     get_accounting_dimensions,
-    get_dimension_with_children,
 )
 from uph.party.controllers.queries import get_counts_of_unposted_or_cancelled_vouchers
+
 
 def execute(filters=None):
     filters = frappe._dict(filters or {})
     validate_set_filters(filters)
-    party_master = get_party_master(filters)
+    party_master = get_leaf_party_master_list_from_any_node(filters)
     columns = get_columns(filters)
     data = get_data(filters, party_master)
-    chart =get_timeline_chart_by_currency(data,from_date=filters.get('from_date'))
+    chart = get_timeline_chart_by_currency(data, from_date=filters.get("from_date"))
 
     return columns, data, None, chart
 
@@ -83,11 +81,14 @@ def validate_set_filters(filters):
             filters.update({"voucher_no_not_in": vouchers_to_ignore})
 
 
+"""
 def get_party_master(filters):
     if not filters or not filters.get("party_master"):
         return None
-    
-    group_party_master=frappe.db.get_all('Party Master',filters={'is_group':1,'disabled':0},pluck='name')
+
+    group_party_master = frappe.db.get_all(
+        "Party Master", filters={"is_group": 1, "disabled": 0}, pluck="name"
+    )
     if not filters.get("is_group"):
         return (
             [filters["party_master"]]
@@ -131,6 +132,9 @@ def get_party_master(filters):
 
     return leaf_parties
 
+"""
+
+
 def get_timeline_chart_by_currency(data, from_date=None):
 
     # Structure: currency -> month -> net change
@@ -146,7 +150,7 @@ def get_timeline_chart_by_currency(data, from_date=None):
             continue
 
         raw_date = entry.get("posting_date")
-        if not raw_date and entry.get('rowtype') == "Opening Balance":
+        if not raw_date and entry.get("rowtype") == "Opening Balance":
             raw_date = from_date
         if not raw_date:
             continue
@@ -187,32 +191,32 @@ def get_timeline_chart_by_currency(data, from_date=None):
 
             cumulative_balance += change
 
-        datasets.extend([
-            {
-                "name": _("{0} - {1}").format(_(currency),_('Debit')),
-                "values": debit_values,
-                "chartType": "bar"
-            },
-            {
-                "name": _("{0} - {1}").format(_(currency),_('Credit')),
-                "values": credit_values,
-                "chartType": "bar"
-            },
-            {
-                "name": _("{0} - {1}").format(_(currency),_('Balance')),
-                "values": line_values,
-                "chartType": "line"
-            }
-        ])
+        datasets.extend(
+            [
+                {
+                    "name": _("{0} - {1}").format(_(currency), _("Debit")),
+                    "values": debit_values,
+                    "chartType": "bar",
+                },
+                {
+                    "name": _("{0} - {1}").format(_(currency), _("Credit")),
+                    "values": credit_values,
+                    "chartType": "bar",
+                },
+                {
+                    "name": _("{0} - {1}").format(_(currency), _("Balance")),
+                    "values": line_values,
+                    "chartType": "line",
+                },
+            ]
+        )
 
     return {
-        "data": {
-            "labels": labels,
-            "datasets": datasets
-        },
+        "data": {"labels": labels, "datasets": datasets},
         "type": "axis-mixed",
-        "colors": ["#F582E8", "#A64AC9", "#00BFFF"] * len(currency_month_map)
+        "colors": ["#F582E8", "#A64AC9", "#00BFFF"] * len(currency_month_map),
     }
+
 
 def get_data(filters, party_master):
     data = []
@@ -233,23 +237,26 @@ def get_data(filters, party_master):
 
     opening_map = {
         (row.get("party"), row.get("party_type")): row
-        for row in opening if row.get("type") == "Opening"
+        for row in opening
+        if row.get("type") == "Opening"
     }
 
     current_totals = {
         (row.get("party"), row.get("party_type")): row
-        for row in opening if row.get("type") == "Current"
+        for row in opening
+        if row.get("type") == "Current"
     }
 
     # Group entries by party
-        
+
     party_entries = defaultdict(list)
     for entry in entries:
         party_entries[(entry.get("party"), entry.get("party_type"))].append(entry)
-        
+
     group_by_vn = filters.get("group_by") == "Group by Voucher (Consolidated)"
     hide_equal = "Hide Equals Voucher" in filters.get("display_options", [])
-    hide_warning= "Hide Warnings Message" in filters.get("display_options", [])
+    hide_warning = "Hide Warnings Message" in filters.get("display_options", [])
+
     def prepare_entries(key, party_master, balance, balance_in_cc, party_name):
         entries = party_entries.get(key, [])
         if not entries:
@@ -259,39 +266,39 @@ def get_data(filters, party_master):
         last_index = -1
 
         for entry in entries:
-            debit = entry.get('debit') or 0
-            credit = entry.get('credit') or 0
-            debit_in_cc = entry.get('debit_in_cc') or 0
-            credit_in_cc = entry.get('credit_in_cc') or 0
+            debit = entry.get("debit") or 0
+            credit = entry.get("credit") or 0
+            debit_in_cc = entry.get("debit_in_cc") or 0
+            credit_in_cc = entry.get("credit_in_cc") or 0
 
             if group_by_vn:
-                current_vn = entry.get('voucher_no')
+                current_vn = entry.get("voucher_no")
 
                 if current_vn == last_vn:
                     row = data[last_index]
-                    row['debit'] += debit
-                    row['credit'] += credit
-                    row['balance'] += (debit - credit)
-                    balance = row['balance']
+                    row["debit"] += debit
+                    row["credit"] += credit
+                    row["balance"] += debit - credit
+                    balance = row["balance"]
 
                     if filters.get("in_company_currency"):
-                        row['debit_in_cc'] += debit_in_cc
-                        row['credit_in_cc'] += credit_in_cc
-                        row['balance_in_cc'] += (debit_in_cc - credit_in_cc)
-                        balance_in_cc = row['balance_in_cc']
+                        row["debit_in_cc"] += debit_in_cc
+                        row["credit_in_cc"] += credit_in_cc
+                        row["balance_in_cc"] += debit_in_cc - credit_in_cc
+                        balance_in_cc = row["balance_in_cc"]
 
-                    if hide_equal and row['debit'] == row['credit']:
+                    if hide_equal and row["debit"] == row["credit"]:
                         data.pop(last_index)
                         last_index -= 1
                         last_vn = None
                     continue
                 else:
-                    balance += (debit - credit)
-                    balance_in_cc += (debit_in_cc - credit_in_cc)
+                    balance += debit - credit
+                    balance_in_cc += debit_in_cc - credit_in_cc
                     new_row = {
                         **entry,
                         "balance": balance,
-                        #"voucher_subtype":_(entry.get('voucher_subtype'),context="Voucher Type"),
+                        # "voucher_subtype":_(entry.get('voucher_subtype'),context="Voucher Type"),
                         "balance_in_cc": balance_in_cc,
                         "party_master": party_master,
                         "party_name": party_name,
@@ -300,8 +307,8 @@ def get_data(filters, party_master):
                     last_vn = current_vn
                     last_index = len(data) - 1
             else:
-                balance += (debit - credit)
-                balance_in_cc += (debit_in_cc - credit_in_cc)
+                balance += debit - credit
+                balance_in_cc += debit_in_cc - credit_in_cc
 
                 new_row = {
                     **entry,
@@ -311,7 +318,7 @@ def get_data(filters, party_master):
                     "party_name": party_name,
                 }
 
-                if hide_equal and new_row['debit'] == new_row['credit']:
+                if hide_equal and new_row["debit"] == new_row["credit"]:
                     continue
 
                 data.append(new_row)
@@ -320,13 +327,11 @@ def get_data(filters, party_master):
 
     # Collect unposted/cancelled voucher info
     gl_voucher_counts = get_counts_of_unposted_or_cancelled_vouchers(
-        filters.get('company'),
-        party_master=None,
-        is_party_gl_effected=1
+        filters.get("company"), party_master=None, is_party_gl_effected=1
     )
     unposted_voucher = {}
     for vc in gl_voucher_counts:
-        unposted_voucher.setdefault(vc.get('party_master'), []).append(vc)
+        unposted_voucher.setdefault(vc.get("party_master"), []).append(vc)
 
     last_pm = None
     cached_warning_row = None
@@ -344,7 +349,9 @@ def get_data(filters, party_master):
         open_balance = open_row.get("balance", 0) or 0
         balance_in_cc = open_row.get("balance_in_cc", 0) or 0
 
-        if open_balance != 0 or (filters.get("in_company_currency") and balance_in_cc != 0):
+        if open_balance != 0 or (
+            filters.get("in_company_currency") and balance_in_cc != 0
+        ):
             row = {**open_row}
             row.update(
                 {
@@ -352,7 +359,7 @@ def get_data(filters, party_master):
                     **party,
                     "remarks": _("Opening Balance"),
                     "rowtype": "Opening Balance",
-                    "status":_("Dr") if open_balance>0 else _("Cr")
+                    "status": _("Dr") if open_balance > 0 else _("Cr"),
                 }
             )
             data.append(row)
@@ -376,7 +383,7 @@ def get_data(filters, party_master):
                     "current_balance": totals.get("debit", 0) - totals.get("credit", 0),
                     "balance": total_balance,
                     "opening": open_balance,
-                    "rowtype":"Current Period Total"
+                    "rowtype": "Current Period Total",
                 }
             )
 
@@ -386,8 +393,8 @@ def get_data(filters, party_master):
                 "credit" if total_balance < 0 else "debit": abs(total_balance),
                 "remarks": _("Closing (Opening + Total)"),
                 "bold": 1,
-                "rowtype":"Closing Balance",
-                "status":_("Dr") if total_balance>0 else _("Cr"),
+                "rowtype": "Closing Balance",
+                "status": _("Dr") if total_balance > 0 else _("Cr"),
                 "balance": total_balance,
             }
             if filters.get("in_company_currency"):
@@ -407,10 +414,10 @@ def get_data(filters, party_master):
                     if d.get("cancelled_count"):
                         msg += f'{d.get("cancelled_count")} {_("Cancelled")} '
                 cached_warning_row = {
-                    "party_name":party.get('party_name'),
+                    "party_name": party.get("party_name"),
                     "party_master": current_pm,
                     "remarks": msg.strip(),
-                    "warning":1,
+                    "warning": 1,
                 }
 
         last_pm = current_pm
@@ -421,16 +428,14 @@ def get_data(filters, party_master):
 
     return data
 
+
 def query_gl(filters, dimension):
-    import pypika.terms
 
     dimension = ["cost_center", "project"] + get_accounting_dimensions(as_list=True)
     GL = DocType("GL Entry")
     display_options = set(filters.get("display_options") or [])
     conditions = GL.company == filters.get("company")
-    company_currency = frappe.get_cached_value(
-        "Company", filters.get("company"), "default_currency"
-    )
+
     from_date = filters.get("from_date")
     period_condition = GL.posting_date.between(from_date, filters.get("to_date"))
 
@@ -444,17 +449,20 @@ def query_gl(filters, dimension):
             fn.Sum(GL.debit_in_account_currency).as_("total_debit"),
             fn.Sum(GL.credit_in_account_currency).as_("total_credit"),
             (
-                fn.Sum(GL.debit_in_account_currency) - fn.Sum(GL.credit_in_account_currency)
+                fn.Sum(GL.debit_in_account_currency)
+                - fn.Sum(GL.credit_in_account_currency)
             ).as_("balance"),
             GL.account_currency.as_("currency"),
         ]
 
         if filters.get("in_company_currency"):
-            total_fields.extend([
-                fn.Sum(GL.debit).as_("debit_in_cc"),
-                fn.Sum(GL.credit).as_("credit_in_cc"),
-                (fn.Sum(GL.debit) - fn.Sum(GL.credit)).as_("balance_in_cc"),
-            ])
+            total_fields.extend(
+                [
+                    fn.Sum(GL.debit).as_("debit_in_cc"),
+                    fn.Sum(GL.credit).as_("credit_in_cc"),
+                    (fn.Sum(GL.debit) - fn.Sum(GL.credit)).as_("balance_in_cc"),
+                ]
+            )
 
         # Opening totals query
         opening_query = (
@@ -463,7 +471,9 @@ def query_gl(filters, dimension):
             .where(base_conditions & (GL.posting_date < from_date))
             .groupby(GL.party, GL.party_type)
             .having(
-                fn.Sum(GL.debit_in_account_currency) - fn.Sum(GL.credit_in_account_currency) != 0
+                fn.Sum(GL.debit_in_account_currency)
+                - fn.Sum(GL.credit_in_account_currency)
+                != 0
             )
         )
 
@@ -471,10 +481,15 @@ def query_gl(filters, dimension):
         current_query = (
             frappe.qb.from_(GL)
             .select(*total_fields, ConstantColumn("Current").as_("type"))
-            .where(base_conditions & (GL.posting_date.between(from_date, filters.get("to_date"))))
+            .where(
+                base_conditions
+                & (GL.posting_date.between(from_date, filters.get("to_date")))
+            )
             .groupby(GL.party, GL.party_type)
             .having(
-                fn.Sum(GL.debit_in_account_currency) - fn.Sum(GL.credit_in_account_currency) != 0
+                fn.Sum(GL.debit_in_account_currency)
+                - fn.Sum(GL.credit_in_account_currency)
+                != 0
             )
         )
 
@@ -489,7 +504,7 @@ def query_gl(filters, dimension):
 
     if "show_cancelled_entries" not in display_options:
         conditions &= GL.is_cancelled == 0
-   
+
     if filters.get("account"):
         conditions &= GL.account.isin(filters.get("account"))
     for df in dimension:
@@ -497,7 +512,7 @@ def query_gl(filters, dimension):
             conditions &= GL[df].isin(filters.get(df))
 
     total_query = get_totals_opening_and_current(conditions)
-    entry_condition=conditions
+    entry_condition = conditions
     if filters.get("voucher_no_not_in"):
         entry_condition &= ~GL.voucher_no.isin(filters.get("voucher_no_not_in"))
 
@@ -531,7 +546,9 @@ def query_gl(filters, dimension):
         )
 
     gl_query = (
-        frappe.qb.from_(GL).select(*fields).where((entry_condition) & (period_condition))
+        frappe.qb.from_(GL)
+        .select(*fields)
+        .where((entry_condition) & (period_condition))
     )
     if filters.get("group_by") == "Group by Voucher (Consolidated)":
         gl_query.groupby(GL.party_type, GL.party, GL.voucher_type, GL.voucher_no)
@@ -540,7 +557,6 @@ def query_gl(filters, dimension):
     )
 
     return total_query, gl_query.run(as_dict=True)
-
 
 
 def get_columns(filters):
@@ -610,7 +626,6 @@ def get_columns(filters):
             "fieldname": "party_name",
             "fieldtype": "Data",
         },
-        
         {
             "label": _("Party Master"),
             "fieldname": "party_master",
@@ -645,34 +660,33 @@ def get_columns(filters):
             "fieldtype": "Data",
             "width": 100,
         },
-                
     ]
     if filters.get("include_dimensions"):
         columns.append(
+            {
+                "label": _("Cost Center"),
+                "options": "Cost Center",
+                "fieldname": "cost_center",
+                "width": 100,
+            }
+        )
+        for dim in get_accounting_dimensions(as_list=False):
+            columns.append(
                 {
-                    "label": _("Cost Center"),
-                    "options": "Cost Center",
-                    "fieldname": "cost_center",
+                    "label": _(dim.label),
+                    "options": dim.label,
+                    "fieldname": dim.fieldname,
                     "width": 100,
                 }
             )
-        for dim in get_accounting_dimensions(as_list=False):
-                    columns.append(
-                        {
-                            "label": _(dim.label),
-                            "options": dim.label,
-                            "fieldname": dim.fieldname,
-                            "width": 100,
-                        }
-                    )
         columns.append(
-                    {
-                        "label": _("Project"),
-                        "options": "Project",
-                        "fieldname": "project",
-                        "width": 100,
-                    }
-                )
+            {
+                "label": _("Project"),
+                "options": "Project",
+                "fieldname": "project",
+                "width": 100,
+            }
+        )
     if filters.get("in_company_currency"):
         columns[9:9] = [
             {
@@ -697,7 +711,6 @@ def get_columns(filters):
                 "options": "company_currency",
             },
         ]
-        
 
     return columns
 

@@ -1,52 +1,25 @@
 """`(Party Master )`
-This is a controller functions to Validate Party Master,Validate Or fetch Party Master on Transactional Docs,
+This is a controller functions to Validate Party Master,Validate Or fetch Party Master
+on Transactional Docs,
 As well it will validate Party Analytic Accounting which is a Dimension Accounting
 Meanwhile it will Create the required Custom Field on Some ERPNext Doctype
 Beside It Will reflect the Change of set Party Master on Party Type Doctype
 
 """
 
-from collections import defaultdict
-
 import frappe
-import redis
-from frappe.utils import cstr
 
-import json
 from uph.party.utils import get_mapped_fieldnames
 from frappe.utils.caching import redis_cache
-from pypika.functions import Coalesce, Sum
+from pypika.functions import Coalesce
 
-from frappe import _, scrub
-from frappe.utils.nestedset import NestedSet
-from frappe.contacts.address_and_contact import (
-    delete_contact_and_address,
-    load_address_and_contact,
-)
-from erpnext.accounts.party import (
-    get_dashboard_info,
-    validate_party_accounts,
-    add_party_account,
-    get_party_gle_account,
-    get_party_gle_currency,
-    get_party_account,
-)  # noqa
-from frappe import qb, scrub
-from frappe.query_builder import Criterion, DocType, Case
-from frappe.query_builder.functions import Concat, Locate, Sum
-from pypika import Order, CustomFunction
-from functools import reduce
-from frappe.query_builder.custom import ConstantColumn
-from frappe.query_builder.functions import Count, Sum
-from frappe.utils.caching import redis_cache
+from frappe import _
+from frappe.query_builder.functions import Count
 from uph.party.boot import get_pm_doctypes
 import uph
-from frappe import _
-
-from uph.party.controllers.queries import get_party_master_parties, get_roles_for_pm
 
 
-###################### Caching##############################################
+# Caching
 def on_update_document_types_clear_cache():
     get_pm_doctypes.clear_cache()
     get_doctypes_functional_fields_mapping_as_dict.clear_cache()
@@ -125,6 +98,8 @@ Here is the Master validation function
     
     
 """
+
+
 def validate_party_master_on_document_types(doc, method=None):
     mapping = get_doctypes_functional_fields_mapping_as_dict()
     doctype = doc.doctype
@@ -179,7 +154,9 @@ def validate_party_master_on_document_types(doc, method=None):
             )
         elif not party_master or party_master != new_party_master:
             frappe.throw(
-                _("Party Master mismatch or missing for Party {0} ({1})").format(party, party_type)
+                _("Party Master mismatch or missing for Party {0} ({1})").format(
+                    party, party_type
+                )
             )
 
     if is_child:
@@ -301,30 +278,6 @@ def reset_default_on_party_master(party, party_type, party_master):
                 doc.db_set("is_default_for_party_master", 0)
 
 
-def run_sync_party_master_change_queue():
-    if not getattr(frappe.local, "_party_to_pm_queue", None):
-        return
-    local = frappe.local.get("_party_to_pm_queue")
-    pm = []
-    old = local.get("old_party_master")
-    new = local.get("new_party_master")
-    if old:
-        pm.append(old)
-    if new:
-        pm.append(new)
-        pm.append(old)
-    if new:
-        pm.append(new)
-    if pm:
-        uph.update_cached_party_master_parties(pm)
-    party_type = local.get("party_type")
-    if local.get("is_new"):
-        return
-    party_name = local.get("party")
-    doc = frappe.get_doc(party_type, party_name)
-
-    
-
 def on_change_party_master_update_transactional_document_types(party, commit=True):
     changes = []
     party_master = party.get("party_master")
@@ -421,9 +374,11 @@ def update_exists_docs_on_new_document_type_insert(document_type):
         )
     if not mapping:
         frappe.log_error(
-            _("Could not update documents {0}").format(
+            method=_("Could not update documents {0}").format(
                 document_type,
-                f"Error exist as no mapping Could be this function run before update cache ",
+                error=_(
+                    "Error exist as no mapping Could be this function run before update cache"
+                ),
             )
         )
         return
@@ -431,7 +386,9 @@ def update_exists_docs_on_new_document_type_insert(document_type):
     meta = frappe.get_meta(doctype)
     if meta.issingle or not frappe.db.count(doctype):
         return
-    fieldname = mapping.get("party_fieldname")
+    # fieldname = mapping.get("party_fieldname")
+
+    # Uncomplete code
 
 
 def update_linked_party_to_party_master_count(party_master, add_dec=None):

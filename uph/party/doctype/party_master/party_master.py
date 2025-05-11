@@ -1,37 +1,16 @@
 # Copyright (c) 2024, Abdo Ruzaqi and contributors
 # For license information, please see license.txt
-from frappe.query_builder.functions import Coalesce
-from frappe.query_builder import Order
 
 import frappe
-import redis
-from frappe.utils.caching import redis_cache
-from pypika.functions import Sum
-from frappe.utils import nowdate, add_months
-from frappe.query_builder.functions import Count
 
-from frappe.model.naming import set_name_by_naming_series, set_name_from_naming_options
-import re
+# from frappe.model.naming import set_name_by_naming_series, set_name_from_naming_options
 from frappe import _, scrub
 from frappe.utils.nestedset import NestedSet
-from frappe.contacts.address_and_contact import (
-    delete_contact_and_address,
-    load_address_and_contact,
-)
-from frappe.utils import cint, cstr, flt, get_formatted_email, today
 
-from erpnext.accounts.party import (
-    get_dashboard_info,
-    validate_party_accounts,
-    add_party_account,
-    get_party_gle_account,
-    get_party_gle_currency,
-    get_party_account,
-)  # noqa
-from frappe import qb, scrub
-from frappe.query_builder import Criterion, DocType, Case
-from frappe.query_builder.functions import Concat, Locate, Sum
-from pypika import CustomFunction
+# from frappe.contacts.address_and_contact import (delete_contact_and_address,load_address_and_contact)
+from frappe.utils import cint
+
+from frappe.query_builder import DocType, Case
 
 from functools import reduce
 from frappe.query_builder.custom import ConstantColumn
@@ -54,13 +33,23 @@ class PartyMaster(NestedSet):
     from typing import TYPE_CHECKING
 
     if TYPE_CHECKING:
-        from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import AllowedToTransactWith
-        from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import CustomerCreditLimit
+        from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import (
+            AllowedToTransactWith,
+        )
+        from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import (
+            CustomerCreditLimit,
+        )
         from erpnext.utilities.doctype.portal_user.portal_user import PortalUser
         from frappe.types import DF
-        from uph.party.doctype.party_master_accounts.party_master_accounts import PartyMasterAccounts
-        from uph.party.doctype.party_master_parties.party_master_parties import PartyMasterParties
-        from uph.party.doctype.party_master_role.party_master_role import PartyMasterRole
+        from uph.party.doctype.party_master_accounts.party_master_accounts import (
+            PartyMasterAccounts,
+        )
+        from uph.party.doctype.party_master_parties.party_master_parties import (
+            PartyMasterParties,
+        )
+        from uph.party.doctype.party_master_role.party_master_role import (
+            PartyMasterRole,
+        )
 
         account_manager: DF.Link | None
         accounts: DF.Table[PartyMasterAccounts]
@@ -86,11 +75,24 @@ class PartyMaster(NestedSet):
         is_internal_party: DF.Check
         is_primary_role: DF.Check
         language: DF.Link | None
-        legal_entity_type: DF.Literal["", "Sole Proprietor", "Partnership", "Corporation", "LLC", "NGO", "Freelancer", "Government", "Individual", "Other"]
+        legal_entity_type: DF.Literal[
+            "",
+            "Sole Proprietor",
+            "Partnership",
+            "Corporation",
+            "LLC",
+            "NGO",
+            "Freelancer",
+            "Government",
+            "Individual",
+            "Other",
+        ]
         lft: DF.Int
         market_segment: DF.Link | None
         mobile_no: DF.ReadOnly | None
-        naming_series: DF.Literal["{party_number}", ".{parent_party_master}.", "PM-{party_name}"]
+        naming_series: DF.Literal[
+            "{party_number}", ".{parent_party_master}.", "PM-{party_name}"
+        ]
         national_id: DF.Data | None
         old_parent: DF.Link | None
         parent_party_master: DF.Link | None
@@ -111,7 +113,21 @@ class PartyMaster(NestedSet):
         rgt: DF.Int
         roles: DF.TableMultiSelect[PartyMasterRole]
         salutation: DF.Link | None
-        status: DF.Literal["Active", "Disabled", "Closed", "Credit Hold", "Delinquent", "Disputed", "Dormant", "Write-Off", "Approved", "On Hold", "Under Review", "Terminated", "Suspended"]
+        status: DF.Literal[
+            "Active",
+            "Disabled",
+            "Closed",
+            "Credit Hold",
+            "Delinquent",
+            "Disputed",
+            "Dormant",
+            "Write-Off",
+            "Approved",
+            "On Hold",
+            "Under Review",
+            "Terminated",
+            "Suspended",
+        ]
         tax_category: DF.Link | None
         tax_id: DF.Data | None
         tax_withholding_category: DF.Link | None
@@ -119,6 +135,7 @@ class PartyMaster(NestedSet):
         title: DF.Data | None
         total_linked_party: DF.Int
         type: DF.Literal["", "Company", "Individual", "Partnership"]
+
     # end: auto-generated types
     def onload(self):
         self.set("parties", get_party_master_parties(self.name))
@@ -313,7 +330,7 @@ class PartyMaster(NestedSet):
                     self.add_comment(
                         "Comment",
                         _("{0} has linked {1} {2}").format(
-                            user, _(party.doctype), party.name
+                            frappe.session.user, _(party.doctype), party.name
                         ),
                     )
             self.set_total_linked_party()
@@ -601,7 +618,7 @@ def get_next_party_master_number(parent=None, is_group=0):
             as_list=1,
         )[0][0]
 
-        return str(cint(parent_number) + increment).zfill(4)
+        return str(cint(number) + increment).zfill(4)
 
     # Non-group logic
 
@@ -913,7 +930,6 @@ def assign_party_master_for_selections_list(assign_parties):
 
 @frappe.whitelist()
 def assign_party_master_for_selection(old_party_master, new_party_master, selections):
-    comments = []
 
     for p in selections:
         if not isinstance(p, list) or len(p) != 2:

@@ -1,25 +1,22 @@
 # Copyright (c) 2025, Abdo Mohammed Ruzaqi and contributors
 # For license information, please see license.txt
-from collections import defaultdict,Counter
+from collections import defaultdict, Counter
 from copy import copy
 
 import frappe
 from uph.party.controllers.queries import (
-    get_party_master_parties,
     get_party_master_parties_db,
     get_leaf_party_master_list_from_any_node,
 )
 from frappe import _
-from frappe.query_builder import Criterion, CustomFunction, DocType, functions as fn
-from frappe import qb, scrub
-from frappe.query_builder.functions import Concat, Locate, Sum, Coalesce, Count
-from frappe.utils import nowdate, today, unique, add_months
-import uph
-from frappe.query_builder.custom import ConstantColumn
+from frappe.query_builder import DocType, functions as fn
+
+"""
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
     get_accounting_dimensions,
     get_dimension_with_children,
 )
+"""
 
 
 def execute(filters=None):
@@ -53,24 +50,23 @@ def get_data(filters):
         where_conditions &= GL.party.isin(in_parties)
     elif not parties:
         where_conditions &= GL.party.isnotnull()
-    fields=[ GL.party,
-            GL.party_type,
-            GL.account_currency.as_("currency"),
+    fields = [
+        GL.party,
+        GL.party_type,
+        GL.account_currency.as_("currency"),
+        (
             (
-                (
-                    fn.Sum(GL.debit_in_account_currency)
-                    - fn.Sum(GL.credit_in_account_currency)
-                ).as_("balance")),fn.Max(GL.posting_date).as_("posting_date"),]
+                fn.Sum(GL.debit_in_account_currency)
+                - fn.Sum(GL.credit_in_account_currency)
+            ).as_("balance")
+        ),
+        fn.Max(GL.posting_date).as_("posting_date"),
+    ]
     if filters.in_company_currency:
-        fields.append( (
-                (
-                    fn.Sum(GL.debit)
-                    - fn.Sum(GL.credit)
-                ).as_("balance_in_cc")))
+        fields.append(((fn.Sum(GL.debit) - fn.Sum(GL.credit)).as_("balance_in_cc")))
     balances = (
         frappe.qb.from_(GL)
         .select(
-           
             *fields,
         )
         .where(where_conditions)
@@ -106,19 +102,19 @@ def get_data(filters):
             pm_dict = copy(pm_detail)
             pm_dict["party_type"] = party_type
             posting_date = []
-            balance_in_cc=0
+            balance_in_cc = 0
             for e in entries:
                 currency = e.get("currency")
                 pm_dict[currency] = e.get("balance")
                 if filters.in_company_currency:
-                    balance_in_cc+=e.get('balance_in_cc')
+                    balance_in_cc += e.get("balance_in_cc")
                 if e.get("posting_date"):
                     posting_date.append(
                         "{0} : {1}".format(_(currency), e.get("posting_date"))
                     )
             pm_dict["posting_date"] = ", ".join(posting_date)
             if filters.in_company_currency:
-                pm_dict['balance_in_cc']=balance_in_cc
+                pm_dict["balance_in_cc"] = balance_in_cc
             data.append(pm_dict)
 
     return data, columns
@@ -163,7 +159,7 @@ def get_columns(fields, filters):
         },
     ]
     if fields:
-       
+
         for df in fields:
             columns.append(
                 {
