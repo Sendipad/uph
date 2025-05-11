@@ -69,7 +69,7 @@ jobs:
           bench get-app erpnext --branch version-15
           bench new-site test_site --mariadb-root-password root --admin-password admin
           bench --site test_site install-app erpnext
-          bench get-app uph --branch develop --skip-assets --skip-requirements https://github.com/Sendipad/uph
+          bench get-app uph --branch develop https://github.com/Sendipad/uph
           bench --site test_site install-app uph
           bench build
 
