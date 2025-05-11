@@ -47,43 +47,36 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Cache pip dependencies
+      - name: Cache pip
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: pip-${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: pip-${{ runner.os }}-
 
-      - name: Cache frappe-bench
-        uses: actions/cache@v3
-        with:
-          path: frappe-bench
-          key: bench-${{ runner.os }}-${{ github.sha }}
-          restore-keys: bench-${{ runner.os }}-
-
-      - name: Install system packages
+      - name: Install system deps
         run: |
           sudo apt-get update
           sudo apt-get install -y libssl-dev curl
 
-      - name: Install Bench
+      - name: Install Bench and Init
         run: |
           pip install "click<8.1.0" frappe-bench
-
-      - name: Setup Frappe Bench
-        run: |
           bench init --skip-redis-config-generation --frappe-branch version-15 frappe-bench
+
+      - name: Set up Frappe site
+        run: |
           cd frappe-bench
-
           bench get-app erpnext https://github.com/frappe/erpnext --branch version-15
-
           bench get-app uph https://github.com/Sendipad/uph --branch develop
-
           bench new-site test-site.local --mariadb-root-password=root --admin-password=admin
           bench --site test-site.local install-app erpnext
-          bench --site test-site.local execute erpnext.patches.v15_0.set_default_warehouse_types
-
           bench --site test-site.local install-app uph
+          bench --site test-site.local migrate
+
+          # Optional: fix missing Warehouse Type error (custom logic)
+          bench --site test-site.local execute frappe.utils.install.insert_record_if_missing \
+            --args '["Warehouse Type", {"warehouse_type": "Transit"}]'
 
       - name: Run tests
         run: |
