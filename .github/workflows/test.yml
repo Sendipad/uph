@@ -11,4 +11,3 @@ jobs:
     with:
       parallel-runs: 2
       disable-socketio: true
-      disable-redis-socketio: true
