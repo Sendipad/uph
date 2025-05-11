@@ -8,15 +8,13 @@ on:
     branches:
       - develop
   schedule:
-    - cron: "0 0 * * *" # Daily test run
+    - cron: "0 0 * * *"
 
 jobs:
   server-tests:
     uses: frappe/frappe/.github/workflows/_base-server-tests.yml@develop
     with:
-      app: uph # Your custom app name
-      required-apps: erpnext payments # Ensures both are installed
-      enable-postgres: false
+      enable-sqlite: false
       parallel-runs: 2
       enable-coverage: ${{ github.event_name != 'pull_request' }}
     secrets: inherit
