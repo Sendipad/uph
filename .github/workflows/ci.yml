@@ -81,6 +81,8 @@ jobs:
 
           bench new-site test-site.local --mariadb-root-password=root --admin-password=admin
           bench --site test-site.local install-app erpnext
+          bench --site test-site.local execute erpnext.patches.v15_0.set_default_warehouse_types
+
           bench --site test-site.local install-app uph
 
       - name: Run tests
