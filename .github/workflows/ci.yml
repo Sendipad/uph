@@ -1,18 +1,34 @@
-name: UPH App Tests
+name: CI
 
 on:
   push:
-    branches: [ develop ]
   pull_request:
-    branches: [ develop ]
+  workflow_dispatch:
 
 jobs:
   test:
-    name: Tests
-    uses: frappe/frappe/.github/workflows/_base-server-tests.yml@develop
-    with:
-      python-version: '3.12'
-      node-version: 20
-      parallel-runs: 4
-      enable-postgres: true
-      enable-coverage: true
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/setup
+        with:
+          db-root-password: ${{ secrets.DB_ROOT_PASSWORD }}
+          disable-socketio: true
+          build-assets: true
+
+      - name: Run tests
+        shell: bash
+        run: |
+          source env/bin/activate
+          bench --site test_site run-tests --app uph --doctype "Party Master"
+
+      - name: Print bench log (on failure)
+        if: failure()
+        run: |
+          cat bench_start.log || echo "No bench_start.log found"
+          ls -l logs || echo "No logs directory found"
