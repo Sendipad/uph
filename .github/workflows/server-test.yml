@@ -55,9 +55,9 @@ jobs:
       - name: Set up Bench
         run: |
           pip install frappe-bench
-          bench init frappe-bench --frappe-branch version-14
+          bench init frappe-bench --frappe-branch version-15
           cd frappe-bench
           bench new-site test_site --mariadb-root-password root --admin-password admin
-          bench get-app erpnext --branch version-14
+          bench get-app erpnext --branch version-15
           bench --site test_site install-app erpnext
           bench start &
