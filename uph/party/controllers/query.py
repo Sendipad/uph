@@ -1,11 +1,8 @@
 import frappe
-from frappe import qb, scrub
-from frappe.desk.reportview import get_filters_cond, get_match_cond
 from frappe.query_builder import Criterion, CustomFunction, DocType
-from frappe.query_builder.functions import Concat, Locate, Sum, Coalesce, Count
-from frappe.utils import nowdate, today, unique, add_months
+from frappe.query_builder.functions import Locate, Coalesce, Count
+from frappe.utils import nowdate, unique, add_months
 from pypika import Order
-from frappe import _
 
 
 @frappe.whitelist()

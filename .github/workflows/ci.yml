@@ -54,7 +54,7 @@ jobs:
           key: pip-${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: pip-${{ runner.os }}-
 
-      - name: Install system deps
+      - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libssl-dev curl
@@ -67,14 +67,27 @@ jobs:
       - name: Set up Frappe site
         run: |
           cd frappe-bench
+
+          # Add your apps
           bench get-app erpnext https://github.com/frappe/erpnext --branch version-15
           bench get-app uph https://github.com/Sendipad/uph --branch develop
+
+          # Create and install site
           bench new-site test-site.local --mariadb-root-password=root --admin-password=admin
           bench --site test-site.local install-app erpnext
           bench --site test-site.local install-app uph
-          bench --site test-site.local migrate
 
-          # Optional: fix missing Warehouse Type error (custom logic)
+          # Simulate Redis services (for CI compatibility)
+          export REDIS_CACHE=redis://localhost:6379
+          export REDIS_QUEUE=redis://localhost:6380
+          export REDIS_SOCKETIO=redis://localhost:6381
+
+          # Apply patches safely
+          bench --site test-site.local set-config maintenance_mode 1
+          bench --site test-site.local migrate
+          bench --site test-site.local set-config maintenance_mode 0
+
+          # Fix Warehouse Type error (create Transit type if missing)
           bench --site test-site.local execute frappe.utils.install.insert_record_if_missing \
             --args '["Warehouse Type", {"warehouse_type": "Transit"}]'
 
