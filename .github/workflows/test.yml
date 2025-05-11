@@ -1,0 +1,15 @@
+name: Tests
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Tests
+    uses: frappe/frappe/.github/workflows/_base-server-tests.yml@develop
+    with:
+      enable-postgres: false
+      parallel-runs: 2
+      disable-socketio: true
+      disable-redis-socketio: true
