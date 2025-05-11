@@ -3,12 +3,12 @@ name: Frappe CI
 on:
   push:
     paths:
-      - '**.py'
-      - '**.js'
-      - '**.json'
-      - '**.html'
-      - '**.vue'
-      - '**.md'
+      - "**.py"
+      - "**.js"
+      - "**.json"
+      - "**.html"
+      - "**.vue"
+      - "**.md"
   pull_request:
 
 jobs:
@@ -45,7 +45,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Cache pip dependencies
         uses: actions/cache@v3
@@ -74,8 +74,11 @@ jobs:
         run: |
           bench init --skip-redis-config-generation --frappe-branch version-15 frappe-bench
           cd frappe-bench
-          bench get-app erpnext --branch version-15
-          bench get-app ../uph
+
+          bench get-app erpnext https://github.com/frappe/erpnext --branch version-15
+
+          bench get-app uph https://github.com/Sendipad/uph --branch develop
+
           bench new-site test-site.local --mariadb-root-password=root --admin-password=admin
           bench --site test-site.local install-app erpnext
           bench --site test-site.local install-app uph
