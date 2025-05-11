@@ -1,7 +1,6 @@
-
 """
 import frappe
-from uph.party.controllers.party import update_transactional_docs,get_parties 
+from uph.party.controllers.party import update_transactional_docs,get_parties
 
 def test_batch_update():
     cl=frappe.get_all('Customer',filters={'party_master':['is','set']})
@@ -30,7 +29,7 @@ def test_update_transactional_doc():
 
 
 def test_update_transactional_docs(party_doc):
-    
+
     frappe.log_error(f"🔹 Starting update_transactional_docs for Party Master: {party_doc.party_master}")
     party_master=party_doc.party_master
     party_type=party_doc.doctype
@@ -542,7 +541,7 @@ def _get_linked_transactional_doctype():
 
 
 def compare_documents(current_doc, existing_doc, meta, child_tables):
-   
+
     comparison = {"is_duplicate": True, "matches": {"parent": [], "children": {}}}
 
     # Parent field comparison
@@ -583,7 +582,7 @@ def compare_documents(current_doc, existing_doc, meta, child_tables):
 
 
 def normalize_child_table(items):
-   
+
     try:
         return sorted(
             [
@@ -604,7 +603,7 @@ def normalize_child_table(items):
 
 @frappe.whitelist()
 def allow_duplicate_submission(doctype, name):
-   
+
     try:
         if not frappe.has_permission(doctype, "submit", doc=name):
             frappe.throw(_("Insufficient Permissions"), frappe.PermissionError)
