@@ -1,18 +1,14 @@
-name: Frappe App Tests
+name: UPH App Tests
 
 on:
   push:
-    branches:
-      - develop
+    branches: [ develop ]
   pull_request:
-    branches:
-      - develop
+    branches: [ develop ]
 
 jobs:
   test:
     uses: frappe/frappe/.github/workflows/_base-server-tests.yml@develop
     with:
-      # Directly passing values instead of using secrets
-      site: "test.local"              # Replace with your actual site
-      db_password: "root"             # Replace with your actual DB password
-      root_password: "root"           # Replace with your actual root password
+      app_name: "uph"
+      frappe_branch: "version-15"
