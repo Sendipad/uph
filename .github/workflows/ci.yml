@@ -3,12 +3,12 @@ name: Frappe CI
 on:
   push:
     paths:
-      - "**.py"
-      - "**.js"
-      - "**.json"
-      - "**.html"
-      - "**.vue"
-      - "**.md"
+      - '**.py'
+      - '**.js'
+      - '**.json'
+      - '**.html'
+      - '**.vue'
+      - '**.md'
   pull_request:
 
 jobs:
@@ -45,36 +45,40 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: '3.10'
 
-      - name: Cache pip
+      - name: Cache pip dependencies
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          key: pip-${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: pip-${{ runner.os }}-
 
-      - name: Install system deps
+      - name: Cache frappe-bench
+        uses: actions/cache@v3
+        with:
+          path: frappe-bench
+          key: bench-${{ runner.os }}-${{ github.sha }}
+          restore-keys: bench-${{ runner.os }}-
+
+      - name: Install system packages
         run: |
           sudo apt-get update
           sudo apt-get install -y libssl-dev curl
 
-      - name: Install Bench and dependencies
+      - name: Install Bench
         run: |
           pip install "click<8.1.0" frappe-bench
-          bench init --skip-redis-config --frappe-branch version-15 frappe-bench
-        shell: bash
 
-      - name: Set up Frappe site
+      - name: Setup Frappe Bench
         run: |
+          bench init --skip-redis-config-generation --frappe-branch version-15 frappe-bench
           cd frappe-bench
           bench get-app erpnext --branch version-15
           bench get-app ../uph
           bench new-site test-site.local --mariadb-root-password=root --admin-password=admin
           bench --site test-site.local install-app erpnext
           bench --site test-site.local install-app uph
-        shell: bash
 
       - name: Run tests
         run: |
