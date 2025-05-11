@@ -10,24 +10,9 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-
-    steps:
-      # Step 1: Checkout the repository
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      # Step 2: Set up Frappe environment and run tests using the Frappe Shared Action
-      - name: Set up Frappe environment and run tests
-        uses: frappe/frappe/.github/workflows/_base-server-tests.yml@develop
-        with:
-          app_name: "uph" # Replace with your app name
-          site_name: "test.local" # Replace with your site name
-          db_password: "root" # Replace with your database password
-          root_password: "root" # Replace with your root password
-
-      # Step 3: Run additional tests or custom commands
-      - name: Run additional tests (optional)
-        run: |
-          # Replace with any specific commands or test suites you'd like to run
-          echo "Running additional tests..."
+    uses: frappe/frappe/.github/workflows/_base-server-tests.yml@develop
+    with:
+      app_name: "uph"               # Replace with your app name
+      site_name: "test.local"       # Replace with your site name
+      db_password: "root"           # Replace with your database password
+      root_password: "root"         # Replace with your root password
