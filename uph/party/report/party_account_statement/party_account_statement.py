@@ -81,60 +81,6 @@ def validate_set_filters(filters):
             filters.update({"voucher_no_not_in": vouchers_to_ignore})
 
 
-"""
-def get_party_master(filters):
-    if not filters or not filters.get("party_master"):
-        return None
-
-    group_party_master = frappe.db.get_all(
-        "Party Master", filters={"is_group": 1, "disabled": 0}, pluck="name"
-    )
-    if not filters.get("is_group"):
-        return (
-            [filters["party_master"]]
-            if isinstance(filters["party_master"], str)
-            else filters["party_master"]
-        )
-
-    # Start with the selected parent group(s)
-    parents = set(
-        filters["party_master"]
-        if isinstance(filters["party_master"], list)
-        else [filters["party_master"]]
-    )
-
-    def collect_all_group_children(current_parents):
-        found_new = True
-        while found_new:
-            found_new = False
-            child_groups = frappe.db.get_all(
-                "Party Master",
-                filters={
-                    "parent_party_master": ["in", list(current_parents)],
-                    "is_group": 1,
-                },
-                fields=["name"],
-            )
-            for child in child_groups:
-                if child.name not in current_parents:
-                    current_parents.add(child.name)
-                    found_new = True
-        return current_parents
-
-    all_group_names = collect_all_group_children(parents)
-
-    # Now fetch all non-group (leaf) parties under any of the group names collected
-    leaf_parties = frappe.db.get_all(
-        "Party Master",
-        filters={"parent_party_master": ["in", list(all_group_names)], "is_group": 0},
-        pluck="name",
-    )
-
-    return leaf_parties
-
-"""
-
-
 def get_timeline_chart_by_currency(data, from_date=None):
 
     # Structure: currency -> month -> net change
