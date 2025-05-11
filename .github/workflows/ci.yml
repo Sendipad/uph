@@ -1,4 +1,4 @@
-name: CI
+name: UPH CI
 
 on:
   push:
@@ -7,27 +7,23 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      GIT_PYTHON_GIT_EXECUTABLE: /usr/bin/git
+      NODE_ENV: development
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: test_frappe
+      MYSQL_USER: test_frappe
+      MYSQL_PASSWORD: test_frappe
+
     services:
       mariadb:
         image: mariadb:10.6
         env:
           MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: test_frappe
-          MYSQL_USER: test_frappe
-          MYSQL_PASSWORD: test_frappe
         ports:
           - 3306:3306
         options: >-
           --health-cmd="mysqladmin ping --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-      redis:
-        image: redis:6.2
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd="redis-cli ping"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
@@ -39,39 +35,45 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12.6'
+          python-version: '3.12'
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '18'
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y redis-server libmariadb-dev
+          sudo apt-get install -y redis-server libmariadb-dev git curl
 
-      - name: Install Frappe Bench
+      - name: Wait for MariaDB to be ready
+        run: |
+          for i in {1..30}; do
+            if mysqladmin ping -h "127.0.0.1" --silent; then
+              echo "MariaDB is up!"
+              break
+            fi
+            echo "Waiting for MariaDB..."
+            sleep 2
+          done
+
+      - name: Install Frappe Bench CLI
         run: |
           pip install frappe-bench
 
-      - name: Initialize Frappe Bench
+      - name: Set up Frappe Bench with ERPNext and UPH
         run: |
           bench init frappe-bench --frappe-branch version-15
-        working-directory: ${{ github.workspace }}
-
-      - name: Set up site and install ERPNext and UPH
-        run: |
           cd frappe-bench
           bench get-app erpnext --branch version-15
-          bench get-app uph --branch develop --source-path ../
           bench new-site test_site --mariadb-root-password root --admin-password admin
           bench --site test_site install-app erpnext
+          bench get-app uph --branch develop --skip-assets --skip-requirements https://github.com/Sendipad/uph
           bench --site test_site install-app uph
-        env:
-          PATH: ${{ github.workspace }}/frappe-bench/env/bin:$PATH
+          bench build
 
-      - name: Run tests for UPH app
+      - name: Run tests
         run: |
           cd frappe-bench
           bench --site test_site run-tests --app uph
