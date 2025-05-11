@@ -68,26 +68,27 @@ jobs:
         run: |
           cd frappe-bench
 
-          # Add your apps
+          # Get apps
           bench get-app erpnext https://github.com/frappe/erpnext --branch version-15
           bench get-app uph https://github.com/Sendipad/uph --branch develop
 
-          # Create and install site
+          # Create site and install apps
           bench new-site test-site.local --mariadb-root-password=root --admin-password=admin
           bench --site test-site.local install-app erpnext
           bench --site test-site.local install-app uph
 
-          # Simulate Redis services (for CI compatibility)
-          export REDIS_CACHE=redis://localhost:6379
-          export REDIS_QUEUE=redis://localhost:6380
-          export REDIS_SOCKETIO=redis://localhost:6381
+          # CI-safe Redis config injection
+          bench --site test-site.local set-config redis_cache redis://localhost:6379
+          bench --site test-site.local set-config redis_queue redis://localhost:6380
+          bench --site test-site.local set-config redis_socketio redis://localhost:6381
 
-          # Apply patches safely
+          # Run migration and enable scheduler
           bench --site test-site.local set-config maintenance_mode 1
           bench --site test-site.local migrate
           bench --site test-site.local set-config maintenance_mode 0
+          bench --site test-site.local enable-scheduler
 
-          # Fix Warehouse Type error (create Transit type if missing)
+          # Fix missing warehouse type
           bench --site test-site.local execute frappe.utils.install.insert_record_if_missing \
             --args '["Warehouse Type", {"warehouse_type": "Transit"}]'
 
@@ -95,3 +96,13 @@ jobs:
         run: |
           cd frappe-bench
           bench --site test-site.local run-tests --app uph
+
+      - name: Show site logs on failure
+        if: failure()
+        run: |
+          cd frappe-bench
+          echo "🔍 Showing last 100 lines of site logs:"
+          tail -n 100 sites/test-site.local/logs/web.error.log || true
+          tail -n 100 sites/test-site.local/logs/worker.error.log || true
+          tail -n 100 sites/test-site.local/logs/schedule.error.log || true
+          tail -n 100 sites/test-site.local/logs/background_job.error.log || true

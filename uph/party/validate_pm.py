@@ -33,7 +33,7 @@ def validate_party_master_journal_entry_account(doc, method):
 
 
 def validate_party_master_tx_doctype(doc, method):
-    if not doc.doctype in get_transactional_doctype_list_to_add_pm:
+    if doc.doctype in get_transactional_doctype_list_to_add_pm:
         return
     if frappe.flags.ignore_party_master_match:
         return
@@ -81,38 +81,55 @@ def assign_party_to_party_master(doc, method=None):
                     )
                 except Exception as e:
                     doc.log_error(f"Error while updating Party Master for {doc.name}")
-    old_pm=frappe.db.get_value(doc.doctype,doc.name,'party_master') or ''
-    new_pm=doc.get('party_master','')
-    currency_field=get_party_type_currency_field(doc.doctype)
-    fullname=frappe.utils.get_fullname(frappe.session.user)
+    old_pm = frappe.db.get_value(doc.doctype, doc.name, "party_master") or ""
+    new_pm = doc.get("party_master", "")
+    currency_field = get_party_type_currency_field(doc.doctype)
+    fullname = frappe.utils.get_fullname(frappe.session.user)
     if new_pm != old_pm:
-        if new_pm!='' and frappe.db.exists(doc.doctype,{'party_master':new_pm,currency_field:doc.get(currency_field)}):
-            frappe.throw(_('Party Master {0} has Linked {1} with Currency{2}').format(new_pm,_(doc.doctype),doc.get(currency_field)))
-        if new_pm!='':    
-            doc.add_comment("Comment", _("{0} Has {1} This {2} To Party Master :{3}").format(
-                                        frappe.bold(fullname),
-                                        frappe.bold(_('Assign')),
-                                        _(doc.doctype),
-                                        frappe.bold(new_pm)))
-            pm=frappe.get_cached_doc("Party Master",new_pm)
-            pm.add_comment("Comment", _("{0} {1} Has {2} a {3} named {4}").format(
-                                frappe.bold(frappe.session.user),
-                                frappe.bold(fullname),
-                                frappe.bold(_("Assign")),
-                                frappe.bold(_(doc.doctype)),
-                                frappe.bold(_(doc.name))
-                            ))
+        if new_pm != "" and frappe.db.exists(
+            doc.doctype,
+            {"party_master": new_pm, currency_field: doc.get(currency_field)},
+        ):
+            frappe.throw(
+                _("Party Master {0} has Linked {1} with Currency{2}").format(
+                    new_pm, _(doc.doctype), doc.get(currency_field)
+                )
+            )
+        if new_pm != "":
+            doc.add_comment(
+                "Comment",
+                _("{0} Has {1} This {2} To Party Master :{3}").format(
+                    frappe.bold(fullname),
+                    frappe.bold(_("Assign")),
+                    _(doc.doctype),
+                    frappe.bold(new_pm),
+                ),
+            )
+            pm = frappe.get_cached_doc("Party Master", new_pm)
+            pm.add_comment(
+                "Comment",
+                _("{0} {1} Has {2} a {3} named {4}").format(
+                    frappe.bold(frappe.session.user),
+                    frappe.bold(fullname),
+                    frappe.bold(_("Assign")),
+                    frappe.bold(_(doc.doctype)),
+                    frappe.bold(_(doc.name)),
+                ),
+            )
             pm.save()
-            #frappe.db.commit()
-        if old_pm!="":
-            opm=frappe.get_cached_doc("Party Master",old_pm)
-            opm.add_comment("Comment", _("{0} {1} Has {2} a {3} named {4}").format(
-                                frappe.bold(frappe.session.user),
-                                frappe.bold(fullname),
-                                frappe.bold(_("Unlinked")),
-                                frappe.bold(_(doc.doctype)),
-                                frappe.bold(_(doc.name))
-                            ))
+            # frappe.db.commit()
+        if old_pm != "":
+            opm = frappe.get_cached_doc("Party Master", old_pm)
+            opm.add_comment(
+                "Comment",
+                _("{0} {1} Has {2} a {3} named {4}").format(
+                    frappe.bold(frappe.session.user),
+                    frappe.bold(fullname),
+                    frappe.bold(_("Unlinked")),
+                    frappe.bold(_(doc.doctype)),
+                    frappe.bold(_(doc.name)),
+                ),
+            )
             opm.save()
     # previouse_pm = frappe.db.get_value(doc.doctype, doc.name, "party_master")
     # set_comments_on_party_master(doc.doctype,doc.name,doc.party_master,previouse_pm)
@@ -265,33 +282,37 @@ def assign_party_master_based_on_doctype_and_exist(doc, method):
 
 
 def validate_party_match_to_party_master(doc):
-    find_by_fields=['customer','supplier','employee','party','default_customer','default_supplier']
-    party_type=''
-    party_field=''
-    party=''
+    find_by_fields = [
+        "customer",
+        "supplier",
+        "employee",
+        "party",
+        "default_customer",
+        "default_supplier",
+    ]
+    party_type = ""
+    party_field = ""
+    party = ""
     try:
         pt_p = get_party_type_party_field_from_doc(doc, value=True, party_type=None)
         if pt_p:
-            party_type=pt_p.get('party_type')
-            party=pt_p.get('party')
+            party_type = pt_p.get("party_type")
+            party = pt_p.get("party")
     except Exception as e:
         for f in find_by_fields:
-                    if doc.get(f):
-                        party_field=f
-                        party=doc.get(f)
-                        
-                        if f=='party':
-                            party_type=doc.get('party_type')
-                        else:
-                             party_type=doc.get('party_type')
-                        break
+            if doc.get(f):
+                party_field = f
+                party = doc.get(f)
 
-            
-    
+                if f == "party":
+                    party_type = doc.get("party_type")
+                else:
+                    party_type = doc.get("party_type")
+                break
+
     if not get_party_type_party_field_from_doc(doc, value=True, party_type=None):
-        
-                    
-                pt_p = get_party_type_party_field_from_doc(doc, value=True, party_type=None)
+
+        pt_p = get_party_type_party_field_from_doc(doc, value=True, party_type=None)
     p_doc = frappe.get_cached_doc(pt_p.get("party_type"), pt_p.get("party"))
     if doc.party_master != p_doc.party_master:
         frappe.throw(
