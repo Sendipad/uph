@@ -12,7 +12,8 @@ jobs:
   test:
     uses: frappe/frappe/.github/workflows/_base-server-tests.yml@develop
     with:
-      app_name: "uph"               # Replace with your app name
-      site_name: "test.local"       # Replace with your site name
-      db_password: "root"           # Replace with your database password
-      root_password: "root"         # Replace with your root password
+      # These are just placeholders, replace them with the actual inputs expected by the reusable workflow
+      # For example, these could be: 'site', 'app' or whatever the reusable workflow needs
+      site: "test.local"                # Replace with actual site parameter if needed
+      db_password: ${{ secrets.DB_PASSWORD }}  # Replace with your actual secrets or values
+      root_password: ${{ secrets.ROOT_PASSWORD }} # Replace with your root password secret
