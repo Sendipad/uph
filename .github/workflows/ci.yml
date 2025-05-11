@@ -2,33 +2,76 @@ name: CI
 
 on:
   push:
-  pull_request:
-  workflow_dispatch:
+    branches: [develop]
 
 jobs:
   test:
-    name: Run Tests
     runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:10.6
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_frappe
+          MYSQL_USER: test_frappe
+          MYSQL_PASSWORD: test_frappe
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+      redis:
+        image: redis:6.2
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
 
     steps:
-      - name: Checkout code
+      - name: Checkout UPH repository
         uses: actions/checkout@v4
 
-      - name: Setup environment
-        uses: ./.github/actions/setup
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          db-root-password: ${{ secrets.DB_ROOT_PASSWORD }}
-          disable-socketio: true
-          build-assets: true
+          python-version: '3.12.6'
 
-      - name: Run tests
-        shell: bash
-        run: |
-          source env/bin/activate
-          bench --site test_site run-tests --app uph --doctype "Party Master"
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
-      - name: Print bench log (on failure)
-        if: failure()
+      - name: Install system dependencies
         run: |
-          cat bench_start.log || echo "No bench_start.log found"
-          ls -l logs || echo "No logs directory found"
+          sudo apt-get update
+          sudo apt-get install -y redis-server libmariadb-dev
+
+      - name: Install Frappe Bench
+        run: |
+          pip install frappe-bench
+
+      - name: Initialize Frappe Bench
+        run: |
+          bench init frappe-bench --frappe-branch version-15
+        working-directory: ${{ github.workspace }}
+
+      - name: Set up site and install ERPNext and UPH
+        run: |
+          cd frappe-bench
+          bench get-app erpnext --branch version-15
+          bench get-app uph --branch develop --source-path ../
+          bench new-site test_site --mariadb-root-password root --admin-password admin
+          bench --site test_site install-app erpnext
+          bench --site test_site install-app uph
+        env:
+          PATH: ${{ github.workspace }}/frappe-bench/env/bin:$PATH
+
+      - name: Run tests for UPH app
+        run: |
+          cd frappe-bench
+          bench --site test_site run-tests --app uph
