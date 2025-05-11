@@ -10,4 +10,3 @@ jobs:
     uses: frappe/frappe/.github/workflows/_base-server-tests.yml@develop
     with:
       parallel-runs: 2
-      disable-socketio: true
