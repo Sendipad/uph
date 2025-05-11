@@ -1,4 +1,4 @@
-name: Server Tests
+name: Frappe App Tests
 
 on:
   push:
@@ -7,14 +7,21 @@ on:
   pull_request:
     branches:
       - develop
-  schedule:
-    - cron: "0 0 * * *"
 
 jobs:
-  server-tests:
-    uses: frappe/frappe/.github/workflows/_base-server-tests.yml@develop
-    with:
-      enable-sqlite: false
-      parallel-runs: 2
-      enable-coverage: ${{ github.event_name != 'pull_request' }}
-    secrets: inherit
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Deploy Frappe app and run tests
+      - name: Deploy Frappe App and Run Tests
+        uses: rtCamp/action-deploy-frappe@v1
+        with:
+          app_name: 'uph'               # Replace with your app name
+          site_name: 'test.local'       # Replace with your site name
+          db_password: 'root'           # Replace with your database password
+          root_password: 'root'         # Replace with your root password
