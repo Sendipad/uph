@@ -8,7 +8,6 @@ from uph.party.controllers.test.test_create_pm_records import (
     create_party_master,
 )
 
-
 # Please Check test in /uph/party/controllers/test for All test methods
 
 
