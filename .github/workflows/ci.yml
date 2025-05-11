@@ -1,108 +1,22 @@
-name: Frappe CI
+name: Server Tests
 
 on:
   push:
-    paths:
-      - "**.py"
-      - "**.js"
-      - "**.json"
-      - "**.html"
-      - "**.vue"
-      - "**.md"
+    branches:
+      - develop
   pull_request:
+    branches:
+      - develop
+  schedule:
+    - cron: "0 0 * * *" # Daily test run
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    services:
-      mariadb:
-        image: mariadb:10.6
-        env:
-          MYSQL_ROOT_PASSWORD: root
-        ports:
-          - 3306:3306
-
-      redis-cache:
-        image: redis:alpine
-        ports:
-          - 6379:6379
-
-      redis-queue:
-        image: redis:alpine
-        ports:
-          - 6380:6379
-
-      redis-socketio:
-        image: redis:alpine
-        ports:
-          - 6381:6379
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-
-      - name: Cache pip
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: pip-${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: pip-${{ runner.os }}-
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libssl-dev curl
-
-      - name: Install Bench and Init
-        run: |
-          pip install "click<8.1.0" frappe-bench
-          bench init --skip-redis-config-generation --frappe-branch version-15 frappe-bench
-
-      - name: Set up Frappe site
-        run: |
-          cd frappe-bench
-
-          # Get apps
-          bench get-app erpnext https://github.com/frappe/erpnext --branch version-15
-          bench get-app uph https://github.com/Sendipad/uph --branch develop
-
-          # Create site and install apps
-          bench new-site test-site.local --mariadb-root-password=root --admin-password=admin
-          bench --site test-site.local install-app erpnext
-          bench --site test-site.local install-app uph
-
-          # CI-safe Redis config injection
-          bench --site test-site.local set-config redis_cache redis://localhost:6379
-          bench --site test-site.local set-config redis_queue redis://localhost:6380
-          bench --site test-site.local set-config redis_socketio redis://localhost:6381
-
-          # Run migration and enable scheduler
-          bench --site test-site.local set-config maintenance_mode 1
-          bench --site test-site.local migrate
-          bench --site test-site.local set-config maintenance_mode 0
-          bench --site test-site.local enable-scheduler
-
-          # Fix missing warehouse type
-          bench --site test-site.local execute frappe.utils.install.insert_record_if_missing \
-            --args '["Warehouse Type", {"warehouse_type": "Transit"}]'
-
-      - name: Run tests
-        run: |
-          cd frappe-bench
-          bench --site test-site.local run-tests --app uph
-
-      - name: Show site logs on failure
-        if: failure()
-        run: |
-          cd frappe-bench
-          echo "🔍 Showing last 100 lines of site logs:"
-          tail -n 100 sites/test-site.local/logs/web.error.log || true
-          tail -n 100 sites/test-site.local/logs/worker.error.log || true
-          tail -n 100 sites/test-site.local/logs/schedule.error.log || true
-          tail -n 100 sites/test-site.local/logs/background_job.error.log || true
+  server-tests:
+    uses: frappe/frappe/.github/workflows/_base-server-tests.yml@develop
+    with:
+      app: uph # Your custom app name
+      required-apps: erpnext payments # Ensures both are installed
+      enable-postgres: false
+      parallel-runs: 2
+      enable-coverage: ${{ github.event_name != 'pull_request' }}
+    secrets: inherit
