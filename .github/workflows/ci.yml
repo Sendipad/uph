@@ -8,10 +8,11 @@ on:
 
 jobs:
   test:
+    name: Tests
     uses: frappe/frappe/.github/workflows/_base-server-tests.yml@develop
     with:
-      app_name: "uph"
-      frappe_branch: "version-15"
-      db: "mariadb"
-      type: "server"
-      python_version: "3.12"
+      python-version: '3.12'
+      node-version: 20
+      parallel-runs: 4
+      enable-postgres: true
+      enable-coverage: true
