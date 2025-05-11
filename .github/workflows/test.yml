@@ -8,5 +8,4 @@ jobs:
   test:
     name: Tests
     uses: frappe/frappe/.github/workflows/_base-server-tests.yml@develop
-    with:
-      parallel-runs: 2
+    
