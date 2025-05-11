@@ -17,11 +17,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Step 2: Deploy Frappe app and run tests
-      - name: Deploy Frappe App and Run Tests
-        uses: rtCamp/action-deploy-frappe@v1
+      # Step 2: Set up the Frappe environment and run tests using the Frappe shared action
+      - name: Set up Frappe environment and run tests
+        uses: frappe/actions/setup-frappe@v1
         with:
-          app_name: 'uph'               # Replace with your app name
-          site_name: 'test.local'       # Replace with your site name
-          db_password: 'root'           # Replace with your database password
-          root_password: 'root'         # Replace with your root password
+          frappe_branch: 'version-15'  # You can change this to your desired Frappe version
+          app_name: 'uph'             # Replace with your app name
+          site_name: 'test.local'     # Replace with your site name, can be any name
+          db_password: 'root'         # Replace with your database password
+          root_password: 'root'       # Replace with your root password
+
+      # Step 3: Run any additional commands, if required
+      - name: Run additional tests (optional)
+        run: |
+          # Replace with any specific commands or test suites you'd like to run
+          echo "Running additional tests..."
