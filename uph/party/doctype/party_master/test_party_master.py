@@ -132,21 +132,6 @@ class TestPartyMaster(FrappeTestCase):
 
 
 """
-def test_get_parties():
-    party_master='131000004'
-    return get_parties(party_master,fromdb=True)
-
-def test_cached_parties():
-    cache=frappe.cache()
-    key='pm_parties_131000004'
-    if cache.get_value(key):
-        return cache.get_value(key)
-    return test_get_parties()
-
-def test_check_similar_party_name():
-    pn='علي احم'
-    return check_similar_party_name(pn)
-
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
 def get_query(doctype, txt, searchfield, start, page_len, filters):
