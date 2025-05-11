@@ -1,14 +1,15 @@
-name: UPH App Tests
+name: Tests
 
 on:
   push:
-    branches: [ develop ]
-  pull_request:
-    branches: [ develop ]
+  workflow_dispatch:
 
 jobs:
   test:
+    name: Tests
     uses: frappe/frappe/.github/workflows/_base-server-tests.yml@develop
     with:
-      app_name: "uph"
-      frappe_branch: "version-15"
+      enable-postgres: true
+      parallel-runs: 2
+      disable-socketio: true
+      disable-redis-socketio: true
