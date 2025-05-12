@@ -90,7 +90,7 @@ boot_session = "uph.party.boot.add_pm_doctypes"
 # Installation
 # ------------
 
-before_install = "uph.setup.before_install.install"
+before_install = "uph.setup.before_install.setup"
 # after_install = "uph.install.after_install"
 
 # Uninstallation
