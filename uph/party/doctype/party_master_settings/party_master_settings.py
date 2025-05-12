@@ -5,7 +5,6 @@ from frappe.custom.doctype.custom_field.custom_field import (
     create_custom_fields,
 )
 from collections import OrderedDict
-from uph.party.controllers.party import on_update_document_types_clear_cache
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -256,19 +255,7 @@ class PartyMasterSettings(Document):
         if self.flags.document_types_same:
             return
 
-        def flush_document_types_cache():
-            return on_update_document_types_clear_cache()
-
-        frappe.db.before_commit.add(flush_document_types_cache)
         create_party_master_on_document_types()
-        for d in self.document_types:
-            if d.get("party_master_custom_field"):
-                continue
-            cf = frappe.get_doc(
-                "Custom Field",
-                {"dt": d, "fieldtype": "Link", "options": "Party Master"},
-            )
-            d.party_master_custom_field = cf.name
 
     def after_save(self):
         doctypes = [d.document_type for d in self.document_types]
@@ -522,9 +509,14 @@ def get_fixtures_document_types():
 
 def setup_initial_document_types():
     docs = get_fixtures_document_types()
+    if not frappe.db.exists("Party Master Settings", "Party Master Settings"):
+        settings = frappe.new_doc("Party Master Settings")
+        settings.save()
+
     settings = frappe.get_doc("Party Master Settings")
     settings_document_types = settings.document_types or []
     exists = {d.get("document_type") for d in settings_document_types}
+
     for d in docs:
         doctype = d.get("document_type")
         if doctype in exists:
@@ -532,9 +524,18 @@ def setup_initial_document_types():
 
         parent = d.get("parent_doctype") or doctype
         if frappe.db.exists("DocType", doctype):
-            d["parent_doctype"] = parent
-            settings.append("document_types", d)
+            new_row = {
+                "document_type": doctype,
+                "parent_doctype": parent,
+                "party_fieldname": d.get("party_fieldname"),
+                "party_type": d.get("party_type"),
+                "party_type_fieldname": d.get("party_type_fieldname"),
+                "is_dynamic_party_type": d.get("is_dynamic_party_type", 0),
+                "document_categories": d.get("document_categories"),
+            }
+            settings.append("document_types", new_row)
             exists.add(doctype)
+
     settings.save()
 
 
