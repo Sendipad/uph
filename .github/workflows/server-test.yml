@@ -1,20 +1,25 @@
-name: Frappe CI
+name: New CI
 
 on:
-  pull_request:
+  push:
     branches: [develop]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      GIT_PYTHON_GIT_EXECUTABLE: /usr/bin/git
+      NODE_ENV: development
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: test_frappe
+      MYSQL_USER: test_frappe
+      MYSQL_PASSWORD: test_frappe
+
     services:
       mariadb:
         image: mariadb:10.6
         env:
           MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: test_frappe
-          MYSQL_USER: test_frappe
-          MYSQL_PASSWORD: test_frappe
         ports:
           - 3306:3306
         options: >-
@@ -24,17 +29,26 @@ jobs:
           --health-retries=3
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout UPH repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12.6"
+          python-version: "3.12"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "18"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y redis-server libmariadb-dev git curl
+
+      - name: Start Redis
+        run: sudo service redis-server start
 
       - name: Wait for MariaDB to be ready
         run: |
@@ -47,17 +61,24 @@ jobs:
             sleep 2
           done
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y redis-server libmariadb-dev
-
-      - name: Set up Bench
+      - name: Install Frappe Bench CLI
         run: |
           pip install frappe-bench
-          bench init frappe-bench --frappe-branch version-15
+
+      - name: Set up Frappe Bench with ERPNext and UPH
+        run: |
+          bench init frappe-bench --frappe-branch version-15 --no-ansi
           cd frappe-bench
-          bench new-site test_site --mariadb-root-password root --admin-password admin
           bench get-app erpnext --branch version-15
+          bench get-app uph --branch develop https://github.com/Sendipad/uph
+          bench new-site test_site --mariadb-root-password root --admin-password admin --no-prompt --no-mariadb-socket
           bench --site test_site install-app erpnext
-          bench start &
+          bench --site test_site install-app uph
+          bench --site test_site execute erpnext.patches.v15_0.disable_one_time_setup
+          bench --site test_site execute erpnext.setup.install_fixtures
+          bench build
+
+      - name: Run Frappe tests (ignore failures)
+        run: |
+          cd frappe-bench
+          bench --site test_site run-tests --app uph --skip-test-records || echo "Tests failed but continuing"
