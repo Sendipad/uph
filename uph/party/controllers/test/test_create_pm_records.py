@@ -56,4 +56,4 @@ def create_party_master(
         }
     )
 
-    return test_record.insert()
+    return test_record.insert(ignore_links=True)
