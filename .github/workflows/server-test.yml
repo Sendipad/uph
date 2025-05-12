@@ -74,7 +74,6 @@ jobs:
           bench new-site test_site --mariadb-root-password root --admin-password admin 
           bench --site test_site install-app erpnext
           bench --site test_site install-app uph
-          bench --site test_site execute erpnext.patches.v15_0.disable_one_time_setup
           bench --site test_site execute erpnext.setup.install_fixtures
           bench build
 
