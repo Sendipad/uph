@@ -71,7 +71,7 @@ jobs:
           cd frappe-bench
           bench get-app erpnext --branch version-15
           bench get-app uph --branch develop https://github.com/Sendipad/uph
-          bench new-site test_site --mariadb-root-password root --admin-password admin --no-prompt --no-mariadb-socket
+          bench new-site test_site --mariadb-root-password root --admin-password admin 
           bench --site test_site install-app erpnext
           bench --site test_site install-app uph
           bench --site test_site execute erpnext.patches.v15_0.disable_one_time_setup
