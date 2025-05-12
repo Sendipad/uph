@@ -578,64 +578,90 @@ def get_children(doctype, parent=None, company=None, **filters):
     ]
 
 
+
+
 @frappe.whitelist()
 def get_next_party_master_number(parent=None, is_group=0):
     """
-    Generate the next party master number based on the parent party master and group status.
+    Generate party numbers as strings according to specified hierarchy:
+    - Root groups: '1000', '2000', '3000'...
+    - First level subgroups: '1100', '1200', '2100'...
+    - Second level subgroups: '1110', '1120', '1210'...
+    - Leaf nodes: '1110000001', '1110000002'...
     """
-    if not parent and not is_group:
-        return
+    try:
+        if not parent and not is_group:
+            return None
 
-    # Fetch the parent party master document
-    parent_doc = frappe.get_doc("Party Master", parent)
-    parent_number = parent_doc.party_number
+        # ROOT GROUP (no parent, is_group=1)
+        if not parent and is_group:
+            last_root = frappe.db.sql("""
+                SELECT MAX(CAST(party_number AS UNSIGNED)) 
+                FROM `tabParty Master`
+                WHERE parent_party_master IS NULL AND is_group=1
+            """)[0][0]
+            
+            if not last_root:
+                return "1000"
+            
+            return str(int(last_root) + 1000)
 
-    # Group logic
-    if is_group:
+        # SUBGROUPS (has parent, is_group=1)
+        if parent and is_group:
+            parent_number = frappe.db.get_value("Party Master", parent, "party_number")
+            if not parent_number:
+                frappe.throw(f"Parent Party Master {parent} has no party number")
 
-        def get_tree_level(pname):
-            level = 0
-            while pname:
-                pdoc = frappe.get_doc("Party Master", pname)
-                pname = pdoc.parent_party_master
-                level += 1
-            return level
+            # Find last sibling at this level
+            last_sibling = frappe.db.sql("""
+                SELECT MAX(CAST(party_number AS UNSIGNED))
+                FROM `tabParty Master`
+                WHERE parent_party_master=%s AND is_group=1
+            """, parent)[0][0]
+            
+            if not last_sibling:
+                # First child of this parent
+                if len(parent_number) == 4:  # Child of root group (1000 -> 1100)
+                    return parent_number[:1] + "100"
+                elif len(parent_number) == 4 and parent_number.endswith("00"):  # First level (1100 -> 1110)
+                    return parent_number[:2] + "10"
+                else:
+                    return parent_number + "0"
+            else:
+                last_sibling = str(last_sibling)
+                # Increment based on level
+                if len(parent_number) == 4:  # First level subgroups (1100, 1200)
+                    increment = 100
+                elif len(parent_number) == 4 and parent_number[2:] == "00":  # Second level (1110, 1120)
+                    increment = 10
+                else:
+                    increment = 1
+                
+                return str(int(last_sibling) + increment).zfill(len(last_sibling))
 
-        level = get_tree_level(parent)
-        increment = (
-            1000 if level == 0 else 100 if level == 1 else 10 if level == 2 else 1
-        )
+        # LEAF NODES (has parent, is_group=0)
+        if parent and not is_group:
+            parent_number = frappe.db.get_value("Party Master", parent, "party_number")
+            if not parent_number:
+                frappe.throw(f"Parent Party Master {parent} has no party number")
 
-        number = frappe.db.sql(
-            """
-            SELECT IFNULL(MAX(CAST(SUBSTRING_INDEX(party_number, ' ', -1) AS UNSIGNED)), 0)
-            FROM `tabParty Master`
-            WHERE parent_party_master = %(parent)s AND is_group = 1
-            """,
-            {"parent": parent},
-            as_list=1,
-        )[0][0]
+            last_leaf = frappe.db.sql("""
+                SELECT MAX(CAST(party_number AS UNSIGNED))
+                FROM `tabParty Master`
+                WHERE parent_party_master=%s AND is_group=0
+            """, parent)[0][0]
+            
+            if not last_leaf:
+                return parent_number + "000001"
+            
+            last_leaf = str(last_leaf)
+            next_num = int(last_leaf[-6:]) + 1
+            return parent_number + str(next_num).zfill(6)
 
-        return str(cint(number) + increment).zfill(4)
-
-    # Non-group logic
-
-    max_suffix = frappe.db.sql(
-        """
-            SELECT IFNULL(MAX(CAST(SUBSTRING(party_number, %(start)s) AS UNSIGNED)), 0)
-            FROM `tabParty Master`
-            WHERE parent_party_master = %(parent)s AND is_group = 0 AND party_number LIKE %(prefix)s
-            """,
-        {
-            "parent": parent,
-            "prefix": parent_number + "%",
-            "start": len(parent_number) + 1,  # 1-based indexing in SQL
-        },
-    )[0][0]
-    new_suffix = cint(max_suffix) + 1
-    return parent_number + str(new_suffix).zfill(5)
-
-
+    except Exception as e:
+        frappe.log_error("Party Number Generation Error", str(e))
+        raise
+		
 @frappe.whitelist()
 def create_party_from_party_master(
     source_name, target_doctype, save=None, target_doc=None, rule_field_value=None
