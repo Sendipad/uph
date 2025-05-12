@@ -106,7 +106,7 @@ class TestPartyMaster(FrappeTestCase):
                 "customer_name": unique_party_name("Customer"),
                 "party_master": self.child_party_master.name,
             }
-        ).insert()
+        ).insert(ignore_links=True)
 
         # Attempt to rename with merge=True → should fail
         with self.assertRaises(frappe.ValidationError):
@@ -126,7 +126,7 @@ class TestPartyMaster(FrappeTestCase):
                 "customer_name": unique_party_name("Delete Test Customer"),
                 "party_master": self.child_party_master.name,
             }
-        ).insert()
+        ).insert(ignore_links=True) 
 
         with self.assertRaises(frappe.LinkExistsError):
             frappe.delete_doc("Party Master", self.child_party_master.name)
