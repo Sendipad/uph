@@ -47,8 +47,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y redis-server libmariadb-dev git curl
 
-      - name: Start Redis
-        run: sudo service redis-server start
+      - name: Start all required Redis services
+        run: |
+          redis-server --daemonize yes --port 13000 --dir . --dbfilename redis_cache.rdb
+          redis-server --daemonize yes --port 11000 --dir . --dbfilename redis_queue.rdb
+          redis-server --daemonize yes --port 12000 --dir . --dbfilename redis_socketio.rdb
 
       - name: Wait for MariaDB to be ready
         run: |
@@ -77,7 +80,6 @@ jobs:
           bench --site test_site migrate
           bench --site test_site install-app uph
           bench --site test_site migrate
-          bench build
 
       - name: Run Frappe tests (ignore failures)
         run: |
