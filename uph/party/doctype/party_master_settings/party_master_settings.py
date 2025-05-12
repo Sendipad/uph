@@ -309,8 +309,6 @@ def create_party_master_on_document_types(document_types=None):
             ):
                 return df.fieldname
 
-    return "company"
-
     setting = frappe.get_doc("Party Master Settings")
     all_doc_types = {row.document_type for row in setting.document_types}
 
@@ -381,6 +379,7 @@ def create_party_master_on_document_types(document_types=None):
 
     if custom_fields:
         create_custom_fields(custom_fields, update=True)
+        """
         for dt in custom_fields:
             docs = frappe.get_all("DocType Layout", {"document_type": dt})
             if docs:
@@ -388,6 +387,7 @@ def create_party_master_on_document_types(document_types=None):
                     doc = frappe.get_doc("DocType Layout", d.name)
                     doc.sync_fields()
                     doc.save()
+        """
 
 
 def create_custom_party_master_field(docfield, update=False, field_properity=None):
