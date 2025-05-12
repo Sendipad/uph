@@ -188,10 +188,8 @@ class PartyMaster(NestedSet):
         self.set("parties", [])
         self.set_missing_value()
         self.party_name = self.party_name.strip()
-        if self.is_group == 1 and not self.party_number:
-            frappe.throw(_("Party Number is Mandatory for Group Node"))
-        if not self.is_group and not self.party_number:
-            self.party_number = self.name
+        if  not self.party_number:
+            self.party_number = self.numbering()
         if not self.party_type:
             frappe.throw(_("Party Type is Mandatory"))
 
