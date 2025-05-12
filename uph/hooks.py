@@ -39,20 +39,19 @@ required_apps = ["erpnext"]
 # webform_include_js = {"doctype": "public/js/doctype.js"}
 # webform_include_css = {"doctype": "public/css/doctype.css"}
 app_include_js = [
-	"uph.bundle.js",
+    "uph.bundle.js",
 ]
 # include js in page
 # page_js = {"page" : "public/js/file.js"}
-reeviews = [
-	"Party Master"
-]
+treeviews = ["Party Master"]
 
-docment_type_with_custom_js=['Sales Invoice','Payment Entry','Journal Entry']
+docment_type_with_custom_js = ["Sales Invoice", "Payment Entry", "Journal Entry"]
 # include js in doctype views
-doctype_js = {"Sales Invoice" : "public/js/erpnext/sales_invoice.js",
-              "Payment Entry":"public/js/erpnext/payment_entry.js",
-              "Journal Entry":"puplic/js/erpnext/journal_entry.js",
-              }
+doctype_js = {
+    "Sales Invoice": "public/js/erpnext/sales_invoice.js",
+    "Payment Entry": "public/js/erpnext/payment_entry.js",
+    "Journal Entry": "puplic/js/erpnext/journal_entry.js",
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -61,7 +60,7 @@ doctype_js = {"Sales Invoice" : "public/js/erpnext/sales_invoice.js",
 # ------------------
 # include app icons in desk
 # app_include_icons = "uph/public/icons.svg"
-boot_session="uph.party.boot.add_pm_doctypes"
+boot_session = "uph.party.boot.add_pm_doctypes"
 # Home Pages
 # ----------
 
@@ -91,8 +90,8 @@ boot_session="uph.party.boot.add_pm_doctypes"
 # Installation
 # ------------
 
-# before_install = "uph.install.before_install"
-after_install = "uph.install.after_install"
+before_install = "uph.setup.before_install.install"
+# after_install = "uph.install.after_install"
 
 # Uninstallation
 # ------------
@@ -141,22 +140,33 @@ after_install = "uph.install.after_install"
 # override_doctype_class = {
 # 	"ToDo": "custom_app.overrides.CustomToDo"
 # }
-tx_doctype_with_party_master=[
-	'Sales Invoice','Purchase Invoice','Journal Entry Account','Payment Entry','Sales Order','Purchase Order','Delivery Note','Purchase Receipt','Expense Claim'
+tx_doctype_with_party_master = [
+    "Sales Invoice",
+    "Purchase Invoice",
+    "Journal Entry Account",
+    "Payment Entry",
+    "Sales Order",
+    "Purchase Order",
+    "Delivery Note",
+    "Purchase Receipt",
+    "Expense Claim",
 ]
 # Document Events
 # ---------------
 # Hook on document methods and events
-parties_type=["Customer","Supplier","Employee"]
-doc_events={
-    "*":{
-        "before_validate":"uph.party.controllers.party.validate_party_master_on_document_types",
-        "validate":"uph.party.controllers.party.validate_party_master_on_target_party_type",
-		"before_save":["uph.party.controllers.party.validate_party_master_on_target_party_type"],
-		"on_change":["uph.party.controllers.party.validate_party_master_on_document_types"],
-		"on_trash":"uph.party.controllers.party.validate_party_master_on_target_party_type",
- }
-    
+parties_type = ["Customer", "Supplier", "Employee"]
+doc_events = {
+    "*": {
+        "before_validate": "uph.party.controllers.party.validate_party_master_on_document_types",
+        "validate": "uph.party.controllers.party.validate_party_master_on_target_party_type",
+        "before_save": [
+            "uph.party.controllers.party.validate_party_master_on_target_party_type"
+        ],
+        "on_change": [
+            "uph.party.controllers.party.validate_party_master_on_document_types"
+        ],
+        "on_trash": "uph.party.controllers.party.validate_party_master_on_target_party_type",
+    }
 }
 # doc_events = {
 # 	"*": {
@@ -166,9 +176,9 @@ doc_events={
 # 	}
 # }
 global_search_doctypes = {
-	"Default": [
-		{"doctype": "Party Master", "index": 0},
-	]
+    "Default": [
+        {"doctype": "Party Master", "index": 0},
+    ]
 }
 # Scheduled Tasks
 # ---------------
@@ -231,9 +241,9 @@ global_search_doctypes = {
 
 # User Data Protection
 # --------------------
-#extend_bootinfo=[
-#	"uph.party.doctype.party_master_settings.party_master_settings.add_pm_doctypes"
-#]
+# extend_bootinfo=[
+# 	"uph.party.doctype.party_master_settings.party_master_settings.add_pm_doctypes"
+# ]
 # user_data_fields = [
 # 	{
 # 		"doctype": "{doctype_1}",
@@ -268,4 +278,3 @@ export_python_type_annotations = True
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
-

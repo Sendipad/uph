@@ -74,7 +74,8 @@ jobs:
           cd frappe-bench
           bench get-app erpnext --branch version-15
           bench get-app uph --branch develop https://github.com/Sendipad/uph
-          bench new-site test_site --mariadb-root-password root --admin-password admin 
+          bench new-site test_site --mariadb-root-password root --admin-password admin
+          bench --site test_site set-config allow_tests true
           bench --site test_site install-app erpnext
           bench --site test_site execute erpnext.setup.setup_wizard.operations.install_fixtures.install --kwargs "{'country': 'United States'}"
           bench --site test_site migrate
