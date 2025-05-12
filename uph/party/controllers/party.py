@@ -404,29 +404,33 @@ def update_linked_party_to_party_master_count(party_master, add_dec=None):
     elif isinstance(party_master, str):
         if not frappe.db.exists("Party Master", party_master):
             return
-        doc = frappe.get_cached_doc("Party Master", party_master)
+        doc = frappe.get_doc("Party Master", party_master)
     else:
         return
 
     if add_dec is None:
         roles = [doc.party_type]
-        if doc.has_secondary_role_party:
-            roles.extend([x.get("party_type_role") for x in doc.get("roles")])
+        if doc.has_secondary_role_party and doc.get("roles"):
+            roles.extend(
+                [
+                    x.get("party_type_role")
+                    for x in doc.get("roles")
+                    if x.get("party_type_role")
+                ]
+            )
+
         total = 0
+        for r in roles:
+            if frappe.get_meta(r):  # Ensure DocType exists
+                total += frappe.db.count(
+                    r, filters={"party_master": doc.name, "docstatus": ["!=", 2]}
+                )
 
-        if roles:
-            queries = [
-                f"SELECT COUNT(name) FROM `tab{r}` WHERE party_master='{doc.name}' AND docstatus!=2"
-                for r in roles
-            ]
-            combined_query = " UNION ALL ".join(queries)
-            counts = frappe.db.sql(combined_query)
-
-            total = sum(row[0] for row in counts)
-
-        doc.db_set("total_linked_party", total)
+        if doc.total_linked_party != total:
+            doc.db_set("total_linked_party", total)
         return
 
+    # Handle add_dec
     current_count = doc.total_linked_party or 0
     doc.db_set("total_linked_party", current_count + add_dec)
 
