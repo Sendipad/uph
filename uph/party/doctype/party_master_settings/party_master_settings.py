@@ -450,133 +450,91 @@ def create_custom_party_master_field(docfield, update=False, field_properity=Non
     return customfield.name
 
 
-def get_default_doctypes(doctype=None, field_properity=None):
-    document_type = {
-        "Sales Invoice": {
-            "document_categories": "Selling DocType",
-            "party_fieldname": "customer",
-            "party_type": "Customer",
-            "field_properity": {"insert_after": "company"},
-        },
-        "Delivery Note": {
+def get_fixtures_document_types():
+    return [
+        {
+            "document_type": "Sales Invoice",
             "document_categories": "Selling DocType",
             "party_fieldname": "customer",
             "party_type": "Customer",
         },
-        "Sales Order": {
+        {
+            "document_type": "Delivery Note",
             "document_categories": "Selling DocType",
             "party_fieldname": "customer",
             "party_type": "Customer",
         },
-        "Purchase Invoice": {
+        {
+            "document_type": "Sales Order",
+            "document_categories": "Selling DocType",
+            "party_fieldname": "customer",
+            "party_type": "Customer",
+        },
+        {
+            "document_type": "Purchase Invoice",
             "document_categories": "Purchasing DocType",
             "party_fieldname": "supplier",
             "party_type": "Supplier",
         },
-        "Purchase Receipt": {
+        {
+            "document_type": "Purchase Receipt",
             "document_categories": "Purchasing DocType",
             "party_fieldname": "supplier",
             "party_type": "Supplier",
         },
-        "Purchase Order": {
+        {
+            "document_type": "Purchase Order",
             "document_categories": "Purchasing DocType",
             "party_fieldname": "supplier",
             "party_type": "Supplier",
         },
-        "Payment Entry": {
+        {
+            "document_type": "Payment Entry",
             "document_categories": "Dynamic type As Parent",
             "party_fieldname": "party",
             "party_type_fieldname": "party_type",
             "is_dynamic_party_type": 1,
         },
-        "Journal Entry Account": {
+        {
+            "document_type": "Journal Entry Account",
             "parent_doctype": "Journal Entry",
             "document_categories": "Dynamic Type As Child",
             "party_fieldname": "party",
             "party_type_fieldname": "party_type",
             "is_dynamic_party_type": 1,
         },
-        "Expense Claim": {
+        {
+            "document_type": "Expense Claim",
             "document_categories": "Employee DocType",
             "party_fieldname": "employee",
             "party_type": "Employee",
         },
-        "Payment Reconciliation": {
+        {
+            "document_type": "Payment Reconciliation",
             "reqd": 0,
             "document_categories": "Dynamic type As Parent",
             "party_fieldname": "party",
             "party_type_fieldname": "party_type",
             "is_dynamic_party_type": 1,
-            "enabled": 0,
         },
-    }
-    if not doctype:
-        return document_type
-    doctype = document_type[doctype]
-    if field_properity:
-        return doctype.get(field_properity, None)
-    return doctype
+    ]
 
 
 def setup_initial_document_types():
-    docs = get_default_doctypes()
+    docs = get_fixtures_document_types()
     settings = frappe.get_doc("Party Master Settings")
-    for doc, options in docs.items():
-        if not frappe.db.exists("DocType", doc):
+    settings_document_types = settings.document_types or []
+    exists = {d.get("document_type") for d in settings_document_types}
+    for d in docs:
+        doctype = d.get("document_type")
+        if doctype in exists:
             continue
-        if frappe.db.exists(
-            "Party Master Settings DocType",
-            {"parent": "Party Master Settings", "document_type": doc},
-        ):
-            continue
-        document_type = {
-            k: v for k, v in docs.get(doc).items() if k != "field_properity"
-        }
-        document_type.update(
-            {
-                "document_type": doc,
-                "is_system_generated": 1,
-            }
-        )
-        settings.append("document_types", document_type)
-    settings.save()
 
-
-def setup_party_master_mapping_fields():
-    common_maps = {
-        "party_details": "Customer:customer_details\nSupplier:supplier_details",
-        "type": "Customer:customer_type\nSupplier:supplier_type",
-        "party_name": "Customer : customer_name\nSupplier:supplier_name\nEmployee: employee_name\nShareholder:title",
-        "is_internal_party": "Customer:is_internal_customer\nSupplier:is_internal_supplier",
-        "party_type_group": "Customer:customer_group\nSupplier:supplier_group",
-        "group_type": "Customer:_\nSupplier:_\nEmployee:_\nShareholder:_",
-    }
-    fields = frappe.get_meta("Party Master").fields
-    fields = [
-        df.fieldname
-        for df in fields
-        if df.fieldname
-        not in (
-            "default_currency",
-            "default_customer",
-            "default_supplier",
-            "is_group",
-            "lft",
-            "rgt",
-            "old_parent",
-            "party_type",
-            "accounts",
-        )
-        and df.fieldtype not in ("Section Break", "Column Break", "Tab Break")
-    ]
-    settings = frappe.get_doc("Party Master Settings")
-    for f in fields:
-        if f in common_maps:
-            settings.append(
-                "party_master_fields", {"fieldname": f, "options": common_maps.get(f)}
-            )
-            continue
-        settings.append("party_master_fields", {"fieldname": f})
+        parent = d.get("parent_doctype") or doctype
+        if frappe.db.exists("DocType", doctype):
+            d["parent_doctype"] = parent
+            settings.append("document_types", d)
+            exists.add(doctype)
     settings.save()
 
 
@@ -635,3 +593,42 @@ def get_party_type_party_master_rules_dict():
         )
 
     return result
+
+
+# Depricated
+def setup_party_master_mapping_fields():
+    common_maps = {
+        "party_details": "Customer:customer_details\nSupplier:supplier_details",
+        "type": "Customer:customer_type\nSupplier:supplier_type",
+        "party_name": "Customer : customer_name\nSupplier:supplier_name\nEmployee: employee_name\nShareholder:title",
+        "is_internal_party": "Customer:is_internal_customer\nSupplier:is_internal_supplier",
+        "party_type_group": "Customer:customer_group\nSupplier:supplier_group",
+        "group_type": "Customer:_\nSupplier:_\nEmployee:_\nShareholder:_",
+    }
+    fields = frappe.get_meta("Party Master").fields
+    fields = [
+        df.fieldname
+        for df in fields
+        if df.fieldname
+        not in (
+            "default_currency",
+            "default_customer",
+            "default_supplier",
+            "is_group",
+            "lft",
+            "rgt",
+            "old_parent",
+            "party_type",
+            "accounts",
+        )
+        and df.fieldtype not in ("Section Break", "Column Break", "Tab Break")
+    ]
+    settings = frappe.get_doc("Party Master Settings")
+    for f in fields:
+        if f in common_maps:
+            settings.append(
+                "party_master_fields", {"fieldname": f, "options": common_maps.get(f)}
+            )
+            continue
+        settings.append("party_master_fields", {"fieldname": f})
+    settings.save()
