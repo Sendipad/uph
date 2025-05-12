@@ -67,7 +67,7 @@ jobs:
 
       - name: Set up Frappe Bench with ERPNext and UPH
         run: |
-          bench init frappe-bench --frappe-branch version-15 --no-ansi
+          bench init frappe-bench --frappe-branch version-15
           cd frappe-bench
           bench get-app erpnext --branch version-15
           bench get-app uph --branch develop https://github.com/Sendipad/uph
