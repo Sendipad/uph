@@ -76,4 +76,4 @@ jobs:
       - name: Run Frappe tests (ignore failures)
         run: |
           cd frappe-bench
-          bench --site test_site run-tests --app uph || echo "Tests failed but continuing"
+          bench --site test_site run-tests --app uph --skip-test-records || echo "Tests failed but continuing"
