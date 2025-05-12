@@ -48,7 +48,7 @@ class PartyMasterSettings(Document):
         if not getattr(self, "_doc_before_save", None):
             return
 
-        if self.is_child_table_same("party_types") or frappe.flags.in_install:
+        if self.is_child_table_same("party_types"):
             return
 
         party_types = [x.get("party_type") for x in self.party_types]
