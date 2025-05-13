@@ -220,7 +220,7 @@ class PartyMaster(NestedSet):
         if duplicate_title:
             title = title + "({0})".format(_(self.party_type))
         self.title = title
-        # self.set_total_linked_party()
+        self.set_total_linked_party()
         self.set_missing_values()
 
     def set_missing_value(self):

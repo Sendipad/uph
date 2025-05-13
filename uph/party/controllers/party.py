@@ -391,48 +391,24 @@ def update_exists_docs_on_new_document_type_insert(document_type):
     # Uncomplete code
 
 
-def update_linked_party_to_party_master_count(party_master, add_dec=None):
-    from frappe.model.document import Document
-
-    doc = None
-
-    if isinstance(party_master, Document) and party_master.doctype == "Party Master":
-        doc = party_master
-        if doc.is_new():
-            doc.total_linked_party = add_dec or 0
-            return
-    elif isinstance(party_master, str):
-        if not frappe.db.exists("Party Master", party_master):
-            return
-        doc = frappe.get_doc("Party Master", party_master)
-    else:
+def update_linked_party_to_party_master_count(party_master, add_dec=0):
+    if isinstance(party_master, str):
+        party_master = frappe.get_doc("Party Master", party_master)
+    if party_master.is_group or party_master.is_new():
+        party_master.total_linked_party = 0
         return
-
-    if add_dec is None:
-        roles = [doc.party_type]
-        if doc.has_secondary_role_party and doc.get("roles"):
-            roles.extend(
-                [
-                    x.get("party_type_role")
-                    for x in doc.get("roles")
-                    if x.get("party_type_role")
-                ]
-            )
-
-        total = 0
-        for r in roles:
-            if frappe.get_meta(r):  # Ensure DocType exists
-                total += frappe.db.count(
-                    r, filters={"party_master": doc.name, "docstatus": ["!=", 2]}
-                )
-
-        if doc.total_linked_party != total:
-            doc.db_set("total_linked_party", total)
-        return
-
-    # Handle add_dec
-    current_count = doc.total_linked_party or 0
-    doc.db_set("total_linked_party", current_count + add_dec)
+    roles = [party_master.party_type]
+    if party_master.roles:
+        for r in party_master.roles:
+            roles.append(r.get("party_type_role"))
+    total = 0
+    for r in roles:
+        total += frappe.db.count(
+            r, filters={"party_master": party_master.name, "docstatus": ["!=", 2]}
+        )
+    total += add_dec
+    if total:
+        party_master.db_set("total_linked_party", total)
 
 
 @frappe.whitelist()
