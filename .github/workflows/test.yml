@@ -80,11 +80,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: bench-folder
-          path: .
+          path: frappe-bench
 
       - name: Overwrite UPH app from current branch
         run: |
-          mkdir -p frappe-bench/apps
           rm -rf frappe-bench/apps/uph
           cp -r uph frappe-bench/apps/uph
 
