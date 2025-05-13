@@ -1,4 +1,4 @@
-name: UPH CI
+name: uph Frappe CI
 
 on:
   workflow_dispatch:
@@ -43,11 +43,6 @@ jobs:
         with:
           ref: ${{ github.event.inputs.branch }}
 
-      - name: Install Redis CLI (for version check)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y redis-tools
-
       - name: Set up Python and Node.js
         uses: actions/setup-python@v5
         with:
@@ -59,6 +54,7 @@ jobs:
 
       - name: Install system dependencies
         run: |
+          sudo apt-get update
           sudo apt-get install -y libmariadb-dev git curl
 
       - name: Install Frappe Bench CLI
@@ -66,15 +62,13 @@ jobs:
           pip install --upgrade pip
           pip install frappe-bench wheel
 
-      - name: Initialize Bench with Redis config override
+      - name: Initialize Bench
         run: |
-          # Create a temporary config to skip Redis version check
-          echo '{"redis_server": "redis://localhost:6379"}' > redis_config.json
           bench init frappe-bench \
             --frappe-branch version-15 \
             --skip-assets \
             --python $(which python) \
-            --redis-config redis_config.json
+            --skip-redis-config-generation
 
       - name: Set up Frappe Bench with ERPNext and UPH
         run: |
