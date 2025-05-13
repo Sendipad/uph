@@ -9,7 +9,7 @@ on:
         default: "develop"
 
 jobs:
-  setup:
+  setup-and-test:
     runs-on: ubuntu-latest
 
     services:
@@ -23,69 +23,86 @@ jobs:
           --health-cmd="mysqladmin ping --silent"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=3
+          --health-retries=5
+
+    env:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: test_frappe
+      MYSQL_USER: test_frappe
+      MYSQL_PASSWORD: test_frappe
+      NODE_ENV: development
 
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Use setup-bench composite action
-        uses: ./.github/actions/setup-bench
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-      - name: Set up Frappe Bench with ERPNext and UPH
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install dependencies & Redis
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y redis-server libmariadb-dev git curl
+          redis-server --daemonize yes --port 11000 --dir . --dbfilename redis_queue.rdb
+          redis-server --daemonize yes --port 12000 --dir . --dbfilename redis_socketio.rdb
+          redis-server --daemonize yes --port 13000 --dir . --dbfilename redis_cache.rdb
+
+      - name: Wait for MariaDB to be ready
+        run: |
+          for i in {1..30}; do
+            if mysqladmin ping -h "127.0.0.1" --silent; then
+              echo "MariaDB is up!"
+              break
+            fi
+            echo "Waiting for MariaDB..."
+            sleep 2
+          done
+
+      - name: Install Frappe Bench CLI
+        run: pip install frappe-bench
+
+      - name: Cache frappe-bench
+        id: cache-frappe
+        uses: actions/cache@v4
+        with:
+          path: frappe-bench
+          key: frappe-bench-v15-${{ hashFiles('bench_setup_hash.txt') }}
+          restore-keys: |
+            frappe-bench-v15-
+
+      - name: Create bench setup hash
+        run: |
+          echo "erpnext@version-15" > bench_setup_hash.txt
+          echo "bench@v5" >> bench_setup_hash.txt
+
+      - name: Setup frappe-bench if no cache hit
+        if: steps.cache-frappe.outputs.cache-hit != 'true'
         run: |
           bench init frappe-bench --frappe-branch version-15
           cd frappe-bench
           bench get-app erpnext --branch version-15
-          bench get-app uph --branch ${{ github.event.inputs.branch }} https://github.com/Sendipad/uph
           bench new-site test_site --mariadb-root-password root --admin-password admin
           bench --site test_site set-config allow_tests true
           bench --site test_site install-app erpnext
           bench --site test_site execute erpnext.setup.setup_wizard.operations.install_fixtures.install --kwargs "{'country': 'United States'}"
-          bench --site test_site install-app uph
-          bench --site test_site migrate
-          cd ..
 
-      - name: Upload bench folder as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: bench-folder
-          path: frappe-bench
-
-  test:
-    needs: setup
-    runs-on: ubuntu-latest
-
-    services:
-      mariadb:
-        image: mariadb:10.6
-        env:
-          MYSQL_ROOT_PASSWORD: root
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Use setup-bench composite action
-        uses: ./.github/actions/setup-bench
-
-      - name: Download cached bench
-        uses: actions/download-artifact@v4
-        with:
-          name: bench-folder
-          path: frappe-bench
-
-      - name: Overwrite UPH app from current branch
+      - name: Overwrite UPH app code
         run: |
           rm -rf frappe-bench/apps/uph
           cp -r uph frappe-bench/apps/uph
+
+      - name: Install UPH app and migrate
+        run: |
+          cd frappe-bench
+          bench --site test_site install-app uph
+          bench --site test_site migrate
 
       - name: Run UPH tests
         run: |
