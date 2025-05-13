@@ -4,15 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 'Branch to test'
+        description: "Branch to test"
         required: true
-        default: 'develop'
+        default: "develop"
 
 jobs:
   setup:
     runs-on: ubuntu-latest
-    env:
-      MYSQL_ROOT_PASSWORD: root
 
     services:
       mariadb:
@@ -28,58 +26,18 @@ jobs:
           --health-retries=3
 
     steps:
-      - name: Checkout UPH repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+      - name: Use setup-bench composite action
+        uses: ./.github/actions/setup-bench
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-
-      - name: Cache pip dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install system dependencies and Redis
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y redis-server libmariadb-dev
-
-          # Start Redis instances
-          redis-server --daemonize yes --port 13000 --dir . --dbfilename redis_cache.rdb &
-          redis-server --daemonize yes --port 11000 --dir . --dbfilename redis_queue.rdb &
-          redis-server --daemonize yes --port 12000 --dir . --dbfilename redis_socketio.rdb &
-          wait
-
-      - name: Wait for MariaDB to be ready
-        run: |
-          for i in {1..30}; do
-            if mysqladmin ping -h "127.0.0.1" --silent; then
-              echo "MariaDB is up!"
-              break
-            fi
-            echo "Waiting for MariaDB..."
-            sleep 2
-          done
-
-      - name: Install Frappe Bench CLI
-        run: pip install frappe-bench --no-cache-dir
-
-      - name: Initialize Frappe Bench with ERPNext and UPH
+      - name: Set up Frappe Bench with ERPNext and UPH
         run: |
           bench init frappe-bench --frappe-branch version-15
           cd frappe-bench
           bench get-app erpnext --branch version-15
-          bench get-app uph --branch develop https://github.com/Sendipad/uph
+          bench get-app uph --branch ${{ github.event.inputs.branch }} https://github.com/Sendipad/uph
           bench new-site test_site --mariadb-root-password root --admin-password admin
           bench --site test_site set-config allow_tests true
           bench --site test_site install-app erpnext
@@ -88,7 +46,7 @@ jobs:
           bench --site test_site migrate
           cd ..
 
-      - name: Upload Bench Folder as Artifact
+      - name: Upload bench folder as artifact
         uses: actions/upload-artifact@v4
         with:
           name: bench-folder
@@ -98,14 +56,25 @@ jobs:
     needs: setup
     runs-on: ubuntu-latest
 
+    services:
+      mariadb:
+        image: mariadb:10.6
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
     steps:
-      - name: Checkout UPH repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+      - name: Use setup-bench composite action
+        uses: ./.github/actions/setup-bench
 
       - name: Download cached bench
         uses: actions/download-artifact@v4
@@ -113,17 +82,13 @@ jobs:
           name: bench-folder
           path: .
 
-      - name: Ensure apps directory exists & overwrite UPH app
+      - name: Overwrite UPH app from current branch
         run: |
           mkdir -p frappe-bench/apps
           rm -rf frappe-bench/apps/uph
           cp -r uph frappe-bench/apps/uph
 
-      - name: Show bench & UPH structure
-        run: |
-          ls -la frappe-bench/apps/uph
-
-      - name: Run Frappe tests
+      - name: Run UPH tests
         run: |
           cd frappe-bench
           bench --site test_site run-tests --app uph --skip-test-records || echo "Tests failed but continuing"

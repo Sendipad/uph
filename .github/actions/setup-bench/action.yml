@@ -1,0 +1,27 @@
+name: "Setup Frappe Bench"
+description: "Install Redis, MariaDB, and prepare bench environment"
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "18"
+
+    - name: Install system dependencies & Redis
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y redis-server libmariadb-dev curl git
+        redis-server --daemonize yes --port 11000 --dir . --dbfilename redis_queue.rdb
+        redis-server --daemonize yes --port 12000 --dir . --dbfilename redis_socketio.rdb
+        redis-server --daemonize yes --port 13000 --dir . --dbfilename redis_cache.rdb
+
+    - name: Install Frappe Bench CLI
+      shell: bash
+      run: pip install frappe-bench --no-cache-dir
