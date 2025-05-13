@@ -4,20 +4,15 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: "Branch to test"
+        description: 'Branch to test'
         required: true
-        default: "develop"
+        default: 'develop'
 
 jobs:
   setup:
     runs-on: ubuntu-latest
     env:
-      GIT_PYTHON_GIT_EXECUTABLE: /usr/bin/git
-      NODE_ENV: development
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: test_frappe
-      MYSQL_USER: test_frappe
-      MYSQL_PASSWORD: test_frappe
 
     services:
       mariadb:
@@ -54,10 +49,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Install system dependencies and start Redis in parallel
+      - name: Install system dependencies and Redis
         run: |
           sudo apt-get update
-          sudo apt-get install -y redis-server libmariadb-dev git curl
+          sudo apt-get install -y redis-server libmariadb-dev
+
+          # Start Redis instances
           redis-server --daemonize yes --port 13000 --dir . --dbfilename redis_cache.rdb &
           redis-server --daemonize yes --port 11000 --dir . --dbfilename redis_queue.rdb &
           redis-server --daemonize yes --port 12000 --dir . --dbfilename redis_socketio.rdb &
@@ -77,7 +74,7 @@ jobs:
       - name: Install Frappe Bench CLI
         run: pip install frappe-bench --no-cache-dir
 
-      - name: Set up Frappe Bench with ERPNext and UPH
+      - name: Initialize Frappe Bench with ERPNext and UPH
         run: |
           bench init frappe-bench --frappe-branch version-15
           cd frappe-bench
@@ -91,7 +88,7 @@ jobs:
           bench --site test_site migrate
           cd ..
 
-      - name: Upload Frappe Bench as artifact
+      - name: Upload Bench Folder as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: bench-folder
@@ -105,21 +102,26 @@ jobs:
       - name: Checkout UPH repository
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Download cached bench
         uses: actions/download-artifact@v4
         with:
           name: bench-folder
           path: .
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Overwrite UPH app with latest source
+      - name: Ensure apps directory exists & overwrite UPH app
         run: |
+          mkdir -p frappe-bench/apps
           rm -rf frappe-bench/apps/uph
           cp -r uph frappe-bench/apps/uph
+
+      - name: Debug: Show bench & UPH structure
+        run: |
+          ls -la frappe-bench/apps/uph
 
       - name: Run Frappe tests
         run: |
