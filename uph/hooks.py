@@ -124,6 +124,7 @@ after_install = "uph.setup.install.setup"
 # Permissions
 # -----------
 # Permissions evaluated in scripted ways
+after_migrate = ["uph.setup.install.on_migrate"]
 
 # permission_query_conditions = {
 # 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",

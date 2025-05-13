@@ -220,7 +220,7 @@ class PartyMaster(NestedSet):
         if duplicate_title:
             title = title + "({0})".format(_(self.party_type))
         self.title = title
-        self.set_total_linked_party()
+        # self.set_total_linked_party()
         self.set_missing_values()
 
     def set_missing_value(self):
@@ -267,11 +267,6 @@ class PartyMaster(NestedSet):
     def on_update(self):
         self.create_primary_contact()
         self.create_primary_address()
-        key = "pm_parties_{0}".format(self.name)
-        if frappe.cache.get_value(key):
-            frappe.cache.delete_value(key)
-
-        self.set_total_linked_party()
 
     def create_primary_contact(self):
         if not self.party_primary_contact and (self.mobile_no or self.email_id):
@@ -336,7 +331,7 @@ class PartyMaster(NestedSet):
                             frappe.session.user, _(party.doctype), party.name
                         ),
                     )
-            self.set_total_linked_party()
+            # self.set_total_linked_party()
             self.save()
             self.reload()
 

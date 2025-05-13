@@ -9,6 +9,12 @@ from uph.party.doctype.party_master_settings.party_master_settings import (
 def setup():
     setup_initial_document_types()
     setup_party_types_table()
+
+
+def on_migrate():
+    # Your logic here, e.g., updating some records
+    setup_initial_document_types()
+    setup_party_types_table()
     create_party_master_tree()
 
 
