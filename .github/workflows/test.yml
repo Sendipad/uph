@@ -119,7 +119,7 @@ jobs:
           rm -rf frappe-bench/apps/uph
           cp -r uph frappe-bench/apps/uph
 
-      - name: Debug: Show bench & UPH structure
+      - name: Show bench & UPH structure
         run: |
           ls -la frappe-bench/apps/uph
 
