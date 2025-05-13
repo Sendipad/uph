@@ -27,53 +27,65 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+        options: --entrypoint redis-server
 
     steps:
       - name: Checkout UPH repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/bench
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Set up Python and Node.js
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-
+          python-version: "3.12"
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y redis-server libmariadb-dev git curl
-
-      - name: Wait for MariaDB to be ready
-        run: |
-          for i in {1..30}; do
-            if mysqladmin ping -h "127.0.0.1" --silent; then
-              echo "MariaDB is up!"
-              break
-            fi
-            echo "Waiting for MariaDB..."
-            sleep 2
-          done
+          sudo apt-get install -y libmariadb-dev git curl
 
       - name: Install Frappe Bench CLI
         run: |
-          pip install frappe-bench
+          pip install --upgrade pip
+          pip install frappe-bench wheel
 
       - name: Set up Frappe Bench with ERPNext and UPH
         run: |
-          bench init frappe-bench --frappe-branch version-15
+          bench init frappe-bench --frappe-branch version-15 --skip-assets --python $(which python)
           cd frappe-bench
-          bench get-app erpnext --branch version-15
-          bench new-site test_site --mariadb-root-password root --admin-password admin
-          bench --site test_site install-app erpnext
-          bench get-app uph --branch develop https://github.com/Sendipad/uph
-          bench --site test_site install-app uph
-          bench build
+          bench get-app erpnext --branch version-15 --skip-assets
+          bench get-app uph --branch develop https://github.com/Sendipad/uph --skip-assets
+          bench new-site test_site --mariadb-root-password root --admin-password admin --install-app erpnext --install-app uph
+          bench --site test_site set-config allow_tests true
+          bench --site test_site execute erpnext.setup.setup_wizard.operations.install_fixtures.install --kwargs "{'country': 'United States'}"
+          bench --site test_site migrate
 
-      - name: Run Frappe tests (ignore failures)
+      - name: Run Frappe tests
         run: |
           cd frappe-bench
-          bench --site test_site run-tests --app uph --skip-test-records || echo "Tests failed but continuing"
+          bench --site test_site run-tests --app uph
