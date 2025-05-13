@@ -9,8 +9,15 @@ on:
         default: "develop"
 
 jobs:
-  setup-and-test:
+  test:
     runs-on: ubuntu-latest
+    env:
+      GIT_PYTHON_GIT_EXECUTABLE: /usr/bin/git
+      NODE_ENV: development
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: test_frappe
+      MYSQL_USER: test_frappe
+      MYSQL_PASSWORD: test_frappe
 
     services:
       mariadb:
@@ -23,17 +30,10 @@ jobs:
           --health-cmd="mysqladmin ping --silent"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=5
-
-    env:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: test_frappe
-      MYSQL_USER: test_frappe
-      MYSQL_PASSWORD: test_frappe
-      NODE_ENV: development
+          --health-retries=3
 
     steps:
-      - name: Checkout repo
+      - name: Checkout UPH repository
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -46,13 +46,16 @@ jobs:
         with:
           node-version: "18"
 
-      - name: Install dependencies & Redis
+      - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y redis-server libmariadb-dev git curl
+
+      - name: Start Redis services
+        run: |
+          redis-server --daemonize yes --port 13000 --dir . --dbfilename redis_cache.rdb
           redis-server --daemonize yes --port 11000 --dir . --dbfilename redis_queue.rdb
           redis-server --daemonize yes --port 12000 --dir . --dbfilename redis_socketio.rdb
-          redis-server --daemonize yes --port 13000 --dir . --dbfilename redis_cache.rdb
 
       - name: Wait for MariaDB to be ready
         run: |
@@ -65,38 +68,30 @@ jobs:
             sleep 2
           done
 
-      - name: Install Frappe Bench CLI
-        run: pip install frappe-bench
-
       - name: Cache frappe-bench
-        id: cache-frappe
         uses: actions/cache@v4
         with:
           path: frappe-bench
-          key: frappe-bench-v15-${{ hashFiles('bench_setup_hash.txt') }}
-          restore-keys: |
-            frappe-bench-v15-
+          key: frappe-bench-${{ runner.os }}-v15
 
-      - name: Create bench setup hash
+      - name: Install Bench if not cached
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          echo "erpnext@version-15" > bench_setup_hash.txt
-          echo "bench@v5" >> bench_setup_hash.txt
-
-      - name: Setup frappe-bench if no cache hit
-        if: steps.cache-frappe.outputs.cache-hit != 'true'
-        run: |
+          pip install frappe-bench
           bench init frappe-bench --frappe-branch version-15
           cd frappe-bench
           bench get-app erpnext --branch version-15
           bench new-site test_site --mariadb-root-password root --admin-password admin
           bench --site test_site set-config allow_tests true
           bench --site test_site install-app erpnext
-          bench --site test_site execute erpnext.setup.setup_wizard.operations.install_fixtures.install --kwargs "{'country': 'United States'}"
+          bench --site test_site execute erpnext.setup.setup_wizard.operations.install_fixtures.install --kwargs '{"country": "United States"}'
 
-      - name: Overwrite UPH app code
+      - name: Overwrite UPH app with latest code
         run: |
           rm -rf frappe-bench/apps/uph
           cp -r uph frappe-bench/apps/uph
+          echo "uph" >> frappe-bench/apps.txt
+          echo "uph" >> frappe-bench/sites/apps.txt
 
       - name: Install UPH app and migrate
         run: |
@@ -104,7 +99,7 @@ jobs:
           bench --site test_site install-app uph
           bench --site test_site migrate
 
-      - name: Run UPH tests
+      - name: Run Frappe tests
         run: |
           cd frappe-bench
           bench --site test_site run-tests --app uph --skip-test-records || echo "Tests failed but continuing"
