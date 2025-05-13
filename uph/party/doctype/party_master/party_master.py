@@ -185,13 +185,18 @@ class PartyMaster(NestedSet):
             self.roles = roles
 
     def before_insert(self):
-        self.set("parties", [])
+        self.set("parties", [])  # Ensure child table is initialized
+
         self.set_missing_value()
-        self.party_name = self.party_name.strip()
+
+        if self.party_name:
+            self.party_name = self.party_name.strip()
+
         if not self.party_number:
             self.party_number = self.numbering()
-        if not self.party_type:
-            frappe.throw(_("Party Type is Mandatory"))
+
+        if not self.party_type and self.parent_party_master:
+            frappe.throw(_("Default Party Type is Mandatory"))
 
     def before_save(self):
         frappe.cache.hdel(uph.make_key("Party Master.parties"), self.name)
@@ -1128,3 +1133,7 @@ def parse_full_name(full_name: str) -> tuple[str, str | None, str | None]:
     last_name = names[-1] if len(names) > 1 else None
 
     return first_name, middle_name, last_name
+
+
+def on_doctype_update():
+    frappe.db.add_index("Party Master", ["lft", "rgt"])
