@@ -1,10 +1,10 @@
 import frappe
 from uph.party.controllers.test.setup_mixin import AccountsTestMixin
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase
 from uph.party.doctype.party_master.party_master import create_party_from_party_master
 
 
-class TestPartyController(AccountsTestMixin, IntegrationTestCase):
+class TestPartyController(AccountsTestMixin, FrappeTestCase):
     def setUp(self):
         self.create_company()
         self.create_usd_receivable_account()
