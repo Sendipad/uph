@@ -44,74 +44,7 @@ class AccountsTestMixin:
         self.retained_earnings = "Retained Earnings - " + abbr
 
         # Deferred revenue, expense and bank accounts
-        frappe.get_doc(
-            {
-                "doctype": "Account",
-                "account_name": "Current Liabilities",
-                "company": self.company,
-                "is_group": 1,
-                "root_type": "Liability",
-            }
-        ).insert()
-        other_accounts = [
-            frappe._dict(
-                {
-                    "attribute_name": "deferred_revenue",
-                    "account_name": "Deferred Revenue",
-                    "parent_account": "Current Liabilities - " + abbr,
-                }
-            ),
-            frappe._dict(
-                {
-                    "attribute_name": "deferred_expense",
-                    "account_name": "Deferred Expense",
-                    "parent_account": "Current Assets - " + abbr,
-                }
-            ),
-            frappe._dict(
-                {
-                    "attribute_name": "bank",
-                    "account_name": "HDFC",
-                    "parent_account": "Bank Accounts - " + abbr,
-                    "account_type": "Bank",
-                }
-            ),
-            frappe._dict(
-                {
-                    "attribute_name": "advance_received",
-                    "account_name": "Advance Received",
-                    "parent_account": "Current Liabilities - " + abbr,
-                    "account_type": "Receivable",
-                }
-            ),
-            frappe._dict(
-                {
-                    "attribute_name": "advance_paid",
-                    "account_name": "Advance Paid",
-                    "parent_account": "Current Assets - " + abbr,
-                    "account_type": "Payable",
-                }
-            ),
-        ]
-        for acc in other_accounts:
-            acc_name = acc.account_name + " - " + abbr
-            if frappe.db.exists("Account", acc_name):
-                setattr(self, acc.attribute_name, acc_name)
-            else:
-                new_acc = frappe.get_doc(
-                    {
-                        "doctype": "Account",
-                        "account_name": acc.account_name,
-                        "parent_account": acc.parent_account,
-                        "company": self.company,
-                    }
-                )
-                new_acc.account_type = acc.get("account_type", None)
-                new_acc.save()
-                setattr(self, acc.attribute_name, new_acc.name)
-
-        self.identify_default_warehouses()
-
+        
     def create_customer(
         self, customer_name="_Test Customer", party_master=None, currency=None
     ):
