@@ -59,6 +59,15 @@ class AccountsTestMixin:
                     "parent_account": "Current Assets - " + abbr,
                 }
             ),
+            frappe.get_doc(
+                {
+                    "doctype": "Account",
+                    "account_name": "Current Liabilities",
+                    "company": company_name,
+                    "is_group": 1,
+                    "root_type": "Liability",
+                }
+            ).insert(),
             frappe._dict(
                 {
                     "attribute_name": "bank",
