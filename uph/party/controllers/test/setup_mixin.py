@@ -24,7 +24,7 @@ class AccountsTestMixin:
                 {
                     "doctype": "Company",
                     "company_name": company_name,
-                    "country": "India",
+                    "country": "Yemen",
                     "default_currency": "YER",
                     "create_chart_of_accounts_based_on": "Standard Template",
                     "chart_of_accounts": "Standard",
@@ -44,6 +44,15 @@ class AccountsTestMixin:
         self.retained_earnings = "Retained Earnings - " + abbr
 
         # Deferred revenue, expense and bank accounts
+        frappe.get_doc(
+            {
+                "doctype": "Account",
+                "account_name": "Current Liabilities",
+                "company": self.company,
+                "is_group": 1,
+                "root_type": "Liability",
+            }
+        ).insert()
         other_accounts = [
             frappe._dict(
                 {
@@ -59,15 +68,6 @@ class AccountsTestMixin:
                     "parent_account": "Current Assets - " + abbr,
                 }
             ),
-            frappe.get_doc(
-                {
-                    "doctype": "Account",
-                    "account_name": "Current Liabilities",
-                    "company": company_name,
-                    "is_group": 1,
-                    "root_type": "Liability",
-                }
-            ).insert(),
             frappe._dict(
                 {
                     "attribute_name": "bank",
