@@ -330,6 +330,67 @@ def get_party_master_parties(party_master, party_type=None, cached=True):
     return parties
 
 
+@frappe.whitelist()
+def get_all_vouchers_documents_with_null_or_another_party_master(
+    doctypes=None, parties=None, party_master=None
+):
+    doctype_rules = frappe.get_doc("Party Master Settings").document_types
+
+    if not doctypes:
+        doctypes = [
+            d for d in doctype_rules if not frappe.get_meta(d.parent_doctype).issingle
+        ]
+
+    if isinstance(doctypes, str) and not frappe.get_meta(doctypes).issingle:
+
+        doctypes = [
+            d
+            for d in doctype_rules
+            if d.get("document_type") == doctypes or d.get("parent_doctype") == doctypes
+        ]
+
+    queries = []
+    for d in doctypes:
+        doctype = d.get("document_type")
+        parent_doctype = d.get("parent_doctype")
+        Voucher = DocType(doctype)
+        conditions = (
+            (Voucher.party_master.isnull())
+            if not party_master
+            else (Voucher.party_master == party_master)
+        )
+        if parties:
+            parties_list = [p.get("party") for p in parties]
+            conditions &= Voucher[d.get("party_fieldname")].isin(parties_list)
+        elif not parties:
+            conditions &= Voucher[d.get("party_fieldname")].isnotnull()
+        select = [
+            Voucher.name,
+            Voucher.docstatus,
+            ConstantColumn(parent_doctype).as_("doctype"),
+            Voucher[d.get("party_fieldname")].as_("party"),
+            Voucher.party_master,
+        ]
+        if doctype == parent_doctype:
+            select.append(Voucher.name.as_("voucher_no"))
+        elif doctype != parent_doctype:
+            select.append(Voucher.parent.as_("voucher_no"))
+
+        if d.get("is_dynamic_party_type") == 1:
+            select.append(Voucher[d.party_type_fieldname].as_("party_type"))
+            queries.append((frappe.qb.from_(Voucher).select(*select).where(conditions)))
+            continue
+        select.append(Voucher[d.get("party_type")].as_("party_type"))
+        queries.append((frappe.qb.from_(Voucher).select(*select).where(conditions)))
+
+    if queries:
+        final_query = queries[0]
+        for q in queries[1:]:
+            final_query = final_query.union_all(q)
+        final_query = final_query.orderby("party", "doctype")
+        return final_query.run(as_dict=True)
+
+
 def get_roles_for_pm(party_master):
     """
     Get the roles for a given party master.
@@ -400,8 +461,7 @@ def get_mapped_party_to_party_master_dict():
 def get_mapped_party_to_party_master(on_party_type=None):
     if on_party_type and isinstance(on_party_type, str):
         on_party_type = [on_party_type]
-    if not on_party_type:
-        on_party_type = uph.get_party_type_list()
+
     quries = []
     for p in on_party_type:
         doctype = DocType(p)

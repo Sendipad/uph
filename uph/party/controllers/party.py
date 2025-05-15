@@ -38,7 +38,6 @@ def get_doctypes_functional_fields_mapping_as_dict():
             "party_fieldname",
             "party_type_fieldname",
             "party_type",
-            "party_type_fieldname",
         ],
     )
     docs = {}
@@ -181,73 +180,77 @@ def validate_party_master_on_target_party_type(doc, method):
     ):
         return
     party_type_rule = get_party_type_validation_rule(party_type=doc.doctype)
-    old_doc = doc.get_doc_before_save()
-    old_party_master = old_doc.get("party_master") if old_doc else None
-    is_default_for_party_master = doc.is_default_for_party_master
-    old_is_default_for_party_master = (
-        old_doc.get("is_default_for_party_master") if old_doc else None
-    )
-    if (
-        doc.party_master
-        and is_default_for_party_master != old_is_default_for_party_master
-    ):
-        if is_default_for_party_master:
-            reset_default_on_party_master(doc.name, doc.doctype, doc.party_master)
 
-        frappe.cache.hdel(uph.make_key("Party Master.parties"), doc.party_master)
+    if method == "validate":
+        if party_type_rule.get("reqd") and not doc.party_master:
+            frappe.throw(
+                _(
+                    "Party Master is mandatory for {0},<br> You can unset Mandatory in Party Master Settings"
+                ).format(_(doc.doctype))
+            )
+        if doc.party_master and not is_valide_party_master_to_party(
+            doc.party_master, doc.doctype
+        ):
+            frappe.throw(
+                _(
+                    "Party Master {0} Could be not Exists or is group or has not Role of {1} or not enabled"
+                ).format(doc.party_master, doc.doctype)
+            )
+        if doc.party_master:
+            filters = {
+                "party_master": ["=", doc.party_master],
+                "name": ["!=", doc.name],
+            }
+            rule_fieldname = get_party_type_validation_rule(doc.doctype).get(
+                "rule_fieldname"
+            )
+            if rule_fieldname:
+                filters.update({rule_fieldname: ["=", doc.get(rule_fieldname)]})
+            existing = frappe.get_value(doc.doctype, filters, "name")
+            if existing:
+                frappe.throw(
+                    title=_("Duplicate Exists"),
+                    msg=_("Party Master {0} has a Party {1} with {2}").format(
+                        doc.party_master,
+                        existing,
+                        doc.get(rule_fieldname) if rule_fieldname else "",
+                    ),
+                )
 
-    if doc.party_master and old_party_master == doc.party_master:
-        return
-    if doc.party_master and (
-        not frappe.db.exists("Party Master", doc.party_master)
-        or not is_valide_party_master_to_party(doc.party_master, doc.doctype)
-    ):
-
-        frappe.throw(
-            _(
-                "Party Master {0} Could be not Exists or is group or has not Role of {1} or not enabled"
-            ).format(doc.party_master, doc.doctype)
+    if method == "on_update":
+        old_doc = doc.get_doc_before_save()
+        old_party_master = old_doc.get("party_master") if old_doc else None
+        is_default_for_party_master = doc.is_default_for_party_master
+        old_is_default_for_party_master = (
+            old_doc.get("is_default_for_party_master") if old_doc else 0
         )
-    if not doc.party_master and party_type_rule.get("reqd"):
-        frappe.throw(
-            _(
-                "Party Master is Mandatory for {0} <br> You can Check Mandatory at Party Master Settings"
-            ).format(_(doc.doctype))
-        )
-    party_master = doc.party_master
-    filters = {"party_master": ["=", party_master], "name": ["!=", doc.name]}
-    rule_fieldname = get_party_type_validation_rule(doc.doctype).get("rule_fieldname")
-    if rule_fieldname:
-        filters.update({rule_fieldname: ["=", doc.get(rule_fieldname)]})
-    existing = frappe.get_value(doc.doctype, filters, "name")
-    if existing:
-        frappe.throw(
-            title=_("Duplicate Exists"),
-            msg=_("Party Master {0} has a Party {1} with {2}").format(
-                party_master,
-                existing,
-                doc.get(rule_fieldname) if rule_fieldname else "",
-            ),
-        )
-
-    if method == "before_save":
-        if party_master:
-            frappe.cache.hdel(uph.make_key("Party Master.parties"), doc.party_master)
-
-        if doc.get("party_master") != old_party_master:
-            if old_party_master is not None:
+        if (
+            doc.party_master != old_party_master
+            or is_default_for_party_master != old_is_default_for_party_master
+        ):
+            if doc.party_master:
+                update_linked_party_to_party_master_count(doc.party_master)
+                frappe.cache.hdel(
+                    uph.make_key("Party Master.parties"), doc.party_master
+                )
+            if old_party_master:
+                update_linked_party_to_party_master_count(old_party_master)
                 frappe.cache.hdel(
                     uph.make_key("Party Master.parties"), old_party_master
                 )
-                update_linked_party_to_party_master_count(old_doc, add_dec=-1)
-
-            frappe.enqueue(
+        if doc.party_master != old_party_master:
+            if frappe.flags.in_test:
+                return on_change_party_master_update_transactional_document_types(
+                    party=doc, old_party_master=old_party_master
+                )
+            return frappe.enqueue(
                 on_change_party_master_update_transactional_document_types,
                 party=doc,
-                queue="short",
+                old_party_master=old_party_master,
+                queue="default",
                 enqueue_after_commit=True,
             )
-
+    # Require flag before deleting document to empty doc.party_master and pass previouse validation
     if method == "on_trash" and doc.party_master:
         pm = frappe.get_doc("Party Master", doc.party_master)
         pm.add_comment("Comment", _("Party : {0} Has been deleted").format(doc.name))
@@ -391,7 +394,7 @@ def update_exists_docs_on_new_document_type_insert(document_type):
     # Uncomplete code
 
 
-def update_linked_party_to_party_master_count(party_master, add_dec=0):
+def update_linked_party_to_party_master_count(party_master):
     if isinstance(party_master, str):
         party_master = frappe.get_doc("Party Master", party_master)
     if party_master.is_group or party_master.is_new():
@@ -406,7 +409,6 @@ def update_linked_party_to_party_master_count(party_master, add_dec=0):
         total += frappe.db.count(
             r, filters={"party_master": party_master.name, "docstatus": ["!=", 2]}
         )
-    total += add_dec
     if total:
         party_master.db_set("total_linked_party", total)
 

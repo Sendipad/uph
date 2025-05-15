@@ -160,7 +160,7 @@ doc_events = {
     "*": {
         "before_validate": "uph.party.controllers.party.validate_party_master_on_document_types",
         "validate": "uph.party.controllers.party.validate_party_master_on_target_party_type",
-        "before_save": [
+        "on_update": [
             "uph.party.controllers.party.validate_party_master_on_target_party_type"
         ],
         "on_change": [
