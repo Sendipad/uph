@@ -12,7 +12,7 @@ class AccountsTestMixin:
             pm = frappe.new_doc("Party Master")
             pm.party_name = party_name
             pm.parent_party_master = parent_party_master
-			pm.type="Individual"
+            pm.type = "Individual"
             pm.save()
             self.party_master = pm.name
 
@@ -45,7 +45,7 @@ class AccountsTestMixin:
         self.retained_earnings = "Retained Earnings - " + abbr
 
         # Deferred revenue, expense and bank accounts
-        
+
     def create_customer(
         self, customer_name="_Test Customer", party_master=None, currency=None
     ):

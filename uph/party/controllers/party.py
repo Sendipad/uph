@@ -247,7 +247,8 @@ def validate_party_master_on_target_party_type(doc, method):
                 on_change_party_master_update_transactional_document_types,
                 party=doc,
                 old_party_master=old_party_master,
-                queue="default",
+                counts_only=False,
+                queue="long",
                 enqueue_after_commit=True,
             )
     # Require flag before deleting document to empty doc.party_master and pass previouse validation
@@ -281,21 +282,24 @@ def reset_default_on_party_master(party, party_type, party_master):
                 doc.db_set("is_default_for_party_master", 0)
 
 
-def on_change_party_master_update_transactional_document_types(party, commit=True):
+def on_change_party_master_update_transactional_document_types(
+    party, old_party_master=None, document_type=None, counts_only=True
+):
     changes = []
     party_master = party.get("party_master")
-    doctypes = get_doctypes_functional_fields_mapping_as_dict()
-    docsets = set(d.get("document_type") for d in doctypes.values())
+    doclist = get_functional_document_types(document_type)
+    party_type = party.doctype
+    for d in doclist:
+        if not d.party_fieldname:
+            continue
+        if d.is_dynamic_party_type and not d.party_type_fieldname:
+            continue
+        if d.party_type and d.party_type != party_type:
+            continue
+        doctype = d.document_type
+        party_fieldname = d.get("party_fieldname")
+        party_type_fieldname = d.get("party_type_fieldname", None)
 
-    for doctype in docsets:
-        mapping = get_document_type_mapping_with_party_master(doctype)
-        if not mapping:
-            continue
-        party_fieldname = mapping.get("party_fieldname")
-        party_type = mapping.get("party_type", None)
-        party_type_fieldname = mapping.get("party_type_fieldname", None)
-        if not party_fieldname:
-            continue
         count = _update_party_master_field_on_exists_transactional_document_types(
             doctype=doctype,
             party_fieldname=party_fieldname,
@@ -303,6 +307,8 @@ def on_change_party_master_update_transactional_document_types(party, commit=Tru
             party_master=party_master,
             party_type=party_type,
             party_type_fieldname=party_type_fieldname,
+            old_party_master=old_party_master,
+            counts_only=counts_only,
         )
         if count:
             changes.append(frappe._("{0} Count: {1}").format(frappe._(doctype), count))
@@ -318,7 +324,7 @@ def on_change_party_master_update_transactional_document_types(party, commit=Tru
             doc = frappe.get_doc("Party Master", party_master)
             doc.add_comment("Comment", f"{party.name} Assigned and Updated: {content}")
             doc.save()
-    if commit:
+    if not counts_only:
         frappe.db.commit()
 
 
@@ -329,6 +335,8 @@ def _update_party_master_field_on_exists_transactional_document_types(
     party_master,
     party_type=None,
     party_type_fieldname=None,
+    old_party_master=None,
+    counts_only=True,
 ):
     """
     This FunctionReceived Args as Str without commiting Change
@@ -337,9 +345,13 @@ def _update_party_master_field_on_exists_transactional_document_types(
     doc = frappe.qb.DocType(doctype)
 
     # Define conditions
-    conditions = (doc[party_fieldname] == party) & (
-        Coalesce(doc.party_master, "") != party_master
-    )
+    conditions = doc[party_fieldname] == party
+    if old_party_master:
+        conditions &= doc.party_master == old_party_master
+    elif not old_party_master:
+        conditions &= (
+            doc.party_master.isnull() & Coalesce(doc.party_master, "") != party_master
+        )
     if party_type_fieldname:
         conditions &= doc[party_type_fieldname] == party_type
 
@@ -352,7 +364,7 @@ def _update_party_master_field_on_exists_transactional_document_types(
     )
     count = affected_count[0]["count"] if affected_count else 0
 
-    if count > 0:
+    if count > 0 and not counts_only:
 
         # Step 2: Perform bulk update separately
         frappe.qb.update(doc).set(doc.party_master, party_master).where(
@@ -360,6 +372,56 @@ def _update_party_master_field_on_exists_transactional_document_types(
         ).run()
 
     return count
+
+
+def get_functional_document_types(document_type=None):
+    doclist = frappe.get_doc("Party Master Settings").document_types
+    doclist = [d for d in doclist if not frappe.get_meta(d.parent_doctype).issingle]
+    if document_type:
+        doclist = [
+            d
+            for d in doclist
+            if d.document_type == document_type or d.parent_doctype == document_type
+        ]
+    return doclist
+
+
+@frappe.whitelist()
+def test_update_exists():
+    party = frappe.get_doc("Supplier", "ابو فارع - USD")
+    party_master = party.get("party_master")
+    document_type = "Payment Entry"
+    old_party_master = None  # "212000001"
+    doclist = get_functional_document_types(document_type)
+
+    party_type = party.doctype
+    changes = []
+    for d in doclist:
+        if not d.party_fieldname:
+            continue
+        if d.is_dynamic_party_type and not d.party_type_fieldname:
+            continue
+        if d.party_type and d.party_type != party_type:
+            continue
+        doctype = d.document_type
+        party_fieldname = d.get("party_fieldname")
+        party_type_fieldname = d.get("party_type_fieldname", None)
+
+        count = _update_party_master_field_on_exists_transactional_document_types(
+            doctype=doctype,
+            party_fieldname=party_fieldname,
+            party=party.name,
+            party_master=party_master,
+            party_type=party_type,
+            party_type_fieldname=party_type_fieldname,
+            old_party_master=old_party_master,
+            counts_only=True,
+        )
+        if count:
+            changes.append(frappe._("{0} Count: {1}").format(frappe._(doctype), count))
+    if changes:
+        content = ", ".join(changes)
+        return content
 
 
 # This will be called on insert new Document type in Party Master Setting and it has Exist documents
