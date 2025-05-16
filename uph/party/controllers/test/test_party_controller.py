@@ -20,7 +20,7 @@ class TestPartyController(AccountsTestMixin, FrappeTestCase):
         settings.save()
 
     def test_create_party_without_party_master(self):
-        self.assertRaises(frappe.ValidationError, self.create_customer())
+        self.assertRaises(frappe.ValidationError, self.create_customer)
 
     def test_duplicate_linked_party_to_party_master(self):
         self.create_party_master()
