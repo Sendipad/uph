@@ -7,8 +7,6 @@ from uph.party.doctype.party_master.party_master import create_party_from_party_
 class TestPartyController(AccountsTestMixin, FrappeTestCase):
     def setUp(self):
         self.create_company()
-        self.create_usd_receivable_account()
-        self.create_usd_payable_account()
         self.create_item()
 
     def tearDown(self):
