@@ -12,6 +12,7 @@ class AccountsTestMixin:
             pm = frappe.new_doc("Party Master")
             pm.party_name = party_name
             pm.parent_party_master = parent_party_master
+			pm.type="Individual"
             pm.save()
             self.party_master = pm.name
 
