@@ -6,6 +6,7 @@ from frappe.query_builder.custom import ConstantColumn
 from frappe.utils import nowdate, unique, add_months
 from pypika import Order
 from frappe.utils.caching import redis_cache
+from frappe import _
 
 
 @frappe.whitelist()
@@ -475,6 +476,104 @@ def get_mapped_party_to_party_master(on_party_type=None):
         for q in quries[1:]:
             final_query = final_query.union(q)
         return final_query.run()
+
+
+def get_unlinked_party(filters, limit=None):
+    """
+    Returns all parties without a set party master.
+    When party_name is provided, orders by most similar party name across party types.
+    Otherwise returns all results ordered by party name.
+    Supports limiting results per party type when limit parameter is provided.
+    """
+    if not frappe.db.exists("Party Master Settings"):
+        frappe.throw(_("Party Master Settings DocType does not exist!"))
+
+    party_name = filters.get("party_name")
+    if not party_name and filters.get("party_master"):
+        party_name = frappe.get_doc("Party Master", filters.party_master).party_name
+
+    party_types = filters.get("party_type") or filters.get("roles") or []
+    if not party_types:
+        party_types = frappe.get_cached_doc("Party Master Settings").party_types
+        party_types = [p.party_type for p in party_types]
+
+    queries = []
+
+    for p in party_types:
+        if not frappe.db.exists("DocType", p):
+            continue
+
+        Doctype = DocType(p)
+        voucher_name_fieldname = f"{p.lower()}_name"
+
+        fields = [
+            Doctype.name.as_("party"),
+            Doctype.party_master,
+            ConstantColumn(p).as_("party_type"),
+        ]
+
+        meta = frappe.get_meta(p)
+
+        # Get party name field
+        if meta.has_field(voucher_name_fieldname):
+            fields.append(getattr(Doctype, voucher_name_fieldname).as_("party_name"))
+        elif meta.has_field("title"):
+            fields.append(Doctype.title.as_("party_name"))
+        elif meta.has_field("name"):
+            fields.append(Doctype.name.as_("party_name"))
+        else:
+            fields.append(ConstantColumn("").as_("party_name"))
+
+        # Currency fields
+        if meta.has_field("default_currency"):
+            fields.append(Doctype.default_currency.as_("currency"))
+        elif meta.has_field("salary_currency"):
+            fields.append(Doctype.salary_currency.as_("currency"))
+        else:
+            fields.append(ConstantColumn("").as_("currency"))
+
+        base_condition = (Doctype.party_master.isnull()) | (Doctype.party_master == "")
+        if not filters.disabled and meta.has_field("disabled"):
+            base_condition = base_condition & (Doctype.disabled == 0)
+
+        query = frappe.qb.from_(Doctype).select(*fields).where(base_condition)
+
+        # Apply limit to each party type query if limit is provided
+        if limit:
+            query = query.limit(limit)
+
+        queries.append(query)
+
+    if not queries:
+        return []
+
+    # Build the final query
+    final_query = queries[0]
+    for q in queries[1:]:
+        final_query = final_query.union_all(q)
+    if limit:
+        final_query.limit(limit)
+    if party_name:
+        words = [word.lower() for word in party_name.split() if word]
+        if words:
+            # Calculate similarity score in Python after getting results
+            results = final_query.run(as_dict=True)
+
+            # Add similarity score to each result
+            for result in results:
+                score = 0
+                party_name_lower = (result.get("party_name") or "").lower()
+                for word in words:
+                    if word in party_name_lower:
+                        score += 1
+                result["similarity_score"] = score
+
+            # Sort by similarity score (descending) then by party_name
+            results.sort(key=lambda x: (-x["similarity_score"], x["party_name"] or ""))
+            return results
+
+    # Default ordering by party_name
+    return final_query.orderby("party_name").run(as_dict=True)
 
 
 def build_fetch_parties_query(doctype: str, party_master: str | list = None):

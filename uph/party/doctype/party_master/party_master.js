@@ -40,15 +40,15 @@ frappe.ui.form.on("Party Master", {
 
 	update_button(frm) {
 		if (frm.is_new()) return;
-		if (frm.doc.has_secondary_role_party) {
-			frm.add_custom_button(
-				__("Add Secondary Roles"),
-				() => {
-					open_secondary_roles_dialog(frm);
-				},
-				__("Action"),
-			);
-		}
+
+		frm.add_custom_button(
+			__("Add Secondary Roles"),
+			() => {
+				open_secondary_roles_dialog(frm);
+			},
+			__("Action"),
+		);
+
 		if (frm.doc.total_linked_party) {
 			frm.add_custom_button(
 				__("Reassign Linked Parties"),
@@ -383,6 +383,7 @@ function get_child_table() {
 		},
 	];
 }
+
 function open_secondary_roles_dialog(frm) {
 	const dialog = new frappe.ui.Dialog({
 		title: __("Add Party Roles"),
@@ -401,18 +402,29 @@ function open_secondary_roles_dialog(frm) {
 			{
 				label: __("Roles"),
 				fieldname: "roles",
-				fieldtype: "MultiSelect",
-				//options: "Party Master Role",
+				fieldtype: "Table MultiSelect",
+				options: "Party Master Role",
 				reqd: 1,
-				get_data: () => {
-					let roles = [frm.doc.party_type];
+				get_data: function (txt) {
+					// Gather existing roles to exclude
+					let existing_roles = [frm.doc.party_type];
 					if (frm.doc.roles && frm.doc.roles.length > 0) {
-						roles = roles.concat(frm.doc.roles.map((role) => role.party_type_role));
+						existing_roles = existing_roles.concat(frm.doc.roles.map((r) => r.party_type_role));
 					}
 
-					return Object.keys(frappe.boot.party_account_types || {})
-						.filter((key) => !roles.includes(key)) // Exclude existing roles
-						.map((key) => ({ value: key, label: __(key) }));
+					// Return a Promise from frappe.db.get_list
+					return frappe.db
+						.get_list("Party Master Role", {
+							fields: ["name"],
+							filters: [
+								["name", "not in", existing_roles],
+								["name", "like", `%${txt}%`],
+							],
+							limit: 20,
+						})
+						.then((records) => {
+							return records;
+						});
 				},
 			},
 		],
@@ -423,11 +435,21 @@ function open_secondary_roles_dialog(frm) {
 				frappe.msgprint(__("Please select at least one role."));
 				return;
 			}
+
 			frm.set_value("has_secondary_role_party", 1);
 
-			frm.set_value("roles", values.roles);
-			dialog.hide();
+			const existing_roles = (frm.doc.roles || []).map((r) => r.party_type_role);
+
+			values.roles.forEach((role_doc) => {
+				if (!existing_roles.includes(role_doc.name)) {
+					frm.add_child("roles", {
+						party_type_role: role_doc.name,
+					});
+				}
+			});
+
 			frm.refresh_field("roles");
+			dialog.hide();
 		},
 	});
 

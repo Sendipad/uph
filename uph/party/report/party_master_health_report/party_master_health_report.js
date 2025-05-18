@@ -15,5 +15,10 @@ frappe.query_reports["Party Master Health Report"] = {
 			fieldname: "party_master",
 			options: "Party Master",
 		},
+		{
+			label: __("Include Disabled Parties"),
+			fieldname: "disabled",
+			fieldtype: "Check",
+		},
 	],
 };

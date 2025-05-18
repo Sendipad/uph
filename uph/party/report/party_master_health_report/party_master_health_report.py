@@ -3,143 +3,140 @@
 
 import frappe
 
+from frappe import _
+
 # from uph.party.doctype.party_master.party_master import fetch_parties_list
-# from frappe.query_builder.functions import Locate, Coalesce, Count
-from frappe.query_builder.custom import ConstantColumn
-from frappe.query_builder import DocType
+# from frappe.query_builder.functions import Count
+
+# from frappe.query_builder.custom import ConstantColumn
+
+# from frappe.query_builder import DocType
+from uph.party.controllers.queries import (
+    get_unlinked_party,
+    get_party_master_parties_db,
+)
 
 
 def execute(filters=None):
     filters = frappe._dict(filters or {})
     data = get_data(filters)
     columns = get_columns()
-    return columns, data
+    summary_data = get_party_type_summary(filters)
+
+    chart = {
+        "data": summary_data["chart_data"],
+        "type": "axis-mixed",
+        "colors": ["#5cb85c", "#d9534f", "#0275d8"],  # green, red, blue
+        "title": _("Linked vs Unlinked Party Stats"),
+        "subtitle": "Compared to total records per party type",
+        "height": 300,
+    }
+
+    return (
+        columns,
+        data,
+        _("This is Old Report Build query Again to get fresh Stats"),
+        chart,
+    )
 
 
 def get_data(filters):
     # settings = frappe.get_cached_doc("party Master Settings")
     data = []
-    data.extend(
-        get_parties_unlinked_to_party_master(
-            party_master=filters.get("party_master", None)
-        )
-    )
+
+    unlinked_parties = get_unlinked_party(filters)
+    if unlinked_parties:
+        data.extend(unlinked_parties)
+    voucher_checks = get_voucher_status(filters)
     return data
 
 
-def get_parties_unlinked_to_party_master(
-    party_master=None,
-    party_name=None,
-    fieldmap={"name": "voucher", "party_type": "voucher_type"},
-):
-    party_types = frappe.get_cached_doc("Party Master Settings").party_types
+def get_voucher_stats(filters):
+    voucher = frappe.get_cached_doc("Party Master Settings").document_types
+    parties = get_party_master_parties_db()
 
-    if party_master and not party_name:
-        party_name = frappe.get_doc("Party Master", party_master).party_name
 
-    words = list(set(filter(None, party_name.lower().split()))) if party_name else []
-    queries = []
+@frappe.whitelist()
+def get_party_type_summary(filters=None):
+    if not filters:
+        filters = {}
 
-    for p in party_types:
-        Doctype = DocType(p.party_type)
-        meta = frappe.get_meta(p.party_type)
+    result = []
+    party_types = filters.get("party_type", None)
+    if not party_types:
+        party_types = frappe.get_cached_doc("Party Master Settings").party_types
+        party_types = [p.party_type for p in party_types]
+    chart_data = {
+        "labels": [],
+        "datasets": [
+            {"name": "Linked", "values": [], "chartType": "bar"},
+            {"name": "Unlinked", "values": [], "chartType": "bar"},
+            {"name": "Total", "values": [], "chartType": "line"},
+        ],
+    }
 
-        fields = [
-            Doctype.name.as_("voucher"),
-            Doctype.party_master,
-            ConstantColumn(p.party_type).as_("voucher_type"),
-        ]
+    total_linked = 0
+    total_unlinked = 0
+    total_overall = 0
 
-        # Determine field for party_name
-        voucher_name_fieldname = f"{p.party_type.lower()}_name"
-        party_name_field = None
-
-        if meta.has_field(voucher_name_fieldname):
-            party_name_field = getattr(Doctype, voucher_name_fieldname)
-        elif meta.has_field("title"):
-            party_name_field = Doctype.title
-
-        # Add party name field and placeholder for match_flag
-        if party_name_field:
-            fields.append(party_name_field.as_("party_name"))
-            fields.append(
-                ConstantColumn("__MATCH_FLAG__").as_("match_flag")
-            )  # placeholder
-        else:
-            fields.append(ConstantColumn("").as_("party_name"))
-            fields.append(ConstantColumn("__MATCH_FLAG__").as_("match_flag"))
-
-        # Currency fields
-        if meta.has_field("default_currency"):
-            fields.append(Doctype.default_currency.as_("currency"))
-        elif meta.has_field("salary_currency"):
-            fields.append(Doctype.salary_currency.as_("currency"))
-        else:
-            fields.append(ConstantColumn("").as_("currency"))
-
-        query = (
-            frappe.qb.from_(Doctype)
-            .select(*fields)
-            .where((Doctype.party_master.isnull()) | (Doctype.party_master == ""))
-        )
-        queries.append(query)
-
-    if not queries:
-        return []
-
-    # Combine all queries using UNION ALL
-    combined_query = queries[0]
-    for q in queries[1:]:
-        combined_query = combined_query.union_all(q)
-
-    query_sql = combined_query.get_sql()
-
-    # If party_name is given, replace placeholder with computed match_flag
-    if words:
-        escaped_words = [word.replace("'", "''") for word in words]
-        conditions = [f"LOWER(party_name) LIKE '%{word}%'" for word in escaped_words]
-        combined_condition = " OR ".join(conditions)
-        match_flag_sql = f"CASE WHEN {combined_condition} THEN 9999 ELSE 0 END"
-        query_sql = query_sql.replace(
-            "'__MATCH_FLAG__' AS match_flag", f"{match_flag_sql} AS match_flag"
-        )
-    else:
-        query_sql = query_sql.replace(
-            "'__MATCH_FLAG__' AS match_flag", "0 AS match_flag"
+    for pt in party_types:
+        party_stats = frappe.db.sql(
+            f"""
+            SELECT 
+                COUNT(*) as total_count,
+                COUNT(CASE WHEN party_master IS NOT NULL THEN 1 END) as linked_count,
+                COUNT(CASE WHEN party_master IS NULL THEN 1 END) as unlinked_count
+            FROM `tab{pt}`
+            """,
+            as_dict=True,
         )
 
-    outer_sql = f"SELECT * FROM ({query_sql}) AS X"
+        if party_stats:
+            stats = party_stats[0]
+            linked_count = stats.get("linked_count", 0)
+            unlinked_count = stats.get("unlinked_count", 0)
+            total_count = stats.get("total_count", 0)
 
-    if party_name:
-        outer_sql += " ORDER BY match_flag DESC, party_name ASC"
-    else:
-        outer_sql += " ORDER BY party_name ASC"
+            linked_pct = (linked_count / total_count * 100) if total_count else 0
+            unlinked_pct = (unlinked_count / total_count * 100) if total_count else 0
 
-    return frappe.db.sql(outer_sql, as_dict=True, debug=True)
+            result.append(
+                {
+                    "party_type": pt,
+                    "linked_count": linked_count,
+                    "unlinked_count": unlinked_count,
+                    "total_count": total_count,
+                    "linked_percentage": round(linked_pct, 2),
+                    "unlinked_percentage": round(unlinked_pct, 2),
+                }
+            )
 
+            chart_data["labels"].append(pt)
+            chart_data["datasets"][0]["values"].append(linked_count)
+            chart_data["datasets"][1]["values"].append(unlinked_count)
+            chart_data["datasets"][2]["values"].append(total_count)
 
-"""
-    if queries:
-        final_query = queries[0]
-        for q in queries[1:]:
-            final_query = final_query.union_all(q)
+            total_linked += linked_count
+            total_unlinked += unlinked_count
+            total_overall += total_count
 
-        if party_name:
-            words = list(set(filter(None, party_name.split())))
-            case = Case()
-            for word in words:
-                case = case.when(
-                    frappe.qb.functions.Lower(frappe.qb.Column("voucher_name")).like(
-                        f"%{word.lower()}%"
-                    ),
-                    1,
-                )
-            final_query = final_query.orderby(case.else_(0), order="desc")
-        else:
-            final_query = final_query.orderby("voucher_name")
+    overall_summary = {
+        "total_linked": total_linked,
+        "total_unlinked": total_unlinked,
+        "total": total_overall,
+        "linked_percentage": round(
+            (total_linked / total_overall * 100) if total_overall else 0, 2
+        ),
+        "unlinked_percentage": round(
+            (total_unlinked / total_overall * 100) if total_overall else 0, 2
+        ),
+    }
 
-        return final_query.run(as_dict=True)
-"""
+    return {
+        "data": result,
+        "chart_data": chart_data,
+        "summary": overall_summary,
+    }
 
 
 def get_columns():
