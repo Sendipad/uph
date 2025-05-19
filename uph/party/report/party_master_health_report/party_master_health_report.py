@@ -13,7 +13,7 @@ from frappe import _
 # from frappe.query_builder import DocType
 from uph.party.controllers.queries import (
     get_unlinked_party,
-    get_party_master_parties_db,
+    # get_party_master_parties_db,
 )
 
 
@@ -47,13 +47,15 @@ def get_data(filters):
     unlinked_parties = get_unlinked_party(filters)
     if unlinked_parties:
         data.extend(unlinked_parties)
-    voucher_checks = get_voucher_status(filters)
+    data.extend(get_voucher_stats(filters))
     return data
 
 
 def get_voucher_stats(filters):
-    voucher = frappe.get_cached_doc("Party Master Settings").document_types
-    parties = get_party_master_parties_db()
+    # voucher = frappe.get_cached_doc("Party Master Settings").document_types
+    # parties = get_party_master_parties_db()
+    result = []
+    return result
 
 
 @frappe.whitelist()
