@@ -1,5 +1,5 @@
 import frappe
-from uph.master_data_manager.deduper import BaseDeduplicationManager
+from uph.master_data_manager.mdm import BaseDeduplicationManager, RemarkEngine
 
 
 def run_all_active_dedupe_jobs():
@@ -67,3 +67,19 @@ def run_deduplication_job(job_name, filters=None):
         manager.configure_conditions(filters)
 
     return manager.find_duplicates()
+
+
+@frappe.whitelist()
+def generate_custom_remark(doctype, docname):
+    try:
+        doc = frappe.get_doc(doctype, docname)
+        engine = RemarkEngine(doc=doc)
+        remark = engine.generate()
+
+        if not remark:
+            frappe.msgprint("No applicable remark found for this document.")
+        else:
+            frappe.msgprint(f"Remarks: {remark}")
+    except Exception as e:
+        frappe.log_error(f"Failed to generate remark: {e}", "Custom Remark API")
+        frappe.throw("Could not generate remark. Check logs for more info.")

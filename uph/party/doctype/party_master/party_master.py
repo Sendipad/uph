@@ -546,7 +546,165 @@ def get_party_master_balances(company):
 
 
 @frappe.whitelist()
-def get_children(doctype, parent=None, company=None, **filters):
+def get_parents(doctype, child):
+    """Get all parent nodes for a given child node"""
+    if not child:
+        return []
+
+    try:
+        node = frappe.get_doc(doctype, child)
+    except frappe.DoesNotExistError:
+        frappe.throw(_("Party Master {0} does not exist").format(child))
+
+    # Verify tree structure
+    if not hasattr(node, "lft") or not hasattr(node, "rgt"):
+        frappe.throw(
+            _(
+                "This doctype is not properly configured as a tree (missing lft/rgt fields)"
+            )
+        )
+
+    # Get hierarchical ancestors
+    ancestors = frappe.get_all(
+        doctype,
+        filters={
+            "lft": ["<=", node.lft],
+            "rgt": [">=", node.rgt],
+            "docstatus": ["<", 2],  # Exclude cancelled documents
+        },
+        fields=[
+            "name as value",
+            "title",
+            "party_name",
+            "is_group as expandable",
+            "parent_party_master as parent",
+            "party_type",
+        ],
+        order_by="lft",
+    )
+
+    return ancestors
+
+
+@frappe.whitelist()
+def get_children(doctype, parent=None, company=None, name=None, is_root=False):
+    """Get child nodes with support for focused leaf view"""
+    filters = [["docstatus", "<", 2]]
+
+    # Handle focused leaf view
+    if name and not parent:
+        party = frappe.get_value(
+            "Party Master",
+            name,
+            ["is_group", "parent_party_master", "party_name", "title"],
+            as_dict=1,
+        )
+        if not party or not party.is_group:
+            # Return parent's children but only include this leaf
+            return [
+                {
+                    "value": name,
+                    "title": party.title,
+                    "party_name": party.party_name,
+                    "expandable": 0,
+                    "parent": party.parent_party_master,
+                }
+            ]
+
+    # Normal parent-child relationship
+    if parent:
+        filters.append(["parent_party_master", "=", parent])
+    else:
+        filters.append(["parent_party_master", "=", ""])
+
+    return frappe.get_all(
+        "Party Master",
+        fields=[
+            "name as value",
+            "title",
+            "party_name",
+            "is_group as expandable",
+            "parent_party_master as parent",
+        ],
+        filters=filters,
+        order_by="name",
+    )
+
+
+"""
+@frappe.whitelist()
+def get_parents(doctype, child):
+    if not child:
+        return []
+
+    node = frappe.get_doc(doctype, child)
+
+    if not hasattr(node, "lft") or not hasattr(node, "rgt"):
+        frappe.throw(_("This doctype is not a tree (missing lft/rgt fields)."))
+
+    # Get ancestors including the node itself
+    ancestors = frappe.get_all(
+        doctype,
+        filters={
+            "lft": ["<=", node.lft],
+            "rgt": [">=", node.rgt],
+        },
+        fields=fields=[
+            "name as value",
+            "title",
+            "is_group as expandable",
+            "parent_party_master as parent",
+            "party_name",
+            "party_type",
+        ],
+        order_by="lft asc",
+    )
+
+    return [
+        {
+            "value": d.name,
+            "title": d.party_name or d.name,
+            "expandable": d.is_group,
+            "is_group": d.is_group,
+            "party_type": d.party_type,
+            "party_name": d.party_name,
+        }
+        for d in ancestors
+    ]
+
+
+@frappe.whitelist()
+def get_children(doctype, parent=None, company=None,name=None is_root=False):
+    if name and not parent:
+        if not frappe.db.get_value("Party Master",name,"is_group"):
+            return get_parents(doctype=doctype,child=name)
+    filters = [["docstatus", "<", 2]]
+
+    if parent:
+        filters.append(["parent_party_master", "=", parent])
+    elif not parent and not name:
+        filters.append(["parent_party_master", "=", ""])
+
+    parties = frappe.get_all(
+        "Party Master",
+        fields=[
+            "name as value",
+            "title",
+            "is_group as expandable",
+            "parent_party_master as parent",
+            "party_name",
+            "party_type",
+        ],
+        filters=filters,
+        order_by="name",
+    )
+    return parties
+
+"""
+
+
+@frappe.whitelist()
+def get_children1(doctype, parent=None, company=None, **filters):
     filters = filters or {}
 
     # Remove frontend-added keys that don't exist in the DocType

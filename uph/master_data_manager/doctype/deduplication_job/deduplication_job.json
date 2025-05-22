@@ -1,7 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "format:Ded-{document_type}-###",
+ "autoname": "format:Ded-{document_type}-{###}",
  "creation": "2025-05-19 17:04:33.161976",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -10,9 +10,9 @@
   "schedule",
   "deduplication_mode",
   "column_break_jcjf",
-  "active",
+  "enabled",
   "match_threshold",
-  "validate_on_form_save",
+  "validate_on_save",
   "section_break_yzon",
   "fields"
  ],
@@ -23,25 +23,22 @@
    "in_list_view": 1,
    "label": "Document Type",
    "options": "DocType",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
+   "default": "Manual",
    "fieldname": "schedule",
    "fieldtype": "Select",
    "label": "Schedule",
-   "options": "Hourly\nDaily\nMonthly\nManual"
+   "options": "Monthly\nDaily\nHourly\nManual"
   },
   {
    "fieldname": "column_break_jcjf",
    "fieldtype": "Column Break"
   },
   {
-   "default": "0",
-   "fieldname": "active",
-   "fieldtype": "Check",
-   "label": "Active"
-  },
-  {
+   "default": "85",
    "fieldname": "match_threshold",
    "fieldtype": "Float",
    "label": "Match Threshold"
@@ -57,16 +54,26 @@
    "options": "Deduplication Job Field"
   },
   {
-   "default": "0",
-   "fieldname": "validate_on_form_save",
-   "fieldtype": "Check",
-   "label": "Vlaidate On Save"
-  },
-  {
+   "default": "Exact",
    "fieldname": "deduplication_mode",
    "fieldtype": "Select",
    "label": "Mode",
    "options": "Fuzzy\nExact"
+  },
+  {
+   "default": "0",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "search_index": 1
+  },
+  {
+   "default": "0",
+   "description": "Checked will Run this on doc events by server",
+   "fieldname": "validate_on_save",
+   "fieldtype": "Check",
+   "label": "Vlaidate On Save",
+   "search_index": 1
   }
  ],
  "grid_page_length": 50,
@@ -77,7 +84,7 @@
    "link_fieldname": "deduplication_job"
   }
  ],
- "modified": "2025-05-19 22:00:15.148151",
+ "modified": "2025-05-21 22:56:51.379714",
  "modified_by": "Administrator",
  "module": "Master Data Manager",
  "name": "Deduplication Job",

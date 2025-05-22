@@ -5,7 +5,7 @@
 from frappe.model.document import Document
 
 
-class DeduplicationJobField(Document):
+class CustomRemarkRuleCondition(Document):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
 
@@ -14,12 +14,11 @@ class DeduplicationJobField(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		fieldname: DF.Literal[None]
-		filter: DF.Check
-		operator: DF.Literal["Equals", "Not Equals", "Date \u00b11 Day", "Contains", "Starts With", "Ends With", "In List", "Not In List", "Greater Than", "Less Than", "Is Empty", "Is Not Empty", "Child Table Has"]
+		condition: DF.Literal["==", "!=", ">", "<", ">=", "<="]
+		field: DF.Literal[None]
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data
-		weight: DF.Float
+		value: DF.Data | None
 	# end: auto-generated types
 	pass

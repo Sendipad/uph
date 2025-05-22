@@ -1,5 +1,5 @@
 import frappe
-from uph.master_data_manager.deduper import BaseDeduplicationManager
+from uph.master_data_manager.mdm import BaseDeduplicationManager
 
 
 def validate_deduplication_on_save(doc, method):
