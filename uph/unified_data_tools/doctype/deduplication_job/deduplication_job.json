@@ -1,0 +1,169 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-05-19 17:04:33.161976",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "enabled",
+  "document_type",
+  "schedule",
+  "deduplication_mode",
+  "batch_size",
+  "column_break_jcjf",
+  "match_threshold",
+  "validate_on_save",
+  "validate_threshold_action",
+  "last_execution",
+  "section_break_yzon",
+  "rules",
+  "section_break_zrlz",
+  "on_doc_rules",
+  "settings_tab",
+  "enable_pass_validation",
+  "similarity_calculation_method"
+ ],
+ "fields": [
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Document Type",
+   "link_filters": "[[\"DocType\",\"issingle\",\"=\",0],[\"DocType\",\"istable\",\"=\",0]]",
+   "options": "DocType",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "default": "Manual",
+   "fieldname": "schedule",
+   "fieldtype": "Select",
+   "label": "Schedule",
+   "options": "Monthly\nDaily\nHourly\nManual"
+  },
+  {
+   "fieldname": "column_break_jcjf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "85",
+   "fieldname": "match_threshold",
+   "fieldtype": "Float",
+   "label": "Match Threshold"
+  },
+  {
+   "fieldname": "section_break_yzon",
+   "fieldtype": "Section Break",
+   "label": "Cross Docs Validation Rules"
+  },
+  {
+   "default": "Exact",
+   "fieldname": "deduplication_mode",
+   "fieldtype": "Select",
+   "label": "Mode",
+   "options": "Fuzzy\nExact"
+  },
+  {
+   "default": "0",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "search_index": 1
+  },
+  {
+   "default": "0",
+   "description": "Checked will Run this on doc events by server",
+   "fieldname": "validate_on_save",
+   "fieldtype": "Check",
+   "label": "Vlaidate On Save",
+   "search_index": 1
+  },
+  {
+   "fieldname": "rules",
+   "fieldtype": "Table",
+   "label": "Rules",
+   "options": "Deduplication Job Rule"
+  },
+  {
+   "depends_on": "eval:doc.validate_on_save",
+   "fieldname": "validate_threshold_action",
+   "fieldtype": "Select",
+   "label": "Validate Threshold Action",
+   "options": "Stop\nWarn"
+  },
+  {
+   "default": "1000",
+   "fieldname": "batch_size",
+   "fieldtype": "Int",
+   "label": "Batch Size"
+  },
+  {
+   "fieldname": "section_break_zrlz",
+   "fieldtype": "Section Break",
+   "label": "Self Doc Validation Rule"
+  },
+  {
+   "description": "Rules Apply to Self Doc fields Value to prevent duplicate Value on different fields of the Same Field Type Either on Parent or in a Child Row",
+   "fieldname": "on_doc_rules",
+   "fieldtype": "Table",
+   "label": "On Doc Validation Rules",
+   "options": "Deduplication Job Doc Validation Rule"
+  },
+  {
+   "fieldname": "settings_tab",
+   "fieldtype": "Tab Break",
+   "label": "Settings"
+  },
+  {
+   "default": "0",
+   "description": "This will prompt user to confirm save and submit events",
+   "fieldname": "enable_pass_validation",
+   "fieldtype": "Check",
+   "label": "Enable Pass Validation"
+  },
+  {
+   "default": "Token Set Ratio",
+   "fieldname": "similarity_calculation_method",
+   "fieldtype": "Select",
+   "label": "Similarity Calculation Method",
+   "options": "Ratio\nPartial Ratio\nToken Sort Ratio\nToken Set Ratio"
+  },
+  {
+   "fieldname": "last_execution",
+   "fieldtype": "Datetime",
+   "label": "Last Execution",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "link_doctype": "Data Quality Task",
+   "link_fieldname": "reference_name"
+  }
+ ],
+ "modified": "2025-05-25 21:57:02.631413",
+ "modified_by": "Administrator",
+ "module": "Unified Data Tools",
+ "name": "Deduplication Job",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

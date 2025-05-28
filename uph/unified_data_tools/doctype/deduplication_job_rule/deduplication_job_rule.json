@@ -1,0 +1,94 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-05-19 17:11:31.036113",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "use_in_filter",
+  "field_path",
+  "operator",
+  "weight",
+  "column_break_nyev",
+  "field_type",
+  "tolerance",
+  "fuzzy_method"
+ ],
+ "fields": [
+  {
+   "fieldname": "weight",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "label": "Weight",
+   "search_index": 1
+  },
+  {
+   "fieldname": "operator",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Operator",
+   "options": "Exact Match\nFuzzy Match\nContains\nStarts With\nEnds With\nExact Date\nWithin Days\nExact Number\nWithin Range\nPercent Difference\nAny Item Exists\nAll Items Exist\nExact Sequence\nBoth Checked\nSyntax Match",
+   "search_index": 1
+  },
+  {
+   "description": "Select parent or child table field (e.g. 'customer_name' or 'items.item_code')",
+   "fieldname": "field_path",
+   "fieldtype": "Autocomplete",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "label": "Field Name",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "field_path.field_type",
+   "fetch_if_empty": 1,
+   "fieldname": "field_type",
+   "fieldtype": "Read Only",
+   "in_list_view": 1,
+   "label": "Field Type"
+  },
+  {
+   "default": "0",
+   "description": "\"Use this field to reduce records fetched before scoring\"",
+   "fieldname": "use_in_filter",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Use In Filters",
+   "search_index": 1
+  },
+  {
+   "fieldname": "tolerance",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Tolerance"
+  },
+  {
+   "fieldname": "column_break_nyev",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Token Set Ratio",
+   "depends_on": "eval:doc.operator ===\"Fuzzy Match\"",
+   "fieldname": "fuzzy_method",
+   "fieldtype": "Select",
+   "label": "Fuzzy Method",
+   "options": "Ratio\nPartial Ratio\nToken Sort Ratio\nToken Set Ratio\nQRatio\nWRatio"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-05-27 15:57:19.907272",
+ "modified_by": "Administrator",
+ "module": "Unified Data Tools",
+ "name": "Deduplication Job Rule",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

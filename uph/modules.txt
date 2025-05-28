@@ -1,2 +1,2 @@
 Party
-Master Data Manager
+Unified Data Tools
