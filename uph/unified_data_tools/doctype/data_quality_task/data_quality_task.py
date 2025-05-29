@@ -40,6 +40,6 @@ class DataQualityTask(Document):
 
 
 @frappe.whitelist()
-def clear_deduplication_job_results():
+def clear_all_data_quality_tasks():
     frappe.only_for("System Manager")
     frappe.db.truncate("Data Quality Task")

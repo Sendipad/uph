@@ -15,6 +15,7 @@
   "validate_on_save",
   "validate_threshold_action",
   "last_execution",
+  "validate_on_event",
   "section_break_yzon",
   "rules",
   "section_break_zrlz",
@@ -133,6 +134,13 @@
    "fieldtype": "Datetime",
    "label": "Last Execution",
    "read_only": 1
+  },
+  {
+   "description": "Run For a this Doc when selected event occurs and Not Cross Document",
+   "fieldname": "validate_on_event",
+   "fieldtype": "Select",
+   "label": "Validate on a Doc Event",
+   "options": "\nBefore Insert\nBefore Save\nValidate\nOn Submit\nOn Cancel\nOn Update After Submit"
   }
  ],
  "grid_page_length": 50,
@@ -143,7 +151,7 @@
    "link_fieldname": "reference_name"
   }
  ],
- "modified": "2025-05-25 21:57:02.631413",
+ "modified": "2025-05-28 21:57:28.433631",
  "modified_by": "Administrator",
  "module": "Unified Data Tools",
  "name": "Deduplication Job",

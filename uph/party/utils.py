@@ -1,3 +1,17 @@
+# -----------------------------------------------------------------------------
+# Project Name: UPH - Unified Party Hub
+# File: utils.py
+# Description: Utility functions for party management and integration in UPH, including helpers for custom fields and Arabic money in words.
+#
+# Author: Abdo Ruzaqi(Sendipad)
+# Created: 2025-04-10
+# License: GNU General Public License v3.0 (GPL-3.0)
+# Repository: https://github.com/Sendipad/uph
+#
+# Copyright (c) 2025 Abdo  Ruzaqi(Sendipad)
+# This file is part of the UPH project and is released under the GPL-3.0 license.
+# See LICENSE file or https://www.gnu.org/licenses/gpl-3.0.en.html for full terms.
+# -----------------------------------------------------------------------------
 import frappe
 from frappe.utils import unique
 from frappe.custom.doctype.custom_field.custom_field import create_custom_field

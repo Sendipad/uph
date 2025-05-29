@@ -1,15 +1,44 @@
 // Copyright (c) 2025, Abdo Mohammed Ruzaqi and contributors
 // For license information, please see license.txt
 frappe.ui.form.on("Custom Remark Rule", {
-	refresh: function (frm) {
-		update_selection_fields(frm);
-		//frm.refresh_field("conditions");
+	onload(frm) {
+		frm.trigger("setup_field_options");
 	},
-	document_type: function (frm) {
+	setup_field_options(frm) {
 		if (frm.doc.document_type) {
-			update_selection_fields(frm);
-			frm.refresh_field("conditions");
+			uph.utils.FieldOptionHelper.load({
+				documentType: frm.doc.document_type,
+				callback(options) {
+					uph.utils.FieldOptionHelper.applyAutocomplete(
+						frm,
+						options,
+						["remark_fieldname"], // parent fields
+					);
+					uph.utils.FieldOptionHelper.applyAutocomplete(
+						frm,
+						options,
+						["fieldname"],
+						"conditions", // parent fields
+					);
+				},
+			});
 		}
+	},
+	refresh(frm) {
+		/* if (frm.doc.document_type) {
+			const options = uph.utils.FieldOptionHelper.cache[frm.doc.document_type];
+			if (options) {
+				uph.utils.FieldOptionHelper.applyAutocomplete({
+					frm,
+					options,
+					fieldnames: ["remark_fieldname"],
+				});
+			}
+		} */
+	},
+
+	document_type: function (frm) {
+		frm.trigger("setup_field_options");
 	},
 });
 

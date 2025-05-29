@@ -1,3 +1,19 @@
+# -----------------------------------------------------------------------------
+# Project Name: UPH - Unified Party Hub
+# File: validate_pm.py
+# Description:
+#
+# Author: Abdo (Sendipad)
+# Created: 2025-04-10
+# License: GNU General Public License v3.0 (GPL-3.0)
+# Repository: https://github.com/Sendipad/uph
+#
+# Copyright (c) 2025 Abdo (Sendipad)
+# This file is part of the UPH project and is released under the GPL-3.0 license.
+# See LICENSE file or https://www.gnu.org/licenses/gpl-3.0.en.html for full terms.
+# -----------------------------------------------------------------------------
+
+
 import frappe
 from uph.party.utils import (
     get_party_type_party_field_from_doc,

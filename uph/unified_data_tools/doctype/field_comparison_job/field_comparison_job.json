@@ -11,7 +11,7 @@
   "run_mode",
   "title",
   "column_break_pcty",
-  "trigger_on_event",
+  "validate_on_event",
   "enabled",
   "ignore_cancelled_doc",
   "section_break_hjkv",
@@ -74,13 +74,6 @@
    "read_only": 1
   },
   {
-   "description": "Run automatically when selected event occurs on Document Type",
-   "fieldname": "trigger_on_event",
-   "fieldtype": "Select",
-   "label": "Trigger On Doc Event",
-   "options": "\nBefore Insert\nBefore Save\nValidate\nOn Submit\nOn Cancel\nOn Update After Submit"
-  },
-  {
    "default": "1",
    "fieldname": "enabled",
    "fieldtype": "Check",
@@ -126,6 +119,13 @@
    "fieldname": "ignore_cancelled_doc",
    "fieldtype": "Check",
    "label": "Ignore Cancelled Doc"
+  },
+  {
+   "description": "Run For a this Doc when selected event occurs and Not Cross Document",
+   "fieldname": "validate_on_event",
+   "fieldtype": "Select",
+   "label": "Validate On Doc Event",
+   "options": "\nBefore Insert\nBefore Save\nValidate\nOn Submit\nOn Cancel\nOn Update After Submit"
   }
  ],
  "grid_page_length": 50,
@@ -136,7 +136,7 @@
    "link_fieldname": "reference_name"
   }
  ],
- "modified": "2025-05-28 18:46:55.775670",
+ "modified": "2025-05-28 21:54:58.208452",
  "modified_by": "Administrator",
  "module": "Unified Data Tools",
  "name": "Field Comparison Job",

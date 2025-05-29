@@ -118,7 +118,7 @@ class DeduplicationJob(Document):
             frappe.throw(_("Field {0} Not Exist in DocType").format(not_exist))
 
     def clear_cache(self):
-        get_doctype_with_validation_deduplication_jobs.clear_cache()
+        get_document_type_run_validate_events().clear_cache()
         return super().clear_cache()
 
     def get_validation_threshold(self):
@@ -133,18 +133,24 @@ class DeduplicationJob(Document):
 
 @frappe.whitelist()
 @redis_cache()
-def get_doctype_with_validation_deduplication_jobs():
+def get_document_type_run_validate_events(document_type=None):
+    filters = {"enabled": 1, "validate_on_event": ["!=", ""]}
+    if document_type:
+        filters["document_type"] = document_type
+
     jobs = frappe.get_all(
         "Deduplication Job",
-        filters={"active": 1, "validate_on_form_save": 1},
-        fields=["name", "document_type"],
+        filters=filters,
+        fields=["name", "document_type", "validate_on_event"],
     )
 
-    result = defaultdict(list)
-    for job in jobs:
-        result[job.document_type].append(job.name)
+    result = defaultdict(lambda: defaultdict(list))
 
-    return dict(result)
+    for job in jobs:
+        result[job.document_type][job.validate_on_event].append(job.name)
+
+    # Convert nested defaultdicts to normal dicts before returning
+    return {doctype: dict(events) for doctype, events in result.items()}
 
     """
     def find_duplicates_for_doc(self, doc):

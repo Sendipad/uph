@@ -10,6 +10,9 @@
   "remark_fieldname",
   "priority",
   "enabled",
+  "column_break_domq",
+  "validate_on_event",
+  "on_child",
   "section_break_fnwo",
   "conditions",
   "template"
@@ -29,7 +32,7 @@
   },
   {
    "fieldname": "remark_fieldname",
-   "fieldtype": "Data",
+   "fieldtype": "Autocomplete",
    "label": "Remark Field",
    "reqd": 1
   },
@@ -59,12 +62,30 @@
   {
    "fieldname": "section_break_fnwo",
    "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_domq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Before Save",
+   "fieldname": "validate_on_event",
+   "fieldtype": "Select",
+   "label": "Run On Doc Event",
+   "options": "\nBefore Insert\nBefore Save\nValidate\nOn Submit\nOn Cancel\nOn Update After Submit"
+  },
+  {
+   "default": "0",
+   "description": "Checked Will be applied to Child  ",
+   "fieldname": "on_child",
+   "fieldtype": "Check",
+   "label": "On Child"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-20 22:22:01.663834",
+ "modified": "2025-05-29 19:24:13.444527",
  "modified_by": "Administrator",
  "module": "Unified Data Tools",
  "name": "Custom Remark Rule",
