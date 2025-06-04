@@ -118,7 +118,7 @@ class DeduplicationJob(Document):
             frappe.throw(_("Field {0} Not Exist in DocType").format(not_exist))
 
     def clear_cache(self):
-        get_document_type_run_validate_events().clear_cache()
+        get_document_type_run_validate_events.clear_cache()
         return super().clear_cache()
 
     def get_validation_threshold(self):

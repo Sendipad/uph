@@ -14,7 +14,7 @@ class CustomRemarkRuleCondition(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		condition: DF.Literal["==", "!=", ">", "<", ">=", "<="]
+		condition: DF.Literal["==", "!=", ">", "<", ">=", "<=", "in", "not in", "is set", "not set"]
 		fieldname: DF.Autocomplete | None
 		parent: DF.Data
 		parentfield: DF.Data

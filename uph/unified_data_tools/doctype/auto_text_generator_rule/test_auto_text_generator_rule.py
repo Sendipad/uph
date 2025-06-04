@@ -5,5 +5,5 @@
 from frappe.tests.utils import FrappeTestCase
 
 
-class TestCustomRemarkRule(FrappeTestCase):
+class TestAutoTextGeneratorRule(FrappeTestCase):
 	pass

@@ -29,6 +29,7 @@ def _get_field_options(doctype):
                     "label": f"{field.label} ({field.fieldname})",
                     "value": field.fieldname,
                     "fieldtype": field.fieldtype,
+                    "options": field.options,
                 }
             )
 
@@ -42,6 +43,7 @@ def _get_field_options(doctype):
                         "label": f"{table_field.label} → {child_field.label}",
                         "value": f"{table_field.fieldname}.{child_field.fieldname}",
                         "fieldtype": child_field.fieldtype,
+                        "options": child_field.options,
                     }
                 )
 

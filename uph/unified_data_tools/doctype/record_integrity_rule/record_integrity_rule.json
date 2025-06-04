@@ -7,15 +7,17 @@
  "engine": "InnoDB",
  "field_order": [
   "section_break_uqqc",
-  "document_type",
-  "run_mode",
   "title",
-  "column_break_pcty",
+  "run_mode",
   "validate_on_event",
+  "column_break_pcty",
   "enabled",
   "ignore_cancelled_doc",
-  "section_break_hjkv",
-  "rules",
+  "section_break_sswv",
+  "document_type",
+  "field_comparison_rules",
+  "column_break_terw",
+  "reference_doctype",
   "custom_filters_section",
   "filters_json",
   "section_break_dfwa",
@@ -39,7 +41,7 @@
    "set_only_once": 1
   },
   {
-   "description": "Optional filters (e.g. {\"status\": \"Active\"}) to narrow records",
+   "description": "Optional filters (e.g. {\"docstatus\": [\"in\",[0,1]]}) to narrow records",
    "fieldname": "filters_json",
    "fieldtype": "Code",
    "label": "Doc Filters (JSON)",
@@ -84,22 +86,12 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "section_break_hjkv",
-   "fieldtype": "Section Break"
-  },
-  {
    "fieldname": "section_break_dfwa",
    "fieldtype": "Section Break"
   },
   {
    "fieldname": "column_break_smlx",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "rules",
-   "fieldtype": "Table MultiSelect",
-   "label": "Rules Applied",
-   "options": "Field Comparison Job Link"
   },
   {
    "fieldname": "title",
@@ -126,6 +118,27 @@
    "fieldtype": "Select",
    "label": "Validate On Doc Event",
    "options": "\nBefore Insert\nBefore Save\nValidate\nOn Submit\nOn Cancel\nOn Update After Submit"
+  },
+  {
+   "fieldname": "section_break_sswv",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_terw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Link",
+   "label": "Reference Doctype",
+   "options": "DocType"
+  },
+  {
+   "description": "In Doc Field to Field Values rules ",
+   "fieldname": "field_comparison_rules",
+   "fieldtype": "Table MultiSelect",
+   "label": "Field Comparison Rules",
+   "options": "Field Comparison Job Link"
   }
  ],
  "grid_page_length": 50,
@@ -136,10 +149,10 @@
    "link_fieldname": "reference_name"
   }
  ],
- "modified": "2025-05-28 21:54:58.208452",
+ "modified": "2025-06-01 18:20:18.085171",
  "modified_by": "Administrator",
  "module": "Unified Data Tools",
- "name": "Field Comparison Job",
+ "name": "Record Integrity Rule",
  "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [

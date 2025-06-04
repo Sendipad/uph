@@ -10,9 +10,12 @@
   "remark_fieldname",
   "priority",
   "enabled",
+  "title",
   "column_break_domq",
   "validate_on_event",
   "on_child",
+  "dependency_fields",
+  "get_dependcy_fields",
   "section_break_fnwo",
   "conditions",
   "template"
@@ -55,9 +58,10 @@
    "options": "Custom Remark Rule Condition"
   },
   {
+   "description": "Jinja template",
    "fieldname": "template",
    "fieldtype": "HTML Editor",
-   "label": "Remark Template"
+   "label": "Text Generated Template"
   },
   {
    "fieldname": "section_break_fnwo",
@@ -72,7 +76,7 @@
    "fieldname": "validate_on_event",
    "fieldtype": "Select",
    "label": "Run On Doc Event",
-   "options": "\nBefore Insert\nBefore Save\nValidate\nOn Submit\nOn Cancel\nOn Update After Submit"
+   "options": "\nBefore Insert\nBefore Save\nOn Submit"
   },
   {
    "default": "0",
@@ -80,15 +84,34 @@
    "fieldname": "on_child",
    "fieldtype": "Check",
    "label": "On Child"
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Title"
+  },
+  {
+   "depends_on": "eval:doc.validate_on_event===\"Before Save\"",
+   "description": "Comma separated Field name,Will be watched for Value Changes",
+   "fieldname": "dependency_fields",
+   "fieldtype": "Data",
+   "label": "Dependency Fields"
+  },
+  {
+   "depends_on": "eval:doc.validate_on_event===\"Before Save\"",
+   "fieldname": "get_dependcy_fields",
+   "fieldtype": "Button",
+   "label": "Get Dependcy Fields"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-29 19:24:13.444527",
+ "modified": "2025-05-31 22:32:07.405095",
  "modified_by": "Administrator",
  "module": "Unified Data Tools",
- "name": "Custom Remark Rule",
+ "name": "Auto Text Generator Rule",
  "owner": "Administrator",
  "permissions": [
   {
@@ -107,5 +130,6 @@
  "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "title"
 }

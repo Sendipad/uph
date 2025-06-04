@@ -5,5 +5,5 @@
 from frappe.tests.utils import FrappeTestCase
 
 
-class TestFieldComparisonJob(FrappeTestCase):
+class TestRecordIntegrityRule(FrappeTestCase):
 	pass

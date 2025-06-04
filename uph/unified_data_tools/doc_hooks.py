@@ -7,7 +7,7 @@ from uph.unified_data_tools.mdm import (
 )
 
 
-def run_deduplication_job_on_doc(doc, method):
+def run_deduplication_job_on_doc(doc, method=None):
     """
     Runs deduplication validation for a given document based on configured jobs and the triggered method.
 
@@ -50,7 +50,11 @@ def run_deduplication_job_on_doc(doc, method):
                 )
 
 
-def run_field_comparison_job_on_doc(doc, method):
+def run_record_integrity_rule_on_doc(doc, method=None):
+    pass
+
+
+def run_field_comparison_rule_on_doc(doc, method=None):
     """
     Runs field comparison validation for a given document using preconfigured jobs.
 
@@ -61,7 +65,7 @@ def run_field_comparison_job_on_doc(doc, method):
         doc: The Frappe document object being validated.
         method: The event (e.g. 'before_save', 'on_submit').
     """
-    from uph.unified_data_tools.doctype.field_comparison_job.field_comparison_job import (
+    from uph.unified_data_tools.doctype.record_integrity_rule.record_integrity_rule import (
         get_document_type_run_validate_events,
     )
 
@@ -71,7 +75,7 @@ def run_field_comparison_job_on_doc(doc, method):
         return
 
     for job_name in jobs[doctype][method]:
-        job = frappe.get_doc("Field Comparison Job", job_name)
+        job = frappe.get_doc("Field Comparison Rule", job_name)
         manager = FieldComparisonEngine(job)
         result = manager.validate_document(doc)
         if result:
@@ -81,5 +85,7 @@ def run_field_comparison_job_on_doc(doc, method):
             )
 
 
-def generate_custom_remarks_on_doc(doc, method):
-    return
+def generate_custom_remarks_on_doc(doc, method=None):
+    from uph.unified_data_tools.mdm.remark_engine import generate_remark
+
+    generate_remark(doc=doc, method=method)

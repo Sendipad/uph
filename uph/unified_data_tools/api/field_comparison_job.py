@@ -12,8 +12,8 @@ def run_job(job_name):
 def _run_job(job_name):
     # Skip if already queued
 
-    job = frappe.get_doc("Field Comparison Job", job_name)
-    if not frappe.has_permission("Field Comparison Job", "write", doc=job):
+    job = frappe.get_doc("Field Comparison Rule", job_name)
+    if not frappe.has_permission("Field Comparison Rule", "write", doc=job):
         frappe.throw(_("You have not Permission to run this Job"))
 
     if job.status in ["Queued", "Runing"]:
@@ -37,7 +37,7 @@ def _run_job(job_name):
         job.status = "Failed"
         frappe.log_error(
             title=f"FieldComparison Job Failed: {job.name}",
-            message=frappe.get_traceback(),
+            message=frappe.get_traceback(e),
         )
 
     finally:

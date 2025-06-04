@@ -1,6 +1,6 @@
 // Copyright (c) 2025, Abdo Mohammed Ruzaqi and contributors
 // For license information, please see license.txt
-frappe.ui.form.on("Field Comparison Job", {
+frappe.ui.form.on("Record Integrity Rule", {
 	rules: function (frm) {
 		frm.fields_dict.rules.get_query = function () {
 			return {
@@ -33,7 +33,7 @@ frappe.ui.form.on("Field Comparison Job", {
 						},
 						callback: function (r) {
 							if (!r.exc) {
-								frappe.msgprint(__("Field Comparison Job executed successfully."));
+								frappe.msgprint(__("Record Integrity Rule executed successfully."));
 								frm.reload_doc();
 							}
 						},

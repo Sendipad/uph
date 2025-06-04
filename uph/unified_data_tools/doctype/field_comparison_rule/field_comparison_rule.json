@@ -8,25 +8,29 @@
  "field_order": [
   "title",
   "document_type",
-  "skip_if_outside_scope",
-  "column_break_abyn",
-  "comparison_type",
+  "type",
   "enabled",
+  "column_break_abyn",
+  "with_doctype",
   "priority",
+  "comparison_type",
+  "skip_if_outside_scope",
   "section_break_kgab",
   "fieldname",
-  "field_allowed_values",
+  "fieldname_type",
   "fetch_values_for_first_field",
+  "field_allowed_values",
   "column_break_dkja",
   "with_field",
-  "with_field_allowed_values",
-  "fetch_values_for_second_field"
+  "with_field_type",
+  "fetch_values_for_second_field",
+  "with_field_allowed_values"
  ],
  "fields": [
   {
+   "depends_on": "eval:doc.__islocal",
    "fieldname": "title",
    "fieldtype": "Data",
-   "hidden": 1,
    "label": "Title",
    "no_copy": 1
   },
@@ -48,7 +52,7 @@
    "fieldname": "comparison_type",
    "fieldtype": "Select",
    "label": "Comparison Type",
-   "options": "Equals\nNot Equals\nGreeter Than\nLess Than\nBoth Empty\nOnly One Set\nBoth Set\nCustom Expression",
+   "options": "Equals\nNot Equals\nGreeter Than\nLess Than\nBoth Empty\nOnly One Set\nBoth Set\nCustom Expression\nLink",
    "search_index": 1
   },
   {
@@ -116,12 +120,40 @@
    "fieldtype": "Select",
    "label": "Priority",
    "options": "High\nMedium\nLow"
+  },
+  {
+   "default": "In-Doc Comparison",
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "label": "Type",
+   "options": "In-Doc Comparison\nCross-Doc Comparison\nCross-DocType Comparison",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval: doc.type===\"Cross-DocType Comparison\"",
+   "fieldname": "with_doctype",
+   "fieldtype": "Link",
+   "label": "With DocType",
+   "mandatory_depends_on": "eval: doc.type===\"Cross-DocType Comparison\"",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "fieldname_type",
+   "fieldtype": "Data",
+   "label": "Fieldname Type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "with_field_type",
+   "fieldtype": "Data",
+   "label": "With Field Type",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-28 19:34:38.642550",
+ "modified": "2025-06-01 18:29:30.252243",
  "modified_by": "Administrator",
  "module": "Unified Data Tools",
  "name": "Field Comparison Rule",

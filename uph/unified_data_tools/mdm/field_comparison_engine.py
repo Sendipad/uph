@@ -146,7 +146,7 @@ class FieldComparisonEngine:
             frappe.get_doc(
                 {
                     "doctype": "Data Quality Task",
-                    "reference_type": "Field Comparison Job",
+                    "reference_type": "Record Integrity Rule",
                     "reference_name": self.job.name,
                     "document_type": self.doc_type,
                     "docname_a": result["document"],
@@ -335,7 +335,7 @@ class FieldComparisonEngine:
                 frappe.get_doc(
                     {
                         "doctype": "Data Quality Task",
-                        "reference_type": "Field Comparison Job",
+                        "reference_type": "Record Integrity Rule",
                         "reference_name": self.job.name,
                         "document_type": self.doc_type,
                         "docname_a": result["document"],

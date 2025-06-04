@@ -16,7 +16,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Condition",
-   "options": "==\n!=\n>\n<\n>=\n<="
+   "options": "==\n!=\n>\n<\n>=\n<=\nin\nnot in\nis set\nnot set"
   },
   {
    "fieldname": "value",
@@ -35,7 +35,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-05-29 19:00:13.546556",
+ "modified": "2025-05-29 21:10:56.040050",
  "modified_by": "Administrator",
  "module": "Unified Data Tools",
  "name": "Custom Remark Rule Condition",
