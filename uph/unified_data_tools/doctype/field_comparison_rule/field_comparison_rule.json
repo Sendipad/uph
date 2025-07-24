@@ -8,23 +8,24 @@
  "field_order": [
   "title",
   "document_type",
-  "type",
-  "enabled",
   "column_break_abyn",
-  "with_doctype",
-  "priority",
+  "comparison_scope",
   "comparison_type",
   "skip_if_outside_scope",
+  "column_break_ajzd",
+  "with_doctype",
+  "priority",
+  "enabled",
   "section_break_kgab",
-  "fieldname",
-  "fieldname_type",
+  "primary_field",
+  "primary_fieldtype",
   "fetch_values_for_first_field",
-  "field_allowed_values",
+  "primary_field_fixed_values",
   "column_break_dkja",
-  "with_field",
-  "with_field_type",
+  "secondary_field",
+  "secondary_fieldtype",
   "fetch_values_for_second_field",
-  "with_field_allowed_values"
+  "secondary_field_fixed_values"
  ],
  "fields": [
   {
@@ -52,7 +53,7 @@
    "fieldname": "comparison_type",
    "fieldtype": "Select",
    "label": "Comparison Type",
-   "options": "Equals\nNot Equals\nGreeter Than\nLess Than\nBoth Empty\nOnly One Set\nBoth Set\nCustom Expression\nLink",
+   "options": "Equals\nNot Equals\nGreater Than\nLess Than\nBoth Empty\nOnly One Set\nBoth Set\nCustom Expression\nLink",
    "search_index": 1
   },
   {
@@ -67,34 +68,8 @@
    "fieldtype": "Section Break"
   },
   {
-   "depends_on": "eval:doc.skip_if_outside_scope",
-   "fieldname": "field_allowed_values",
-   "fieldtype": "Small Text",
-   "label": "Field Allowed Values"
-  },
-  {
    "fieldname": "column_break_dkja",
    "fieldtype": "Column Break"
-  },
-  {
-   "depends_on": "eval:doc.document_type",
-   "fieldname": "with_field",
-   "fieldtype": "Autocomplete",
-   "label": "With Field",
-   "search_index": 1
-  },
-  {
-   "depends_on": "eval:doc.skip_if_outside_scope",
-   "fieldname": "with_field_allowed_values",
-   "fieldtype": "Small Text",
-   "label": "With Field Allowed Values"
-  },
-  {
-   "depends_on": "eval:doc.document_type",
-   "fieldname": "fieldname",
-   "fieldtype": "Autocomplete",
-   "label": "First Field",
-   "search_index": 1
   },
   {
    "depends_on": "eval:doc.skip_if_outside_scope",
@@ -122,15 +97,7 @@
    "options": "High\nMedium\nLow"
   },
   {
-   "default": "In-Doc Comparison",
-   "fieldname": "type",
-   "fieldtype": "Select",
-   "label": "Type",
-   "options": "In-Doc Comparison\nCross-Doc Comparison\nCross-DocType Comparison",
-   "reqd": 1
-  },
-  {
-   "depends_on": "eval: doc.type===\"Cross-DocType Comparison\"",
+   "depends_on": "eval: doc.comparison_scope===\"Cross-DocType Comparison\"",
    "fieldname": "with_doctype",
    "fieldtype": "Link",
    "label": "With DocType",
@@ -138,22 +105,60 @@
    "options": "DocType"
   },
   {
-   "fieldname": "fieldname_type",
+   "default": "In-Doc Comparison",
+   "fieldname": "comparison_scope",
+   "fieldtype": "Select",
+   "label": "Comparison Scope",
+   "options": "In-Doc Comparison\nCross-Doc Comparison\nCross-DocType Comparison",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_ajzd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.document_type",
+   "fieldname": "primary_field",
+   "fieldtype": "Autocomplete",
+   "label": "Primary Field",
+   "search_index": 1
+  },
+  {
+   "fieldname": "primary_fieldtype",
    "fieldtype": "Data",
    "label": "Fieldname Type",
    "read_only": 1
   },
   {
-   "fieldname": "with_field_type",
+   "depends_on": "eval:doc.skip_if_outside_scope",
+   "fieldname": "primary_field_fixed_values",
+   "fieldtype": "Small Text",
+   "label": "Field Allowed Values"
+  },
+  {
+   "depends_on": "eval:doc.document_type",
+   "fieldname": "secondary_field",
+   "fieldtype": "Autocomplete",
+   "label": "With Field",
+   "search_index": 1
+  },
+  {
+   "fieldname": "secondary_fieldtype",
    "fieldtype": "Data",
    "label": "With Field Type",
    "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.skip_if_outside_scope",
+   "fieldname": "secondary_field_fixed_values",
+   "fieldtype": "Small Text",
+   "label": "With Field Allowed Values"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-06-01 18:29:30.252243",
+ "modified": "2025-06-05 23:23:03.083307",
  "modified_by": "Administrator",
  "module": "Unified Data Tools",
  "name": "Field Comparison Rule",

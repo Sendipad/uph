@@ -40,6 +40,7 @@ required_apps = ["erpnext"]
 # webform_include_css = {"doctype": "public/css/doctype.css"}
 app_include_js = [
     "uph.bundle.js",
+    "public/js/rule_builder/rule_builder.js",  # NOT rule_builder_app.js
 ]
 # include js in page
 # page_js = {"page" : "public/js/file.js"}
@@ -124,7 +125,10 @@ after_install = "uph.setup.install.setup"
 # Permissions
 # -----------
 # Permissions evaluated in scripted ways
-after_migrate = ["uph.setup.install.on_migrate"]
+after_migrate = [
+    "uph.hub.services.registry.sync_rule_service_types",
+    "uph.setup.install.on_migrate",
+]
 
 # permission_query_conditions = {
 # 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",

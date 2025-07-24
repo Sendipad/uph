@@ -1,0 +1,87 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-06-13 21:45:31.249150",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_u3yw",
+  "parameter_name",
+  "parameter_type",
+  "required",
+  "default_value",
+  "target_doctype",
+  "is_context_var",
+  "description"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_u3yw",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "parameter_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Parameter Name",
+   "reqd": 1
+  },
+  {
+   "default": "Any",
+   "fieldname": "parameter_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Data Type",
+   "options": "String\nInteger\nFloat\nBoolean\nDict\nList\nDocType\nAny",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "required",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Required",
+   "reqd": 1
+  },
+  {
+   "fieldname": "default_value",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Default Value"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "depends_on": "eval:doc.parameter_type=='DocType'",
+   "fieldname": "target_doctype",
+   "fieldtype": "Link",
+   "label": "Target DocType",
+   "options": "DocType"
+  },
+  {
+   "default": "0",
+   "description": "Resolve value from template context",
+   "fieldname": "is_context_var",
+   "fieldtype": "Check",
+   "label": "Use Document Context"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-06-13 22:48:05.979762",
+ "modified_by": "Administrator",
+ "module": "Hub",
+ "name": "Registered Method Parameter",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

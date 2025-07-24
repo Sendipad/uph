@@ -1,0 +1,214 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:title",
+ "creation": "2025-06-14 20:50:50.552573",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "rule_builder_tab",
+  "section_break_krit",
+  "rule_builder_html",
+  "details_tab",
+  "title",
+  "rule_service_type",
+  "column_break_rqol",
+  "match_threshold",
+  "priority",
+  "is_active",
+  "service_details_section",
+  "service_note",
+  "section_break_triggers",
+  "document_type",
+  "apply_scopes",
+  "column_break_rule",
+  "debug_mode",
+  "default_alert_message",
+  "section_break_config",
+  "conditions",
+  "actions",
+  "last_evaluated",
+  "evaluation_count"
+ ],
+ "fields": [
+  {
+   "depends_on": "eval:!doc.is_local",
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1,
+   "unique": 1,
+   "width": "200px"
+  },
+  {
+   "depends_on": "eval:doc,rule_service_type",
+   "fieldname": "section_break_triggers",
+   "fieldtype": "Section Break",
+   "label": "Application Scope"
+  },
+  {
+   "description": "Define which DocTypes and events this rule applies to. A rule can apply to multiple scopes.",
+   "fieldname": "apply_scopes",
+   "fieldtype": "Table",
+   "label": "Apply Scopes",
+   "options": "Rule Scope",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Active",
+   "width": "80px"
+  },
+  {
+   "default": "100",
+   "description": "Rules with a higher number (e.g., 100) are executed before rules with a lower number (e.g., 10). Use this to define the order of execution for dependent rules.",
+   "fieldname": "priority",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Execution Priority",
+   "width": "80px"
+  },
+  {
+   "fieldname": "column_break_rule",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Logs detailed execution information for this rule. Useful for troubleshooting.",
+   "fieldname": "debug_mode",
+   "fieldtype": "Check",
+   "label": "Enable Debug Mode"
+  },
+  {
+   "depends_on": "eval:doc.actions.some(action => ['Raise Alert (Error)', 'Raise Alert (Warning)', 'Raise Alert (Info)'].includes(action.action_type))",
+   "description": "Fallback message if a rule action of type 'Raise Alert' is triggered without a specific message.",
+   "fieldname": "default_alert_message",
+   "fieldtype": "Small Text",
+   "label": "Default Alert Message"
+  },
+  {
+   "depends_on": "eval:doc,rule_service_type",
+   "fieldname": "section_break_config",
+   "fieldtype": "Section Break",
+   "label": "Rule Logic"
+  },
+  {
+   "description": "Define the criteria that must be met for this rule to be executed.",
+   "fieldname": "conditions",
+   "fieldtype": "Table",
+   "label": "Conditions",
+   "options": "Rule Condition"
+  },
+  {
+   "description": "Define the actions to perform if the rule's conditions are met.",
+   "fieldname": "actions",
+   "fieldtype": "Table",
+   "label": "Actions",
+   "options": "Rule Action"
+  },
+  {
+   "fieldname": "last_evaluated",
+   "fieldtype": "Datetime",
+   "hidden": 1,
+   "label": "Last Evaluated",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "evaluation_count",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Evaluation Count",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_rqol",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rule_service_type",
+   "fieldtype": "Link",
+   "label": "Rule Service Type",
+   "options": "Rule Service Type",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "description": "Override by document_type in Apply Scope",
+   "fieldname": "document_type",
+   "fieldtype": "Link",
+   "label": "Document Type",
+   "link_filters": "[[\"DocType\",\"issingle\",\"=\",0],[\"DocType\",\"istable\",\"=\",0]]",
+   "options": "DocType"
+  },
+  {
+   "depends_on": "eval:doc.rule_service_type==\"Deduplication\"",
+   "fieldname": "match_threshold",
+   "fieldtype": "Float",
+   "label": "Match Threshold"
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:doc.rule_service_type && doc.service_note",
+   "fieldname": "service_details_section",
+   "fieldtype": "Section Break",
+   "label": "Service Details"
+  },
+  {
+   "fieldname": "service_note",
+   "fieldtype": "HTML",
+   "label": "Service Note"
+  },
+  {
+   "fieldname": "rule_builder_tab",
+   "fieldtype": "Tab Break",
+   "label": "Rule Builder"
+  },
+  {
+   "fieldname": "details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "section_break_krit",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "rule_builder_html",
+   "fieldtype": "HTML",
+   "label": "Rule Builder"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-07-22 19:07:57.056474",
+ "modified_by": "Administrator",
+ "module": "Hub",
+ "name": "Rule",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title"
+}

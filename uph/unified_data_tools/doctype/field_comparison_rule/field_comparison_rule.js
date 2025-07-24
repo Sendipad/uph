@@ -13,15 +13,15 @@ frappe.ui.form.on("Field Comparison Rule", {
 		frm.trigger("set_document_type_auto_complete");
 	},
 	with_doctype(frm) {
-		if (frm.doc.type === "Cross-DocType Comparison" && frm.doc.with_doctype) {
+		if (frm.doc.comparison_scope === "Cross-DocType Comparison" && frm.doc.with_doctype) {
 			frm.trigger("set_with_doctype_autocomplete");
 		}
 	},
 	set_document_type_auto_complete(frm) {
 		if (!frm.doc.document_type && !frm.doc.with_doctype) return;
-		let document_type_fields = ["fieldname"];
+		let document_type_fields = ["primary_field"];
 		if (!frm.doc.with_doctype && frm.doc.type !== "Cross-DocType Comparison") {
-			document_type_fields.push("with_field");
+			document_type_fields.push("secondary_field");
 		}
 		uph.utils.FieldOptionHelper.load({
 			documentType: frm.doc.document_type,
@@ -35,14 +35,14 @@ frappe.ui.form.on("Field Comparison Rule", {
 		});
 	},
 	set_with_doctype_autocomplete(frm) {
-		if (frm.doc.type === "Cross-DocType Comparison" && frm.doc.with_doctype) {
+		if (frm.doc.comparison_scope === "Cross-DocType Comparison" && frm.doc.with_doctype) {
 			uph.utils.FieldOptionHelper.load({
 				documentType: frm.doc.with_doctype,
 				callback(options) {
 					uph.utils.FieldOptionHelper.applyAutocomplete(
 						frm,
 						options,
-						["with_field"], // parent fields
+						["secondary_field"], // parent fields
 					);
 				},
 			});
@@ -52,39 +52,47 @@ frappe.ui.form.on("Field Comparison Rule", {
 		handleFieldValueSelection({
 			frm,
 			doctypeField: "document_type",
-			fieldnameField: "fieldname",
-			targetField: "field_allowed_values",
+			fieldnameField: "primary_field",
+			targetField: "primary_field_fixed_values",
 		});
 	},
 
 	fetch_values_for_second_field(frm) {
 		handleFieldValueSelection({
 			frm,
-			doctypeField: frm.doc.type === "Cross-DocType Comparison" ? "with_doctype" : "document_type",
-			fieldnameField: "with_field",
-			targetField: "with_field_allowed_values",
+			doctypeField:
+				frm.doc.comparison_scope === "Cross-DocType Comparison" ? "with_doctype" : "document_type",
+			fieldnameField: "secondary_field",
+			targetField: "secondary_field_fixed_values",
 		});
 	},
-	fieldname(frm) {
-		if (!frm.doc.document_type || !frm.doc.fieldname) return;
+	primary_field(frm) {
+		if (!frm.doc.document_type || !frm.doc.primary_field) return;
 
 		const fieldtype = uph.utils.FieldOptionHelper.getFieldType(
 			frm.doc.document_type,
-			frm.doc.fieldname,
+			frm.doc.primary_field,
 		);
-		frm.set_value("fieldname_type", fieldtype);
-		frm.refresh_field("fieldname_type");
+		frm.set_value("primary_fieldtype", fieldtype);
+		frm.refresh_field("primary_fieldtype");
 	},
 
-	with_field(frm) {
+	secondary_field(frm) {
+		if (!frm.doc.secondary_doctype && !frm.doc.secondary_field) {
+			frm.set_value("secondary_fieldtype", "");
+			frm.refresh_field("secondary_fieldtype");
+
+			return;
+		}
+
 		const doctype =
-			frm.doc.type === "Cross-DocType Comparison" ? frm.doc.with_doctype : frm.doc.document_type;
+			frm.doc.comparison_scope === "Cross-DocType Comparison"
+				? frm.doc.secondary_doctype
+				: frm.doc.document_type;
 
-		if (!doctype || !frm.doc.with_field) return;
-
-		const fieldtype = uph.utils.FieldOptionHelper.getFieldType(doctype, frm.doc.with_field);
-		frm.set_value("with_field_type", fieldtype);
-		frm.refresh_field("with_field_type");
+		const fieldtype = uph.utils.FieldOptionHelper.getFieldType(doctype, frm.doc.secondary_field);
+		frm.set_value("secondary_fieldtype", fieldtype);
+		frm.refresh_field("secondary_fieldtype");
 	},
 });
 

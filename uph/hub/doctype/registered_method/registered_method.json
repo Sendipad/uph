@@ -1,0 +1,127 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-06-13 21:46:00.026899",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "method_path",
+  "column_break_tyyt",
+  "requires_auth",
+  "whitelisted",
+  "return_type",
+  "execution_context",
+  "section_break_ynpl",
+  "signature",
+  "parameters",
+  "description",
+  "version"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_ynpl",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Method Title",
+   "reqd": 1
+  },
+  {
+   "description": "Full module path (e.g., my_module.utils.calculate)",
+   "fieldname": "method_path",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Python Path",
+   "reqd": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text",
+   "label": "Description"
+  },
+  {
+   "default": "Any",
+   "fieldname": "return_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Return Type",
+   "options": "String\nInteger\nFloat\nBoolean\nList\nDict\nDocument\nAny",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "description": "Allow execution via REST API",
+   "fieldname": "whitelisted",
+   "fieldtype": "Check",
+   "label": "API Access"
+  },
+  {
+   "default": "Synchronous",
+   "fieldname": "execution_context",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Execution Context",
+   "options": "Synchronous\nBackground\nUser Context",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "requires_auth",
+   "fieldtype": "Check",
+   "label": "Requires Authentication",
+   "reqd": 1
+  },
+  {
+   "fieldname": "version",
+   "fieldtype": "Data",
+   "label": "Version"
+  },
+  {
+   "fieldname": "parameters",
+   "fieldtype": "Table",
+   "label": "Parameters",
+   "options": "Registered Method Parameter"
+  },
+  {
+   "fieldname": "signature",
+   "fieldtype": "Code",
+   "label": "Method Signature",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_tyyt",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-06-13 22:00:57.167831",
+ "modified_by": "Administrator",
+ "module": "Hub",
+ "name": "Registered Method",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

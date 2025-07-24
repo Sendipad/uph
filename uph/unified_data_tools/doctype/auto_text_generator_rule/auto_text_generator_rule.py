@@ -1,15 +1,12 @@
-# Copyright (c) 2025, Abdo Mohammed Ruzaqi and contributors
-# For license information, please see license.txt
-
-
-from collections import defaultdict
 import frappe
-from jinja2 import Environment, exceptions
-
+from jinja2 import exceptions, Template
 from frappe.model.document import Document
-from frappe.utils.caching import redis_cache
 from uph.unified_data_tools.utils.field import get_field_options
 from frappe import _
+from uph.unified_data_tools.mdm.auto_text_generator_engine import (
+    get_document_type_run_validate_events,
+    delete_set_document_types_cache,
+)
 
 
 class AutoTextGeneratorRule(Document):
@@ -30,33 +27,48 @@ class AutoTextGeneratorRule(Document):
         enabled: DF.Check
         on_child: DF.Check
         priority: DF.Int
-        remark_fieldname: DF.Autocomplete
+        remove_markers_on_submit: DF.Check
+        target_field: DF.Autocomplete
         template: DF.HTMLEditor | None
+        text_merge_mode: DF.Literal["Overwrite", "Append", "Prepend"]
         title: DF.Data | None
         validate_on_event: DF.Literal["", "Before Insert", "Before Save", "On Submit"]
     # end: auto-generated types
 
     def clear_cache(self):
-        get_document_type_run_validate_events.clear_cache()
+        get_document_type_run_validate_events.clear_cache()  # Clear cache for event rules
         return super().clear_cache()
 
     def validate(self):
-        env = Environment()
         try:
-            # Parse the template to check syntax errors
-            env.parse(self.template or "")
+            # KEY CHANGE: Use frappe.get_jenv() to parse for validation
+            frappe.get_jenv().parse(self.template or "")
         except exceptions.TemplateSyntaxError as e:
-            # Raise a validation error with info about the syntax problem
             frappe.throw(f"Template syntax error at line {e.lineno}: {e.message}")
 
+    def delete_cached_list_document_types(self):
+        if self.is_new():
+            if self.enabled:
+                delete_set_document_types_cache()
+        else:
+            if self.has_value_changed("enabled"):
+                delete_set_document_types_cache()
+
     def before_save(self):
+        self.delete_cached_list_document_types()
+
+        # Clear cache only if the template itself has changed
+        # or if the rule is new (since the template might have been set)
+        if self.is_new() or self.has_value_changed("template"):
+            self.clear_compiled_template_cache()
+
         if not self.title:
-            if self.remark_fieldname:
+            if self.target_field:
                 fields = get_field_options(self.document_type)
                 fields = [
                     f.get("label")
                     for f in fields
-                    if f.get("value") == self.remark_fieldname
+                    if f.get("value") == self.target_field
                 ]
                 if fields:
                     self.title = _("{0} : {1}").format(
@@ -64,41 +76,34 @@ class AutoTextGeneratorRule(Document):
                     )
                 else:
                     self.title = _("{0} : {1}").format(
-                        _(self.document_type), self.remark_fieldname
+                        _(self.document_type), self.target_field
                     )
 
+    def _get_compiled_template(self) -> Template | None:
+        """
+        Compiles the Jinja2 template and caches it.
+        Returns the compiled Jinja2 Template object.
+        """
+        if cached := frappe.cache.get_value(
+            f"AutoTextGeneratorRule._get_compiled_template-{self.name}"
+        ):
+            return cached
+        if not self.template or not self.template.strip():
+            return None
+        try:
+            # KEY CHANGE: Use frappe.get_jenv() to get Frappe's default Jinja2 environment
+            # This environment already has 'frappe', '_', etc., in its globals.
+            compiled_template = frappe.get_jenv().from_string(self.template)
+            return compiled_template
+        except Exception as e:
+            frappe.log_error(
+                f"Error compiling template for rule {self.name}: {e}",
+                "AutoTextGeneratorRule Template Compilation",
+            )
+            return None
 
-@frappe.whitelist()
-@redis_cache()
-def get_document_type_run_validate_events(document_type=None, method=None):
-    """Get rules filtered by doctype and event method"""
-    # Build base filters
-    filters = [["enabled", "=", 1], ["validate_on_event", "not in", ["", None]]]
-
-    # Add document type filter if provided
-    if document_type:
-        filters.append(["document_type", "=", document_type])
-
-    # Add method filter if provided (case-insensitive)
-    if method:
-        filters.append(["validate_on_event", "like", method.lower()])
-
-    # Fetch matching rules
-    rules = frappe.get_all(
-        "Auto Text Generator Rule",
-        filters=filters,
-        order_by="priority desc",
-        fields=["name", "document_type", "validate_on_event"],
-    )
-
-    # Return rule names if method is specified
-    if method:
-        return [rule.name for rule in rules]
-
-    # Group by doctype and event if no method specified
-    result = defaultdict(lambda: defaultdict(list))
-    for rule in rules:
-        event_key = rule.validate_on_event.lower()
-        result[rule.document_type][event_key].append(rule.name)
-
-    return {doctype: dict(events) for doctype, events in result.items()}
+    def clear_compiled_template_cache(self):
+        """Clears the cached compiled template for this rule."""
+        frappe.cache.delete_key(
+            f"AutoTextGeneratorRule._get_compiled_template-{self.name}"
+        )

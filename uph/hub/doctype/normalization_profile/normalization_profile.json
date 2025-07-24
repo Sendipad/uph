@@ -1,0 +1,82 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:profile_name",
+ "creation": "2025-06-17 18:00:35.120869",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "pipeline",
+  "profile_name",
+  "column_break_bxib",
+  "get_pipeline_template",
+  "section_break_uaht",
+  "parameters"
+ ],
+ "fields": [
+  {
+   "depends_on": "eval:!doc.is_local",
+   "fieldname": "profile_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Profile Name",
+   "mandatory_depends_on": "eval:!doc.is_local",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_bxib",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "trim_whitespace,casefold,remove_diacritics",
+   "description": "Comma-separated list of normalization methods like remove_punctuation",
+   "fieldname": "pipeline",
+   "fieldtype": "Data",
+   "label": "Processing Pipelin"
+  },
+  {
+   "fieldname": "section_break_uaht",
+   "fieldtype": "Section Break"
+  },
+  {
+   "description": "JSON parameters for normalization methods",
+   "fieldname": "parameters",
+   "fieldtype": "Code",
+   "label": "Parameters",
+   "options": "JSON"
+  },
+  {
+   "fieldname": "get_pipeline_template",
+   "fieldtype": "Button",
+   "label": "Get Processing Piplin"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-06-17 22:44:19.448586",
+ "modified_by": "Administrator",
+ "module": "Hub",
+ "name": "Normalization Profile",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

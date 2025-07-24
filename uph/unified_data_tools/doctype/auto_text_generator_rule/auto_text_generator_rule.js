@@ -46,7 +46,7 @@ frappe.ui.form.on("Auto Text Generator Rule", {
 					uph.utils.FieldOptionHelper.applyAutocomplete(
 						frm,
 						options,
-						["remark_fieldname"], // parent fields
+						["target_field"], // parent fields
 					);
 					uph.utils.FieldOptionHelper.applyAutocomplete(
 						frm,

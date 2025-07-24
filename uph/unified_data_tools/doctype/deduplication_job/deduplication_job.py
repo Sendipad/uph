@@ -19,28 +19,31 @@ class DeduplicationJob(Document):
 
     if TYPE_CHECKING:
         from frappe.types import DF
-        from uph.unified_data_tools.doctype.deduplication_job_doc_validation_rule.deduplication_job_doc_validation_rule import (
-            DeduplicationJobDocValidationRule,
-        )
-        from uph.unified_data_tools.doctype.deduplication_job_rule.deduplication_job_rule import (
-            DeduplicationJobRule,
-        )
+        from uph.unified_data_tools.doctype.deduplication_job_rule.deduplication_job_rule import DeduplicationJobRule
 
+        auto_merge_enabled: DF.Check
+        auto_merge_threshold: DF.Float
         batch_size: DF.Int
-        deduplication_mode: DF.Literal["Fuzzy", "Exact"]
+        block_threshold: DF.Float
+        cache_duration: DF.Int
+        conflict_resolution: DF.Literal["Prefer Newer Record", "Prefer Longer Record", "Prefer Higher Confidence", "Manual Resolution"]
+        custom_handling_method: DF.Link | None
         document_type: DF.Link
-        enable_pass_validation: DF.Check
+        enable_caching: DF.Check
         enabled: DF.Check
+        job_name: DF.Data
         last_execution: DF.Datetime | None
         match_threshold: DF.Float
-        on_doc_rules: DF.Table[DeduplicationJobDocValidationRule]
+        max_candidates: DF.Int
+        notification_template: DF.Link | None
+        prefetch_common_values: DF.Check
+        required_critical_matches: DF.Int
         rules: DF.Table[DeduplicationJobRule]
-        schedule: DF.Literal["Monthly", "Daily", "Hourly", "Manual"]
-        similarity_calculation_method: DF.Literal[
-            "Ratio", "Partial Ratio", "Token Sort Ratio", "Token Set Ratio"
-        ]
+        schedule: DF.Literal["Manual", "Hourly", "Daily", "Weekly", "Monthly"]
+        scoring_strategy: DF.Literal["Weighted Average", "Minimum Field Score", "Geometric Mean"]
+        validate_on_event: DF.Literal["", "Before Insert", "Before Save", "Validate", "On Submit", "On Cancel", "On Update After Submit", "On Trash"]
         validate_on_save: DF.Check
-        validate_threshold_action: DF.Literal["Stop", "Warn"]
+        warn_threshold: DF.Float
     # end: auto-generated types
 
     def autoname(self):

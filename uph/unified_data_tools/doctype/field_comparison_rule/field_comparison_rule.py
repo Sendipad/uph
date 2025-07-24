@@ -15,32 +15,20 @@ class FieldComparisonRule(Document):
     if TYPE_CHECKING:
         from frappe.types import DF
 
-        comparison_type: DF.Literal[
-            "Equals",
-            "Not Equals",
-            "Greeter Than",
-            "Less Than",
-            "Both Empty",
-            "Only One Set",
-            "Both Set",
-            "Custom Expression",
-            "Link",
-        ]
+        comparison_scope: DF.Literal["In-Doc Comparison", "Cross-Doc Comparison", "Cross-DocType Comparison"]
+        comparison_type: DF.Literal["Equals", "Not Equals", "Greater Than", "Less Than", "Both Empty", "Only One Set", "Both Set", "Custom Expression", "Link"]
         document_type: DF.Link
         enabled: DF.Check
-        field_allowed_values: DF.SmallText | None
-        fieldname: DF.Autocomplete | None
-        fieldname_type: DF.Data | None
+        primary_field: DF.Autocomplete | None
+        primary_field_fixed_values: DF.SmallText | None
+        primary_fieldtype: DF.Data | None
         priority: DF.Literal["High", "Medium", "Low"]
+        secondary_field: DF.Autocomplete | None
+        secondary_field_fixed_values: DF.SmallText | None
+        secondary_fieldtype: DF.Data | None
         skip_if_outside_scope: DF.Check
         title: DF.Data | None
-        type: DF.Literal[
-            "In-Doc Comparison", "Cross-Doc Comparison", "Cross-DocType Comparison"
-        ]
         with_doctype: DF.Link | None
-        with_field: DF.Autocomplete | None
-        with_field_allowed_values: DF.SmallText | None
-        with_field_type: DF.Data | None
     # end: auto-generated types
 
     def before_insert(self):
@@ -49,18 +37,18 @@ class FieldComparisonRule(Document):
         fields_a = get_field_options(self.document_type)
         fields_b = get_field_options(
             self.with_doctype
-            if self.type == "Cross-DocType Comparison"
+            if self.comparison_scope == "Cross-DocType Comparison"
             else self.document_type
         )
 
         field_a = field_b = _("(Unknown)")
 
         for field in fields_a:
-            if field["value"] == self.fieldname:
+            if field["value"] == self.primary_field:
                 field_a = _(field["label"])
 
         for field in fields_b:
-            if field["value"] == self.with_field:
+            if field["value"] == self.secondary_field:
                 field_b = _(field["label"])
 
         if not self.title:
@@ -72,25 +60,27 @@ class FieldComparisonRule(Document):
             )
 
     def validate(self):
-        if not self.document_type or not self.fieldname or not self.with_field:
+        if not self.document_type or not self.primary_field or not self.secondary_field:
             frappe.throw(_("Document Type, Field A, and Field B are required."))
 
         meta_a = frappe.get_meta(self.document_type)
         meta_b = (
             frappe.get_meta(self.with_doctype)
-            if self.type == "Cross-DocType Comparison"
+            if self.comparison_scope == "Cross-DocType Comparison"
             else meta_a
         )
 
-        self.validate_field_exists(meta_a, self.fieldname, _("Field A"))
-        self.validate_field_exists(meta_b, self.with_field, _("Field B"))
+        self.validate_field_exists(meta_a, self.primary_field, _("Field A"))
+        self.validate_field_exists(meta_b, self.secondary_field, _("Field B"))
 
-        if self.field_allowed_values:
-            self.validate_field_type_allows_values(meta_a, self.fieldname, _("Field A"))
-
-        if self.with_field_allowed_values:
+        if self.primary_field_fixed_values:
             self.validate_field_type_allows_values(
-                meta_b, self.with_field, _("Field B")
+                meta_a, self.primary_field, _("Field A")
+            )
+
+        if self.secondary_field_fixed_values:
+            self.validate_field_type_allows_values(
+                meta_b, self.secondary_field, _("Field B")
             )
 
     def validate_field_exists(self, meta, path, field_label):
@@ -132,5 +122,5 @@ class FieldComparisonRule(Document):
             frappe.throw(
                 _(
                     "{0} '{1}' is of type '{2}', which does not support allowed values."
-                ).format(field_label, df.fieldname, df.fieldtype)
+                ).format(field_label, df.primary_field, df.fieldtype)
             )

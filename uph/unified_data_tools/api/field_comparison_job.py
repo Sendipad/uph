@@ -1,5 +1,5 @@
 import frappe
-from uph.unified_data_tools.mdm.field_comparison_engine import FieldComparisonEngine
+from uph.unified_data_tools.mdm.field_comparison_engine import RecordIntegrityEngine
 from frappe.utils import now_datetime
 from frappe import _
 
@@ -27,7 +27,7 @@ def _run_job(job_name):
 
     try:
         # ---- Actual job logic ----
-        engine = FieldComparisonEngine(job)
+        engine = RecordIntegrityEngine(job)
         engine.run_batch()
 
         # Mark as Completed

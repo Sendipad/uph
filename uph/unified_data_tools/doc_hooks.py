@@ -2,7 +2,7 @@ import frappe
 from frappe import _
 from uph.unified_data_tools.mdm import (
     DeduplicationEngine,
-    FieldComparisonEngine,
+    RecordIntegrityEngine,
     # RemarkEngine
 )
 
@@ -76,7 +76,7 @@ def run_field_comparison_rule_on_doc(doc, method=None):
 
     for job_name in jobs[doctype][method]:
         job = frappe.get_doc("Field Comparison Rule", job_name)
-        manager = FieldComparisonEngine(job)
+        manager = RecordIntegrityEngine(job)
         result = manager.validate_document(doc)
         if result:
             frappe.throw(
@@ -86,6 +86,6 @@ def run_field_comparison_rule_on_doc(doc, method=None):
 
 
 def generate_custom_remarks_on_doc(doc, method=None):
-    from uph.unified_data_tools.mdm.remark_engine import generate_remark
+    from uph.unified_data_tools.mdm.auto_text_generator_engine import text_generator
 
-    generate_remark(doc=doc, method=method)
+    text_generator(doc=doc, method=method)

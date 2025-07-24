@@ -1,0 +1,104 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-06-17 20:59:56.056177",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_r5du",
+  "document_type",
+  "docname",
+  "column_break_cczu",
+  "field_path",
+  "normalization_profile",
+  "section_break_ixbh",
+  "original_data",
+  "normalized_data"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_r5du",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Document Type",
+   "options": "DocType",
+   "reqd": 1
+  },
+  {
+   "fieldname": "docname",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "label": "Document Name",
+   "options": "document_type",
+   "reqd": 1
+  },
+  {
+   "description": "Dot-notated path (e.g., 'customer_name' or 'address.line1')",
+   "fieldname": "field_path",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Field Path",
+   "reqd": 1
+  },
+  {
+   "fieldname": "normalization_profile",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Normalization Profile",
+   "options": "Normalization Profile",
+   "reqd": 1
+  },
+  {
+   "fieldname": "original_data",
+   "fieldtype": "Text",
+   "label": "Original Value",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "normalized_data",
+   "fieldtype": "Text",
+   "label": "Normalized Value",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_cczu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_ixbh",
+   "fieldtype": "Section Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-06-17 22:39:12.012061",
+ "modified_by": "Administrator",
+ "module": "Hub",
+ "name": "Normalization Record",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -6,82 +6,131 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "use_in_filter",
   "field_path",
-  "operator",
-  "weight",
-  "column_break_nyev",
   "field_type",
+  "use_in_filter",
+  "is_critical",
+  "weight",
   "tolerance",
-  "fuzzy_method"
+  "column_break_nyev",
+  "operator",
+  "normalizer",
+  "custom_normalizer",
+  "normalizer_params",
+  "scorer",
+  "custom_scorer",
+  "scorer_params"
  ],
  "fields": [
   {
-   "fieldname": "weight",
-   "fieldtype": "Float",
+   "description": "Field path (e.g. 'customer_name' or 'items.item_code')",
+   "fieldname": "field_path",
+   "fieldtype": "Autocomplete",
    "in_list_view": 1,
-   "in_preview": 1,
-   "label": "Weight",
-   "search_index": 1
+   "label": "Field Path",
+   "reqd": 1
   },
   {
+   "fetch_from": "field_path.fieldtype",
+   "fieldname": "field_type",
+   "fieldtype": "Read Only",
+   "label": "Field Type"
+  },
+  {
+   "default": "Fuzzy Match",
    "fieldname": "operator",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Operator",
-   "options": "Exact Match\nFuzzy Match\nContains\nStarts With\nEnds With\nExact Date\nWithin Days\nExact Number\nWithin Range\nPercent Difference\nAny Item Exists\nAll Items Exist\nExact Sequence\nBoth Checked\nSyntax Match",
-   "search_index": 1
+   "options": "Exact Match\nFuzzy Match\nContains\nStarts With\nEnds With\nExact Date\nWithin Days\nExact Number\nWithin Range\nPercent Difference\nAny Item Exists\nAll Items Exist\nExact Sequence\nBoth Checked\nSyntax Match\nPhonetic Match"
   },
   {
-   "description": "Select parent or child table field (e.g. 'customer_name' or 'items.item_code')",
-   "fieldname": "field_path",
-   "fieldtype": "Autocomplete",
+   "description": "Data cleaning method before comparison",
+   "fieldname": "normalizer",
+   "fieldtype": "Select",
    "in_list_view": 1,
-   "in_preview": 1,
-   "label": "Field Name",
-   "reqd": 1
+   "label": "Normalizer",
+   "options": "\nStrict Arabic\nClean Text\nTrim Whitespace\nLowercase\nUppercase\nRemove Special Chars\nPhone Format (E164)\nEmail Normalize\nAddress Standardization\nNumeric Only\nAlphanumeric Only\nDate to ISO\nCustom Normalizer"
   },
   {
-   "fetch_from": "field_path.field_type",
-   "fetch_if_empty": 1,
-   "fieldname": "field_type",
-   "fieldtype": "Read Only",
+   "default": "Token Set Ratio",
+   "depends_on": "eval:['Fuzzy Match', 'Phonetic Match'].includes(doc.operator)",
+   "description": "Similarity calculation algorithm",
+   "fieldname": "scorer",
+   "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "Field Type"
+   "label": "Scorer",
+   "options": "Levenshtein Distance\nJaro-Winkler\nCosine Similarity\nJaccard Index\nToken Set Ratio\nPartial Ratio\nSoundex\nMetaphone\nDouble Metaphone\nCustom Scorer"
+  },
+  {
+   "default": "1",
+   "description": "Importance in overall match score",
+   "fieldname": "weight",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Weight"
   },
   {
    "default": "0",
-   "description": "\"Use this field to reduce records fetched before scoring\"",
+   "description": "Allowed variance for numeric/date comparisons",
+   "fieldname": "tolerance",
+   "fieldtype": "Float",
+   "label": "Tolerance"
+  },
+  {
+   "default": "0",
+   "description": "Must match for record to be considered duplicate",
+   "fieldname": "is_critical",
+   "fieldtype": "Check",
+   "label": "Critical Field"
+  },
+  {
+   "default": "0",
+   "description": "Use for initial record filtering before scoring",
    "fieldname": "use_in_filter",
    "fieldtype": "Check",
    "in_list_view": 1,
-   "label": "Use In Filters",
-   "search_index": 1
+   "label": "Use in Pre-Filter"
   },
   {
-   "fieldname": "tolerance",
-   "fieldtype": "Float",
+   "depends_on": "eval:doc.normalizer === 'Custom Normalizer'",
+   "description": "Custom normalization function",
+   "fieldname": "custom_normalizer",
+   "fieldtype": "Link",
+   "label": "Custom Normalizer",
+   "options": "Registered Method"
+  },
+  {
+   "depends_on": "eval:doc.scorer === 'Custom Scorer'",
+   "description": "Custom similarity calculation function",
+   "fieldname": "custom_scorer",
+   "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Tolerance"
+   "label": "Custom Scorer",
+   "options": "Registered Method"
   },
   {
    "fieldname": "column_break_nyev",
    "fieldtype": "Column Break"
   },
   {
-   "default": "Token Set Ratio",
-   "depends_on": "eval:doc.operator ===\"Fuzzy Match\"",
-   "fieldname": "fuzzy_method",
-   "fieldtype": "Select",
-   "label": "Fuzzy Method",
-   "options": "Ratio\nPartial Ratio\nToken Sort Ratio\nToken Set Ratio\nQRatio\nWRatio"
+   "description": "Additional parameters for normalizer (e.g. {'country': 'US' for phone})",
+   "fieldname": "normalizer_params",
+   "fieldtype": "JSON",
+   "label": "Normalizer Parameters"
+  },
+  {
+   "description": "Additional parameters for scorer (e.g. {'n_gram_size': 2})",
+   "fieldname": "scorer_params",
+   "fieldtype": "JSON",
+   "label": "Scorer Parameters"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-05-27 15:57:19.907272",
+ "modified": "2025-06-16 23:20:56.446448",
  "modified_by": "Administrator",
  "module": "Unified Data Tools",
  "name": "Deduplication Job Rule",

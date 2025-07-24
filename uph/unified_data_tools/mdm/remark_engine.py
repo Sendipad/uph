@@ -1,24 +1,4 @@
-# -----------------------------------------------------------------------------
-# Project Name: UPH - Unified Party Hub
-# File: remark_engine.py
-# Description: Provides the RemarkEngine class for generating custom remarks based on rules and templates for documents in the UPH system.
-#
-# Author: Abdo Ruzaqi(Sendipad)
-# Created: 2025-04-10
-# License: GNU General Public License v3.0 (GPL-3.0)
-# Repository: https://github.com/Sendipad/uph
-#
-# Copyright (c) 2025 Abdo  Ruzaqi(Sendipad)
-# This file is part of the UPH project and is released under the GPL-3.0 license.
-# See LICENSE file or https://www.gnu.org/licenses/gpl-3.0.en.html for full terms.
-# -----------------------------------------------------------------------------
-import frappe
-from uph.unified_data_tools.doctype.auto_text_generator_rule.auto_text_generator_rule import (
-    get_document_type_run_validate_events,
-)
-from frappe import _
-
-
+"""
 def generate_remark(doc, method=None):
     if not method:
         return
@@ -184,3 +164,4 @@ def generate_remarks_for_save_doc(doctype, docname, rule):
                     return remark
             except Exception as e:
                 frappe.log_error(f"Render error (parent): {e}", "Remark Rule")
+"""

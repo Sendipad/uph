@@ -30,7 +30,7 @@ COMPARISON_FUNCTIONS = {
 }
 
 
-class FieldComparisonEngine:
+class RecordIntegrityEngine:
     def __init__(self, job_or_doc):
         self.job = job_or_doc if hasattr(job_or_doc, "rules") else None
         self.doc_type = getattr(job_or_doc, "document_type", None)

@@ -7,13 +7,15 @@
  "field_order": [
   "section_break_n9uf",
   "document_type",
-  "remark_fieldname",
+  "target_field",
   "priority",
-  "enabled",
+  "validate_on_event",
   "title",
   "column_break_domq",
-  "validate_on_event",
+  "enabled",
   "on_child",
+  "text_merge_mode",
+  "remove_markers_on_submit",
   "dependency_fields",
   "get_dependcy_fields",
   "section_break_fnwo",
@@ -31,12 +33,6 @@
    "in_list_view": 1,
    "label": "Target Doctype",
    "options": "DocType",
-   "reqd": 1
-  },
-  {
-   "fieldname": "remark_fieldname",
-   "fieldtype": "Autocomplete",
-   "label": "Remark Field",
    "reqd": 1
   },
   {
@@ -103,12 +99,31 @@
    "fieldname": "get_dependcy_fields",
    "fieldtype": "Button",
    "label": "Get Dependcy Fields"
+  },
+  {
+   "fieldname": "text_merge_mode",
+   "fieldtype": "Select",
+   "label": "Text Merge Mode",
+   "options": "Overwrite\nAppend\nPrepend"
+  },
+  {
+   "default": "0",
+   "description": "Will Remove \"** **\", \"*** ***\", \"// //\" From Custom input Text",
+   "fieldname": "remove_markers_on_submit",
+   "fieldtype": "Check",
+   "label": "Remove Markers On Submit"
+  },
+  {
+   "fieldname": "target_field",
+   "fieldtype": "Autocomplete",
+   "label": "Target Field",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-31 22:32:07.405095",
+ "modified": "2025-06-05 22:35:51.166448",
  "modified_by": "Administrator",
  "module": "Unified Data Tools",
  "name": "Auto Text Generator Rule",

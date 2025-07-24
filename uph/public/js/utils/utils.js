@@ -1,6 +1,5 @@
 //import { $ } from "frappe-gantt/src/svg_utils";
 uph.party_type_pm_rules = {};
-
 function get_party_type_party_master_rules(party_type, callback) {
 	if (Object.keys(uph.party_type_pm_rules).length === 0) {
 		console.log("Fetching Party Type PM Rules");

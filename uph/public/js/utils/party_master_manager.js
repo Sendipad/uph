@@ -1,4 +1,5 @@
 frappe.provide("frappe.ui.form");
+
 frappe.ui.form.PartyMasterQuickEntryForm = class PartyMasterQuickEntryForm extends (
 	frappe.ui.form.QuickEntryForm
 ) {
