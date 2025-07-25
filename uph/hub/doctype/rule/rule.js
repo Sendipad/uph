@@ -32,6 +32,7 @@ frappe.ui.form.on("Rule", {
 		frm.doctypes = getDocumentTypes(frm);
 		await set_field_options(frm);
 	},
+	/*
 	async apply_scopes_add(frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
 		const doc_type = frm.doc.document_type;
@@ -91,7 +92,7 @@ frappe.ui.form.on("Rule Condition", {
 				}
 			});
 		}
-	},
+	},*/
 });
 async function set_field_options(frm, fieldname = null, row = null, options = null) {
 	const grid = frm.fields_dict["conditions"].grid;

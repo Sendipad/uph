@@ -1,5 +1,4 @@
 //file: apps/uph/uph/public/js/rule_builder/rule_builder_mount.js
-import { toRaw } from "vue";
 
 frappe.ui.form.on("Rule", {
 	onload(frm) {
@@ -42,24 +41,20 @@ frappe.ui.form.on("Rule", {
 		}
 		return types.sort();
 	},
-
 	before_save(frm) {
-		if (frm.ruleBuilder?.app && frm.ruleBuilder?.app._instance?.proxy?.$store) {
-			const store = frm.ruleBuilder.app._instance.proxy.$store;
-			if (store?.syncToDoc) {
-				store.syncToDoc();
-			}
+		const store = frm.rule_builder?.store;
+		if (!store) return;
+
+		const updated = store.update_conditions();
+
+		if (typeof updated === "string") {
+			frappe.throw(updated); // error message
+		}
+
+		if (Array.isArray(updated)) {
+			frm.set_value("conditions", updated);
 		}
 	},
-
-	after_save(frm) {
-		frm.dirty = false;
-		frm.page.clear_indicator();
-		if (frm.rule_builder?.store) {
-			frm.rule_builder.store.clearDirty();
-		}
-	},
-
 	on_tab_change(frm) {
 		const currentTab = frm.get_active_tab()?.label;
 

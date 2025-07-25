@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { computed, ref, reactive, watch, toRaw, nextTick } from "vue";
 import { generateUniqueId, useServiceUIConfig, getFinalFields } from "./utils";
-import { useDebouncedRefHistory } from "@vueuse/core";
+import { useDebouncedRefHistory, onKeyDown } from "@vueuse/core";
 
 export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 	const frm = ref(null);
@@ -284,9 +284,123 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 		});
 	}
 
+	onKeyDown("z", (e) => {
+		if (e.ctrlKey && !e.shiftKey && ref_history.canUndo.value) {
+			ref_history.undo();
+		}
+		if (e.ctrlKey && e.shiftKey && ref_history.canRedo.value) {
+			ref_history.redo();
+		}
+	});
+
 	function save_rule() {
-		frm.value.set_value("conditions", deepClone(conditions.value));
-		frm.value.set_value("actions", deepClone(actions.value));
+		const f = frm.value;
+		if (!f) return;
+
+		// Sync Pinia → cur_frm.doc
+		syncToDoc();
+
+		frappe.dom.freeze(__("Saving..."));
+		f.save()
+			.then(() => {
+				clearDirty();
+				frappe.show_alert({ message: __("Rule saved"), indicator: "green" });
+			})
+			.catch((err) => {
+				console.error("Save failed:", err);
+				frappe.msgprint({
+					title: __("Save Failed"),
+					message: err.message || err,
+					indicator: "red",
+				});
+			})
+			.finally(() => {
+				frappe.dom.unfreeze();
+			});
+	}
+	function update_conditions() {
+		if (!dirty.value && !frm.value.is_new()) return;
+
+		frappe.dom.freeze(__("Saving..."));
+
+		try {
+			const syncedConditions = [];
+
+			for (const [i, cond] of toRaw(conditions.value).entries()) {
+				const isNew = cint(cond.__islocal) === 1 || !cond.name;
+
+				const cleaned = {
+					...deepClone(cond),
+					doctype: "Rule Condition",
+					parent: frm.value.docname,
+					parenttype: "Rule",
+					parentfield: "conditions",
+					idx: i + 1,
+				};
+
+				if (isNew) {
+					// Let Frappe assign the name
+					delete cleaned.name;
+					cleaned.__islocal = 1;
+					cleaned.__unsaved = 1;
+				} else {
+					cleaned.name = cond.name;
+					// Clear these flags so Frappe doesn't reassign
+					delete cleaned.__islocal;
+					delete cleaned.__unsaved;
+				}
+				console.table(
+					syncedConditions.map((c) => ({
+						idx: c.idx,
+						name: c.name,
+						islocal: c.__islocal,
+						condition_id: c.condition_id,
+					})),
+				);
+
+				syncedConditions.push(cleaned);
+			}
+
+			return syncedConditions;
+		} catch (e) {
+			console.error("Failed to prepare updated conditions", e);
+			return __("Failed to prepare condition data");
+		} finally {
+			frappe.dom.unfreeze();
+		}
+	}
+
+	function syncToDoc() {
+		const f = frm.value;
+		if (!f) return;
+
+		const syncedConditions = [];
+
+		for (const [i, cond] of toRaw(conditions.value).entries()) {
+			const isNew = cond.__islocal || !cond.name;
+
+			syncedConditions.push({
+				...deepClone(cond),
+				doctype: "Rule Condition",
+				parent: f.docname,
+				parenttype: "Rule",
+				parentfield: "conditions",
+				idx: i + 1,
+				__unsaved: 1, // needed in some Frappe versions
+				name: isNew ? undefined : cond.name,
+			});
+		}
+		console.table(
+			syncedConditions.map((c) => ({
+				idx: c.idx,
+				name: c.name,
+				islocal: c.__islocal,
+				condition_id: c.condition_id,
+			})),
+		);
+
+		// Update the form doc's table
+		f.set_value("conditions", syncedConditions);
 	}
 
 	return {
@@ -330,5 +444,7 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 		canUndo: computed(() => history.canUndo.value),
 		canRedo: computed(() => history.canRedo.value),
 		layoutMode,
+		syncToDoc,
+		update_conditions,
 	};
 });

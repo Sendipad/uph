@@ -1,5 +1,5 @@
 //file: apps/uph/uph/public/js/rule_builder/rule_builder.js
-import { createApp } from "vue";
+import { createApp, watchEffect } from "vue";
 import { createPinia } from "pinia";
 import { useRuleBuilderStore } from "./store.js";
 import RuleBuilderComponent from "./RuleBuilder.vue";
@@ -93,12 +93,10 @@ class RuleBuilder {
 		}
 	}
 	watch_changes() {
-		this.store.$subscribe(() => {
+		watchEffect(() => {
 			if (this.store.dirty) {
-				this.frm.dirty = true;
 				this.page.set_indicator(__("Unsaved"), "orange");
 			} else {
-				this.frm.dirty = false;
 				this.page.clear_indicator();
 			}
 		});
