@@ -17,13 +17,13 @@ class RuleCondition(Document):
 		comparison_strategy: DF.Literal["", "Auto Detect", "String", "Numeric", "Date", "Boolean"]
 		condition_id: DF.Data
 		custom_scorer: DF.Link | None
-		final_left_field_path: DF.Data | None
 		final_right_field_path: DF.Data | None
 		fuzzy_threshold: DF.Int
 		group_operator: DF.Literal["", "AND", "OR"]
 		indent: DF.Int
 		is_critical: DF.Check
 		is_group: DF.Check
+		left_field_chain: DF.JSON | None
 		left_field_path: DF.Autocomplete | None
 		left_method_parameters: DF.Code | None
 		left_specific_doctype: DF.Link | None

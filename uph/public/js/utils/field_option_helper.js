@@ -1,15 +1,48 @@
 //file uph/public/js/utils/field_option_helper.js
 
 frappe.provide("uph.utils");
+frappe.provide("uph.hub");
+
+uph.hub.docfields = {
+	cache: {},
+
+	get_docfields(document_type, basefieldname = null, callback) {
+		let key = Array.isArray(document_type) ? document_type.slice().sort().join(",") : document_type;
+
+		let cached = this.cache[key];
+
+		if (cached && basefieldname) {
+			const child = cached.child_tables?.[basefieldname];
+			if (child) {
+				callback?.(child);
+				return;
+			}
+		}
+
+		if (cached && !basefieldname) {
+			callback?.(cached);
+			return;
+		}
+
+		frappe.call({
+			method: "uph.hub.utils.field.get_field_path",
+			args: { doctype: document_type, basefieldname: basefieldname },
+			callback: (r) => {
+				if (r.message?.fields) {
+					r.message.fields.forEach((field) => {
+						if (field.label) {
+							field.label = __(field.label);
+						}
+					});
+				}
+				callback(r.message);
+			},
+		});
+	},
+};
 
 uph.utils.FieldOptionHelper = {
 	cache: {},
-
-	/**
-	 * Load and cache field options for one or more doctypes
-	 * - If array of doctypes → load common fields using unified server API
-	 * - If single doctype → load all fields for that doctype
-	 */
 	load({ documentType, callback }) {
 		if (Array.isArray(documentType)) {
 			// استخدم الكاش للمصفوفة المفتاحية
@@ -55,10 +88,6 @@ uph.utils.FieldOptionHelper = {
 		});
 	},
 
-	/**
-	 * Load field options for all doctypes in apply_scopes on the form
-	 * - uses load with array to get common fields
-	 */
 	load_field_options_for_conditions(frm) {
 		const rule_doc_types = (frm.doc.apply_scopes || [])
 			.map((entry) => entry.document_type)
@@ -78,6 +107,19 @@ uph.utils.FieldOptionHelper = {
 				});
 			},
 		});
+	},
+
+	getFieldType(documentType, fieldPath) {
+		const field = this.cache[documentType]?.find((f) => f.value === fieldPath);
+		return field?.fieldtype || "Data";
+	},
+
+	getField(documentType, fieldPath) {
+		return this.cache[documentType]?.find((f) => f.value === fieldPath) || null;
+	},
+
+	hasFieldOption(documentType, fieldPath) {
+		return !!this.cache[documentType]?.some((f) => f.value === fieldPath);
 	},
 
 	applyAutocomplete(frm, options, fieldnames = [], tableField = null, row_name = null) {
@@ -108,19 +150,6 @@ uph.utils.FieldOptionHelper = {
 				frm.refresh_field(fieldname);
 			});
 		}
-	},
-
-	getFieldType(documentType, fieldPath) {
-		const field = this.cache[documentType]?.find((f) => f.value === fieldPath);
-		return field?.fieldtype || "Data";
-	},
-
-	getField(documentType, fieldPath) {
-		return this.cache[documentType]?.find((f) => f.value === fieldPath) || null;
-	},
-
-	hasFieldOption(documentType, fieldPath) {
-		return !!this.cache[documentType]?.some((f) => f.value === fieldPath);
 	},
 };
 

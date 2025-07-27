@@ -1,79 +1,3 @@
-<template>
-	<div
-		class="condition-wrapper"
-		:class="{ focused: isFocused, group: isGroup, collapsed: isCollapsed }"
-		:style="indentStyle"
-		ref="wrapper"
-		@click="focusSelf"
-		@mouseenter="isHovered = true"
-		@mouseleave="isHovered = false"
-	>
-		<!-- Group Header -->
-		<template v-if="isGroup">
-			<div class="group-header">
-				<span class="drag-handle" v-html="utils.icon('drag', 'xs')" />
-				<select v-model="condition.group_operator" @change="update" class="group-operator">
-					<option value="AND">AND</option>
-					<option value="OR">OR</option>
-				</select>
-				<div class="group-actions" v-show="isFocused || isHovered">
-					<button @click="addChildCondition">+</button>
-					<button @click="addChildGroup">⋁</button>
-					<button @click="duplicate">⎘</button>
-					<button @click="remove" class="danger">✕</button>
-					<button @click="toggleCollapse">{{ isCollapsed ? "▶" : "▼" }}</button>
-				</div>
-			</div>
-
-			<div v-if="isCollapsed" class="group-summary">{{ groupSummary }}</div>
-
-			<div v-else class="group-children">
-				<draggable
-					:list="children"
-					item-key="condition_id"
-					:group="dragGroup"
-					handle=".drag-handle"
-					ghost-class="dragging-ghost"
-					:animation="200"
-					@start="onDragStart"
-					@end="onDragEnd"
-					@change="onDragChange"
-				>
-					<template #item="{ element }">
-						<Condition :condition-id="element.condition_id" :depth="depth + 1" />
-					</template>
-				</draggable>
-			</div>
-		</template>
-
-		<!-- Atomic Condition -->
-		<template v-else>
-			<div class="condition-header vertical-layout">
-				<!-- Left: drag + vertical buttons -->
-				<div class="left-toolbar">
-					<span class="drag-handle" v-html="utils.icon('drag', 'xs')" />
-					<div class="condition-actions" v-show="isFocused || isHovered">
-						<button @click="toggleCollapse">{{ isCollapsed ? "▶" : "▼" }}</button>
-
-						<button @click="duplicate">⎘</button>
-						<button @click="remove" class="danger">✕</button>
-					</div>
-				</div>
-
-				<!-- Right: form -->
-				<div class="condition-content" v-if="!isCollapsed">
-					<GridRenderer :doc="condition" :fields="conditionFields" />
-				</div>
-			</div>
-
-			<div v-if="isCollapsed" class="condition-summary">
-				<span v-html="utils.icon('file', 'sm')" />
-				{{ summaryText }}
-			</div>
-		</template>
-	</div>
-</template>
-
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from "vue";
 import Condition from "./Condition.vue";
@@ -81,11 +5,13 @@ import GridRenderer from "./GridRenderer.vue";
 import draggable from "vuedraggable";
 import { useRuleBuilderStore } from "../store";
 import { getServiceUIConfig, safeFrappeUtils } from "../utils";
+import { Switch } from "@headlessui/vue";
 
 const props = defineProps({
 	conditionId: { type: String, required: true },
 	depth: { type: Number, default: 0 },
 });
+const isAnd = ref(true);
 
 const store = useRuleBuilderStore();
 const utils = safeFrappeUtils();
@@ -302,199 +228,446 @@ function remove() {
 }
 </script>
 
+<template>
+	<div
+		class="condition-group-wrapper with-connector"
+		:class="{ focused: isFocused, group: isGroup, collapsed: isCollapsed }"
+		:style="indentStyle"
+		ref="wrapper"
+		@click="focusSelf"
+		@mouseenter="isHovered = true"
+		@mouseleave="isHovered = false"
+	>
+		<!-- Group Header -->
+		<template v-if="isGroup">
+			<div class="group-header">
+				<span class="drag-handle" v-html="utils.icon('drag', 'xs')" />
+
+				<Switch
+					v-model="isAnd"
+					as="button"
+					:class="['group-operator-switch', isAnd ? 'bg-green-600' : 'bg-yellow-600']"
+				>
+					{{ isAnd ? "AND" : "OR" }}
+				</Switch>
+				<div class="group-actions" v-show="isFocused || isHovered">
+					<button @click="addChildCondition">+</button>
+					<button @click="addChildGroup">⋁</button>
+					<button @click="duplicate">⎘</button>
+					<button @click="remove" class="danger">✕</button>
+					<button @click="toggleCollapse">{{ isCollapsed ? "▶" : "▼" }}</button>
+				</div>
+			</div>
+
+			<div v-if="isCollapsed" class="group-summary">{{ groupSummary }}</div>
+
+			<div v-else class="group-children">
+				<draggable
+					:list="children"
+					item-key="condition_id"
+					:group="dragGroup"
+					handle=".drag-handle"
+					ghost-class="dragging-ghost"
+					:animation="200"
+					@start="onDragStart"
+					@end="onDragEnd"
+					@change="onDragChange"
+				>
+					<template #item="{ element }">
+						<Condition :condition-id="element.condition_id" :depth="depth + 1" />
+					</template>
+				</draggable>
+			</div>
+		</template>
+
+		<!-- Atomic Condition -->
+		<template v-else>
+			<div class="condition-header vertical-layout">
+				<!-- Left: drag + vertical buttons -->
+				<div class="left-toolbar">
+					<span class="drag-handle" v-html="utils.icon('drag', 'xs')" />
+					<div class="condition-actions" v-show="isFocused || isHovered">
+						<button @click="toggleCollapse">{{ isCollapsed ? "▶" : "▼" }}</button>
+
+						<button @click="duplicate">⎘</button>
+						<button @click="remove" class="danger">✕</button>
+					</div>
+				</div>
+
+				<!-- Right: form -->
+				<div class="condition-content" v-if="!isCollapsed">
+					<GridRenderer :doc="condition" :fields="conditionFields" />
+				</div>
+			</div>
+
+			<div v-if="isCollapsed" class="condition-summary">
+				<span v-html="utils.icon('file', 'sm')" />
+				{{ summaryText }}
+			</div>
+		</template>
+	</div>
+</template>
+
 <style scoped>
-.condition-wrapper {
-	border: 1px solid #e5e7eb;
+.btn {
+	padding: 10px 16px;
 	border-radius: 8px;
-	background: white;
-	margin-bottom: 12px;
-	padding: 12px;
+	font-weight: 500;
+	font-size: 14px;
+	cursor: pointer;
 	transition: all 0.2s ease;
-	position: relative;
-}
-
-.condition-wrapper.group {
-	background-color: #f8fbff;
-	border-color: #dbeafe;
-}
-
-.condition-wrapper.focused {
-	border-color: #3b82f6;
-	box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-}
-
-.condition-wrapper.collapsed {
-	padding: 8px 12px;
-}
-
-.condition-wrapper.dragging {
-	opacity: 0.6;
-	transform: scale(0.98);
-}
-
-.condition-error {
-	padding: 12px;
-	background-color: #fef2f2;
-	color: #b91c1c;
-	border-radius: 6px;
+	border: none;
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: 6px;
 }
 
-/* 🟦 Drag handle icon */
-.drag-handle {
-	cursor: grab;
-	color: #6b7280;
-	opacity: 0.6;
-	transition: opacity 0.2s;
-}
-.condition-wrapper:hover .drag-handle,
-.condition-wrapper.focused .drag-handle {
-	opacity: 1;
+.btn-primary {
+	background: #3b82f6;
+	color: white;
 }
 
-/* 🧱 GROUP layout */
+.btn-primary:hover {
+	background: #2563eb;
+}
+
+.btn-outline {
+	background: transparent;
+	border: 1px solid #cbd5e1;
+	color: #334155;
+}
+
+.btn-outline:hover {
+	background: #f1f5f9;
+	border-color: #94a3b8;
+}
+
+/* Condition styles */
+.condition-group-wrapper {
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	background: white;
+	margin-bottom: 16px;
+	padding: 18px;
+	transition: all 0.25s ease;
+	position: relative;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.condition-group-wrapper.group {
+	background-color: #f8fbff;
+	border-color: #d1e0ff;
+}
+
+.condition-group-wrapper.focused {
+	border-color: #3b82f6;
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.condition-group-wrapper.collapsed {
+	padding: 14px 18px;
+}
+
+.with-connector::before {
+	content: "";
+	position: absolute;
+	top: 28px;
+	left: -16px;
+	height: calc(100% - 28px);
+	width: 16px;
+	border-top: 2px solid #cbd5e1;
+	border-left: 2px solid #cbd5e1;
+	border-top-left-radius: 8px;
+}
+
+/* Group Header */
 .group-header {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-}
-.group-operator {
-	padding: 4px 8px;
-	border-radius: 4px;
-	border: 1px solid #d1d5db;
-	background: white;
-	font-size: 0.9rem;
+	gap: 14px;
+	padding-bottom: 16px;
+	position: relative;
 }
 
-/* 🔹 GROUP actions: INLINE */
+/* Drag handle */
+.drag-handle {
+	cursor: grab;
+	color: #94a3b8;
+	opacity: 0.7;
+	transition: all 0.2s;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 8px;
+	background: #f1f5f9;
+}
+
+.drag-handle svg {
+	width: 16px;
+	height: 16px;
+}
+
+.drag-handle:hover {
+	opacity: 1;
+	background: #e2e8f0;
+	color: #64748b;
+}
+
+/* Group operator switch */
+.group-operator-switch {
+	width: 70px;
+	height: 32px;
+	border-radius: 50px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	border: none;
+	outline: none;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+}
+
+.group-operator-switch.bg-green-600 {
+	background-color: #10b981;
+}
+
+.group-operator-switch.bg-green-600:hover {
+	background-color: #059669;
+}
+
+.group-operator-switch.bg-yellow-600 {
+	background-color: #f59e0b;
+}
+
+.group-operator-switch.bg-yellow-600:hover {
+	background-color: #d97706;
+}
+
+/* Group actions */
 .group-actions {
 	display: flex;
-	gap: 6px;
+	gap: 8px;
 	margin-left: auto;
 }
+
 .group-actions button {
-	background: none;
+	background: #f1f5f9;
 	border: none;
-	padding: 4px 6px;
-	border-radius: 4px;
+	width: 34px;
+	height: 34px;
+	border-radius: 8px;
 	cursor: pointer;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: #374151;
-}
-.group-actions button:hover {
-	background-color: #f3f4f6;
-}
-.group-actions button.danger:hover {
-	background-color: #fee2e2;
-	color: #b91c1c;
-}
-
-/* 🟩 ATOMIC condition layout */
-.condition-header {
-	display: flex;
-	align-items: flex-start;
-	gap: 12px;
-}
-.vertical-layout {
-	display: flex;
-	align-items: flex-start;
-	gap: 12px;
-}
-
-/* Left toolbar for condition buttons + handle */
-.left-toolbar {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 6px;
-	margin-right: 8px;
-	min-width: 36px; /* 👈 Prevent shrinking */
-}
-
-/* Right content: grid form */
-.condition-content {
-	flex-grow: 1;
-}
-
-/* 🔸 CONDITION actions: VERTICAL */
-.condition-actions {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-}
-.condition-actions button {
-	width: 28px;
-	height: 28px;
-	padding: 4px;
-	background: none;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;
-	color: #374151;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-.condition-actions button:hover {
-	background-color: #f3f4f6;
-}
-.condition-actions button.danger:hover {
-	background-color: #fee2e2;
-	color: #b91c1c;
-}
-
-/* 📄 Summary (group or atomic) */
-.group-summary,
-.condition-summary {
-	padding: 8px 12px;
-	background: #f9fafb;
-	border-radius: 6px;
-	margin-top: 8px;
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	font-size: 0.9rem;
-}
-
-/* Drop zone */
-.collapsed-drop-zone {
-	border: 2px dashed #cbd5e1;
-	border-radius: 6px;
-	padding: 16px;
-	text-align: center;
-	margin-top: 8px;
-	background: #f8fafc;
 	color: #64748b;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 8px;
-	cursor: pointer;
+	font-size: 16px;
 	transition: all 0.2s;
 }
-.collapsed-drop-zone:hover {
-	border-color: #94a3b8;
-	background: #f1f5f9;
+
+.group-actions button:hover {
+	background-color: #e2e8f0;
+	color: #475569;
+}
+
+.group-actions button.danger {
+	color: #ef4444;
+}
+
+.group-actions button.danger:hover {
+	background-color: #fee2e2;
+	color: #dc2626;
 }
 
 /* Children list inside group */
 .group-children {
-	margin-top: 12px;
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
+	position: relative;
+	margin-left: 36px;
+	padding-left: 18px;
 }
 
-/* While dragging */
+.group-children::before {
+	content: "";
+	position: absolute;
+	top: -18px;
+	bottom: 16px;
+	left: 0;
+	width: 2px;
+	background-color: #cbd5e1;
+}
+
+/* Condition Header */
+.condition-header {
+	display: flex;
+	gap: 16px;
+	align-items: flex-start;
+}
+
+.left-toolbar {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding-top: 6px;
+}
+
+/* Condition actions */
+.condition-actions {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.condition-actions button {
+	width: 34px;
+	height: 34px;
+	background: #f1f5f9;
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+	color: #64748b;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 16px;
+	transition: all 0.2s;
+}
+
+.condition-actions button:hover {
+	background-color: #e2e8f0;
+	color: #475569;
+}
+
+.condition-actions button.danger {
+	color: #ef4444;
+}
+
+.condition-actions button.danger:hover {
+	background-color: #fee2e2;
+	color: #dc2626;
+}
+
+/* Condition form */
+.condition-content {
+	flex-grow: 1;
+	padding: 4px 0;
+}
+
+.condition-form {
+	display: grid;
+	grid-template-columns: 1.2fr 1fr 1.5fr;
+	gap: 14px;
+	align-items: center;
+}
+
+.condition-form select,
+.condition-form input {
+	padding: 10px 14px;
+	border: 1px solid #cbd5e1;
+	border-radius: 8px;
+	background: white;
+	font-size: 14px;
+	color: #334155;
+	transition: all 0.2s;
+	height: 40px;
+}
+
+.condition-form select:focus,
+.condition-form input:focus {
+	outline: none;
+	border-color: #93c5fd;
+	box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.3);
+}
+
+/* Condition summary */
+.condition-summary {
+	padding: 14px 18px;
+	background: #f8fafc;
+	border-radius: 8px;
+	margin-top: 14px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 14px;
+	color: #475569;
+	border: 1px dashed #cbd5e1;
+}
+
+.condition-summary svg {
+	color: #94a3b8;
+	flex-shrink: 0;
+}
+
+/* Group summary */
+.group-summary {
+	padding: 14px 18px;
+	background: #f8fafc;
+	border-radius: 8px;
+	margin-top: 14px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 14px;
+	color: #475569;
+	border: 1px dashed #cbd5e1;
+}
+
+.group-summary svg {
+	color: #94a3b8;
+	flex-shrink: 0;
+}
+
+/* Collapsed state */
+.condition-group-wrapper.collapsed .condition-content {
+	display: none;
+}
+
+/* RTL support */
+html[dir="rtl"] .with-connector::before {
+	left: auto;
+	right: -16px;
+	border-left: none;
+	border-right: 2px solid #cbd5e1;
+	border-top-left-radius: 0;
+	border-top-right-radius: 8px;
+}
+
+html[dir="rtl"] .group-children {
+	margin-left: 0;
+	margin-right: 36px;
+	padding-left: 0;
+	padding-right: 18px;
+}
+
+html[dir="rtl"] .group-children::before {
+	left: auto;
+	right: 0;
+}
+
+/* Footer */
+.footer {
+	text-align: center;
+	color: #64748b;
+	font-size: 14px;
+	padding: 20px 0;
+	border-top: 1px solid #e2e8f0;
+	margin-top: 20px;
+}
+
+/* Dragging state */
 .dragging-ghost {
 	opacity: 0.7;
 	transform: scale(0.98);
-	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
 }
+
 .drag-over-highlight {
 	border-color: #3b82f6 !important;
 	background-color: #e0f2fe;

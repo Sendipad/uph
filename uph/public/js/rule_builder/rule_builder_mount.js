@@ -52,7 +52,18 @@ frappe.ui.form.on("Rule", {
 		}
 
 		if (Array.isArray(updated)) {
+			console.table(
+				updated.map((c) => ({
+					idx: c.idx,
+					name: c.name,
+					islocal: c.__islocal,
+					condition_id: c.condition_id,
+				})),
+			);
+			console.log(updated);
 			frm.set_value("conditions", updated);
+			frappe.throw(frm.doc.conditions);
+			//frm.set_value("conditions", updated);
 		}
 	},
 	on_tab_change(frm) {
@@ -87,7 +98,6 @@ function initRuleBuilder(frm) {
 			documentTypes,
 		});
 	} else {
-		// ✅ If doc name changed (e.g. Ctrl+B → new doc), reset store
 		if (frm.rule_builder.store?.doc?.name !== currentDocName) {
 			frm.rule_builder.store.init(frm, frm.doc.rule_service_type, documentTypes);
 		} else {
@@ -108,7 +118,6 @@ function getDocumentTypes(frm) {
 	return types.sort();
 }
 
-// Cleanup on form close
 frappe.ui.form.on("Rule", "before_unload", function (frm) {
 	if (frm.rule_builder) {
 		frm.rule_builder.$rule_builder.$destroy();

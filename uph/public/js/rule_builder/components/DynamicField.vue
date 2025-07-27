@@ -1,9 +1,11 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, reactive, defineExpose } from "vue";
+
 import { evaluate_depends_on_value } from "../utils.js";
 import LinkAutocomplete from "./LinkAutocomplete.vue";
 import FieldSelector from "./FieldSelector.vue";
 import { useRuleBuilderStore } from "../store.js";
+import DocFieldCrawl from "./DocFieldCrawl.vue";
 
 const props = defineProps({
 	df: Object,
@@ -16,6 +18,7 @@ const isFocused = ref(false);
 const showFloatingLabel = computed(
 	() => props.mode === "compact" && props.df.fieldtype !== "Check" && props.df.label,
 );
+const docFieldCrawlRef = ref(null);
 
 const emit = defineEmits(["update:modelValue"]);
 const store = useRuleBuilderStore();
@@ -43,6 +46,7 @@ const value = computed({
 		emit("update:modelValue", val);
 	},
 });
+
 const parentDoc = computed(() => props.doc?.__parent || store.doc || {});
 const isVisible = computed(() =>
 	evaluate_depends_on_value(props.df.depends_on, props.doc, parentDoc.value),
@@ -93,6 +97,20 @@ const fieldSourceDoctypes = computed(() => {
 
 	// fallback to parent provided documentTypes (from store)
 	return store.documentTypes;
+});
+defineExpose({
+	get_value() {
+		// If the inner DocFieldCrawl component has get_value, use it
+		if (docFieldCrawlRef.value?.get_value) {
+			return docFieldCrawlRef.value.get_value();
+		}
+		// Otherwise, fallback to raw string render
+		const val = value.value;
+		if (typeof val === "object" && Array.isArray(val?.field_chain)) {
+			return val.field_chain.map((f) => f.label || f.fieldname).join(" › ");
+		}
+		return "";
+	},
 });
 </script>
 <template>

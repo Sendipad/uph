@@ -349,14 +349,6 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 					delete cleaned.__islocal;
 					delete cleaned.__unsaved;
 				}
-				console.table(
-					syncedConditions.map((c) => ({
-						idx: c.idx,
-						name: c.name,
-						islocal: c.__islocal,
-						condition_id: c.condition_id,
-					})),
-				);
 
 				syncedConditions.push(cleaned);
 			}
