@@ -17,7 +17,6 @@ class RuleCondition(Document):
 		comparison_strategy: DF.Literal["", "Auto Detect", "String", "Numeric", "Date", "Boolean"]
 		condition_id: DF.Data
 		custom_scorer: DF.Link | None
-		final_right_field_path: DF.Data | None
 		fuzzy_threshold: DF.Int
 		group_operator: DF.Literal["", "AND", "OR"]
 		indent: DF.Int
@@ -41,6 +40,7 @@ class RuleCondition(Document):
 		parentfield: DF.Data
 		parenttype: DF.Data
 		regex_pattern: DF.Data | None
+		right_field_chain: DF.JSON | None
 		right_field_path: DF.Autocomplete | None
 		right_method_parameters: DF.Code | None
 		right_value_context_key: DF.Data | None

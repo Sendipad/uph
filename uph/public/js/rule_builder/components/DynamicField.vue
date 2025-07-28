@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, reactive, defineExpose } from "vue";
+import { computed, ref } from "vue";
 
 import { evaluate_depends_on_value } from "../utils.js";
 import LinkAutocomplete from "./LinkAutocomplete.vue";
@@ -10,18 +10,19 @@ import DocFieldCrawl from "./DocFieldCrawl.vue";
 const props = defineProps({
 	df: Object,
 	doc: Object,
-	mode: { type: String, default: "default" }, // 'default', 'compact', 'grid', 'labelless'
+	mode: { type: String, default: "default" },
 });
 
+const emit = defineEmits(["update:modelValue"]);
+
+const store = useRuleBuilderStore();
 const isFocused = ref(false);
+const docFieldCrawlRef = ref(null);
 
 const showFloatingLabel = computed(
 	() => props.mode === "compact" && props.df.fieldtype !== "Check" && props.df.label,
 );
-const docFieldCrawlRef = ref(null);
 
-const emit = defineEmits(["update:modelValue"]);
-const store = useRuleBuilderStore();
 const showLabel = computed(() => {
 	if (props.mode === "labelless") return false;
 	if (props.mode === "compact") return props.df.fieldtype !== "Check";
@@ -60,11 +61,9 @@ const isReadOnly = computed(() =>
 	evaluate_depends_on_value(props.df.read_only_depends_on, props.doc, parentDoc.value),
 );
 
-// Fieldtype mapping for input types
 const inputType = computed(() => {
 	switch (props.df.fieldtype) {
 		case "Int":
-			return "number";
 		case "Float":
 		case "Currency":
 			return "number";
@@ -75,7 +74,6 @@ const inputType = computed(() => {
 	}
 });
 
-// Options for Select
 const parsedOptions = computed(() => {
 	if (Array.isArray(props.df.options)) return props.df.options;
 	if (typeof props.df.options === "string") {
@@ -83,7 +81,51 @@ const parsedOptions = computed(() => {
 	}
 	return [];
 });
+
+function getDocFields(document_type, basefieldname = null) {
+	const cleaned = (Array.isArray(document_type) ? document_type : [document_type]).filter(
+		(dt) => typeof dt === "string" && dt.trim().length > 0,
+	);
+
+	if (!cleaned.length) return Promise.resolve([]);
+
+	return new Promise((resolve) => {
+		uph.hub.docfields.get_docfields(cleaned, basefieldname, (result) => {
+			const fields = result?.fields || [];
+			fields.forEach((f) => {
+				f.label = f.label ? __(f.label) : f.fieldname;
+			});
+			resolve(fields);
+		});
+	});
+}
+
+const documentTypesClean = computed(() => {
+	if (!store.documentTypes) return [];
+	const raw = Array.isArray(store.documentTypes) ? store.documentTypes : [store.documentTypes];
+	return raw.filter((dt) => typeof dt === "string" && dt.trim().length > 0);
+});
+
 const fieldSourceDoctypes = computed(() => {
+	const isLeft = props.df.fieldname === "left_field_chain";
+	const sourceField = isLeft ? "left_value_source" : "right_value_source";
+	const doctypeField = isLeft ? "left_specific_doctype" : "right_specific_doctype";
+
+	const source = props.doc?.[sourceField];
+	const specific = props.doc?.[doctypeField];
+
+	let raw = [];
+
+	if (source === "Specific DocType Field" && specific) {
+		raw = Array.isArray(specific) ? specific : [specific];
+	} else {
+		raw = Array.isArray(store.documentTypes) ? store.documentTypes : [store.documentTypes];
+	}
+
+	return raw.filter((dt) => typeof dt === "string" && dt.trim().length > 0);
+});
+
+const fieldSourceDoctype = computed(() => {
 	const source =
 		props.doc[
 			props.df.fieldname === "left_field_path" ? "left_value_source" : "right_value_source"
@@ -95,24 +137,10 @@ const fieldSourceDoctypes = computed(() => {
 		];
 	}
 
-	// fallback to parent provided documentTypes (from store)
 	return store.documentTypes;
 });
-defineExpose({
-	get_value() {
-		// If the inner DocFieldCrawl component has get_value, use it
-		if (docFieldCrawlRef.value?.get_value) {
-			return docFieldCrawlRef.value.get_value();
-		}
-		// Otherwise, fallback to raw string render
-		const val = value.value;
-		if (typeof val === "object" && Array.isArray(val?.field_chain)) {
-			return val.field_chain.map((f) => f.label || f.fieldname).join(" › ");
-		}
-		return "";
-	},
-});
 </script>
+
 <template>
 	<div
 		class="field-wrapper"
@@ -163,12 +191,18 @@ defineExpose({
 			:doctype="df.options"
 			:disabled="isReadOnly"
 		/>
-
+		<DocFieldCrawl
+			v-else-if="df.fieldtype === 'JSON'"
+			v-model="value"
+			:rootDoctypes="documentTypesClean"
+			:disabled="isReadOnly"
+			:get-fields="getDocFields"
+		/>
 		<!-- Autocomplete -->
 		<FieldSelector
 			v-else-if="df.fieldtype === 'Autocomplete'"
 			v-model="value"
-			:documentType="fieldSourceDoctypes"
+			:documentType="fieldSourceDoctype"
 			:disabled="isReadOnly"
 		/>
 

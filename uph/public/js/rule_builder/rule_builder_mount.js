@@ -62,7 +62,6 @@ frappe.ui.form.on("Rule", {
 			);
 			console.log(updated);
 			frm.set_value("conditions", updated);
-			frappe.throw(frm.doc.conditions);
 			//frm.set_value("conditions", updated);
 		}
 	},

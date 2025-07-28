@@ -1,458 +1,391 @@
 <script setup>
+import { ref, computed, onMounted, watch } from "vue";
 import { Combobox, ComboboxInput, ComboboxOptions, ComboboxOption } from "@headlessui/vue";
-import { ref, computed, reactive, watch } from "vue";
 import { safeFrappeUtils } from "../utils";
 
 const utils = safeFrappeUtils();
 
 const props = defineProps({
-	modelValue: [String, Object], // string for flat, object for recursive
-	documentType: [String, Array],
-	placeholder: { type: String, default: "Select Field" },
+	modelValue: {
+		type: [Array, String],
+		default: () => [],
+	},
+	rootDoctypes: {
+		type: [Array, String],
+		required: true,
+	},
+	getFields: Function,
 	disabled: Boolean,
-	recursive: { type: Boolean, default: false }, // new prop to toggle mode
 });
 
-const emit = defineEmits(["update:modelValue", "change"]);
+const emit = defineEmits(["update:modelValue"]);
+
+const value = computed({
+	get: () => {
+		try {
+			return Array.isArray(props.modelValue)
+				? props.modelValue
+				: JSON.parse(props.modelValue || "[]");
+		} catch (e) {
+			console.warn("DocFieldCrawl: Failed to parse modelValue", e);
+			return [];
+		}
+	},
+	set: (val) => {
+		emit("update:modelValue", JSON.stringify(val));
+	},
+});
+
+const search = ref("");
+const selectedField = ref(null);
+const fieldStack = ref([]);
+const currentDoctypes = ref([]);
+const availableFields = ref([]);
 
 const isLoading = ref(false);
 const loadError = ref(false);
+const showOptions = ref(false);
 
-// For recursive mode
-const levels = ref([]);
-const showOptions = reactive([]);
-const fieldChain = ref([]);
-const baseDoctype = ref(null);
+const isOpen = ref(false); // control Combobox open state
 
-// For flat mode
-const fieldOptions = ref([]);
-const selectedOption = ref(null);
-const query = ref("");
-const showFlatOptions = ref(false);
-
-// --- Common Functions ---
-
-function getFieldIcon(type) {
-	return (
-		{
-			Data: "edit",
-			Link: "link",
-			Select: "arrow-down",
-			Date: "calendar",
-			Int: "hash",
-			Check: "check-square",
-			Currency: "dollar-sign",
-			Float: "percent",
-			Text: "align-left",
-		}[type] || "circle"
-	);
-}
-const filteredFieldsFlat = computed(() => {
-	if (!query.value) return fieldOptions.value;
-
-	const term = query.value.toLowerCase();
-	return fieldOptions.value.filter((f) => (f.label || f.fieldname).toLowerCase().includes(term));
+const showInput = computed(() => {
+	if (!fieldStack.value.length) return true;
+	const lastFieldType = fieldStack.value[fieldStack.value.length - 1].fieldtype;
+	return ["Link", "Table", "MultiSelectTable"].includes(lastFieldType);
 });
-// --- Backend API wrapper (simulate) ---
-async function getDocfieldsAsync(document_type, basefieldname = null) {
-	if (
-		!document_type ||
-		(Array.isArray(document_type) && document_type.length === 0) ||
-		(typeof document_type === "string" && document_type.trim() === "")
-	) {
-		// Return empty fields instead of calling backend when no valid doctype
-		return { fields: [] };
-	}
-	return new Promise((resolve) => {
-		uph.hub.docfields.get_docfields(document_type, basefieldname, resolve);
-	});
+
+function normalizeDoctypes(input) {
+	if (!input) return [];
+	const array = Array.isArray(input) ? input : [input];
+	return array.filter((dt) => typeof dt === "string" && dt.trim().length > 0);
 }
 
-// --- Recursive mode logic ---
-
-async function resolveCommonFields(doctype) {
-	if (Array.isArray(doctype)) {
-		const result = await getDocfieldsAsync(doctype);
-		return { doctype: "_MULTI", fields: result.fields || [] };
-	} else {
-		return await loadDoctypeFields(doctype);
-	}
+function getFieldIcon(fieldtype) {
+	const map = {
+		Data: "edit",
+		Link: "link",
+		Select: "arrow-down",
+		Date: "calendar",
+		Int: "hash",
+		Check: "check-square",
+		Currency: "dollar-sign",
+		Float: "percent",
+		Text: "align-left",
+		Table: "table",
+		MultiSelectTable: "table",
+	};
+	return map[fieldtype] || "circle";
 }
 
-async function loadDoctypeFields(doctype, basefield = null) {
-	const result = await getDocfieldsAsync(doctype, basefield);
-	return { doctype, fields: result.fields || [] };
+function emitFieldPath() {
+	value.value = [
+		normalizeDoctypes(props.rootDoctypes),
+		fieldStack.value.map((f) => ({
+			fieldname: f.fieldname,
+			fieldtype: f.fieldtype,
+			options: f.options,
+			label: f.label,
+		})),
+	];
 }
 
-async function pushLevel(source) {
-	levels.value.push({
-		doctype: source.doctype,
-		fields: source.fields,
-		selected: "",
-		query: "",
-	});
-	showOptions.push(true);
-}
-
-function filteredFields(index) {
-	const q = levels.value[index]?.query?.toLowerCase() || "";
-	return (
-		levels.value[index]?.fields?.filter((f) =>
-			(f.label || f.fieldname).toLowerCase().includes(q),
-		) || []
-	);
-}
-
-function getLabel(index, fieldname) {
-	return levels.value[index]?.fields?.find((f) => f.fieldname === fieldname)?.label || fieldname;
-}
-
-function handleBlur(index) {
-	setTimeout(() => {
-		showOptions[index] = false;
-	}, 200);
-}
-
-async function onSelect(index, fieldname) {
-	const level = levels.value[index];
-	level.selected = fieldname;
-
-	// Remove deeper levels
-	levels.value.splice(index + 1);
-	showOptions.splice(index + 1);
-	fieldChain.value.splice(index);
-
-	const field = level.fields.find((f) => f.fieldname === fieldname);
-	if (!field) return;
-
-	fieldChain.value.push(field);
-
-	// Expand next level if applicable
-	if (field.fieldtype === "Link") {
-		const childFields = await loadDoctypeFields(field.options);
-		await pushLevel(childFields);
-	} else if (field.fieldtype === "Table") {
-		const childFields = await loadDoctypeFields(baseDoctype.value, field.fieldname);
-		await pushLevel(childFields);
-	}
-
-	emitChangeRecursive();
-}
-
-function emitChangeRecursive() {
-	const chain = fieldChain.value.map((f) => ({
-		fieldname: f.fieldname,
-		fieldtype: f.fieldtype,
-		label: f.label,
-		options: f.options || null,
-	}));
-
-	emit("update:modelValue", {
-		document_type: props.documentType,
-		field_chain: chain,
-	});
-	emit("change", {
-		document_type: props.documentType,
-		field_chain: chain,
-	});
-}
-
-async function initFromChain(chain) {
-	levels.value = [];
-	fieldChain.value = [];
-
-	let current = await resolveCommonFields(baseDoctype.value);
-
-	for (const fieldObj of chain) {
-		await pushLevel(current);
-		const level = levels.value.at(-1);
-		level.selected = fieldObj.fieldname;
-
-		const field = level.fields.find((f) => f.fieldname === fieldObj.fieldname);
-		if (!field) break;
-
-		fieldChain.value.push(field);
-
-		if (field.fieldtype === "Link") {
-			current = await loadDoctypeFields(field.options);
-		} else if (field.fieldtype === "Table") {
-			current = await loadDoctypeFields(baseDoctype.value, field.fieldname);
-		} else {
-			break;
-		}
-	}
-}
-
-// --- Flat mode logic ---
-
-async function loadFlatOptions() {
-	if (!props.documentType) return;
+async function loadFieldsForDoctypes(doctypes) {
+	if (!props.getFields) return [];
 
 	isLoading.value = true;
 	loadError.value = false;
-
 	try {
-		const normalizedTypes = Array.isArray(props.documentType)
-			? [...new Set(props.documentType)].sort()
-			: [props.documentType];
-
-		const fields = await getDocfieldsAsync(normalizedTypes);
-
-		fieldOptions.value = fields.fields || [];
-
-		updateSelectedOption();
+		const fields = await props.getFields(doctypes);
+		return fields || [];
 	} catch (e) {
-		console.error("Field load failed:", e);
+		console.error("Failed to load fields:", e);
 		loadError.value = true;
-		fieldOptions.value = [];
+		return [];
 	} finally {
 		isLoading.value = false;
 	}
 }
 
-function updateSelectedOption() {
-	if (!props.modelValue) {
-		selectedOption.value = null;
+async function initializeFromModel() {
+	if (!Array.isArray(value.value) || value.value.length !== 2) return;
+
+	const [doctypeList, path] = value.value || [];
+
+	if (!Array.isArray(path)) return;
+
+	currentDoctypes.value = normalizeDoctypes(doctypeList || props.rootDoctypes);
+
+	let fields = await loadFieldsForDoctypes(currentDoctypes.value);
+
+	for (const field of path) {
+		const match = fields.find((f) => f.fieldname === field.fieldname);
+		if (!match) break;
+		fieldStack.value.push(match);
+
+		if (["Link", "Table", "MultiSelectTable"].includes(match.fieldtype) && match.options) {
+			currentDoctypes.value = [match.options];
+			fields = await loadFieldsForDoctypes(match.options);
+		} else {
+			break;
+		}
+	}
+	availableFields.value = fields;
+}
+
+const filteredFields = computed(() => {
+	if (!search.value) return availableFields.value;
+	const term = search.value.toLowerCase();
+	return availableFields.value.filter((f) => (f.label || f.fieldname).toLowerCase().includes(term));
+});
+
+async function selectField(field) {
+	if (props.disabled) return;
+
+	fieldStack.value.push(field);
+	selectedField.value = null;
+	search.value = "";
+	isOpen.value = false;
+
+	if (["Link", "Table", "MultiSelectTable"].includes(field.fieldtype) && field.options) {
+		currentDoctypes.value = [field.options];
+		availableFields.value = (await loadFieldsForDoctypes(field.options)) || [];
+	} else {
+		availableFields.value = [];
+	}
+
+	emitFieldPath();
+}
+
+function removeLast() {
+	if (props.disabled) return;
+
+	fieldStack.value.pop();
+
+	if (!fieldStack.value.length) {
+		currentDoctypes.value = normalizeDoctypes(props.rootDoctypes);
+		loadFieldsForDoctypes(currentDoctypes.value).then((fields) => {
+			availableFields.value = fields;
+			emitFieldPath();
+		});
 		return;
 	}
 
-	if (props.recursive) {
-		// in recursive mode, modelValue is object — no flat selection
-		selectedOption.value = null;
-	} else {
-		// flat mode, modelValue is string
-		selectedOption.value = fieldOptions.value.find((f) => f.fieldname === props.modelValue) || null;
+	const lastField = fieldStack.value[fieldStack.value.length - 1];
+	const targetDoctype = lastField.options || normalizeDoctypes(props.rootDoctypes)[0];
+
+	currentDoctypes.value = [targetDoctype];
+	loadFieldsForDoctypes(targetDoctype).then((fields) => {
+		availableFields.value = fields;
+		emitFieldPath();
+	});
+}
+
+onMounted(async () => {
+	await initializeFromModel();
+
+	if (!fieldStack.value.length) {
+		currentDoctypes.value = normalizeDoctypes(props.rootDoctypes);
+		availableFields.value = (await loadFieldsForDoctypes(currentDoctypes.value)) || [];
 	}
-}
-
-function onSelectFlat(option) {
-	selectedOption.value = option;
-	emit("update:modelValue", option?.fieldname || "");
-	emit("change", option?.fieldname || "");
-}
-
-function handleBlurFlat() {
-	setTimeout(() => {
-		showFlatOptions.value = false;
-	}, 200);
-}
-
-// --- Watchers ---
+});
 
 watch(
-	() => props.modelValue,
-	(val) => {
-		if (props.recursive) {
-			if (!val?.field_chain) return;
-			initFromChain(val.field_chain);
-		} else {
-			updateSelectedOption();
+	() => props.rootDoctypes,
+	async (newVal) => {
+		if (!fieldStack.value.length && newVal?.length) {
+			currentDoctypes.value = normalizeDoctypes(newVal);
+			availableFields.value = (await loadFieldsForDoctypes(currentDoctypes.value)) || [];
 		}
 	},
-	{ immediate: true },
+	{ immediate: true, deep: true },
 );
 
-watch(
-	() => props.documentType,
-	() => {
-		// Defensive check for valid documentType
-		if (
-			!props.documentType ||
-			(Array.isArray(props.documentType) && props.documentType.length === 0) ||
-			(typeof props.documentType === "string" && props.documentType.trim() === "")
-		) {
-			// Clear state and skip loading fields if no valid doctype
-			baseDoctype.value = null;
-			levels.value = [];
-			fieldChain.value = [];
-			return;
-		}
-
-		baseDoctype.value = props.documentType;
-
-		if (props.recursive) {
-			initFromChain([]);
-		} else {
-			loadFlatOptions();
-		}
-	},
-	{ immediate: true },
-);
+watch(fieldStack, () => {
+	selectedField.value = null;
+});
 </script>
 
 <template>
-	<div class="docfield-crawl">
-		<div v-if="props.recursive">
-			<div class="field-chain">
-				<template v-for="(item, index) in fieldChain" :key="index">
-					<span class="field-item">
-						<span v-html="utils.icon(getFieldIcon(item.fieldtype), 'xs')"></span>
-						{{ item.label || item.fieldname }}
-					</span>
-					<span v-if="index < fieldChain.length - 1" class="arrow">›</span>
-				</template>
-			</div>
-
-			<div v-for="(level, index) in levels" :key="index">
-				<Combobox
-					:modelValue="level.selected"
-					@update:modelValue="(val) => onSelect(index, val)"
-					:disabled="disabled"
-				>
-					<div class="combo-container">
-						<ComboboxInput
-							class="combo-input"
-							:placeholder="index === 0 ? placeholder : 'Next field...'"
-							@input="level.query = $event.target.value"
-							@focus="showOptions[index] = true"
-							@blur="() => handleBlur(index)"
-							:displayValue="(val) => getLabel(index, val)"
-						/>
-
-						<ComboboxOptions v-show="showOptions[index]" static class="combo-options">
-							<ComboboxOption
-								v-for="field in filteredFields(index)"
-								:key="field.fieldname"
-								:value="field.fieldname"
-								as="template"
-								v-slot="{ active, selected }"
-							>
-								<div :class="{ 'combo-option': true, active, selected }">
-									<span v-html="utils.icon(getFieldIcon(field.fieldtype), 'xs')"></span>
-									<span>{{ field.label || field.fieldname }}</span>
-								</div>
-							</ComboboxOption>
-							<div v-if="!filteredFields(index).length" class="empty-state">
-								{{ __("No matching fields") }}
-							</div>
-						</ComboboxOptions>
-					</div>
-				</Combobox>
-			</div>
+	<div class="doc-field-crawl">
+		<div class="breadcrumb">
+			<span v-for="(item, index) in fieldStack" :key="index">
+				{{ item.label || item.fieldname }}
+				<span v-if="index < fieldStack.length - 1"> › </span>
+			</span>
+			<button v-if="fieldStack.length" @click="removeLast" class="remove-btn">×</button>
 		</div>
 
-		<div v-else>
-			<!-- Loading -->
-			<div v-if="isLoading" class="field-loading">
-				<span class="spinner"></span>
-				{{ __("Loading fields...") }}
-			</div>
+		<div v-if="isLoading" class="field-loading">
+			<span class="spinner"></span> {{ __("Loading fields...") }}
+		</div>
 
-			<!-- Error -->
-			<div v-else-if="loadError" class="field-error">
-				<span v-html="utils.icon('warning', 'sm')"></span>
-				{{ __("Error loading fields") }}
-			</div>
+		<div v-else-if="loadError" class="field-error">
+			<span v-html="utils.icon('warning', 'sm')"></span> {{ __("Error loading fields") }}
+		</div>
 
-			<!-- Flat single-level Combobox -->
-			<Combobox :modelValue="selectedOption" @update:modelValue="onSelectFlat" :disabled="disabled">
-				<div class="relative">
-					<ComboboxInput
-						class="combobox-input"
-						:placeholder="placeholder"
-						:displayValue="(item) => item?.label || ''"
-						@input="query = $event.target.value"
-						@focus="showFlatOptions = true"
-						@blur="handleBlurFlat"
-					/>
-
-					<ComboboxOptions v-show="showFlatOptions" static class="combobox-options">
-						<ComboboxOption
-							v-for="field in filteredFieldsFlat"
-							:key="field.fieldname"
-							:value="field"
-							as="template"
-							v-slot="{ active, selected }"
+		<Combobox
+			v-if="showInput"
+			v-model="selectedField"
+			v-model:open="isOpen"
+			@update:modelValue="selectField"
+			:disabled="disabled"
+			:as="Fragment"
+			@focus="() => (isOpen.value = true)"
+		>
+			<div class="relative">
+				<ComboboxInput
+					class="combobox-input"
+					:displayValue="(field) => field?.label || ''"
+					@input="search = $event.target.value"
+					:placeholder="__('Search field...')"
+					@focus="isOpen = true"
+				/>
+				<ComboboxOptions v-if="isOpen" static class="combobox-options">
+					<ComboboxOption
+						v-for="field in filteredFields"
+						:key="field.fieldname"
+						:value="field"
+						as="template"
+						v-slot="{ active, selected, disabled }"
+					>
+						<div
+							class="combobox-option"
+							:class="{
+								'option-active': active,
+								'option-selected': selected,
+								'option-disabled': disabled,
+							}"
 						>
-							<div
-								class="combobox-option"
-								:class="{ 'option-active': active, 'option-selected': selected }"
-							>
-								<span v-html="utils.icon(getFieldIcon(field.fieldtype), 'xs')"></span>
-								<span>{{ field.label || field.fieldname }}</span>
-							</div>
-						</ComboboxOption>
-
-						<div v-if="!filteredFieldsFlat.length" class="empty-state">
-							{{ __("No matching fields") }}
+							<span v-html="utils.icon(getFieldIcon(field.fieldtype), 'xs')"></span>
+							<span>{{ field.label || field.fieldname }}</span>
+							<span v-if="selected">✔</span>
 						</div>
-					</ComboboxOptions>
-				</div>
-			</Combobox>
-		</div>
+					</ComboboxOption>
+
+					<div v-if="!filteredFields.length" class="empty-state">
+						{{ __("No matching fields") }}
+					</div>
+				</ComboboxOptions>
+			</div>
+		</Combobox>
 	</div>
 </template>
 
 <style scoped>
-.docfield-crawl {
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
-}
-
-.field-chain {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	font-size: 0.875rem;
-	color: #374151;
-	gap: 0.25rem;
-}
-
-.field-item {
-	display: inline-flex;
-	align-items: center;
-	background-color: #f3f4f6;
-	padding: 0.25rem 0.5rem;
-	border-radius: 9999px;
-	gap: 0.25rem;
-}
-
-.arrow {
-	color: #9ca3af;
-	margin: 0 0.25rem;
-}
-
-.combo-container {
+.relative {
 	position: relative;
 }
 
-.combo-input {
-	width: 100%;
-	padding: 6px 8px;
-	border: 1px solid #ccc;
-	border-radius: 4px;
-	font-size: 14px;
-}
+.doc-field-crawl {
+	position: relative; /* ensure root wrapper is relative */
 
-.combo-options {
+	border: 1px solid #ccc;
+	padding: 12px;
+	border-radius: 6px;
+	max-width: 450px;
+	background: #fff;
+}
+.breadcrumb {
+	font-size: 14px;
+	margin-bottom: 8px;
+	color: #444;
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+}
+.remove-btn {
+	margin-left: 8px;
+	background: transparent;
+	border: none;
+	color: #c00;
+	font-weight: bold;
+	font-size: 16px;
+	cursor: pointer;
+}
+.field-loading {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: #6b7280;
+	background-color: #f3f4f6;
+	padding: 8px;
+	border-radius: 4px;
+	margin-bottom: 8px;
+}
+.field-error {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: #b91c1c;
+	background: #fef2f2;
+	padding: 8px;
+	border-radius: 4px;
+	margin-bottom: 8px;
+}
+.spinner {
+	display: inline-block;
+	width: 12px;
+	height: 12px;
+	border: 2px solid rgba(0, 0, 0, 0.1);
+	border-radius: 50%;
+	border-top-color: #3b82f6;
+	animation: spin 1s linear infinite;
+}
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+.combobox-input {
+	width: 100%;
+	padding: 8px 12px;
+	border-radius: 6px;
+	border: 1px solid #d1d5db;
+	background: white;
+	font-size: 0.9rem;
+}
+.combobox-options {
 	position: absolute;
+	z-index: 50;
 	top: 100%;
 	left: 0;
 	width: 100%;
+	box-sizing: border-box;
 	background: white;
-	border: 1px solid #e5e7eb;
+	border: 1px solid #d1d5db;
 	border-radius: 4px;
-	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-	z-index: 10;
+	margin-top: 4px;
+	max-height: 240px;
+	overflow-y: auto;
+	list-style: none;
+	padding: 0;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+	font-size: 0.9rem;
 }
-
-.combo-option {
-	padding: 8px 12px;
+.combobox-option {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 8px 12px;
 	cursor: pointer;
+	transition: background-color 0.15s ease;
+	border-bottom: 1px solid #f3f4f6;
 }
-
-.combo-option.active {
-	background-color: #f9fafb;
+.combobox-option:last-child {
+	border-bottom: none;
 }
-
-.combo-option.selected {
-	background-color: #eff6ff;
+.option-active {
+	background-color: #f3f4f6;
 }
-
+.option-selected {
+	font-weight: 600;
+}
+.option-disabled {
+	color: #9ca3af;
+	cursor: not-allowed;
+	opacity: 0.6;
+}
 .empty-state {
 	padding: 8px 12px;
 	color: #6b7280;

@@ -20,6 +20,7 @@
   "left_value_literal",
   "left_value_context_key",
   "left_value_method",
+  "left_field_chain",
   "left_method_parameters",
   "column_break_damg",
   "operator",
@@ -36,8 +37,7 @@
   "fuzzy_threshold",
   "regex_pattern",
   "negate_condition",
-  "left_field_chain",
-  "final_right_field_path",
+  "right_field_chain",
   "scorer",
   "use_in_filter",
   "is_critical",
@@ -204,15 +204,6 @@
    "width": "80px"
   },
   {
-   "depends_on": "eval:doc.right_value_source == 'Document Field' && !doc.is_group",
-   "description": "Internal field to store the resolved field path for the right value. Populated by client script.",
-   "fieldname": "final_right_field_path",
-   "fieldtype": "Data",
-   "hidden": 1,
-   "label": "Final Right Field Path",
-   "read_only": 1
-  },
-  {
    "depends_on": "eval: !doc.is_group &&parent.rule_service_type==='Deduplication'",
    "description": "Method to Calculate similarity",
    "fieldname": "scorer",
@@ -332,17 +323,25 @@
    "fieldtype": "Section Break"
   },
   {
+   "depends_on": "eval:!doc.is_group",
    "description": "Internal field to store the resolved field path (e.g., 'customer.credit_limit' or 'SUM(items.qty)'). Populated by client script.",
    "fieldname": "left_field_chain",
    "fieldtype": "JSON",
    "label": "Final Left Field Path"
+  },
+  {
+   "depends_on": "eval:!doc.is_group",
+   "description": "Internal field to store the resolved field path for the right value. Populated by client script.",
+   "fieldname": "right_field_chain",
+   "fieldtype": "JSON",
+   "label": "Final Right Field Path"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-07-27 17:06:07.253848",
+ "modified": "2025-07-28 20:36:47.377088",
  "modified_by": "Administrator",
  "module": "Hub",
  "name": "Rule Condition",
