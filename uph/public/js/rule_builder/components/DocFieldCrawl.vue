@@ -18,7 +18,7 @@ const props = defineProps({
 	disabled: Boolean,
 });
 
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(["update:modelValue", "field-change"]);
 
 const value = computed({
 	get: () => {
@@ -141,11 +141,16 @@ const filteredFields = computed(() => {
 async function selectField(field) {
 	if (props.disabled) return;
 
+	// Clone old value for comparison
+	const oldVal = [...fieldStack.value];
+
+	// Apply the change
 	fieldStack.value.push(field);
 	selectedField.value = null;
 	search.value = "";
 	isOpen.value = false;
 
+	// Optionally load fields for next level
 	if (["Link", "Table", "MultiSelectTable"].includes(field.fieldtype) && field.options) {
 		currentDoctypes.value = [field.options];
 		availableFields.value = (await loadFieldsForDoctypes(field.options)) || [];
@@ -154,22 +159,39 @@ async function selectField(field) {
 	}
 
 	emitFieldPath();
+
+	// Emit field-change for external handling (e.g. depends_on, markDirty)
+	emit("field-change", {
+		field: "field_chain", // or props.df?.fieldname if you have it
+		oldVal,
+		newVal: [...fieldStack.value],
+	});
 }
 
 function removeLast() {
 	if (props.disabled) return;
 
-	fieldStack.value.pop();
+	const oldVal = [...fieldStack.value]; // Capture before mutation
 
+	fieldStack.value.pop(); // Mutate
+
+	// If the stack is now empty, reset to root
 	if (!fieldStack.value.length) {
 		currentDoctypes.value = normalizeDoctypes(props.rootDoctypes);
 		loadFieldsForDoctypes(currentDoctypes.value).then((fields) => {
 			availableFields.value = fields;
 			emitFieldPath();
+
+			emit("field-change", {
+				field: "field_chain",
+				oldVal,
+				newVal: [...fieldStack.value],
+			});
 		});
 		return;
 	}
 
+	// Otherwise, update based on last field's options
 	const lastField = fieldStack.value[fieldStack.value.length - 1];
 	const targetDoctype = lastField.options || normalizeDoctypes(props.rootDoctypes)[0];
 
@@ -177,6 +199,12 @@ function removeLast() {
 	loadFieldsForDoctypes(targetDoctype).then((fields) => {
 		availableFields.value = fields;
 		emitFieldPath();
+
+		emit("field-change", {
+			field: "field_chain",
+			oldVal,
+			newVal: [...fieldStack.value],
+		});
 	});
 }
 
@@ -272,10 +300,6 @@ watch(fieldStack, () => {
 </template>
 
 <style scoped>
-.relative {
-	position: relative;
-}
-
 .doc-field-crawl {
 	position: relative; /* ensure root wrapper is relative */
 

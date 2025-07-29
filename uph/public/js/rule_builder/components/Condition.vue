@@ -11,7 +11,6 @@ const props = defineProps({
 	conditionId: { type: String, required: true },
 	depth: { type: Number, default: 0 },
 });
-const isAnd = ref(true);
 
 const store = useRuleBuilderStore();
 const utils = safeFrappeUtils();
@@ -40,6 +39,7 @@ const dragGroup = computed(() => ({
 		return fromDepth <= toDepth;
 	},
 }));
+const isAnd = ref(condition.value?.group_operator === "AND");
 
 const indentStyle = computed(() => ({
 	marginLeft: `${props.depth * 20}px`,
@@ -69,13 +69,28 @@ const groupSummary = computed(
 onMounted(async () => {
 	await loadConditionFields();
 });
+// Sync changes back to condition and mark dirty:
+watch(isAnd, (newVal, oldVal) => {
+	if (!condition.value) return;
+	const newOperator = newVal ? "AND" : "OR";
 
+	if (condition.value.group_operator !== newOperator) {
+		condition.value.group_operator = newOperator;
+		store.markDirty();
+	}
+});
 watch(
 	() => store.doc.rule_service_type,
 	async () => {
 		await loadConditionFields();
 	},
 );
+function onFieldChange({ field, oldVal, newVal }) {
+	if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+		store.markDirty();
+	}
+}
+
 async function loadConditionFields() {
 	try {
 		const fields = frappe.meta.get_docfields("Rule Condition");
@@ -222,9 +237,19 @@ function duplicate() {
 		store.focusCondition(duplicated.condition_id);
 	}
 }
-
 function remove() {
-	store.removeCondition(props.conditionId);
+	if (props.conditionId === "Root") {
+		frappe.confirm(
+			__(
+				"You are about to remove the root group. This will delete all its child conditions. Are you sure?",
+			),
+			() => {
+				store.removeCondition(props.conditionId);
+			},
+		);
+	} else {
+		store.removeCondition(props.conditionId);
+	}
 }
 </script>
 
@@ -296,7 +321,7 @@ function remove() {
 
 				<!-- Right: form -->
 				<div class="condition-content" v-if="!isCollapsed">
-					<GridRenderer :doc="condition" :fields="conditionFields" />
+					<GridRenderer :doc="condition" :fields="conditionFields" @field-change="onFieldChange" />
 				</div>
 			</div>
 

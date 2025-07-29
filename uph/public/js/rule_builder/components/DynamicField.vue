@@ -13,7 +13,7 @@ const props = defineProps({
 	mode: { type: String, default: "default" },
 });
 
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(["update:modelValue", "field-change"]);
 
 const store = useRuleBuilderStore();
 const isFocused = ref(false);
@@ -43,6 +43,10 @@ const inputClass = computed(() => {
 const value = computed({
 	get: () => props.doc?.[props.df.fieldname],
 	set: (val) => {
+		const old = props.doc?.[props.df.fieldname];
+		if (old !== val) {
+			emit("field-change", { field: props.df.fieldname, oldVal: old, newVal: val });
+		}
 		props.doc[props.df.fieldname] = val;
 		emit("update:modelValue", val);
 	},
@@ -197,7 +201,9 @@ const fieldSourceDoctype = computed(() => {
 			:rootDoctypes="documentTypesClean"
 			:disabled="isReadOnly"
 			:get-fields="getDocFields"
+			@field-change="(e) => emit('field-change', e)"
 		/>
+
 		<!-- Autocomplete -->
 		<FieldSelector
 			v-else-if="df.fieldtype === 'Autocomplete'"

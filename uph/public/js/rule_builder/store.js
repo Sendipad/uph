@@ -108,52 +108,90 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 			markDirty();
 		}
 	}
+	function get_new_child_template(doctype, parentfield) {
+		let user = frappe.session.user;
+		return {
+			docstatus: 0,
+			doctype: doctype,
+			name: frappe.model.get_new_name(doctype),
+			parent: doc.value.name,
+			parentfield: parentfield,
+			parenttype: doc.value.doctype,
+			__islocal: 1,
+			__unsaved: 1,
+			owner: user,
+			creation: "",
+			modified_by: user,
+			modified: "",
+		};
+	}
+	function add_child(doctype, parentfield, defaults = {}, idx = null) {
+		const child = get_new_child_template(doctype, parentfield);
 
-	function child_add(child_table, doc_args = {}, uuid = null) {
-		const doc = frappe.model.get_new_doc(child_table);
-		Object.assign(doc, doc_args);
-		return doc;
+		Object.assign(child, defaults);
+
+		let targetList;
+		if (parentfield === "conditions") {
+			targetList = conditions.value;
+
+			// Compute idx relative to the same parent_condition_id
+			const parentId = child.parent_condition_id || "ROOT";
+			const siblingCount = targetList.filter(
+				(c) => (c.parent_condition_id || "ROOT") === parentId,
+			).length;
+			child.idx = idx != null ? idx : siblingCount + 1;
+		} else if (parentfield === "actions") {
+			targetList = actions.value;
+			child.idx = idx != null ? idx : targetList.length + 1;
+		} else {
+			console.warn(`Unknown parentfield: ${parentfield}`);
+			return;
+		}
+
+		targetList.push(child);
+		markDirty();
+		return child;
 	}
 
 	function addCondition(parentId = "ROOT") {
 		const id = generateUniqueId();
 		const defaults = serviceUIConfig.value?.["Rule Condition"]?.defaults || {};
 
-		const newCond = child_add(
+		const newCond = add_child(
 			"Rule Condition",
+			"conditions",
 			{
 				condition_id: id,
 				parent_condition_id: parentId,
 				is_group: 0,
 				left_value_source: "Document Field",
 				operator: "==",
-				comparison_strategy: "Auto Detect",
 				...defaults,
 			},
-			id,
+			//id,
 		);
 
-		conditions.value.push(newCond);
-		markDirty();
+		//conditions.value.push(newCond);
+		//markDirty();
 		focusCondition(id);
 		return newCond;
 	}
 
 	function addGroup(parentId = "ROOT") {
 		const id = generateUniqueId();
-		const newCond = child_add(
+		const newCond = add_child(
 			"Rule Condition",
+			"conditions",
 			{
 				condition_id: id,
 				parent_condition_id: parentId,
 				is_group: 1,
 				group_operator: "AND",
-				name: "",
 			},
-			id,
+			//id,
 		);
-		conditions.value.push(newCond);
-		markDirty();
+		//conditions.value.push(newCond);
+		//markDirty();
 		focusCondition(id);
 		return newCond;
 	}
@@ -166,18 +204,19 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 
 	function duplicateInLayout(original) {
 		const raw = toRaw(original);
+		let doctype = raw.doctype;
+		let parentfield = raw.parentfield;
 		const idMap = new Map();
 		const toDup = collectRecursiveConditions(raw.condition_id);
 
 		const clones = toDup.map((item) => {
 			const newId = generateUniqueId();
+			const child = get_new_child_template(doctype, parentfield); //must used to make the new duplicate items as new
 			idMap.set(item.condition_id, newId);
 			return {
 				...deepClone(toRaw(item)),
 				condition_id: newId,
-				name: "new-rule-condition-" + newId,
-				__islocal: 1,
-				__unsaved: 1,
+				...child,
 			};
 		});
 
@@ -285,11 +324,11 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 	}
 
 	onKeyDown("z", (e) => {
-		if (e.ctrlKey && !e.shiftKey && ref_history.canUndo.value) {
-			ref_history.undo();
+		if (e.ctrlKey && !e.shiftKey && history.canUndo.value) {
+			history.undo();
 		}
-		if (e.ctrlKey && e.shiftKey && ref_history.canRedo.value) {
-			ref_history.redo();
+		if (e.ctrlKey && e.shiftKey && history.canRedo.value) {
+			history.redo();
 		}
 	});
 
@@ -340,7 +379,6 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 
 				if (isNew) {
 					// Let Frappe assign the name
-					delete cleaned.name;
 					cleaned.__islocal = 1;
 					cleaned.__unsaved = 1;
 				} else {

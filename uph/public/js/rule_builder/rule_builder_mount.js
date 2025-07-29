@@ -45,25 +45,58 @@ frappe.ui.form.on("Rule", {
 		const store = frm.rule_builder?.store;
 		if (!store) return;
 
-		const updated = store.update_conditions();
-
-		if (typeof updated === "string") {
-			frappe.throw(updated); // error message
+		const updates = store.update_conditions(); // rows from Vue with `.name`
+		if (typeof updates === "string") {
+			frappe.throw(updates); // validation error
 		}
 
-		if (Array.isArray(updated)) {
-			console.table(
-				updated.map((c) => ({
-					idx: c.idx,
-					name: c.name,
-					islocal: c.__islocal,
-					condition_id: c.condition_id,
-				})),
-			);
-			console.log(updated);
-			frm.set_value("conditions", updated);
-			//frm.set_value("conditions", updated);
+		const meta = frappe.get_meta("Rule Condition");
+		const allowed_fields = meta.fields.map((df) => df.fieldname);
+		const table = frm.doc.conditions;
+
+		const updateNames = new Set(updates.map((row) => row.name));
+		const grid = frm.fields_dict["conditions"].grid;
+
+		// STEP 1: Remove rows not in updates
+		for (let i = table.length - 1; i >= 0; i--) {
+			const row = table[i];
+			if (!updateNames.has(row.name)) {
+				table.splice(i, 1); // Remove from doc
+				grid.grid_rows_by_docname[row.name]?.remove(); // Clean UI
+				frm.dirty();
+			}
 		}
+
+		// STEP 2: Add new or update existing
+		for (let row of updates) {
+			let existing = table.find((d) => d.name === row.name);
+			if (existing) {
+				for (const key of allowed_fields) {
+					if (row.hasOwnProperty(key)) {
+						existing[key] = row[key];
+					}
+				}
+			} else {
+				const newRow = frm.add_child("conditions");
+				for (const key of allowed_fields) {
+					if (row.hasOwnProperty(key)) {
+						newRow[key] = row[key];
+					}
+				}
+			}
+		}
+		frm.dirty();
+
+		frm.refresh_field("conditions");
+
+		console.table(
+			frm.doc.conditions.map((row) => ({
+				name: row.name,
+				idx: row.idx,
+				condition_id: row.condition_id,
+				__islocal: row.__islocal,
+			})),
+		);
 	},
 	on_tab_change(frm) {
 		const currentTab = frm.get_active_tab()?.label;

@@ -10,6 +10,14 @@ const props = defineProps({
 		default: "default", // options: 'default', 'compact', 'grid', 'labelless'
 	},
 });
+const emit = defineEmits(["field-change"]);
+function onFieldUpdate(df, val) {
+	const oldVal = props.doc[df.fieldname];
+	props.doc[df.fieldname] = val;
+	if (JSON.stringify(oldVal) !== JSON.stringify(val)) {
+		// emit field-change here if needed
+	}
+}
 
 function parseLayout(fields) {
 	const layout = [];
@@ -66,7 +74,8 @@ const parsedLayout = computed(() => parseLayout(props.fields));
 							:df="df"
 							:doc="doc"
 							:mode="layoutMode"
-							@update:modelValue="(val) => (doc[df.fieldname] = val)"
+							@update:modelValue="(val) => onFieldUpdate(df, val)"
+							@field-change="$emit('field-change', $event)"
 						/>
 					</div>
 				</div>
