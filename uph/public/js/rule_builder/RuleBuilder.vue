@@ -17,6 +17,8 @@
 							<span v-html="utils.icon('plus', 'xs')"></span>
 							{{ __("Add Group") }}
 						</button>
+						<button @click="store.pruneEmptyGroups()">🧹 Clean Empty Groups</button>
+
 						<button
 							@click="toggleActionsPanel"
 							class="btn btn-actions"
@@ -32,7 +34,7 @@
 					</div>
 				</div>
 
-				<Condition
+				<ConditionTree
 					v-for="item in store.rootConditions"
 					:key="item.condition_id"
 					:condition-id="item.condition_id"
@@ -84,7 +86,7 @@ import { ref, computed } from "vue";
 import { useRuleBuilderStore } from "./store";
 
 import ActionGroup from "./components/ActionGroup.vue";
-import Condition from "./components/Condition.vue";
+import ConditionTree from "./components/ConditionTree.vue";
 
 import { safeFrappeUtils } from "./utils";
 

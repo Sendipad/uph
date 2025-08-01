@@ -11,6 +11,10 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 	const collapsed = reactive({});
 	const focusedConditionId = ref(null);
 	const dirty = ref(false);
+	const dirties = ref({
+		conditions: false,
+		actions: false,
+	});
 	const isLoaded = ref(false);
 	const layoutMode = ref("compact");
 
@@ -51,6 +55,34 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 		const config = serviceUIConfig.value?.["Rule Condition"] || {};
 		return getFinalFields(config, meta, layoutMode.value);
 	});
+	const selectedConditions = ref(new Set());
+
+	// Add selection methods
+	function setConditionSelected(conditionId, selected) {
+		if (selected) {
+			selectedConditions.value.add(conditionId);
+		} else {
+			selectedConditions.value.delete(conditionId);
+		}
+	}
+
+	function setGroupSelected(conditionId, selected) {
+		setConditionSelected(conditionId, selected);
+		const children = childConditions(conditionId);
+		children.forEach((child) => {
+			if (child.is_group) {
+				setGroupSelected(child.condition_id, selected);
+			} else {
+				setConditionSelected(child.condition_id, selected);
+			}
+		});
+	}
+
+	function isConditionSelected(conditionId) {
+		return selectedConditions.value.has(conditionId);
+	}
+
+	// Clear selection when initializing
 
 	function deepClone(obj) {
 		return JSON.parse(JSON.stringify(toRaw(obj)));
@@ -152,6 +184,22 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 		markDirty();
 		return child;
 	}
+	function updateConditionIndents() {
+		function setIndentRecursively(id, depth) {
+			const node = getConditionById(id);
+			if (!node) return;
+
+			node.indent = depth;
+
+			for (const child of childConditions(id)) {
+				setIndentRecursively(child.condition_id, depth + 1);
+			}
+		}
+
+		for (const root of rootConditions.value) {
+			setIndentRecursively(root.condition_id, 0);
+		}
+	}
 
 	function addCondition(parentId = "ROOT") {
 		const id = generateUniqueId();
@@ -173,6 +221,8 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 
 		//conditions.value.push(newCond);
 		//markDirty();
+		updateConditionIndents();
+
 		focusCondition(id);
 		return newCond;
 	}
@@ -192,6 +242,8 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 		);
 		//conditions.value.push(newCond);
 		//markDirty();
+		updateConditionIndents();
+
 		focusCondition(id);
 		return newCond;
 	}
@@ -199,6 +251,7 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 	function removeCondition(id) {
 		const allIds = collectRecursiveChildren(id);
 		conditions.value = conditions.value.filter((c) => !allIds.includes(c.condition_id));
+
 		markDirty();
 	}
 
@@ -229,10 +282,100 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 		}
 
 		conditions.value.push(...clones);
+		updateConditionIndents();
+
 		const root = clones.find((c) => c.condition_id === idMap.get(original.condition_id));
 		if (root) focusCondition(root.condition_id);
 		markDirty();
 		return root;
+	}
+	function suggestUnnestingMoves() {
+		const suggestions = [];
+
+		function findLeafPath(groupId, chain = []) {
+			const children = childConditions(groupId);
+			if (children.length !== 1) return null;
+
+			const child = children[0];
+			chain.push(child);
+
+			if (!child.is_group) return chain;
+
+			return findLeafPath(child.condition_id, chain);
+		}
+
+		for (const group of conditions.value) {
+			if (!group.is_group || group.condition_id === "Root") continue;
+
+			const children = childConditions(group.condition_id);
+			if (children.length !== 1) continue;
+
+			const path = findLeafPath(group.condition_id, [group]);
+
+			if (path && path.length >= 2) {
+				const last = path[path.length - 1];
+				if (!last.is_group) {
+					suggestions.push({
+						moveConditionId: last.condition_id,
+						fromPath: path.map((n) => n.condition_id),
+						suggestToParent: group.parent_condition_id || "Root",
+					});
+				}
+			}
+		}
+
+		return suggestions;
+	}
+
+	function pruneEmptyGroups() {
+		if (!conditions.value.length) return;
+
+		const toRemove = new Set();
+
+		// Step 1: Build map of condition → children
+		const childrenMap = {};
+		for (const cond of conditions.value) {
+			const parentId = cond.parent_condition_id || "ROOT";
+			if (!childrenMap[parentId]) childrenMap[parentId] = [];
+			childrenMap[parentId].push(cond);
+		}
+
+		// Step 2: Determine max depth from current indents
+		const maxIndent = Math.max(...conditions.value.map((c) => c.indent || 0));
+
+		// Step 3: Bottom-up pruning
+		for (let depth = maxIndent; depth >= 0; depth--) {
+			for (const cond of conditions.value) {
+				if (!cond.is_group || cond.indent !== depth || toRemove.has(cond.condition_id)) continue;
+
+				const childList = childrenMap[cond.condition_id] || [];
+
+				// If all children are already removed or don't exist, we can remove this
+				const allGone = childList.every((child) => {
+					return toRemove.has(child.condition_id);
+				});
+
+				if (allGone) {
+					toRemove.add(cond.condition_id);
+				}
+			}
+		}
+
+		// Step 4: Special case - preserve "Root" if it's the last group
+		const remainingGroups = conditions.value.filter(
+			(c) => c.is_group && !toRemove.has(c.condition_id) && c.condition_id !== "Root",
+		);
+
+		if (remainingGroups.length === 0) {
+			toRemove.delete("Root");
+		}
+
+		// Step 5: Actually remove them
+		if (toRemove.size > 0) {
+			conditions.value = conditions.value.filter((c) => !toRemove.has(c.condition_id));
+			updateConditionIndents();
+			markDirty();
+		}
 	}
 
 	function updateCondition(id) {
@@ -249,6 +392,8 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 		else filtered.splice(insertIndex, 0, node);
 
 		conditions.value = filtered;
+		updateConditionIndents();
+
 		markDirty();
 	}
 
@@ -321,6 +466,7 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 			markDirty(true); // Force-check dirty after load
 			history.resume();
 		});
+		selectedConditions.value.clear(); // Clear selection on new load
 	}
 
 	onKeyDown("z", (e) => {
@@ -333,29 +479,14 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 	});
 
 	function save_rule() {
-		const f = frm.value;
-		if (!f) return;
-
-		// Sync Pinia → cur_frm.doc
-		syncToDoc();
-
-		frappe.dom.freeze(__("Saving..."));
-		f.save()
-			.then(() => {
-				clearDirty();
-				frappe.show_alert({ message: __("Rule saved"), indicator: "green" });
-			})
-			.catch((err) => {
-				console.error("Save failed:", err);
-				frappe.msgprint({
-					title: __("Save Failed"),
-					message: err.message || err,
-					indicator: "red",
-				});
-			})
-			.finally(() => {
-				frappe.dom.unfreeze();
-			});
+		let update = {
+			conditions: [],
+			actions: [],
+		};
+		//frappe.dom.freeze(__("Saving..."));
+		update.conditions = update_conditions();
+		update.actions = update_actions();
+		return update;
 	}
 	function update_conditions() {
 		if (!dirty.value && !frm.value.is_new()) return;
@@ -364,16 +495,13 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 
 		try {
 			const syncedConditions = [];
+			pruneEmptyGroups();
 
 			for (const [i, cond] of toRaw(conditions.value).entries()) {
 				const isNew = cint(cond.__islocal) === 1 || !cond.name;
 
 				const cleaned = {
 					...deepClone(cond),
-					doctype: "Rule Condition",
-					parent: frm.value.docname,
-					parenttype: "Rule",
-					parentfield: "conditions",
 					idx: i + 1,
 				};
 
@@ -476,5 +604,10 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 		layoutMode,
 		syncToDoc,
 		update_conditions,
+		pruneEmptyGroups,
+		selectedConditions,
+		setConditionSelected,
+		setGroupSelected,
+		isConditionSelected,
 	};
 });
