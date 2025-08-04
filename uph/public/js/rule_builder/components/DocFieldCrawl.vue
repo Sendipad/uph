@@ -1,40 +1,20 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount } from "vue";
 import { Combobox, ComboboxInput, ComboboxOptions, ComboboxOption } from "@headlessui/vue";
 import { safeFrappeUtils } from "../utils";
+import Breadcrumb from "./Breadcrumb.vue";
 
 const utils = safeFrappeUtils();
 
 const props = defineProps({
-	modelValue: {
-		type: [Array, String],
-		default: () => [],
-	},
-	rootDoctypes: {
-		type: [Array, String],
-		required: true,
-	},
+	modelValue: { type: [Array, String], default: () => [] },
+	rootDoctypes: { type: [Array, String], required: true },
 	getFields: Function,
 	disabled: Boolean,
+	placeholder: { type: String, default: "Select field..." },
 });
 
 const emit = defineEmits(["update:modelValue", "field-change"]);
-
-const value = computed({
-	get: () => {
-		try {
-			return Array.isArray(props.modelValue)
-				? props.modelValue
-				: JSON.parse(props.modelValue || "[]");
-		} catch (e) {
-			console.warn("DocFieldCrawl: Failed to parse modelValue", e);
-			return [];
-		}
-	},
-	set: (val) => {
-		emit("update:modelValue", JSON.stringify(val));
-	},
-});
 
 const search = ref("");
 const selectedField = ref(null);
@@ -44,61 +24,32 @@ const availableFields = ref([]);
 
 const isLoading = ref(false);
 const loadError = ref(false);
-const showOptions = ref(false);
+const isOpen = ref(false);
 
-const isOpen = ref(false); // control Combobox open state
+const rootRef = ref(null);
+const inputRef = ref(null);
+const lastSelectedField = ref(null);
 
-const showInput = computed(() => {
-	if (!fieldStack.value.length) return true;
-	const lastFieldType = fieldStack.value[fieldStack.value.length - 1].fieldtype;
-	return ["Link", "Table", "MultiSelectTable"].includes(lastFieldType);
+const dropdownStyle = ref({
+	position: "absolute",
+	top: "0px",
+	left: "0px",
+	width: "auto",
+	minWidth: "200px",
+	zIndex: 1000,
 });
 
 function normalizeDoctypes(input) {
-	if (!input) return [];
-	const array = Array.isArray(input) ? input : [input];
-	return array.filter((dt) => typeof dt === "string" && dt.trim().length > 0);
-}
-
-function getFieldIcon(fieldtype) {
-	const map = {
-		Data: "edit",
-		Link: "link",
-		Select: "arrow-down",
-		Date: "calendar",
-		Int: "hash",
-		Check: "check-square",
-		Currency: "dollar-sign",
-		Float: "percent",
-		Text: "align-left",
-		Table: "table",
-		MultiSelectTable: "table",
-	};
-	return map[fieldtype] || "circle";
-}
-
-function emitFieldPath() {
-	value.value = [
-		normalizeDoctypes(props.rootDoctypes),
-		fieldStack.value.map((f) => ({
-			fieldname: f.fieldname,
-			fieldtype: f.fieldtype,
-			options: f.options,
-			label: f.label,
-		})),
-	];
+	return Array.isArray(input) ? input : [input];
 }
 
 async function loadFieldsForDoctypes(doctypes) {
 	if (!props.getFields) return [];
-
 	isLoading.value = true;
 	loadError.value = false;
 	try {
-		const fields = await props.getFields(doctypes);
-		return fields || [];
+		return (await props.getFields(doctypes)) || [];
 	} catch (e) {
-		console.error("Failed to load fields:", e);
 		loadError.value = true;
 		return [];
 	} finally {
@@ -106,31 +57,36 @@ async function loadFieldsForDoctypes(doctypes) {
 	}
 }
 
-async function initializeFromModel() {
-	if (!Array.isArray(value.value) || value.value.length !== 2) return;
-
-	const [doctypeList, path] = value.value || [];
-
-	if (!Array.isArray(path)) return;
-
-	currentDoctypes.value = normalizeDoctypes(doctypeList || props.rootDoctypes);
-
-	let fields = await loadFieldsForDoctypes(currentDoctypes.value);
-
-	for (const field of path) {
-		const match = fields.find((f) => f.fieldname === field.fieldname);
-		if (!match) break;
-		fieldStack.value.push(match);
-
-		if (["Link", "Table", "MultiSelectTable"].includes(match.fieldtype) && match.options) {
-			currentDoctypes.value = [match.options];
-			fields = await loadFieldsForDoctypes(match.options);
-		} else {
-			break;
-		}
-	}
-	availableFields.value = fields;
+function emitFieldPath() {
+	// Emit modelValue as JSON string: [rootDoctypes, fieldStack array]
+	emit(
+		"update:modelValue",
+		JSON.stringify([
+			normalizeDoctypes(props.rootDoctypes),
+			fieldStack.value.map(({ fieldname, fieldtype, options, label }) => ({
+				fieldname,
+				fieldtype,
+				options,
+				label,
+			})),
+		]),
+	);
 }
+
+const value = computed({
+	get() {
+		try {
+			return Array.isArray(props.modelValue)
+				? props.modelValue
+				: JSON.parse(props.modelValue || "[]");
+		} catch {
+			return [];
+		}
+	},
+	set(val) {
+		emit("update:modelValue", JSON.stringify(val));
+	},
+});
 
 const filteredFields = computed(() => {
 	if (!search.value) return availableFields.value;
@@ -138,85 +94,161 @@ const filteredFields = computed(() => {
 	return availableFields.value.filter((f) => (f.label || f.fieldname).toLowerCase().includes(term));
 });
 
-async function selectField(field) {
-	if (props.disabled) return;
+const showInput = computed(() => {
+	if (props.disabled) return false;
 
-	// Clone old value for comparison
-	const oldVal = [...fieldStack.value];
+	// If no fields selected, always show input
+	if (!fieldStack.value.length) return true;
 
-	// Apply the change
-	fieldStack.value.push(field);
+	// Get the last selected field
+	const lastField = fieldStack.value.at(-1);
+
+	// Only show input if last field is one of these types
+	return ["Link", "Table", "MultiSelectTable"].includes(lastField?.fieldtype);
+});
+
+function handleBreadcrumbClick(index) {
+	// When clicking a breadcrumb item, truncate the stack to that point
+	if (index < fieldStack.value.length - 1) {
+		removeField(index + 1);
+	}
+}
+function isSameField(a, b) {
+	if (!a || !b) return false;
+	return a.fieldname === b.fieldname && a.fieldtype === b.fieldtype;
+}
+async function handleSelect(field) {
+	if (props.disabled || !field || isSameField(field, lastSelectedField.value)) return;
+
+	// Only proceed if this is a new selection
+	if (!isSameField(field, fieldStack.value.at(-1))) {
+		await selectField(field);
+		lastSelectedField.value = field;
+	}
+
+	await nextTick();
 	selectedField.value = null;
+	search.value = "";
+}
+
+async function selectField(field) {
+	if (!field) return;
+
+	const oldVal = [...fieldStack.value];
+	fieldStack.value.push(field);
 	search.value = "";
 	isOpen.value = false;
 
-	// Optionally load fields for next level
 	if (["Link", "Table", "MultiSelectTable"].includes(field.fieldtype) && field.options) {
 		currentDoctypes.value = [field.options];
-		availableFields.value = (await loadFieldsForDoctypes(field.options)) || [];
+		availableFields.value = (await loadFieldsForDoctypes(currentDoctypes.value)) || [];
 	} else {
+		currentDoctypes.value = [];
 		availableFields.value = [];
 	}
 
 	emitFieldPath();
 
-	// Emit field-change for external handling (e.g. depends_on, markDirty)
 	emit("field-change", {
-		field: "field_chain", // or props.df?.fieldname if you have it
+		field: "field_chain",
 		oldVal,
 		newVal: [...fieldStack.value],
 	});
 }
 
-function removeLast() {
+function removeField(index) {
 	if (props.disabled) return;
 
-	const oldVal = [...fieldStack.value]; // Capture before mutation
+	const oldVal = [...fieldStack.value];
+	// Remove from index to end, truncating the stack
+	fieldStack.value.splice(index);
+	lastSelectedField.value = null; // 👈 reset last selection
 
-	fieldStack.value.pop(); // Mutate
-
-	// If the stack is now empty, reset to root
-	if (!fieldStack.value.length) {
+	// Update currentDoctypes based on new last field or rootDoctypes
+	if (fieldStack.value.length) {
+		const last = fieldStack.value.at(-1);
+		currentDoctypes.value = last?.options ? [last.options] : normalizeDoctypes(props.rootDoctypes);
+	} else {
 		currentDoctypes.value = normalizeDoctypes(props.rootDoctypes);
-		loadFieldsForDoctypes(currentDoctypes.value).then((fields) => {
-			availableFields.value = fields;
-			emitFieldPath();
-
-			emit("field-change", {
-				field: "field_chain",
-				oldVal,
-				newVal: [...fieldStack.value],
-			});
-		});
-		return;
 	}
 
-	// Otherwise, update based on last field's options
-	const lastField = fieldStack.value[fieldStack.value.length - 1];
-	const targetDoctype = lastField.options || normalizeDoctypes(props.rootDoctypes)[0];
-
-	currentDoctypes.value = [targetDoctype];
-	loadFieldsForDoctypes(targetDoctype).then((fields) => {
+	loadFieldsForDoctypes(currentDoctypes.value).then((fields) => {
 		availableFields.value = fields;
 		emitFieldPath();
-
-		emit("field-change", {
-			field: "field_chain",
-			oldVal,
-			newVal: [...fieldStack.value],
-		});
+		emit("field-change", { field: "field_chain", oldVal, newVal: [...fieldStack.value] });
 	});
 }
 
-onMounted(async () => {
-	await initializeFromModel();
+function startEditing() {
+	if (props.disabled || !showInput.value) return;
+	isOpen.value = true;
+	nextTick(() => {
+		inputRef.value?.focus();
+		updateDropdownPosition();
+	});
+}
 
-	if (!fieldStack.value.length) {
-		currentDoctypes.value = normalizeDoctypes(props.rootDoctypes);
-		availableFields.value = (await loadFieldsForDoctypes(currentDoctypes.value)) || [];
+function updateDropdownPosition() {
+	const rootEl = rootRef.value;
+	if (!rootEl) return;
+
+	const rect = rootEl.getBoundingClientRect();
+
+	dropdownStyle.value = {
+		position: "absolute",
+		top: `${rect.bottom + window.scrollY + 4}px`,
+		left: `${rect.left + window.scrollX}px`,
+		width: `${rect.width}px`,
+		minWidth: "200px",
+		zIndex: 1000,
+	};
+}
+
+function handleFocusIn(e) {
+	if (!rootRef.value?.contains(e.target)) {
+		isOpen.value = false;
 	}
+}
+
+function onScrollOrResize() {
+	if (isOpen.value) updateDropdownPosition();
+}
+
+onMounted(async () => {
+	const [doctypes, path] = value.value;
+	currentDoctypes.value = normalizeDoctypes(doctypes || props.rootDoctypes);
+	let fields = await loadFieldsForDoctypes(currentDoctypes.value);
+
+	for (const savedField of path || []) {
+		// Try to match saved field with loaded fields by fieldname & fieldtype (better match)
+		const match = fields.find(
+			(f) => f.fieldname === savedField.fieldname && f.fieldtype === savedField.fieldtype,
+		);
+		if (!match) break;
+
+		fieldStack.value.push(match);
+
+		if (["Link", "Table", "MultiSelectTable"].includes(match.fieldtype) && match.options) {
+			currentDoctypes.value = [match.options];
+			fields = await loadFieldsForDoctypes(currentDoctypes.value);
+		} else {
+			break;
+		}
+	}
+	availableFields.value = fields;
+
+	document.addEventListener("focusin", handleFocusIn);
+	window.addEventListener("scroll", onScrollOrResize, true);
+	window.addEventListener("resize", onScrollOrResize);
 });
 
+onBeforeUnmount(() => {
+	document.removeEventListener("focusin", handleFocusIn);
+	window.removeEventListener("scroll", onScrollOrResize, true);
+	window.removeEventListener("resize", onScrollOrResize);
+});
+
+// Watch for rootDoctypes changes
 watch(
 	() => props.rootDoctypes,
 	async (newVal) => {
@@ -227,72 +259,70 @@ watch(
 	},
 	{ immediate: true, deep: true },
 );
-
-watch(fieldStack, () => {
-	selectedField.value = null;
-});
 </script>
 
 <template>
-	<div class="doc-field-crawl">
-		<div class="breadcrumb">
-			<span v-for="(item, index) in fieldStack" :key="index">
+	<div ref="rootRef" class="compact-field-crawl">
+		<!-- Breadcrumb display (always visible when there are items) -->
+		<Breadcrumb
+			v-if="fieldStack.length"
+			:items="fieldStack"
+			:clickable="!disabled"
+			:show-remove="!disabled ? 'last' : 'none'"
+			:separator="'›'"
+			@item-click="handleBreadcrumbClick"
+			@remove="removeField(fieldStack.length - 1)"
+			class="breadcrumb-preview"
+		>
+			<template #item="{ item }">
 				{{ item.label || item.fieldname }}
-				<span v-if="index < fieldStack.length - 1"> › </span>
-			</span>
-			<button v-if="fieldStack.length" @click="removeLast" class="remove-btn">×</button>
-		</div>
+			</template>
+		</Breadcrumb>
 
-		<div v-if="isLoading" class="field-loading">
-			<span class="spinner"></span> {{ __("Loading fields...") }}
-		</div>
-
-		<div v-else-if="loadError" class="field-error">
-			<span v-html="utils.icon('warning', 'sm')"></span> {{ __("Error loading fields") }}
-		</div>
-
+		<!-- Combobox input (only shown when needed) -->
 		<Combobox
 			v-if="showInput"
+			:disabled="disabled"
 			v-model="selectedField"
 			v-model:open="isOpen"
-			@update:modelValue="selectField"
-			:disabled="disabled"
-			:as="Fragment"
-			@focus="() => (isOpen.value = true)"
+			@update:modelValue="handleSelect"
 		>
-			<div class="relative">
-				<ComboboxInput
-					class="combobox-input"
-					:displayValue="(field) => field?.label || ''"
-					@input="search = $event.target.value"
-					:placeholder="__('Search field...')"
-					@focus="isOpen = true"
-				/>
-				<ComboboxOptions v-if="isOpen" static class="combobox-options">
+			<div class="combobox-container">
+				<div class="input-wrapper" @click="startEditing">
+					<ComboboxInput
+						ref="inputRef"
+						class="combobox-input"
+						:modelValue="search"
+						@update:modelValue="(val) => (search = val)"
+						:placeholder="fieldStack.length ? 'Add next field...' : placeholder"
+						@focus="isOpen = true"
+						autocomplete="off"
+						spellcheck="false"
+					/>
+				</div>
+
+				<ComboboxOptions v-show="isOpen" as="div" static class="combobox-options">
 					<ComboboxOption
 						v-for="field in filteredFields"
-						:key="field.fieldname"
+						:key="field.fieldname + field.fieldtype"
 						:value="field"
+						v-slot="{ active }"
 						as="template"
-						v-slot="{ active, selected, disabled }"
 					>
-						<div
-							class="combobox-option"
-							:class="{
-								'option-active': active,
-								'option-selected': selected,
-								'option-disabled': disabled,
-							}"
-						>
-							<span v-html="utils.icon(getFieldIcon(field.fieldtype), 'xs')"></span>
-							<span>{{ field.label || field.fieldname }}</span>
-							<span v-if="selected">✔</span>
+						<div :class="['option', { active }]">
+							{{ field.label || field.fieldname }}
+							<span
+								v-if="['Link', 'Table', 'MultiSelectTable'].includes(field.fieldtype)"
+								class="type-indicator"
+							>
+								→
+							</span>
 						</div>
 					</ComboboxOption>
 
-					<div v-if="!filteredFields.length" class="empty-state">
-						{{ __("No matching fields") }}
-					</div>
+					<div v-if="isLoading" class="empty-state">Loading fields...</div>
+					<div v-else-if="loadError" class="empty-state error">Error loading fields</div>
+					<div v-else-if="filteredFields.length === 0" class="empty-state">No fields found</div>
 				</ComboboxOptions>
 			</div>
 		</Combobox>
@@ -300,120 +330,95 @@ watch(fieldStack, () => {
 </template>
 
 <style scoped>
-.doc-field-crawl {
-	position: relative; /* ensure root wrapper is relative */
-
-	border: 1px solid #ccc;
-	padding: 12px;
-	border-radius: 6px;
-	max-width: 450px;
-	background: #fff;
-}
-.breadcrumb {
-	font-size: 14px;
-	margin-bottom: 8px;
-	color: #444;
+.compact-field-crawl {
 	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-}
-.remove-btn {
-	margin-left: 8px;
-	background: transparent;
-	border: none;
-	color: #c00;
-	font-weight: bold;
-	font-size: 16px;
-	cursor: pointer;
-}
-.field-loading {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	color: #6b7280;
-	background-color: #f3f4f6;
-	padding: 8px;
-	border-radius: 4px;
-	margin-bottom: 8px;
-}
-.field-error {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	color: #b91c1c;
-	background: #fef2f2;
-	padding: 8px;
-	border-radius: 4px;
-	margin-bottom: 8px;
-}
-.spinner {
-	display: inline-block;
-	width: 12px;
-	height: 12px;
-	border: 2px solid rgba(0, 0, 0, 0.1);
-	border-radius: 50%;
-	border-top-color: #3b82f6;
-	animation: spin 1s linear infinite;
-}
-@keyframes spin {
-	to {
-		transform: rotate(360deg);
-	}
-}
-.combobox-input {
+	flex-direction: column;
+	gap: 4px;
 	width: 100%;
-	padding: 8px 12px;
-	border-radius: 6px;
-	border: 1px solid #d1d5db;
-	background: white;
-	font-size: 0.9rem;
+	position: relative;
 }
-.combobox-options {
-	position: absolute;
-	z-index: 50;
-	top: 100%;
-	left: 0;
+
+.breadcrumb-preview {
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	padding: 8px 12px;
+	background-color: white;
+}
+
+.combobox-container {
+	position: relative;
+	width: 100%;
+}
+
+.input-wrapper {
+	display: flex;
+	align-items: center;
+	padding: 8px 12px;
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	min-height: 40px;
+	background-color: white;
+	cursor: text;
 	width: 100%;
 	box-sizing: border-box;
-	background: white;
-	border: 1px solid #d1d5db;
-	border-radius: 4px;
-	margin-top: 4px;
-	max-height: 240px;
+}
+
+.combobox-input {
+	flex: 1;
+	min-width: 120px;
+	border: none;
+	outline: none;
+	padding: 2px 0;
+	font-size: 0.875rem;
+	background: transparent;
+}
+
+.combobox-options {
+	position: absolute;
+	top: calc(100% + 4px);
+	left: 0;
+	width: 100%;
+	max-height: 300px;
 	overflow-y: auto;
-	list-style: none;
-	padding: 0;
-	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-	font-size: 0.9rem;
+	background-color: white;
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	box-shadow:
+		0 4px 6px -1px rgba(0, 0, 0, 0.1),
+		0 2px 4px -1px rgba(0, 0, 0, 0.06);
+	z-index: 50;
+	margin-top: 2px;
 }
-.combobox-option {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 8px;
-	padding: 8px 12px;
+
+.option {
+	padding: 10px 12px;
 	cursor: pointer;
+	font-size: 0.875rem;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
 	transition: background-color 0.15s ease;
-	border-bottom: 1px solid #f3f4f6;
 }
-.combobox-option:last-child {
-	border-bottom: none;
-}
-.option-active {
+
+.option:hover,
+.option.active {
 	background-color: #f3f4f6;
 }
-.option-selected {
-	font-weight: 600;
-}
-.option-disabled {
+
+.type-indicator {
 	color: #9ca3af;
-	cursor: not-allowed;
-	opacity: 0.6;
+	font-weight: bold;
+	margin-left: 8px;
 }
+
 .empty-state {
-	padding: 8px 12px;
+	padding: 10px 12px;
 	color: #6b7280;
+	font-size: 0.875rem;
 	font-style: italic;
-	text-align: center;
+}
+
+.empty-state.error {
+	color: #ef4444;
 }
 </style>

@@ -539,7 +539,8 @@ function remove() {
 	flex-wrap: nowrap;
 	gap: 8px; /* spacing between fields */
 	align-items: center;
-	overflow: hidden; /* optional: prevent overflow */
+	overflow: visible; /* optional: prevent overflow */
+	position: relative;
 }
 
 .drag-handle {
@@ -583,7 +584,7 @@ function remove() {
 }
 
 .summary-cell {
-	overflow: hidden;
+	overflow: visible;
 	padding: 0 4px;
 }
 
