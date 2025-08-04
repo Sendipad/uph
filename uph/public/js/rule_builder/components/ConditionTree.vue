@@ -370,8 +370,8 @@ function remove() {
 							<span class="switch-thumb" />
 						</span>
 						<span class="switch-labels">
-							<span class="label-and">AND</span>
-							<span class="label-or">OR</span>
+							<span class="label-and">{{ __("All") }}</span>
+							<span class="label-or">{{ __("Any") }}</span>
 						</span>
 					</button>
 				</Switch>
@@ -834,7 +834,37 @@ input[type="checkbox"] {
 	cursor: pointer;
 	accent-color: var(--color-primary);
 }
+/* Add these to your parent component's styles */
+.condition-wrapper {
+	overflow: visible !important;
+	contain: none !important;
+}
 
+.compact-row {
+	overflow: visible !important;
+}
+
+.summary-cell {
+	overflow: visible !important;
+	contain: none !important;
+	z-index: auto;
+}
+
+.summary-fields {
+	overflow: visible !important;
+	contain: none !important;
+}
+
+.expanded-content {
+	overflow: visible !important;
+	contain: none !important;
+}
+
+.grid-row,
+.grid-cell {
+	overflow: visible !important;
+	contain: none !important;
+}
 /* ACCESSIBILITY */
 .sr-only {
 	position: absolute;
@@ -847,7 +877,17 @@ input[type="checkbox"] {
 	white-space: nowrap;
 	border-width: 0;
 }
+.grid-row,
+.grid-cell {
+	overflow: visible !important;
+	contain: none !important;
+}
 
+/* Ensure the expanded content doesn't clip dropdowns */
+.expanded-content {
+	overflow: visible !important;
+	contain: none !important;
+}
 /* FOCUS STATES */
 .action-button:focus-visible,
 .toggle-button:focus-visible,

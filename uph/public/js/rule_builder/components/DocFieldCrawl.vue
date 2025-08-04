@@ -87,11 +87,17 @@ const value = computed({
 		emit("update:modelValue", JSON.stringify(val));
 	},
 });
-
 const filteredFields = computed(() => {
-	if (!search.value) return availableFields.value;
-	const term = search.value.toLowerCase();
-	return availableFields.value.filter((f) => (f.label || f.fieldname).toLowerCase().includes(term));
+	const term = search.value.trim().toLowerCase();
+	if (!term) return availableFields.value;
+
+	return availableFields.value.filter((field) => {
+		const labelMatch = (field.label || field.fieldname || "").toLowerCase().includes(term);
+		const optionsMatch =
+			typeof field.options === "string" && field.options.toLowerCase().includes(term);
+
+		return labelMatch || optionsMatch;
+	});
 });
 
 const showInput = computed(() => {
@@ -112,6 +118,24 @@ function handleBreadcrumbClick(index) {
 	if (index < fieldStack.value.length - 1) {
 		removeField(index + 1);
 	}
+}
+function fuzzySearch(term, text) {
+	if (!text) return false;
+	term = term.toLowerCase();
+	text = text.toLowerCase();
+
+	// Simple includes check first for better performance
+	if (text.includes(term)) return true;
+
+	// More flexible matching if simple includes fails
+	let termIndex = 0;
+	for (let i = 0; i < text.length; i++) {
+		if (text[i] === term[termIndex]) {
+			termIndex++;
+			if (termIndex === term.length) return true;
+		}
+	}
+	return false;
 }
 function isSameField(a, b) {
 	if (!a || !b) return false;
@@ -259,6 +283,22 @@ watch(
 	},
 	{ immediate: true, deep: true },
 );
+watch(
+	filteredFields,
+	(newVal) => {
+		console.log("Filtered fields:", newVal);
+		console.log("Search term:", search.value);
+	},
+	{ immediate: true },
+);
+
+watch(
+	availableFields,
+	(newVal) => {
+		console.log("Available fields:", newVal);
+	},
+	{ immediate: true },
+);
 </script>
 
 <template>
@@ -290,12 +330,12 @@ watch(
 			<div class="combobox-container">
 				<div class="input-wrapper" @click="startEditing">
 					<ComboboxInput
-						ref="inputRef"
-						class="combobox-input"
-						:modelValue="search"
-						@update:modelValue="(val) => (search = val)"
+						:value="search"
+						@input="search = $event.target.value"
+						@change="search = $event.target.value"
 						:placeholder="fieldStack.length ? 'Add next field...' : placeholder"
 						@focus="isOpen = true"
+						class="combobox-input"
 						autocomplete="off"
 						spellcheck="false"
 					/>
@@ -319,7 +359,6 @@ watch(
 							</span>
 						</div>
 					</ComboboxOption>
-
 					<div v-if="isLoading" class="empty-state">Loading fields...</div>
 					<div v-else-if="loadError" class="empty-state error">Error loading fields</div>
 					<div v-else-if="filteredFields.length === 0" class="empty-state">No fields found</div>
