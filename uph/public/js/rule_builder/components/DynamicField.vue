@@ -213,7 +213,7 @@ const fieldSourceDoctype = computed(() => {
 		/>
 
 		<!-- Default Input -->
-		<div class="input-wrapper" v-else>
+		<div class="input-wrapper" v-else-if="df.fieldtype !== 'Check'">
 			<input
 				:type="inputType"
 				v-model="value"

@@ -16,6 +16,7 @@ const props = defineProps({
 
 const emit = defineEmits(["update:modelValue", "field-change"]);
 
+// State
 const search = ref("");
 const selectedField = ref(null);
 const fieldStack = ref([]);
@@ -30,26 +31,19 @@ const rootRef = ref(null);
 const inputRef = ref(null);
 const lastSelectedField = ref(null);
 
-const dropdownStyle = ref({
-	position: "absolute",
-	top: "0px",
-	left: "0px",
-	width: "auto",
-	minWidth: "200px",
-	zIndex: 1000,
-});
-
+// Utils
 function normalizeDoctypes(input) {
 	return Array.isArray(input) ? input : [input];
 }
 
+// Load fields
 async function loadFieldsForDoctypes(doctypes) {
 	if (!props.getFields) return [];
 	isLoading.value = true;
 	loadError.value = false;
 	try {
 		return (await props.getFields(doctypes)) || [];
-	} catch (e) {
+	} catch {
 		loadError.value = true;
 		return [];
 	} finally {
@@ -57,8 +51,8 @@ async function loadFieldsForDoctypes(doctypes) {
 	}
 }
 
+// Emit full field path
 function emitFieldPath() {
-	// Emit modelValue as JSON string: [rootDoctypes, fieldStack array]
 	emit(
 		"update:modelValue",
 		JSON.stringify([
@@ -73,6 +67,7 @@ function emitFieldPath() {
 	);
 }
 
+// Computed: current stored value
 const value = computed({
 	get() {
 		try {
@@ -87,12 +82,15 @@ const value = computed({
 		emit("update:modelValue", JSON.stringify(val));
 	},
 });
+
+// Computed: filtered fields
 const filteredFields = computed(() => {
 	const term = search.value.trim().toLowerCase();
 	if (!term) return availableFields.value;
 
 	return availableFields.value.filter((field) => {
 		const labelMatch = (field.label || field.fieldname || "").toLowerCase().includes(term);
+
 		const optionsMatch =
 			typeof field.options === "string" && field.options.toLowerCase().includes(term);
 
@@ -100,51 +98,23 @@ const filteredFields = computed(() => {
 	});
 });
 
+// Computed: show combobox input?
 const showInput = computed(() => {
 	if (props.disabled) return false;
-
-	// If no fields selected, always show input
 	if (!fieldStack.value.length) return true;
 
-	// Get the last selected field
 	const lastField = fieldStack.value.at(-1);
-
-	// Only show input if last field is one of these types
 	return ["Link", "Table", "MultiSelectTable"].includes(lastField?.fieldtype);
 });
 
-function handleBreadcrumbClick(index) {
-	// When clicking a breadcrumb item, truncate the stack to that point
-	if (index < fieldStack.value.length - 1) {
-		removeField(index + 1);
-	}
-}
-function fuzzySearch(term, text) {
-	if (!text) return false;
-	term = term.toLowerCase();
-	text = text.toLowerCase();
-
-	// Simple includes check first for better performance
-	if (text.includes(term)) return true;
-
-	// More flexible matching if simple includes fails
-	let termIndex = 0;
-	for (let i = 0; i < text.length; i++) {
-		if (text[i] === term[termIndex]) {
-			termIndex++;
-			if (termIndex === term.length) return true;
-		}
-	}
-	return false;
-}
+// Select field handler
 function isSameField(a, b) {
-	if (!a || !b) return false;
-	return a.fieldname === b.fieldname && a.fieldtype === b.fieldtype;
+	return !!a && !!b && a.fieldname === b.fieldname && a.fieldtype === b.fieldtype;
 }
+
 async function handleSelect(field) {
 	if (props.disabled || !field || isSameField(field, lastSelectedField.value)) return;
 
-	// Only proceed if this is a new selection
 	if (!isSameField(field, fieldStack.value.at(-1))) {
 		await selectField(field);
 		lastSelectedField.value = field;
@@ -165,30 +135,24 @@ async function selectField(field) {
 
 	if (["Link", "Table", "MultiSelectTable"].includes(field.fieldtype) && field.options) {
 		currentDoctypes.value = [field.options];
-		availableFields.value = (await loadFieldsForDoctypes(currentDoctypes.value)) || [];
+		availableFields.value = await loadFieldsForDoctypes(currentDoctypes.value);
 	} else {
 		currentDoctypes.value = [];
 		availableFields.value = [];
 	}
 
 	emitFieldPath();
-
-	emit("field-change", {
-		field: "field_chain",
-		oldVal,
-		newVal: [...fieldStack.value],
-	});
+	emit("field-change", { field: "field_chain", oldVal, newVal: [...fieldStack.value] });
 }
 
+// Remove field from breadcrumb
 function removeField(index) {
 	if (props.disabled) return;
 
 	const oldVal = [...fieldStack.value];
-	// Remove from index to end, truncating the stack
 	fieldStack.value.splice(index);
-	lastSelectedField.value = null; // 👈 reset last selection
+	lastSelectedField.value = null;
 
-	// Update currentDoctypes based on new last field or rootDoctypes
 	if (fieldStack.value.length) {
 		const last = fieldStack.value.at(-1);
 		currentDoctypes.value = last?.options ? [last.options] : normalizeDoctypes(props.rootDoctypes);
@@ -203,6 +167,13 @@ function removeField(index) {
 	});
 }
 
+function handleBreadcrumbClick(index) {
+	if (index < fieldStack.value.length - 1) {
+		removeField(index + 1);
+	}
+}
+
+// Input focus + dropdown position
 function startEditing() {
 	if (props.disabled || !showInput.value) return;
 	isOpen.value = true;
@@ -217,15 +188,11 @@ function updateDropdownPosition() {
 	if (!rootEl) return;
 
 	const rect = rootEl.getBoundingClientRect();
-
-	dropdownStyle.value = {
-		position: "absolute",
+	Object.assign(dropdownStyle.value, {
 		top: `${rect.bottom + window.scrollY + 4}px`,
 		left: `${rect.left + window.scrollX}px`,
 		width: `${rect.width}px`,
-		minWidth: "200px",
-		zIndex: 1000,
-	};
+	});
 }
 
 function handleFocusIn(e) {
@@ -238,13 +205,22 @@ function onScrollOrResize() {
 	if (isOpen.value) updateDropdownPosition();
 }
 
+const dropdownStyle = ref({
+	position: "absolute",
+	top: "0px",
+	left: "0px",
+	width: "auto",
+	minWidth: "200px",
+	zIndex: 1000,
+});
+
+// Lifecycle
 onMounted(async () => {
 	const [doctypes, path] = value.value;
 	currentDoctypes.value = normalizeDoctypes(doctypes || props.rootDoctypes);
 	let fields = await loadFieldsForDoctypes(currentDoctypes.value);
 
 	for (const savedField of path || []) {
-		// Try to match saved field with loaded fields by fieldname & fieldtype (better match)
 		const match = fields.find(
 			(f) => f.fieldname === savedField.fieldname && f.fieldtype === savedField.fieldtype,
 		);
@@ -272,38 +248,22 @@ onBeforeUnmount(() => {
 	window.removeEventListener("resize", onScrollOrResize);
 });
 
-// Watch for rootDoctypes changes
+// Watch rootDoctypes changes
 watch(
 	() => props.rootDoctypes,
 	async (newVal) => {
 		if (!fieldStack.value.length && newVal?.length) {
 			currentDoctypes.value = normalizeDoctypes(newVal);
-			availableFields.value = (await loadFieldsForDoctypes(currentDoctypes.value)) || [];
+			availableFields.value = await loadFieldsForDoctypes(currentDoctypes.value);
 		}
 	},
 	{ immediate: true, deep: true },
-);
-watch(
-	filteredFields,
-	(newVal) => {
-		console.log("Filtered fields:", newVal);
-		console.log("Search term:", search.value);
-	},
-	{ immediate: true },
-);
-
-watch(
-	availableFields,
-	(newVal) => {
-		console.log("Available fields:", newVal);
-	},
-	{ immediate: true },
 );
 </script>
 
 <template>
 	<div ref="rootRef" class="compact-field-crawl">
-		<!-- Breadcrumb display (always visible when there are items) -->
+		<!-- Breadcrumb -->
 		<Breadcrumb
 			v-if="fieldStack.length"
 			:items="fieldStack"
@@ -319,7 +279,7 @@ watch(
 			</template>
 		</Breadcrumb>
 
-		<!-- Combobox input (only shown when needed) -->
+		<!-- Field picker -->
 		<Combobox
 			v-if="showInput"
 			:disabled="disabled"
@@ -330,12 +290,12 @@ watch(
 			<div class="combobox-container">
 				<div class="input-wrapper" @click="startEditing">
 					<ComboboxInput
+						ref="inputRef"
+						class="combobox-input"
 						:value="search"
 						@input="search = $event.target.value"
-						@change="search = $event.target.value"
 						:placeholder="fieldStack.length ? 'Add next field...' : placeholder"
 						@focus="isOpen = true"
-						class="combobox-input"
 						autocomplete="off"
 						spellcheck="false"
 					/>
@@ -359,6 +319,7 @@ watch(
 							</span>
 						</div>
 					</ComboboxOption>
+
 					<div v-if="isLoading" class="empty-state">Loading fields...</div>
 					<div v-else-if="loadError" class="empty-state error">Error loading fields</div>
 					<div v-else-if="filteredFields.length === 0" class="empty-state">No fields found</div>
