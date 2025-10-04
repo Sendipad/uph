@@ -1,11 +1,14 @@
 <script setup>
+// Imports
 import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount } from "vue";
-import { Combobox, ComboboxInput, ComboboxOptions, ComboboxOption } from "@headlessui/vue";
+import { Combobox, ComboboxInput, ComboboxOptions, Portal } from "@headlessui/vue";
 import { safeFrappeUtils } from "../utils";
 import Breadcrumb from "./Breadcrumb.vue";
 
+// Utilities
 const utils = safeFrappeUtils();
 
+// Props and Emits
 const props = defineProps({
 	modelValue: { type: [Array, String], default: () => [] },
 	rootDoctypes: { type: [Array, String], required: true },
@@ -13,7 +16,6 @@ const props = defineProps({
 	disabled: Boolean,
 	placeholder: { type: String, default: "Select field..." },
 });
-
 const emit = defineEmits(["update:modelValue", "field-change"]);
 
 // State
@@ -22,21 +24,27 @@ const selectedField = ref(null);
 const fieldStack = ref([]);
 const currentDoctypes = ref([]);
 const availableFields = ref([]);
-
 const isLoading = ref(false);
 const loadError = ref(false);
 const isOpen = ref(false);
-
 const rootRef = ref(null);
 const inputRef = ref(null);
 const lastSelectedField = ref(null);
+const highlightedIndex = ref(0);
 
-// Utils
-function normalizeDoctypes(input) {
-	return Array.isArray(input) ? input : [input];
-}
+// Dropdown positioning
+const dropdownStyle = ref({
+	position: "absolute",
+	top: "0px",
+	left: "0px",
+	width: "auto",
+	minWidth: "200px",
+	zIndex: 1000,
+});
 
-// Load fields
+// Helpers
+const normalizeDoctypes = (input) => (Array.isArray(input) ? input : [input]);
+
 async function loadFieldsForDoctypes(doctypes) {
 	if (!props.getFields) return [];
 	isLoading.value = true;
@@ -51,7 +59,6 @@ async function loadFieldsForDoctypes(doctypes) {
 	}
 }
 
-// Emit full field path
 function emitFieldPath() {
 	emit(
 		"update:modelValue",
@@ -67,7 +74,7 @@ function emitFieldPath() {
 	);
 }
 
-// Computed: current stored value
+// Computed values
 const value = computed({
 	get() {
 		try {
@@ -83,39 +90,46 @@ const value = computed({
 	},
 });
 
-// Computed: filtered fields
 const filteredFields = computed(() => {
 	const term = search.value.trim().toLowerCase();
 	if (!term) return availableFields.value;
-
 	return availableFields.value.filter((field) => {
-		const labelMatch = (field.label || field.fieldname || "").toLowerCase().includes(term);
-
-		const optionsMatch =
-			typeof field.options === "string" && field.options.toLowerCase().includes(term);
-
-		return labelMatch || optionsMatch;
+		const label = (field.label || field.fieldname || "").toLowerCase();
+		const options = typeof field.options === "string" ? field.options.toLowerCase() : "";
+		return label.includes(term) || options.includes(term);
 	});
 });
 
-// Computed: show combobox input?
 const showInput = computed(() => {
 	if (props.disabled) return false;
 	if (!fieldStack.value.length) return true;
-
-	const lastField = fieldStack.value.at(-1);
-	return ["Link", "Table", "MultiSelectTable"].includes(lastField?.fieldtype);
+	return ["Link", "Table", "MultiSelectTable"].includes(fieldStack.value.at(-1)?.fieldtype);
 });
 
-// Select field handler
-function isSameField(a, b) {
-	return !!a && !!b && a.fieldname === b.fieldname && a.fieldtype === b.fieldtype;
+const isSameField = (a, b) =>
+	!!a && !!b && a.fieldname === b.fieldname && a.fieldtype === b.fieldtype;
+
+function moveHighlight(delta) {
+	const count = filteredFields.value.length;
+	if (count === 0) return;
+	highlightedIndex.value = (highlightedIndex.value + delta + count) % count;
+}
+
+function selectHighlighted() {
+	const field = filteredFields.value[highlightedIndex.value];
+	if (field) handleSelect(field);
 }
 
 async function handleSelect(field) {
-	if (props.disabled || !field || isSameField(field, lastSelectedField.value)) return;
+	if (props.disabled || !field) return;
 
-	if (!isSameField(field, fieldStack.value.at(-1))) {
+	// Optional: Debugging log
+	// console.log("Selected:", field);
+
+	const alreadySelected =
+		isSameField(field, lastSelectedField.value) || isSameField(field, fieldStack.value.at(-1));
+
+	if (!alreadySelected) {
 		await selectField(field);
 		lastSelectedField.value = field;
 	}
@@ -133,8 +147,10 @@ async function selectField(field) {
 	search.value = "";
 	isOpen.value = false;
 
-	if (["Link", "Table", "MultiSelectTable"].includes(field.fieldtype) && field.options) {
-		currentDoctypes.value = [field.options];
+	const { fieldtype, options } = field;
+
+	if (["Link", "Table", "MultiSelectTable"].includes(fieldtype) && options) {
+		currentDoctypes.value = [options];
 		availableFields.value = await loadFieldsForDoctypes(currentDoctypes.value);
 	} else {
 		currentDoctypes.value = [];
@@ -145,7 +161,6 @@ async function selectField(field) {
 	emit("field-change", { field: "field_chain", oldVal, newVal: [...fieldStack.value] });
 }
 
-// Remove field from breadcrumb
 function removeField(index) {
 	if (props.disabled) return;
 
@@ -173,7 +188,6 @@ function handleBreadcrumbClick(index) {
 	}
 }
 
-// Input focus + dropdown position
 function startEditing() {
 	if (props.disabled || !showInput.value) return;
 	isOpen.value = true;
@@ -186,7 +200,6 @@ function startEditing() {
 function updateDropdownPosition() {
 	const rootEl = rootRef.value;
 	if (!rootEl) return;
-
 	const rect = rootEl.getBoundingClientRect();
 	Object.assign(dropdownStyle.value, {
 		top: `${rect.bottom + window.scrollY + 4}px`,
@@ -205,15 +218,6 @@ function onScrollOrResize() {
 	if (isOpen.value) updateDropdownPosition();
 }
 
-const dropdownStyle = ref({
-	position: "absolute",
-	top: "0px",
-	left: "0px",
-	width: "auto",
-	minWidth: "200px",
-	zIndex: 1000,
-});
-
 // Lifecycle
 onMounted(async () => {
 	const [doctypes, path] = value.value;
@@ -225,9 +229,7 @@ onMounted(async () => {
 			(f) => f.fieldname === savedField.fieldname && f.fieldtype === savedField.fieldtype,
 		);
 		if (!match) break;
-
 		fieldStack.value.push(match);
-
 		if (["Link", "Table", "MultiSelectTable"].includes(match.fieldtype) && match.options) {
 			currentDoctypes.value = [match.options];
 			fields = await loadFieldsForDoctypes(currentDoctypes.value);
@@ -248,7 +250,7 @@ onBeforeUnmount(() => {
 	window.removeEventListener("resize", onScrollOrResize);
 });
 
-// Watch rootDoctypes changes
+// Watchers
 watch(
 	() => props.rootDoctypes,
 	async (newVal) => {
@@ -259,27 +261,47 @@ watch(
 	},
 	{ immediate: true, deep: true },
 );
+
+watch(isOpen, async (val) => {
+	if (val) {
+		await nextTick();
+		updateDropdownPosition();
+	}
+});
+watch(
+	() => props.modelValue,
+	async (newVal) => {
+		try {
+			const [doctypes, path] = Array.isArray(newVal) ? newVal : JSON.parse(newVal || "[]");
+
+			currentDoctypes.value = normalizeDoctypes(doctypes || props.rootDoctypes);
+			let fields = await loadFieldsForDoctypes(currentDoctypes.value);
+
+			fieldStack.value = [];
+			for (const savedField of path || []) {
+				const match = fields.find(
+					(f) => f.fieldname === savedField.fieldname && f.fieldtype === savedField.fieldtype,
+				);
+				if (!match) break;
+				fieldStack.value.push(match);
+				if (["Link", "Table", "MultiSelectTable"].includes(match.fieldtype) && match.options) {
+					currentDoctypes.value = [match.options];
+					fields = await loadFieldsForDoctypes(currentDoctypes.value);
+				} else {
+					break;
+				}
+			}
+			availableFields.value = fields;
+		} catch (e) {
+			console.error("Failed to sync from modelValue:", e);
+		}
+	},
+	{ deep: true },
+);
 </script>
-
 <template>
-	<div ref="rootRef" class="compact-field-crawl">
-		<!-- Breadcrumb -->
-		<Breadcrumb
-			v-if="fieldStack.length"
-			:items="fieldStack"
-			:clickable="!disabled"
-			:show-remove="!disabled ? 'last' : 'none'"
-			:separator="'›'"
-			@item-click="handleBreadcrumbClick"
-			@remove="removeField(fieldStack.length - 1)"
-			class="breadcrumb-preview"
-		>
-			<template #item="{ item }">
-				{{ item.label || item.fieldname }}
-			</template>
-		</Breadcrumb>
-
-		<!-- Field picker -->
+	<div ref="rootRef" class="compact-field-crawl" :dir="direction">
+		<!-- Only show inline combined input+breadcrumb if input allowed -->
 		<Combobox
 			v-if="showInput"
 			:disabled="disabled"
@@ -288,46 +310,98 @@ watch(
 			@update:modelValue="handleSelect"
 		>
 			<div class="combobox-container">
-				<div class="input-wrapper" @click="startEditing">
+				<!-- Breadcrumb + Input in same row -->
+				<div class="breadcrumb-input-wrapper">
+					<!-- Breadcrumb (scrollable) -->
+					<Breadcrumb
+						v-if="fieldStack.length"
+						:items="fieldStack"
+						:clickable="!disabled"
+						:show-remove="!disabled ? 'last' : 'none'"
+						:separator="separator"
+						@item-click="handleBreadcrumbClick"
+						@remove="removeField(fieldStack.length - 1)"
+						class="breadcrumb-inline"
+					>
+						<template #item="{ item }">
+							{{ item.label || item.fieldname }}
+						</template>
+					</Breadcrumb>
+
+					<!-- Input after breadcrumb -->
 					<ComboboxInput
 						ref="inputRef"
 						class="combobox-input"
 						:value="search"
 						@input="search = $event.target.value"
-						:placeholder="fieldStack.length ? 'Add next field...' : placeholder"
+						:placeholder="fieldStack.length ? 'Add next field…' : placeholder"
 						@focus="isOpen = true"
-						autocomplete="off"
-						spellcheck="false"
+						@keydown.down.prevent="moveHighlight(1)"
+						@keydown.up.prevent="moveHighlight(-1)"
+						@keydown.enter.prevent="selectHighlighted"
 					/>
 				</div>
 
-				<ComboboxOptions v-show="isOpen" as="div" static class="combobox-options">
-					<ComboboxOption
-						v-for="field in filteredFields"
-						:key="field.fieldname + field.fieldtype"
-						:value="field"
-						v-slot="{ active }"
-						as="template"
-					>
-						<div :class="['option', { active }]">
-							{{ field.label || field.fieldname }}
-							<span
-								v-if="['Link', 'Table', 'MultiSelectTable'].includes(field.fieldtype)"
-								class="type-indicator"
+				<!-- Dropdown Options -->
+				<Portal v-if="isOpen">
+					<div :style="dropdownStyle" class="combobox-portal-wrapper">
+						<ComboboxOptions as="div" static class="combobox-options">
+							<div
+								v-for="(field, i) in filteredFields"
+								:key="field.fieldname + field.fieldtype"
+								class="option"
+								:class="{ active: i === highlightedIndex }"
+								@click="handleSelect(field)"
 							>
-								→
-							</span>
-						</div>
-					</ComboboxOption>
+								{{ field.label || field.fieldname }}
+								<span
+									v-if="['Link', 'Table', 'MultiSelectTable'].includes(field.fieldtype)"
+									class="type-indicator"
+								>
+									{{ direction === "rtl" ? "←" : "→" }}
+								</span>
+							</div>
 
-					<div v-if="isLoading" class="empty-state">Loading fields...</div>
-					<div v-else-if="loadError" class="empty-state error">Error loading fields</div>
-					<div v-else-if="filteredFields.length === 0" class="empty-state">No fields found</div>
-				</ComboboxOptions>
+							<div v-if="isLoading" class="empty-state">Loading fields...</div>
+							<div v-else-if="loadError" class="empty-state error">Error loading fields</div>
+							<div v-else-if="filteredFields.length === 0" class="empty-state">No fields found</div>
+						</ComboboxOptions>
+					</div>
+				</Portal>
 			</div>
 		</Combobox>
+
+		<!-- Fallback: only breadcrumb if input is disabled -->
+		<Breadcrumb
+			v-else-if="fieldStack.length"
+			:items="fieldStack"
+			:clickable="!disabled"
+			:show-remove="!disabled ? 'last' : 'none'"
+			:separator="separator"
+			@item-click="handleBreadcrumbClick"
+			@remove="removeField(fieldStack.length - 1)"
+			class="breadcrumb-preview"
+		>
+			<template #item="{ item }">
+				{{ item.label || item.fieldname }}
+			</template>
+		</Breadcrumb>
 	</div>
 </template>
+
+<script setup>
+import { ref, computed, onMounted } from "vue";
+
+// Add direction detection
+const direction = computed(() => {
+	return document.documentElement.dir === "rtl" ? "rtl" : "ltr";
+});
+
+// Update separator based on direction
+const separator = computed(() => {
+	return direction.value === "rtl" ? "‹" : "›";
+});
+</script>
 
 <style scoped>
 .compact-field-crawl {
@@ -338,6 +412,45 @@ watch(
 	position: relative;
 }
 
+/* Breadcrumb + Input wrapper */
+.breadcrumb-input-wrapper {
+	display: flex;
+	align-items: center;
+	overflow-x: auto;
+	white-space: nowrap;
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	padding: 6px 8px;
+	background-color: white;
+	flex-direction: row;
+}
+
+[dir="rtl"] .breadcrumb-input-wrapper {
+	flex-direction: row-reverse;
+}
+
+.breadcrumb-inline {
+	display: inline-flex;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.combobox-input {
+	flex: 1 0 auto;
+	min-width: 100px;
+	border: none;
+	outline: none;
+	background: transparent;
+	padding: 0 6px;
+	font-size: 0.875rem;
+}
+
+[dir="rtl"] .combobox-input {
+	padding-right: 6px;
+	padding-left: 0;
+}
+
+/* Breadcrumb preview style */
 .breadcrumb-preview {
 	border: 1px solid #e2e8f0;
 	border-radius: 6px;
@@ -345,38 +458,15 @@ watch(
 	background-color: white;
 }
 
+/* Combobox dropdown styles */
 .combobox-container {
 	position: relative;
 	width: 100%;
 }
 
-.input-wrapper {
-	display: flex;
-	align-items: center;
-	padding: 8px 12px;
-	border: 1px solid #e2e8f0;
-	border-radius: 6px;
-	min-height: 40px;
-	background-color: white;
-	cursor: text;
-	width: 100%;
-	box-sizing: border-box;
-}
-
-.combobox-input {
-	flex: 1;
-	min-width: 120px;
-	border: none;
-	outline: none;
-	padding: 2px 0;
-	font-size: 0.875rem;
-	background: transparent;
-}
-
 .combobox-options {
 	position: absolute;
 	top: calc(100% + 4px);
-	left: 0;
 	width: 100%;
 	max-height: 300px;
 	overflow-y: auto;
@@ -390,6 +480,17 @@ watch(
 	margin-top: 2px;
 }
 
+[dir="ltr"] .combobox-options {
+	left: 0;
+	right: auto;
+}
+
+[dir="rtl"] .combobox-options {
+	right: 0;
+	left: auto;
+}
+
+/* Option styles */
 .option {
 	padding: 10px 12px;
 	cursor: pointer;
@@ -411,6 +512,12 @@ watch(
 	margin-left: 8px;
 }
 
+[dir="rtl"] .type-indicator {
+	margin-left: 0;
+	margin-right: 8px;
+}
+
+/* Empty state styles */
 .empty-state {
 	padding: 10px 12px;
 	color: #6b7280;

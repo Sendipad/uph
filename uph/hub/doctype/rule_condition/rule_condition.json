@@ -55,7 +55,6 @@
    "depends_on": "eval:!doc.is_group",
    "fieldname": "left_value_source",
    "fieldtype": "Select",
-   "in_list_view": 1,
    "label": "Left Value Source",
    "options": "\nDocument Field\nSpecific DocType Field\nLiteral Value\nRegistered Method Result\nContext Variable",
    "width": "150px"
@@ -74,7 +73,6 @@
    "description": "Enter field path (e.g. 'customer', 'items.qty', 'SUM(items.amount)'). Populated via backend query.",
    "fieldname": "left_field_path",
    "fieldtype": "Autocomplete",
-   "in_list_view": 1,
    "label": "Field Path",
    "width": "250px"
   },
@@ -323,10 +321,11 @@
    "fieldtype": "Section Break"
   },
   {
-   "depends_on": "eval:!doc.is_group",
+   "depends_on": "eval:!doc.is_group&&in_list([\"Document Field\",\"Specific DocType Field\"],doc.left_value_source)",
    "description": "Internal field to store the resolved field path (e.g., 'customer.credit_limit' or 'SUM(items.qty)'). Populated by client script.",
    "fieldname": "left_field_chain",
    "fieldtype": "JSON",
+   "in_list_view": 1,
    "label": "Final Left Field Path"
   },
   {
@@ -341,7 +340,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-07-28 20:36:47.377088",
+ "modified": "2025-08-09 21:07:39.443868",
  "modified_by": "Administrator",
  "module": "Hub",
  "name": "Rule Condition",

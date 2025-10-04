@@ -7,7 +7,28 @@ const metaCache = {};
 export function registerServiceUIConfig(serviceType, config) {
 	serviceUIConfigs[serviceType] = config;
 }
+export async function loadDoctypeFields(
+	doctype,
+	{ excludeFieldnames = new Set(), excludeFieldtypes = new Set() } = {},
+) {
+	try {
+		// Ensure doctype meta is loaded
+		await frappe.model.with_doctype(doctype);
 
+		const fields = frappe.meta.get_docfields(doctype);
+		if (!Array.isArray(fields)) {
+			throw new Error(`Expected array of fields from get_docfields for "${doctype}"`);
+		}
+
+		// Apply filters
+		return fields.filter(
+			(f) => !excludeFieldnames.has(f.fieldname) && !excludeFieldtypes.has(f.fieldtype),
+		);
+	} catch (err) {
+		console.error(`Failed to load fields for doctype "${doctype}":`, err);
+		return [];
+	}
+}
 export async function getServiceUIConfig(serviceType) {
 	if (!serviceType) return {};
 
@@ -178,6 +199,130 @@ export function hasCachedField(documentType, fieldPath) {
 export function getCachedFieldsForDoctype(documentType) {
 	const key = getDoctypeCacheKey(documentType);
 	return fieldCache.get(key) || [];
+}
+// utils/formatValue.ts
+/**
+ * Safe get: supports nested keys like 'meta.label'
+ */
+function get(obj, path, fallback = "[?]") {
+	if (!obj || typeof obj !== "object") return fallback;
+	return path.split(".").reduce((acc, part) => acc && acc[part], obj) ?? fallback;
+}
+
+/**
+ * Format a value based on fieldtype
+ * @param {*} value - the raw value (string, number, object, etc.)
+ * @param {Object} field - a DocField object with at least `fieldtype` and optional `options`, `precision`
+ * @param {Object} opts - optional: locale, currency override
+ * @returns {string} formatted value
+ */
+export function formatValue(value, field, opts = {}) {
+	if (value == null || value === "") return "";
+
+	switch (field.fieldtype) {
+		case "Data":
+		case "Text":
+		case "Small Text":
+		case "Long Text":
+		case "Code":
+		case "Read Only":
+			return String(value);
+
+		case "Int":
+		case "Float":
+		case "Percent":
+			return Number(value).toLocaleString(opts.locale, {
+				minimumFractionDigits: field.precision ?? (field.fieldtype === "Percent" ? 2 : 0),
+				maximumFractionDigits: field.precision ?? 4,
+			});
+
+		case "Currency": {
+			const currency = opts.currency || field.options || "USD";
+			return new Intl.NumberFormat(opts.locale, {
+				style: "currency",
+				currency,
+				minimumFractionDigits: field.precision ?? 2,
+			}).format(Number(value));
+		}
+
+		case "Date":
+			return new Date(value).toLocaleDateString(opts.locale);
+
+		case "Datetime":
+			return new Date(value).toLocaleString(opts.locale);
+
+		case "Time":
+			try {
+				return new Date(`1970-01-01T${value}Z`).toLocaleTimeString(opts.locale, {
+					hour: "2-digit",
+					minute: "2-digit",
+				});
+			} catch {
+				return String(value);
+			}
+
+		case "Check":
+		case "Boolean":
+			return value ? "✔️" : "✖️";
+
+		case "Select":
+			return String(value);
+
+		case "Link":
+		case "Dynamic Link":
+			return String(value);
+
+		case "Rating":
+			return "★".repeat(value) + "☆".repeat(5 - value);
+
+		case "JSON": {
+			let parsed;
+
+			try {
+				parsed = typeof value === "string" ? JSON.parse(value) : value;
+			} catch (e) {
+				return "[Invalid JSON]";
+			}
+
+			const keyPath = field.options || "label";
+
+			// Case: list of lists
+			if (Array.isArray(parsed) && parsed.every((item) => Array.isArray(item))) {
+				const formattedGroups = parsed.map((group, i) => {
+					if (i === 0) {
+						// First group — plain strings
+						return group.map((str) => String(str)).join(", ");
+					} else {
+						// Other groups — format objects
+						return group
+							.map((obj) => (typeof obj === "object" ? get(obj, keyPath) : String(obj)))
+							.join(" > ");
+					}
+				});
+
+				return formattedGroups.join(" | ");
+			}
+
+			// Case: list of objects
+			if (Array.isArray(parsed)) {
+				return parsed
+					.map((item) => (typeof item === "object" ? get(item, keyPath) : String(item)))
+					.join(" > ");
+			}
+
+			// Case: plain object
+			if (typeof parsed === "object") {
+				return Object.entries(parsed)
+					.map(([k, v]) => `${k}: ${v}`)
+					.join(", ");
+			}
+
+			return String(parsed);
+		}
+
+		default:
+			return String(value);
+	}
 }
 
 // Add this function for ID generation

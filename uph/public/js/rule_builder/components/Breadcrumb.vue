@@ -1,51 +1,3 @@
-<template>
-	<div class="breadcrumb-container" :class="{ clickable: clickable }">
-		<template v-for="(item, i) in processedItems" :key="getItemKey(item, i)">
-			<!-- Item Content with Remove Button -->
-			<div class="breadcrumb-item-wrapper">
-				<div class="breadcrumb-item" :class="itemClasses(item, i)">
-					<component
-						:is="clickable && !isDisabled(item) ? 'button' : 'span'"
-						class="breadcrumb-content"
-						@click="handleClick(item, i)"
-					>
-						<slot name="item" :item="item" :index="i">
-							{{ __(item.label) || __(item.value) || __(item.fieldname) || __(item.name) || item }}
-						</slot>
-					</component>
-				</div>
-
-				<!-- Remove Button for Each Item when showRemove='all' -->
-				<button
-					v-if="showRemove === 'all'"
-					class="breadcrumb-remove"
-					@click.stop="handleRemove(i)"
-					:disabled="isRemoveDisabled(item, i)"
-				>
-					<slot name="remove-icon">×</slot>
-				</button>
-			</div>
-
-			<!-- Separator -->
-			<div v-if="i < processedItems.length - 1" class="breadcrumb-separator">
-				<slot name="separator">{{ separator }}</slot>
-			</div>
-		</template>
-
-		<!-- Single Remove Button when showRemove='last' -->
-		<button
-			v-if="showRemove === 'last' && processedItems.length > 0"
-			class="breadcrumb-remove"
-			@click.stop="handleRemove(processedItems.length - 1)"
-			:disabled="
-				isRemoveDisabled(processedItems[processedItems.length - 1], processedItems.length - 1)
-			"
-		>
-			<slot name="remove-icon">×</slot>
-		</button>
-	</div>
-</template>
-
 <script setup>
 import { computed } from "vue";
 
@@ -171,6 +123,54 @@ function handleRemove(index) {
 	});
 }
 </script>
+
+<template>
+	<div class="breadcrumb-container" :class="{ clickable: clickable }">
+		<template v-for="(item, i) in processedItems" :key="getItemKey(item, i)">
+			<!-- Item Content with Remove Button -->
+			<div class="breadcrumb-item-wrapper">
+				<div class="breadcrumb-item" :class="itemClasses(item, i)">
+					<component
+						:is="clickable && !isDisabled(item) ? 'button' : 'span'"
+						class="breadcrumb-content"
+						@click="handleClick(item, i)"
+					>
+						<slot name="item" :item="item" :index="i">
+							{{ __(item.label) || __(item.value) || __(item.fieldname) || __(item.name) || item }}
+						</slot>
+					</component>
+				</div>
+
+				<!-- Remove Button for Each Item when showRemove='all' -->
+				<button
+					v-if="showRemove === 'all'"
+					class="breadcrumb-remove"
+					@click.stop="handleRemove(i)"
+					:disabled="isRemoveDisabled(item, i)"
+				>
+					<slot name="remove-icon">×</slot>
+				</button>
+			</div>
+
+			<!-- Separator -->
+			<div v-if="i < processedItems.length - 1" class="breadcrumb-separator">
+				<slot name="separator">{{ separator }}</slot>
+			</div>
+		</template>
+
+		<!-- Single Remove Button when showRemove='last' -->
+		<button
+			v-if="showRemove === 'last' && processedItems.length > 0"
+			class="breadcrumb-remove"
+			@click.stop="handleRemove(processedItems.length - 1)"
+			:disabled="
+				isRemoveDisabled(processedItems[processedItems.length - 1], processedItems.length - 1)
+			"
+		>
+			<slot name="remove-icon">×</slot>
+		</button>
+	</div>
+</template>
 
 <style scoped>
 .breadcrumb-container {

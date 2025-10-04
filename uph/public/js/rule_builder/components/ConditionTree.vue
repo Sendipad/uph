@@ -1,12 +1,18 @@
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick, watch } from "vue";
 import ConditionTree from "./ConditionTree.vue";
 import GridRenderer from "./GridRenderer.vue";
 import draggable from "vuedraggable";
 import { useRuleBuilderStore } from "../store";
-import { getServiceUIConfig, safeFrappeUtils } from "../utils";
+import {
+	safeFrappeUtils,
+	getFinalFields,
+	loadDoctypeFields,
+	evaluate_depends_on_value,
+} from "../utils";
 import { Switch } from "@headlessui/vue";
 import DynamicField from "./DynamicField.vue";
+
 const props = defineProps({
 	conditionId: { type: String, required: true },
 	depth: { type: Number, default: 0 },
@@ -18,309 +24,172 @@ const wrapper = ref(null);
 const draggedId = ref(null);
 const isHovered = ref(false);
 
-const condition = computed(() => store.getConditionById(props.conditionId));
+// reactive refs
+const conditionRef = computed(() => store.getConditionById(props.conditionId));
 const children = computed(() => store.childConditions(props.conditionId));
-const isGroup = computed(() => condition.value?.is_group === 1);
+const isGroup = computed(() => conditionRef.value?.is_group === 1);
 const isCollapsed = computed(() => store.isConditionCollapsed(props.conditionId));
 const isFocused = computed(() => store.focusedConditionId === props.conditionId);
 const conditionFields = ref([]);
+
+// drag group rule (keeps previous behavior)
 const dragGroup = computed(() => ({
 	name: "conditions",
 	pull: true,
-	put: (to, from, draggedEl) => {
+	put: (to, from) => {
 		const toDepth = props.depth;
-		const fromWrapper = from.el.closest(".condition-wrapper");
-
+		const fromWrapper = from.el.closest?.(".condition-wrapper");
 		if (!fromWrapper) return true;
-
 		const fromComponent = fromWrapper.__vue__ || fromWrapper.__vnode?.component?.proxy;
 		const fromDepth = fromComponent?.depth ?? 0;
-
 		return fromDepth <= toDepth;
 	},
 }));
-const isAnd = ref(condition.value?.group_operator === "AND");
+
+const isAnd = ref(conditionRef.value?.group_operator === "AND");
 const isRTL = ref(false);
-const isSelected = ref(false);
-const isIndeterminate = ref(false);
-const summaryFields = computed(() => {
-	if (!conditionFields.value.length) return [];
 
-	// Find left_field_path field
-	const leftField = conditionFields.value.find((f) => f.fieldname === "left_field_path");
-	// Find operator field
-	const operatorField = conditionFields.value.find((f) => f.fieldname === "operator");
-	// Find all required fields (mandatory)
-	const requiredFields = conditionFields.value.filter((f) => f.reqd);
+// computed selection & indeterminate
+const isSelected = computed(() => store.isConditionSelected(props.conditionId));
+const isIndeterminate = computed(() => {
+	if (!isGroup.value) return false;
+	const ch = children.value || [];
+	const selectedCount = ch.filter((c) => store.isConditionSelected(c.condition_id)).length;
+	return selectedCount > 0 && selectedCount < ch.length;
+});
 
-	// Combine: left_field_path, operator, then required fields that are not duplicates
-	const fields = [];
+// parent doc context used by evaluate_depends_on_value
+const parentDoc = computed(() => conditionRef.value?.__parent || store.doc || {});
 
-	if (leftField) fields.push(leftField);
-	if (operatorField) fields.push(operatorField);
+// load fields on mount (await async store method)
+onMounted(async () => {
+	isRTL.value = document.documentElement.dir === "rtl";
+	conditionFields.value = await store.getFieldsForDoctype("Rule Condition");
+});
 
-	requiredFields.forEach((f) => {
-		if (f.fieldname !== "left_field_path" && f.fieldname !== "operator") {
-			fields.push(f);
+// keep group operator in sync
+watch(
+	() => isAnd.value,
+	(val) => {
+		if (!conditionRef.value) return;
+		const op = val ? "AND" : "OR";
+		if (conditionRef.value.group_operator !== op) {
+			conditionRef.value.group_operator = op;
+			store.markDirty();
 		}
+	},
+);
+
+// helpers: compute summary fields using standard Frappe meta
+function getSummaryFields(condition) {
+	if (!condition || !conditionFields.value?.length) return [];
+
+	const blacklist = new Set([
+		"group_a_column",
+		"group_b_column",
+		"group_logic_section",
+		"is_group",
+		"indent",
+		"group_operator",
+		"logical_operator",
+		"condition_section",
+	]);
+
+	// fields to always include (if present and not blacklisted)
+	const alwaysInclude = ["left_field_chain", "operator"];
+
+	// preserve order from conditionFields.value
+	const filtered = conditionFields.value.filter((f) => {
+		if (!f || !f.fieldname) return false;
+		if (blacklist.has(f.fieldname)) return false;
+		if (f.hidden === 1) return false; // respect hidden meta
+		if (alwaysInclude.includes(f.fieldname)) return true;
+
+		// evaluate visibility & required using standard meta keys
+		const visible = f.depends_on
+			? evaluate_depends_on_value(f.depends_on, condition, parentDoc.value)
+			: true;
+
+		const reqd = f.mandatory_depends_on
+			? evaluate_depends_on_value(f.mandatory_depends_on, condition, parentDoc.value)
+			: !!f.reqd;
+
+		const value = condition[f.fieldname];
+
+		// Generic rule: hide any field that is NOT in_list_view once it has a value
+		if (value !== undefined && value !== null && value !== "" && f.in_list_view !== 1) {
+			return false;
+		}
+
+		// Show if required & has a value OR explicitly marked for list view
+		return (
+			(visible && reqd && value !== undefined && value !== null && value !== "") ||
+			(visible && f.in_list_view === 1)
+		);
 	});
 
-	// Optionally limit to first 4 total fields
-	return fields.slice(0, 4);
-});
+	return filtered.slice(0, 6);
+}
 
-// Initialize RTL on mount
-onMounted(() => {
-	isRTL.value = document.documentElement.dir === "rtl";
-});
+const summaryFields = computed(() => getSummaryFields(conditionRef.value));
+const limitedSummaryFields = computed(() => summaryFields.value.slice(0, 4));
 
-// Add selection handling
+// UI helpers
 function toggleSelection() {
-	if (isGroup.value) {
-		store.setGroupSelected(props.conditionId, !isSelected.value);
-	} else {
-		store.setConditionSelected(props.conditionId, !isSelected.value);
-	}
+	if (isGroup.value) store.setGroupSelected(props.conditionId, !isSelected.value);
+	else store.setConditionSelected(props.conditionId, !isSelected.value);
 }
-
-// Update selection state when store changes
-watch(
-	() => store.selectedConditions,
-	() => {
-		isSelected.value = store.isConditionSelected(props.conditionId);
-
-		// Handle indeterminate state for groups
-		if (isGroup.value) {
-			const children = store.childConditions(props.conditionId);
-			const selectedChildren = children.filter((child) =>
-				store.isConditionSelected(child.condition_id),
-			).length;
-
-			isIndeterminate.value = selectedChildren > 0 && selectedChildren < children.length;
-		}
-	},
-	{ deep: true },
-);
-
-// Update indent style for RTL/LTR
-const indentStyle = computed(() => {
-	if (isRTL.value) {
-		return {
-			marginRight: `${props.depth * 5}px`,
-			borderRight: props.depth > 0 ? "3px solid #e5e7eb" : "none",
-			paddingRight: props.depth > 0 ? "3px" : "0",
-		};
-	} else {
-		return {
-			marginLeft: `${props.depth * 5}px`,
-			borderLeft: props.depth > 0 ? "3px solid #e5e7eb" : "none",
-			paddingLeft: props.depth > 0 ? "3px" : "0",
-		};
-	}
-});
-
-const summaryText = computed(() => {
-	if (!condition.value) return "⚠️ Invalid condition";
-	const c = condition.value;
-
-	// Build a meaningful summary
-	const leftValue = c.left_field_path || c.left_value_literal || c.left_value_context_key || "...";
-
-	const operator = c.operator || "?";
-
-	const rightValue =
-		c.right_field_path || c.right_value_literal || c.right_value_context_key || "...";
-
-	return `${leftValue} ${operator} ${rightValue}`;
-});
-
-const groupSummary = computed(
-	() => `${condition.value?.name || __("Condition Group")} (${children.value.length})`,
-);
-
-onMounted(async () => {
-	await loadConditionFields();
-});
-// Sync changes back to condition and mark dirty:
-watch(isAnd, (newVal, oldVal) => {
-	if (!condition.value) return;
-	const newOperator = newVal ? "AND" : "OR";
-
-	if (condition.value.group_operator !== newOperator) {
-		condition.value.group_operator = newOperator;
-		store.markDirty();
-	}
-});
-watch(
-	() => store.doc.rule_service_type,
-	async () => {
-		await loadConditionFields();
-	},
-);
-function onFieldChange({ field, oldVal, newVal }) {
-	if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
-		store.markDirty();
-	}
-}
-
-async function loadConditionFields() {
-	try {
-		const fields = frappe.meta.get_docfields("Rule Condition");
-		if (Array.isArray(fields)) {
-			const blacklist = new Set([
-				"group_a_column",
-				"group_b_column",
-				"group_logic_section",
-				"is_group",
-				"indent",
-				"group_operator",
-				"logical_operator",
-				"condition_section",
-			]);
-
-			conditionFields.value = fields.filter((f) => {
-				// Exclude by fieldname
-				if (blacklist.has(f.fieldname)) return false;
-
-				// Exclude fields meant for groups only via depends_on
-				const depends = f.depends_on || "";
-				const isGroupOnly = /doc\.is_group\s*={1,3}\s*1/.test(depends);
-				return !isGroupOnly;
-			});
-		} else {
-			console.warn("get_docfield did not return an array");
-			conditionFields.value = [];
-		}
-	} catch (e) {
-		console.error("Failed to load condition fields from meta:", e);
-		conditionFields.value = [];
-	}
-}
-
-function onDragEnter() {
-	wrapper.value?.classList.add("drag-over-highlight");
-}
-function onDragLeave() {
-	wrapper.value?.classList.remove("drag-over-highlight");
-}
-
-function onDragStart(event) {
-	if (event.dataTransfer) {
-		event.dataTransfer.setData("condition_id", props.conditionId);
-		event.dataTransfer.effectAllowed = "move";
-	}
-
-	draggedId.value = props.conditionId;
-
-	if (wrapper.value) {
-		wrapper.value.classList.add("dragging");
-	}
-}
-function onReorder(evt) {
-	const { added, moved } = evt;
-	if (moved) {
-		store.reorderInGroup(props.conditionId, moved.oldIndex, moved.newIndex);
-	} else if (added) {
-		const id = added.element.condition_id;
-		store.moveCondition(id, props.conditionId, added.newIndex);
-	}
-}
-
-function onDragEnd(event) {
-	draggedId.value = null;
-	if (wrapper.value) {
-		wrapper.value.classList.remove("dragging");
-	}
-}
-
-function handleDrop(event) {
-	event.preventDefault();
-	const droppedId = event.dataTransfer?.getData("condition_id");
-	if (!droppedId || droppedId === props.conditionId) return;
-
-	// Drop into current group
-	const groupId = props.conditionId;
-	const isGroupTarget = isGroup.value;
-
-	const newParentId = isGroupTarget ? props.conditionId : condition.value.parent_condition_id;
-	store.moveCondition(droppedId, newParentId);
-}
-
 function focusSelf() {
 	store.focusCondition(props.conditionId);
 }
-
 function toggleCollapse() {
 	store.toggleConditionCollapse(props.conditionId);
 }
-
-function update() {
-	const old = { ...condition.value };
-	nextTick(() => {
-		if (
-			condition.value?.group_operator !== old.group_operator // or other relevant fields
-		) {
-			store.markDirty();
-		}
-	});
-}
-
 function addChildCondition() {
-	const newCondition = store.addCondition(props.conditionId);
-	if (newCondition) {
-		store.focusCondition(newCondition.condition_id);
-	}
+	const n = store.addCondition(props.conditionId);
+	if (n) store.focusCondition(n.condition_id);
 }
-function onDragChange(evt) {
-	const { added, moved } = evt;
-	if (moved) {
-		// Internal reorder
-		const { oldIndex, newIndex } = moved;
-		if (oldIndex === newIndex) return;
-
-		const siblings = store.childConditions(props.conditionId);
-		const movedId = siblings[oldIndex]?.condition_id;
-		if (!movedId) return;
-
-		store.moveCondition(movedId, props.conditionId, newIndex);
-	} else if (added) {
-		// Cross-group drop
-		const { newIndex, element } = added;
-		if (!element?.condition_id) return;
-		store.moveCondition(element.condition_id, props.conditionId, newIndex);
-	}
-}
-
 function addChildGroup() {
-	const newGroup = store.addGroup(props.conditionId);
-	if (newGroup) {
-		store.focusCondition(newGroup.condition_id);
-	}
+	const n = store.addGroup(props.conditionId);
+	if (n) store.focusCondition(n.condition_id);
 }
-function onMove({ draggedContext, to }) {
-	const targetGroupId = to.el.closest(".condition-wrapper")?.__vue__?.conditionId;
-	// Allow dropping only into actual groups:
-	return store.getConditionById(targetGroupId)?.is_group === 1;
-}
-
 function duplicate() {
-	const duplicated = store.duplicateInLayout(condition.value);
-	if (duplicated) {
-		store.focusCondition(duplicated.condition_id);
-	}
+	const d = store.duplicateInLayout(conditionRef.value);
+	if (d) store.focusCondition(d.condition_id);
 }
 function remove() {
 	if (props.conditionId === "Root") {
-		frappe.confirm(
-			__(
-				"You are about to remove the root group. This will delete all its child conditions. Are you sure?",
-			),
-			() => {
-				store.removeCondition(props.conditionId);
-			},
+		frappe.confirm(__("Removing the root group deletes all children. Proceed?"), () =>
+			store.removeCondition(props.conditionId),
 		);
 	} else {
 		store.removeCondition(props.conditionId);
+	}
+}
+
+// drag handlers
+function onDragStart() {
+	draggedId.value = props.conditionId;
+	wrapper.value?.classList.add("dragging");
+}
+function onDragEnd() {
+	draggedId.value = null;
+	wrapper.value?.classList.remove("dragging");
+}
+function onDragChange({ added, moved }) {
+	if (moved) {
+		// reorder inside same group
+		store.reorderInGroup(props.conditionId, moved.oldIndex, moved.newIndex);
+	} else if (added) {
+		store.moveCondition(added.element.condition_id, props.conditionId, added.newIndex);
+	}
+}
+
+// field change -> update store and mark dirty
+function onFieldChange({ field, oldVal, newVal }) {
+	if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+		store.updateConditionField(props.conditionId, field.fieldname, newVal);
+		store.markDirty();
 	}
 }
 </script>
@@ -333,143 +202,112 @@ function remove() {
 			'is-collapsed': isCollapsed,
 			'is-dragging': draggedId === conditionId,
 		}"
-		:style="indentStyle"
+		:style="{
+			marginLeft: `${depth * 5}px`,
+			borderLeft: depth > 0 ? '3px solid #e5e7eb' : 'none',
+			paddingLeft: depth > 0 ? '3px' : '0',
+		}"
 		ref="wrapper"
 		@mouseenter="isHovered = true"
 		@mouseleave="isHovered = false"
 	>
-		<!-- COMPACT ROW LAYOUT -->
 		<div class="compact-row" @click="focusSelf">
-			<!-- Selection Checkbox -->
 			<div class="selection-cell">
 				<input
 					type="checkbox"
 					:checked="isSelected"
 					:indeterminate.prop="isGroup && isIndeterminate"
-					@change="toggleSelection"
-					@click.stop
+					@change.stop="toggleSelection"
 				/>
 			</div>
 
-			<!-- Drag Handle -->
 			<div class="drag-cell">
 				<span
 					class="drag-handle"
 					v-html="utils.icon('drag', 'xs')"
-					@click.stop
 					@dblclick.stop="toggleCollapse"
 				/>
 			</div>
 
-			<!-- Operator/Toggle -->
 			<div class="operator-cell">
 				<Switch v-if="isGroup" v-model="isAnd" as="template">
-					<button class="group-switch" :class="{ 'is-and': isAnd, 'is-or': !isAnd }" @click.stop>
-						<span class="sr-only">Toggle between AND and OR</span>
-						<span class="switch-track">
-							<span class="switch-thumb" />
-						</span>
-						<span class="switch-labels">
-							<span class="label-and">{{ __("All") }}</span>
-							<span class="label-or">{{ __("Any") }}</span>
-						</span>
-					</button>
+					<button class="group-switch" :class="{ 'is-and': isAnd, 'is-or': !isAnd }" @click.stop />
 				</Switch>
-
 				<button
-					v-if="!isGroup"
+					v-else
 					class="toggle-button"
 					@click.stop="toggleCollapse"
 					:aria-expanded="!isCollapsed"
 				>
-					<span aria-hidden="true">{{ isCollapsed ? "▶" : "▼" }}</span>
+					{{ isCollapsed ? "▶" : "▼" }}
 				</button>
 			</div>
 
-			<!-- Summary Content -->
 			<div class="summary-cell">
 				<div v-if="isGroup" class="group-summary">
-					<span class="group-icon" v-html="utils.icon('folder', 'sm')" />
-					<span class="group-label">If {{ isAnd ? "all" : "any" }} of:</span>
-					<span class="child-count" v-if="!isCollapsed">({{ children.length }})</span>
+					<span v-html="utils.icon('folder', 'sm')" />
+					<span>If {{ isAnd ? "all" : "any" }} of:</span>
+					<span v-if="!isCollapsed">({{ children.length }})</span>
 				</div>
+
 				<div v-else class="condition-summary">
-					<span class="condition-icon" v-html="utils.icon('file', 'sm')" />
+					<span v-html="utils.icon('file', 'sm')" />
 					<div class="summary-fields">
+						<!-- render the computed summary fields only -->
 						<DynamicField
-							v-for="field in summaryFields"
+							v-for="field in limitedSummaryFields"
 							:key="field.fieldname"
 							:df="field"
-							:doc="condition"
+							:doc="conditionRef"
 							mode="labelless"
 							@field-change="onFieldChange"
-							:readonly="true"
 						/>
 					</div>
 				</div>
 			</div>
 
-			<!-- Action Buttons -->
 			<div class="actions-cell">
 				<div class="action-buttons" v-show="isFocused || isHovered">
 					<template v-if="isGroup">
-						<button
-							class="action-button add-condition"
-							@click.stop="addChildCondition"
-							aria-label="Add child condition"
-						>
-							<span aria-hidden="true">+</span>
-						</button>
-						<button
-							class="action-button add-group"
-							@click.stop="addChildGroup"
-							aria-label="Add child group"
-						>
-							<span aria-hidden="true">⋁</span>
-						</button>
+						<button class="action-button add-condition" @click.stop="addChildCondition">+</button>
+						<button class="action-button add-group" @click.stop="addChildGroup">⋁</button>
 					</template>
-					<button class="action-button duplicate" @click.stop="duplicate" aria-label="Duplicate">
-						<span aria-hidden="true">⎘</span>
-					</button>
-					<button class="action-button delete" @click.stop="remove" aria-label="Delete">
-						<span aria-hidden="true">✕</span>
-					</button>
+					<button class="action-button duplicate" @click.stop="duplicate">⎘</button>
+					<button class="action-button delete" @click.stop="remove">✕</button>
 				</div>
 			</div>
 		</div>
 
-		<!-- EXPANDED CONTENT -->
 		<transition name="expand">
 			<div v-if="!isCollapsed" class="expanded-content">
 				<template v-if="isGroup">
-					<div class="group-children">
-						<draggable
-							:list="children"
-							item-key="condition_id"
-							:group="dragGroup"
-							handle=".drag-handle"
-							ghost-class="dragging-ghost"
-							drag-class="dragging-active"
-							:animation="150"
-							@start="onDragStart"
-							@end="onDragEnd"
-							@change="onDragChange"
-						>
-							<template #item="{ element }">
-								<ConditionTree :condition-id="element.condition_id" :depth="depth + 1" />
-							</template>
-							<template #footer v-if="children.length === 0">
-								<div class="empty-group">
-									<p>{{ __("Drop conditions here or click") }} +</p>
-								</div>
-							</template>
-						</draggable>
-					</div>
+					<draggable
+						:list="children"
+						item-key="condition_id"
+						:group="dragGroup"
+						handle=".drag-handle"
+						ghost-class="dragging-ghost"
+						drag-class="dragging-active"
+						:animation="150"
+						@start="onDragStart"
+						@end="onDragEnd"
+						@change="onDragChange"
+					>
+						<template #item="{ element }">
+							<ConditionTree :condition-id="element.condition_id" :depth="depth + 1" />
+						</template>
+						<template #footer v-if="children.length === 0">
+							<div class="empty-group">
+								<p>{{ __("Drop conditions here or click") }} +</p>
+							</div>
+						</template>
+					</draggable>
 				</template>
+
 				<template v-else>
 					<div class="condition-form">
 						<GridRenderer
-							:doc="condition"
+							:doc="conditionRef"
 							:fields="conditionFields"
 							@field-change="onFieldChange"
 						/>

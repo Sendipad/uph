@@ -7,6 +7,7 @@
 		<!-- Builder -->
 		<div class="builder-container" :class="{ 'actions-visible': showActionsPanel }">
 			<!-- Conditions Section -->
+
 			<section class="conditions">
 				<div class="section-header">
 					<h3>{{ __("Conditions") }}</h3>
@@ -41,7 +42,6 @@
 				/>
 			</section>
 
-			<!-- Actions Section -->
 			<transition name="slide-fade">
 				<section v-if="showActionsPanel" class="actions">
 					<div class="section-header">
@@ -60,11 +60,12 @@
 						</div>
 					</template>
 					<template v-else>
-						<ActionGroup :actions="store.actions" />
+						<Action :actions="store.actions" />
 					</template>
 				</section>
 			</transition>
 		</div>
+		<div id="autocomplete-area" />
 
 		<!-- Footer -->
 		<div class="footer">
@@ -85,8 +86,9 @@
 import { ref, computed } from "vue";
 import { useRuleBuilderStore } from "./store";
 
-import ActionGroup from "./components/ActionGroup.vue";
+import Action from "./components/Action.vue";
 import ConditionTree from "./components/ConditionTree.vue";
+import Condition from "./components/Condition.vue";
 
 import { safeFrappeUtils } from "./utils";
 

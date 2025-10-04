@@ -1,6 +1,12 @@
 import { defineStore } from "pinia";
 import { computed, ref, reactive, watch, toRaw, nextTick } from "vue";
-import { generateUniqueId, useServiceUIConfig, getFinalFields } from "./utils";
+import {
+	generateUniqueId,
+	useServiceUIConfig,
+	getFinalFields,
+	getServiceUIConfig,
+	loadDoctypeFields,
+} from "./utils";
 import { useDebouncedRefHistory, onKeyDown } from "@vueuse/core";
 
 export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
@@ -15,6 +21,7 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 		conditions: false,
 		actions: false,
 	});
+	const conditionFields = ref([]);
 	const isLoaded = ref(false);
 	const layoutMode = ref("compact");
 
@@ -48,14 +55,12 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 	const childConditions = (parentId) =>
 		conditions.value.filter((c) => c.parent_condition_id === parentId);
 
-	const mergedConditionFields = computed(() => {
-		const getFields = uph?.hub?.field_options?.getCachedFieldsForDoctype;
-		if (typeof getFields !== "function") return [];
-		const meta = getFields("Rule Condition") || [];
-		const config = serviceUIConfig.value?.["Rule Condition"] || {};
-		return getFinalFields(config, meta, layoutMode.value);
-	});
 	const selectedConditions = ref(new Set());
+	const mergedConditionFields = computed(() => {
+		if (!Array.isArray(conditionFields.value)) return [];
+		const config = serviceUIConfig.value?.["Rule Condition"] || {};
+		return getFinalFields(config, conditionFields.value, layoutMode.value);
+	});
 
 	// Add selection methods
 	function setConditionSelected(conditionId, selected) {
@@ -157,6 +162,10 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 			modified: "",
 		};
 	}
+	function addAction() {
+		let cdt = add_child("Rule Action", "actions");
+		return cdt;
+	}
 	function add_child(doctype, parentfield, defaults = {}, idx = null) {
 		const child = get_new_child_template(doctype, parentfield);
 
@@ -253,6 +262,29 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 		conditions.value = conditions.value.filter((c) => !allIds.includes(c.condition_id));
 
 		markDirty();
+	}
+
+	async function loadConditionFields() {
+		let fields = await loadDoctypeFields("Rule Condition", {
+			excludeFieldnames: new Set([
+				"group_a_column",
+				"group_b_column",
+				"group_logic_section",
+				"is_group",
+				"indent",
+				"group_operator",
+				"logical_operator",
+				"condition_section",
+			]),
+		});
+
+		fields = fields.filter((f) => {
+			const depends = f.depends_on || "";
+			return !/doc\.is_group\s*={1,3}\s*1/.test(depends);
+		});
+
+		const config = await getServiceUIConfig(doc.value.rule_service_type);
+		conditionFields.value = getFinalFields(config, fields, "full");
 	}
 
 	function duplicateInLayout(original) {
@@ -422,6 +454,12 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 		}
 		return all;
 	}
+	function updateConditionField(conditionId, fieldname, value) {
+		const cond = getConditionById(conditionId);
+		if (cond) {
+			cond[fieldname] = value;
+		}
+	}
 
 	function collapseAll() {
 		for (const c of conditions.value) collapsed[c.condition_id] = true;
@@ -437,6 +475,16 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 	function redo() {
 		history.redo();
 		markDirty();
+	}
+	async function getFieldsForDoctype(doctype) {
+		if (doctype !== "Rule Condition") {
+			return [];
+		}
+		if (conditionFields.value.length) {
+			return conditionFields.value;
+		}
+		await loadConditionFields();
+		return conditionFields.value;
 	}
 
 	function init(frmInstance, serviceType, documentTypes) {
@@ -466,6 +514,7 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 			markDirty(true); // Force-check dirty after load
 			history.resume();
 		});
+		loadConditionFields();
 		selectedConditions.value.clear(); // Clear selection on new load
 	}
 
@@ -590,9 +639,10 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 		collapseAll,
 		expandAll,
 		markDirtyIfChanged,
-
+		updateConditionField,
 		rootConditions,
 		childConditions,
+		getFieldsForDoctype,
 		conditionsMap,
 		serviceUIConfig,
 		mergedConditionFields,
@@ -609,5 +659,6 @@ export const useRuleBuilderStore = defineStore("ruleBuilder", () => {
 		setConditionSelected,
 		setGroupSelected,
 		isConditionSelected,
+		addAction,
 	};
 });
