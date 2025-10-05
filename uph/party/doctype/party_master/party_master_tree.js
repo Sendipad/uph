@@ -5,28 +5,34 @@ frappe.treeview_settings["Party Master"] = {
 	get_tree_nodes: "uph.party.doctype.party_master.party_master.get_children",
 	ignore_fields: ["parent_party_master"],
 
+	onload: function (treeview) {
+		treeview.make_new_node = function (parent_node) {
+			frappe.ui.form.make_quick_entry(
+				"Party Master",
+				null, // after_insert
+				null, // init_callback
+				{ parent_party_master: parent_node.data.value }, // prefill
+				null, // force
+				frappe.ui.form.PartyMasterQuickEntryForm, // custom class
+			);
+		};
+	},
+
 	on_get_node: function (nodes, deep = false) {
 		if (frappe.boot.user.can_read.indexOf("GL Entry") == -1) return;
-
 		let party_master = deep
 			? nodes.reduce((pm, node) => [...pm, ...node.data], [])
 			: nodes.map((node) => node.label);
 
 		frappe.call({
 			method: "uph.party.doctype.party_master.party_master.get_party_master_balances",
-			args: {
-				name: party_master,
-				company: cur_tree.args.company,
-			},
+			args: { name: party_master, company: cur_tree.args.company },
 			callback: function (r) {
 				if (!r.message) return;
-
 				r.message.forEach((pm) => {
 					const node = cur_tree.nodes[pm.name];
 					if (!node || node.is_root) return;
-
 					node.$tree_link.find(".balance-area").remove();
-
 					const balance_text = pm.balances
 						.map((balance) => {
 							const is_dr = balance.amount >= 0;
@@ -35,7 +41,6 @@ frappe.treeview_settings["Party Master"] = {
 							return `<span style="color:${color}">${arrow} ${format_currency(Math.abs(balance.amount), balance.currency)}</span>`;
 						})
 						.join(" / ");
-
 					$('<span class="balance-area pull-right">' + balance_text + "</span>").insertAfter(
 						node.$tree_link.find("a"),
 					);
@@ -59,7 +64,6 @@ frappe.treeview_settings["Party Master"] = {
 			label: __("Party Master"),
 			onchange: function () {
 				const treeview = frappe.views.trees["Party Master"];
-				const field = this.df;
 				const input = this.$input;
 				const party_master = input ? input.get_value() : null;
 
@@ -70,7 +74,6 @@ frappe.treeview_settings["Party Master"] = {
 					return;
 				}
 
-				// Check if selected node is a leaf
 				frappe.call({
 					method: "frappe.client.get_value",
 					args: {
@@ -80,29 +83,17 @@ frappe.treeview_settings["Party Master"] = {
 					},
 					callback: (r) => {
 						if (r.message.is_group) {
-							// Handle group node normally
 							treeview.root_value = party_master;
 							treeview.root_label = party_master;
 							treeview.make_tree();
 						} else {
-							// For leaf node, get its parent and set as root
 							const parent = r.message.parent_party_master;
-
-							// Set parent as root
 							treeview.root_value = parent;
 							treeview.root_label = parent;
-
-							// Make tree with parent as root
 							treeview.make_tree();
-
-							// After render, show only the selected leaf under parent
 							setTimeout(() => {
 								const parent_node = cur_tree.nodes[parent];
 								if (parent_node) {
-									// Collapse all other children
-									//cur_tree.load_children(parent_node, false);
-
-									// Expand only our selected leaf
 									const leaf_node = cur_tree.nodes[party_master];
 									if (leaf_node) {
 										leaf_node.show();
@@ -127,34 +118,25 @@ frappe.treeview_settings["Party Master"] = {
 	toolbar: [
 		{
 			label: __("Add Child"),
-			condition: function (node) {
-				return node.expandable;
-			},
+			condition: (node) => node.expandable,
 			click: function (node) {
-				frappe.ui.form.make_quick_entry("Party Master", null, null, {
-					parent_party_master: node.label,
-				});
+				// Reuse make_new_node for consistency
+				frappe.views.trees["Party Master"].make_new_node(node);
 			},
 			btnClass: "hidden-xs",
 		},
 		{
 			label: __("Edit"),
-			click: function (node) {
-				frappe.set_route("Form", "Party Master", node.label);
-			},
+			click: (node) => frappe.set_route("Form", "Party Master", node.label),
 			btnClass: "hidden-xs",
 		},
 		{
 			label: __("View Ledger"),
 			click: function (node) {
-				frappe.route_options = {
-					party_master: node.label,
-					company: cur_tree.args.company,
-				};
+				frappe.route_options = { party_master: node.label, company: cur_tree.args.company };
 				frappe.set_route("query-report", "Party Account Statement");
 			},
 			btnClass: "hidden-xs",
 		},
 	],
-	extend_toolbar: false,
 };

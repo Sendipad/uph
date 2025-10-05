@@ -14,7 +14,19 @@ frappe.ui.form.on("Party Master", {
 			},
 		}));
 	},
-
+	is_group(frm) {
+		if (!frm.doc.parent_party_master && !frm.doc.is_group) return;
+		frappe.call({
+			method: "uph.party.doctype.party_master.party_master.get_next_party_master_number",
+			args: {
+				parent: frm.doc.parent_party_master,
+				is_group: frm.doc.is_group ? 1 : 0,
+			},
+			callback: (r) => {
+				if (r.message) frm.set_value("party_number", r.message);
+			},
+		});
+	},
 	parent_party_master(frm) {
 		if (!frm.doc.parent_party_master) return;
 

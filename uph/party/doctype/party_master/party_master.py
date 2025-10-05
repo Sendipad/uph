@@ -33,23 +33,13 @@ class PartyMaster(NestedSet):
     from typing import TYPE_CHECKING
 
     if TYPE_CHECKING:
-        from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import (
-            AllowedToTransactWith,
-        )
-        from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import (
-            CustomerCreditLimit,
-        )
+        from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import AllowedToTransactWith
+        from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import CustomerCreditLimit
         from erpnext.utilities.doctype.portal_user.portal_user import PortalUser
         from frappe.types import DF
-        from uph.party.doctype.party_master_accounts.party_master_accounts import (
-            PartyMasterAccounts,
-        )
-        from uph.party.doctype.party_master_parties.party_master_parties import (
-            PartyMasterParties,
-        )
-        from uph.party.doctype.party_master_role.party_master_role import (
-            PartyMasterRole,
-        )
+        from uph.party.doctype.party_master_accounts.party_master_accounts import PartyMasterAccounts
+        from uph.party.doctype.party_master_parties.party_master_parties import PartyMasterParties
+        from uph.party.doctype.party_master_role.party_master_role import PartyMasterRole
 
         account_manager: DF.Link | None
         accounts: DF.Table[PartyMasterAccounts]
@@ -75,24 +65,11 @@ class PartyMaster(NestedSet):
         is_internal_party: DF.Check
         is_primary_role: DF.Check
         language: DF.Link | None
-        legal_entity_type: DF.Literal[
-            "",
-            "Sole Proprietor",
-            "Partnership",
-            "Corporation",
-            "LLC",
-            "NGO",
-            "Freelancer",
-            "Government",
-            "Individual",
-            "Other",
-        ]
+        legal_entity_type: DF.Literal["", "Sole Proprietor", "Partnership", "Corporation", "LLC", "NGO", "Freelancer", "Government", "Individual", "Other"]
         lft: DF.Int
         market_segment: DF.Link | None
         mobile_no: DF.ReadOnly | None
-        naming_series: DF.Literal[
-            "{party_number}", ".{parent_party_master}.", "PM-{party_name}"
-        ]
+        naming_series: DF.Literal["{party_number}", ".{parent_party_master}.", "PM-{party_name}"]
         national_id: DF.Data | None
         old_parent: DF.Link | None
         parent_party_master: DF.Link | None
@@ -113,21 +90,7 @@ class PartyMaster(NestedSet):
         rgt: DF.Int
         roles: DF.TableMultiSelect[PartyMasterRole]
         salutation: DF.Link | None
-        status: DF.Literal[
-            "Active",
-            "Disabled",
-            "Closed",
-            "Credit Hold",
-            "Delinquent",
-            "Disputed",
-            "Dormant",
-            "Write-Off",
-            "Approved",
-            "On Hold",
-            "Under Review",
-            "Terminated",
-            "Suspended",
-        ]
+        status: DF.Literal["Active", "Disabled", "Closed", "Credit Hold", "Delinquent", "Disputed", "Dormant", "Write-Off", "Approved", "On Hold", "Under Review", "Terminated", "Suspended"]
         tax_category: DF.Link | None
         tax_id: DF.Data | None
         tax_withholding_category: DF.Link | None
@@ -135,7 +98,6 @@ class PartyMaster(NestedSet):
         title: DF.Data | None
         total_linked_party: DF.Int
         type: DF.Literal["", "Company", "Individual", "Partnership"]
-
     # end: auto-generated types
     def onload(self):
         self.set("parties", get_party_master_parties(self.name))
@@ -153,7 +115,10 @@ class PartyMaster(NestedSet):
             frappe.throw(_("Party Number is Mandatory for Root Group Node"))
 
         number = get_next_party_master_number(self.parent_party_master, self.is_group)
-        self.party_number = number
+        # ensure we set and return the computed number so callers can use it
+        if number:
+            self.party_number = number
+            return number
 
     def validate(self):
         self.validate_roles()
@@ -738,139 +703,47 @@ def get_children1(doctype, parent=None, company=None, **filters):
 
 @frappe.whitelist()
 def get_next_party_master_number(parent=None, is_group=0):
-    """
-    Generate party numbers as strings according to specified hierarchy:
-    - Root groups: '1000', '2000', '3000'...
-    - First level subgroups: '1100', '1200', '2100'...
-    - Second level subgroups: '1110', '1120', '1210'...
-    - Leaf nodes: '1110000001', '1110000002'...
-    """
-    if not parent and not is_group:
-        return
+    """Hierarchical numbering with proper padding and sibling checks."""
+    import traceback
 
-    # Fetch the parent party master document
-    parent_doc = frappe.get_doc("Party Master", parent)
-    parent_number = parent_doc.party_number
-
-    # Group logic
-    if is_group:
-
-        def get_tree_level(pname):
-            level = 0
-            while pname:
-                pdoc = frappe.get_doc("Party Master", pname)
-                pname = pdoc.parent_party_master
-                level += 1
-            return level
-
-        level = get_tree_level(parent)
-        increment = (
-            1000 if level == 0 else 100 if level == 1 else 10 if level == 2 else 1
-        )
-
-        number = frappe.db.sql(
-            """
-            SELECT IFNULL(MAX(CAST(SUBSTRING_INDEX(party_number, ' ', -1) AS UNSIGNED)), 0)
-            FROM `tabParty Master`
-            WHERE parent_party_master = %(parent)s AND is_group = 1
-            """,
-            {"parent": parent},
-            as_list=1,
-        )[0][0]
-
-        return str(cint(number) + increment).zfill(4)
-
-    # Non-group logic
-
-    max_suffix = frappe.db.sql(
-        """
-            SELECT IFNULL(MAX(CAST(SUBSTRING(party_number, %(start)s) AS UNSIGNED)), 0)
-            FROM `tabParty Master`
-            WHERE parent_party_master = %(parent)s AND is_group = 0 AND party_number LIKE %(prefix)s
-            """,
-        {
-            "parent": parent,
-            "prefix": parent_number + "%",
-            "start": len(parent_number) + 1,  # 1-based indexing in SQL
-        },
-    )[0][0]
-    new_suffix = cint(max_suffix) + 1
-    return parent_number + str(new_suffix).zfill(5)
-
-
-@frappe.whitelist()
-def get_next_party_master_number2(parent=None, is_group=0):
-    """
-    Generate party numbers as strings according to specified hierarchy:
-    - Root groups: '1000', '2000', '3000'...
-    - First level subgroups: '1100', '1200', '2100'...
-    - Second level subgroups: '1110', '1120', '1210'...
-    - Leaf nodes: '1110000001', '1110000002'...
-    """
     try:
         if not parent and not is_group:
-            return None
+            frappe.throw("Cannot create a leaf Party Master without a parent group")
 
-        # ROOT GROUP (no parent, is_group=1)
+        # ROOT GROUP
         if not parent and is_group:
             last_root = frappe.db.sql(
                 """
-                SELECT MAX(CAST(party_number AS UNSIGNED)) 
+                SELECT MAX(CAST(party_number AS UNSIGNED))
                 FROM `tabParty Master`
                 WHERE parent_party_master IS NULL AND is_group=1
             """
             )[0][0]
+            return str(int(last_root or 0) + 1000).zfill(4)
 
-            if not last_root:
-                return "1000"
-
-            return str(int(last_root) + 1000)
-
-        # SUBGROUPS (has parent, is_group=1)
+        # SUBGROUPS
         if parent and is_group:
             parent_number = frappe.db.get_value("Party Master", parent, "party_number")
             if not parent_number:
-                frappe.throw(f"Parent Party Master {parent} has no party number")
+                frappe.throw(f"Parent {parent} has no party number")
 
-            # Find last sibling at this level
             last_sibling = frappe.db.sql(
                 """
                 SELECT MAX(CAST(party_number AS UNSIGNED))
                 FROM `tabParty Master`
                 WHERE parent_party_master=%s AND is_group=1
             """,
-                parent,
+                (parent,),
             )[0][0]
 
-            if not last_sibling:
-                # First child of this parent
-                if len(parent_number) == 4:  # Child of root group (1000 -> 1100)
-                    return parent_number[:1] + "100"
-                elif len(parent_number) == 4 and parent_number.endswith(
-                    "00"
-                ):  # First level (1100 -> 1110)
-                    return parent_number[:2] + "10"
-                else:
-                    return parent_number + "0"
-            else:
-                last_sibling = str(last_sibling)
-                # Increment based on level
-                if len(parent_number) == 4:  # First level subgroups (1100, 1200)
-                    increment = 100
-                elif (
-                    len(parent_number) == 4 and parent_number[2:] == "00"
-                ):  # Second level (1110, 1120)
-                    increment = 10
-                else:
-                    increment = 1
+            base = int(last_sibling or parent_number)
+            return str(base + 100).zfill(len(parent_number))
 
-                return str(int(last_sibling) + increment).zfill(len(last_sibling))
-
-        # LEAF NODES (has parent, is_group=0)
+        # LEAVES
         if parent and not is_group:
             parent_number = frappe.db.get_value("Party Master", parent, "party_number")
             if not parent_number:
-                frappe.throw(f"Parent Party Master {parent} has no party number")
+                frappe.throw(f"Parent {parent} has no party number")
 
             last_leaf = frappe.db.sql(
                 """
@@ -878,18 +751,16 @@ def get_next_party_master_number2(parent=None, is_group=0):
                 FROM `tabParty Master`
                 WHERE parent_party_master=%s AND is_group=0
             """,
-                parent,
+                (parent,),
             )[0][0]
 
-            if not last_leaf:
-                return parent_number + "000001"
-
-            last_leaf = str(last_leaf)
-            next_num = int(last_leaf[-6:]) + 1
-            return parent_number + str(next_num).zfill(6)
+            suffix = int(str(last_leaf)[-6:] if last_leaf else 0) + 1
+            return f"{parent_number}{suffix:06d}"
 
     except Exception as e:
-        frappe.log_error("Party Number Generation Error", str(e))
+        frappe.log_error(
+            "Party Number Generation Error", f"{e}\n{traceback.format_exc()}"
+        )
         raise
 
 
@@ -1290,3 +1161,40 @@ def parse_full_name(full_name: str) -> tuple[str, str | None, str | None]:
 
 def on_doctype_update():
     frappe.db.add_index("Party Master", ["lft", "rgt"])
+
+
+@frappe.whitelist()
+def map_party_to_target(
+    source_name, target_doctype=None, save=False, rule_field_value=None, target_doc=None
+):
+    """Compatibility wrapper used by client code.
+
+    Calls create_party_from_party_master and returns a serializable dict for the client.
+    """
+    if not source_name:
+        frappe.throw("source_name is required")
+    if not target_doctype:
+        frappe.throw("target_doctype is required")
+
+    # Ensure proper types for save
+    save_flag = True if str(save).lower() in ("1", "true", "yes") else False
+
+    try:
+        doc = create_party_from_party_master(
+            source_name=source_name,
+            target_doctype=target_doctype,
+            save=save_flag,
+            target_doc=target_doc,
+            rule_field_value=rule_field_value,
+        )
+    except Exception:
+        # Let Frappe handle and propagate the exception to client
+        raise
+
+    # If a Document object is returned, serialize it for the client
+    try:
+        if hasattr(doc, "as_dict"):
+            return doc.as_dict()
+        return doc
+    except Exception:
+        return doc
