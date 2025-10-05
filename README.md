@@ -86,7 +86,7 @@ It provides essential automation and system services, including:
 ```bash
 bench get-app unified_party_hub https://github.com/Sendipad/uph
 bench install-app uph
-
+```
 Next Steps
 
 1. Navigate: Unified Party Hub → Party Master in ERPNext v15+.
