@@ -6,12 +6,17 @@
   <p><strong>A Foundational and Scalable Master Data Management Solution for ERPNext</strong></p>
 
   <!-- Badges -->
-  <p>
-    ![Frappe v15+](https://img.shields.io/badge/Frappe-v15+-blue)
-    ![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue)
-    ![GitHub issues](https://img.shields.io/github/issues/Sendipad/uph)
-    ![GitHub stars](https://img.shields.io/github/stars/Sendipad/uph)
-  </p>
+  UPH supports Frappe / ERPNext v15+.
+
+<p align="center">
+  <a href="https://github.com/Sendipad/uph#installation">
+    <img src="https://img.shields.io/badge/Try%20It%20Now-Install-blue?style=for-the-badge&logo=github" alt="Try It Now"/>
+  </a>
+  &nbsp;
+  <a href="https://github.com/Sendipad/uph/wiki">
+    <img src="https://img.shields.io/badge/Documentation-Wiki-green?style=for-the-badge&logo=read-the-docs" alt="Documentation"/>
+  </a>
+</p>
 </div>
 
 ---
@@ -145,19 +150,5 @@ Licensed under GNU General Public License v3.0.
 Free to use, extend, and contribute.
 
 
----
 
-🚀 Try it Now
-
-UPH supports Frappe / ERPNext v15+.
-
-<p align="center">
-  <a href="https://github.com/Sendipad/uph#installation">
-    <img src="https://img.shields.io/badge/Try%20It%20Now-Install-blue?style=for-the-badge&logo=github" alt="Try It Now"/>
-  </a>
-  &nbsp;
-  <a href="https://github.com/Sendipad/uph/wiki">
-    <img src="https://img.shields.io/badge/Documentation-Wiki-green?style=for-the-badge&logo=read-the-docs" alt="Documentation"/>
-  </a>
-</p>
 ```
