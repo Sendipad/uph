@@ -6,14 +6,26 @@ frappe.treeview_settings["Party Master"] = {
 	ignore_fields: ["parent_party_master"],
 
 	onload: function (treeview) {
+		// ✅ Custom Add Child handler using Quick Entry
 		treeview.make_new_node = function (parent_node) {
 			frappe.ui.form.make_quick_entry(
 				"Party Master",
-				null, // after_insert
-				null, // init_callback
-				{ parent_party_master: parent_node.data.value }, // prefill
+				function (doc) {
+					if (doc && doc.name) {
+						frappe.show_alert({
+							message: __("Created new Party Master {0}", [doc.party_name || doc.name]),
+							indicator: "green",
+						});
+						treeview.reload();
+					}
+				},
+				null, // init callback
+				{
+					doctype: "Party Master", // 🔧 required for backend
+					parent_party_master: parent_node?.data?.value || null,
+				},
 				null, // force
-				frappe.ui.form.PartyMasterQuickEntryForm, // custom class
+				frappe.ui.form.PartyMasterQuickEntryForm, // your custom class
 			);
 		};
 	},
@@ -38,10 +50,13 @@ frappe.treeview_settings["Party Master"] = {
 							const is_dr = balance.amount >= 0;
 							const arrow = is_dr ? "▲" : "▼";
 							const color = is_dr ? "red" : "green";
-							return `<span style="color:${color}">${arrow} ${format_currency(Math.abs(balance.amount), balance.currency)}</span>`;
+							return `<span style="color:${color}">${arrow} ${format_currency(
+								Math.abs(balance.amount),
+								balance.currency,
+							)}</span>`;
 						})
 						.join(" / ");
-					$('<span class="balance-area pull-right">' + balance_text + "</span>").insertAfter(
+					$(`<span class="balance-area pull-right">${balance_text}</span>`).insertAfter(
 						node.$tree_link.find("a"),
 					);
 				});
@@ -111,7 +126,22 @@ frappe.treeview_settings["Party Master"] = {
 	post_render: function (treeview) {
 		treeview.page.set_title(__("Chart of Party"));
 		treeview.page.set_primary_action(__("New"), function () {
-			frappe.ui.form.make_quick_entry("Party Master", null, null);
+			frappe.ui.form.make_quick_entry(
+				"Party Master",
+				(doc) => {
+					if (doc && doc.name) {
+						frappe.show_alert({
+							message: __("Created new Party Master {0}", [doc.party_name || doc.name]),
+							indicator: "green",
+						});
+						treeview.reload();
+					}
+				},
+				null,
+				{ doctype: "Party Master" },
+				null,
+				frappe.ui.form.PartyMasterQuickEntryForm,
+			);
 		});
 	},
 
@@ -120,7 +150,6 @@ frappe.treeview_settings["Party Master"] = {
 			label: __("Add Child"),
 			condition: (node) => node.expandable,
 			click: function (node) {
-				// Reuse make_new_node for consistency
 				frappe.views.trees["Party Master"].make_new_node(node);
 			},
 			btnClass: "hidden-xs",

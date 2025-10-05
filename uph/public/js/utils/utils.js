@@ -1,4 +1,3 @@
-//import { $ } from "frappe-gantt/src/svg_utils";
 uph.party_type_pm_rules = {};
 function get_party_type_party_master_rules(party_type, callback) {
 	if (Object.keys(uph.party_type_pm_rules).length === 0) {
@@ -81,43 +80,62 @@ $(document).on("app_ready", function () {
 									fieldtype: "Link",
 									options: "Party Master",
 									reqd: 1,
-									get_query: function () {
+									get_query() {
 										return {
 											query: "uph.party.controllers.queries.get_party_master",
-											filters: {
-												party_type: frm.doc.doctype,
-											},
+											filters: { party_type: frm.doc.doctype },
 										};
 									},
 								},
 							],
 							primary_action_label: __("Link"),
-							freeze: 1,
+							freeze: true,
 							primary_action(values) {
+								if (!values.party_master) return;
 								frm.set_value("party_master", values.party_master);
-								frm.save();
 								d.hide();
-								frm.reload();
+								frm.save().then(() => frm.reload_doc());
 							},
-							secondary_action_label: __("Create new Party Master"),
-							secondary_action(frm) {
-								var dict = {
+						});
+
+						// 🧩 Secondary action — Create a new Party Master (Quick Entry)
+						d.set_secondary_action_label(__("Create New Party Master"));
+						d.set_secondary_action(() => {
+							d.hide(); // close first dialog
+
+							// add small delay to allow backdrop to be removed
+							setTimeout(() => {
+								const party_name_map = {
 									Customer: frm.doc.customer_name,
 									Supplier: frm.doc.supplier_name,
 									Employee: frm.doc.employee_name,
 								};
-								const pn = dict[p];
-								console.log("Party Name:", pn);
-								frappe.run_serially([
-									() => d.hide(),
-									() =>
-										erpnext.utils.create_new_doc("Party Master", {
-											party_name: pn,
-											party_type: frm.doc.doctype,
-										}),
-								]);
-							},
+
+								const party_name = party_name_map[frm.doc.doctype] || frm.doc.title || frm.doc.name;
+
+								frappe.ui.form.make_quick_entry(
+									"Party Master",
+									(doc) => {
+										if (doc && doc.name) {
+											frm.set_value("party_master", doc.name);
+											frm.save().then(() => frm.reload_doc());
+											frappe.show_alert({
+												message: __("Linked new Party Master {0}", [doc.party_name]),
+												indicator: "green",
+											});
+										}
+									},
+									null,
+									{
+										party_name: party_name,
+										party_type: frm.doc.doctype,
+									},
+									null,
+									frappe.ui.form.PartyMasterQuickEntryForm,
+								);
+							}, 300); // small wait so modal backdrop clears
 						});
+
 						d.show();
 					});
 				} else if (!frm.is_new()) {

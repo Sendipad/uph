@@ -73,6 +73,8 @@ frappe.ui.form.PartyMasterQuickEntryForm = class PartyMasterQuickEntryForm exten
 					break;
 
 				case "parent_party_master":
+					field.onchange = this.fetch_next_party_number.bind(this);
+					break;
 				case "is_group":
 					field.onchange = this.fetch_next_party_number.bind(this);
 					break;
