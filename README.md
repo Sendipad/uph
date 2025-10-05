@@ -1,14 +1,16 @@
+# Unified Party Hub (UPH)
+
 <div align="center">
   <a href="https://github.com/Sendipad/uph/wiki">
-    <img src="https://github.com/user-attachments/assets/424defe6-b5cc-4f77-aa94-7d74c67ff7cc" alt="UPH Logo By Abdo" height="80px" width="80px"/>
+    <img src="https://github.com/user-attachments/assets/424defe6-b5cc-4f77-aa94-7d74c67ff7cc" alt="UPH Logo" height="80px" width="80px"/>
   </a>
-  <h1>Unified Party Hub (UPH)</h1>
-  <p><strong>A Foundational and Scalable Master Data Management Solution for ERPNext</strong></p>
+  <p>A Foundational and Scalable Master Data Management Solution for ERPNext</p>
 
-  <!-- Badges -->
-  UPH supports Frappe / ERPNext v15+.
+  <!-- Version/Compatibility Badge -->
+  <img src="https://img.shields.io/badge/Frappe%20%2F%20ERPNext-v15+-red" alt="Supports ERPNext v15+"/>
+  <br>
 
-<p align="center">
+  <!-- Action Badges -->
   <a href="https://github.com/Sendipad/uph#installation">
     <img src="https://img.shields.io/badge/Try%20It%20Now-Install-blue?style=for-the-badge&logo=github" alt="Try It Now"/>
   </a>
@@ -16,7 +18,6 @@
   <a href="https://github.com/Sendipad/uph/wiki">
     <img src="https://img.shields.io/badge/Documentation-Wiki-green?style=for-the-badge&logo=read-the-docs" alt="Documentation"/>
   </a>
-</p>
 </div>
 
 ---
@@ -24,20 +25,20 @@
 ## 🖼 Screenshots & Demo
 
 <p align="center">
-  <img src="screenshots/party_master_tree.png" alt="Party Master Tree" width="600"/>
+  <img src="screenshots/party_master_tree.png" alt="Party Master Tree Hierarchy" width="600"/>
 </p>
 
 <p align="center">
-  <img src="screenshots/link_party_roles.gif" alt="Link Party Roles Demo" width="600"/>
+  <img src="screenshots/link_party_roles.gif" alt="Link Party Roles Demonstration" width="600"/>
 </p>
 
 ---
 
 ## 🌟 Overview
 UPH is a mission-critical Frappe application solving **Master Data Management (MDM) challenges** in ERPNext.  
-It provides a **single source of truth** for all business entities (Customers, Suppliers, Employees, Shareholders), enabling multi-role management, consolidated reporting, and zero data duplication.  
+It provides a **single source of truth** for all business entities (Customers, Suppliers, Employees, Shareholders), enabling multi-role management, consolidated reporting, and zero data duplication.
 
-> Built on Frappe (Python, JavaScript, Vue) for extensibility and enterprise readiness.
+Built on Frappe (Python, JavaScript, Vue) for **extensibility and enterprise readiness**.
 
 **Other Languages:**  
 - [Arabic (العربية)](README.ar.md) 🇸🇦
@@ -46,10 +47,11 @@ It provides a **single source of truth** for all business entities (Customers, S
 
 ## 💡 The Problem UPH Solves
 Standard ERPNext treats Customers, Suppliers, and Employees as separate entities, which causes:
-- **Data Duplication:** Entities with multiple roles require separate records.  
-- **Consolidation Complexity:** No unified multi-currency reporting per entity.  
-- **Lack of Hierarchy:** No native parent-subsidiary or organizational grouping.  
-- **Limited Flexibility:** Extending party roles for vertical domains (Schools, Healthcare) is cumbersome.
+
+- **Data Duplication:** A single entity with multiple roles requires separate, unlinked records.  
+- **Consolidation Complexity:** Multi-currency consolidated reports are difficult or impossible.  
+- **Lack of Hierarchy:** No native mechanism for parent-subsidiary organization.  
+- **Limited Flexibility:** Extending party roles to vertical domains (Schools, Healthcare) is cumbersome.
 
 ---
 
@@ -57,31 +59,27 @@ Standard ERPNext treats Customers, Suppliers, and Employees as separate entities
 
 ### 1. Unified Party Master (Tree Doctype)
 - **Single Unified Doctype:** Controls creation, fetching, and linking of all related entities.  
-- **Zero Duplication:** Minimizes duplicate party records and transactional mistakes.  
-- **Tree Hierarchy:** Multi-level structure for reporting by party type, business type, or corporate structure.  
+- **Zero Duplication:** Minimizes duplicate party records.  
+- **Tree Hierarchy:** Multi-level organizational grouping for accurate reporting.
 
 ### 2. Dynamic Role & Integration Flexibility
-- **Multi-Role Party:** Assign multiple roles to a single Party Master (Customer, Supplier, Shareholder).  
+- **Multi-Role Party:** Enable multiple roles per Party Master.  
 - **Flexible Integration:** Works with standard and custom ERPNext party types.  
-- **Easy UI/Migration:** Backend queries allow linking thousands of existing unlinked records seamlessly.  
+- **Easy UI/Migration:** Intelligent backend queries and UI simplify linking existing records.
 
 ### 3. Advanced Financial & Data Control
-- **Multi-Currency Support:** Consolidated reporting and balance tracking per Party Master entity.  
-- **Centralized Control:** Configure all relationships, settings, and data in one place.  
-- **Extensible Foundation:** Future modules can extend capabilities, e.g., the Hub module.
+- **Multi-Currency Support:** Consolidated reporting and balance tracking.  
+- **Centralized Control:** Manage relationships, defaults, and configurations in one place.
 
 ---
 
-## 🔧 Future Module: Hub (Rule System)
-The **Hub module** is currently under development as a **flexible rule engine** for ERPNext.  
-It provides essential automation and system services, including:
+## 🔧 Future Vision: Hub Module (Rule Engine)
+The **Hub module** is under development as a **flexible rule engine** providing:
 
-- **Deduplication:** Automatically prevent duplicate entries.  
-- **Dynamic Text Generation:** Populate fields based on configurable rules.  
-- **Integrity Validation:** Ensure data consistency across the system.  
-- **Custom Rule Services:** Developers can easily define their own rule types for specialized workflows.  
-
-> This module extends UPH’s capabilities, enabling advanced automation and control over party management and other business processes.
+- **Deduplication Enforcement**  
+- **Integrity Validation**  
+- **Dynamic Data Population**  
+- **Custom Rule Services** for developers to create specialized workflow rules.
 
 ---
 
@@ -92,7 +90,7 @@ It provides essential automation and system services, including:
 bench get-app unified_party_hub https://github.com/Sendipad/uph
 bench install-app uph
 ```
-Next Steps
+### Next Steps
 
 1. Navigate: Unified Party Hub → Party Master in ERPNext v15+.
 
@@ -100,10 +98,10 @@ Next Steps
 2. Define your Party Master hierarchy.
 
 
-3. Link existing Customers/Suppliers/Employees or create new linked doctypes from Party Master.
+3. Link existing Customers/Suppliers/Employees or create new linked doctypes.
 
 
-4. Explore reports, multi-currency tracking, and hierarchical analytics.
+4. Explore consolidated reports, multi-currency tracking, and hierarchical analytics.
 
 
 
@@ -114,15 +112,13 @@ Next Steps
 
 UPH is more than a feature—it’s a fundamental architectural improvement.
 
-We urge the ERPNext developer team to consider integrating key UPH modules into the standard codebase. Benefits include:
+Benefits for ERPNext core:
 
-Native support for multi-role entities.
+Native multi-role support
 
-Consolidated reporting with multi-currency and hierarchical tracking.
+Eliminates duplicate records
 
-Elimination of duplicate party records, improving data integrity.
-
-Enhanced ERPNext enterprise MDM capabilities.
+Enterprise-grade MDM with hierarchical and consolidated reporting
 
 
 We welcome feedback and collaboration to align UPH with ERPNext core standards.
@@ -132,13 +128,13 @@ We welcome feedback and collaboration to align UPH with ERPNext core standards.
 
 💼 Use Cases
 
-Group-level financial consolidation.
+Group-level financial consolidation
 
-Hierarchical sales and procurement reporting.
+Hierarchical sales/procurement reporting
 
-Mapping business unit, employee, and shareholder relationships.
+Mapping relationships among business units, employees, shareholders
 
-Departmental or regional party organization.
+Departmental or regional party organization
 
 
 
@@ -149,6 +145,4 @@ Departmental or regional party organization.
 Licensed under GNU General Public License v3.0.
 Free to use, extend, and contribute.
 
-
-
-```
+---
