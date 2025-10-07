@@ -1,85 +1,148 @@
-## Unified Party Hub
+# Unified Party Hub (UPH)
 
 <div align="center">
-    <a href="https://github.com/Sendipad/uph/wiki">
-	<img src="https://github.com/user-attachments/assets/424defe6-b5cc-4f77-aa94-7d74c67ff7cc" alt="UPH Logo By Abdo" height="80px" width="80xp"/>
-    </a>
-    <h2>Unified Party Hub (UPH)</h2>
-    <p align="center">
-        <p>Powerful, Intuitive and Open-Source For ERPNext</p>
-    </p>
+  <a href="https://github.com/Sendipad/uph/wiki">
+    <img src="https://github.com/user-attachments/assets/424defe6-b5cc-4f77-aa94-7d74c67ff7cc" alt="UPH Logo" height="80px" width="80px"/>
+  </a>
+  <p>A Foundational and Scalable Master Data Management Solution for ERPNext</p>
 
+  <!-- Version/Compatibility Badge -->
+  <img src="https://img.shields.io/badge/Frappe%20%2F%20ERPNext-v15+-red" alt="Supports ERPNext v15+"/>
+  <br>
+
+  <!-- Action Badges -->
+  <a href="https://github.com/Sendipad/uph#installation">
+    <img src="https://img.shields.io/badge/Try%20It%20Now-Install-blue?style=for-the-badge&logo=github" alt="Try It Now"/>
+  </a>
+  &nbsp;
+  <a href="https://github.com/Sendipad/uph/wiki">
+    <img src="https://img.shields.io/badge/Documentation-Wiki-green?style=for-the-badge&logo=read-the-docs" alt="Documentation"/>
+  </a>
 </div>
-A powerful ,Innovative and a foundational data model in ERP System that provides a unified and flexible way to manage party information—such as customers, suppliers, ..etc, and other business entities for ERPNext that brings centralized, hierarchical party management to your enterprise .
 
-### Other Languages
+---
+
+## 🖼 Screenshots & Demo
+
+<p align="center">
+  <img src="screenshots/party_master_tree.png" alt="Party Master Tree Hierarchy" width="600"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/link_party_roles.gif" alt="Link Party Roles Demonstration" width="600"/>
+</p>
+
+---
+
+## 🌟 Overview
+UPH is a mission-critical Frappe application solving **Master Data Management (MDM) challenges** in ERPNext.  
+It provides a **single source of truth** for all business entities (Customers, Suppliers, Employees, Shareholders), enabling multi-role management, consolidated reporting, and zero data duplication.
+
+Built on Frappe (Python, JavaScript, Vue) for **extensibility and enterprise readiness**.
+
+**Other Languages:**  
 - [Arabic (العربية)](README.ar.md) 🇸🇦
 
-# 🌟 What is Unified Party Hub?
-Unified Party Hub (UPH) is a Frappe-based custom app built to unify all business-related parties—Customers, Suppliers, Employees, Shareholders, etc.—into one central Party Master tree. It simplifies relationship tracking, streamlines classification, and enables advanced reporting in a scalable and structured way.
+---
 
-# ✅ Key Features
-## 📁 Party Master (Tree Doctype):
-Centralize all party entities under a hierarchical tree structure for better visibility and classification.
+## 💡 The Problem UPH Solves
+Standard ERPNext treats Customers, Suppliers, and Employees as separate entities, which causes:
 
-## 🔗 Seamless ERPNext Integration:
-Directly integrates with ERPNext’s core Doctypes such as Customer, Supplier, Employee, etc.
+- **Data Duplication:** A single entity with multiple roles requires separate, unlinked records.  
+- **Consolidation Complexity:** Multi-currency consolidated reports are difficult or impossible.  
+- **Lack of Hierarchy:** No native mechanism for parent-subsidiary organization.  
+- **Limited Flexibility:** Extending party roles to vertical domains (Schools, Healthcare) is cumbersome.
 
-## 👥 Flexible Relationship Mapping:
-Create and manage parent-child relationships across different party types.
+---
 
-## 🌍 Multi-Currency Support:
-Efficiently track balances and transactions across currencies for global businesses.
+## ✅ Key Features
 
-## ⚙️ Customizable & Scalable:
-Designed with extensibility in mind—create custom workflows, fields, and reports as needed.
+### 1. Unified Party Master (Tree Doctype)
+- **Single Unified Doctype:** Controls creation, fetching, and linking of all related entities.  
+- **Zero Duplication:** Minimizes duplicate party records.  
+- **Tree Hierarchy:** Multi-level organizational grouping for accurate reporting.
 
-## 📊 Enhanced Reporting:
-Generate advanced hierarchical reports based on party relationships.
+### 2. Dynamic Role & Integration Flexibility
+- **Multi-Role Party:** Enable multiple roles per Party Master.  
+- **Flexible Integration:** Works with standard and custom ERPNext party types.  
+- **Easy UI/Migration:** Intelligent backend queries and UI simplify linking existing records.
 
-# 🚀 Usage
-Install the App:
-```
+### 3. Advanced Financial & Data Control
+- **Multi-Currency Support:** Consolidated reporting and balance tracking.  
+- **Centralized Control:** Manage relationships, defaults, and configurations in one place.
+
+---
+
+## 🔧 Future Vision: Hub Module (Rule Engine)
+The **Hub module** is under development as a **flexible rule engine** providing:
+
+- **Deduplication Enforcement**  
+- **Integrity Validation**  
+- **Dynamic Data Population**  
+- **Custom Rule Services** for developers to create specialized workflow rules.
+
+---
+
+## 🚀 Usage
+
+### Installation
+```bash
 bench get-app unified_party_hub https://github.com/Sendipad/uph
 bench install-app uph
 ```
-Go to Unified Party Hub > Party Master in your ERPNext dashboard.
+### Next Steps
 
-Start creating party nodes and defining relationships.
+1. Navigate: Unified Party Hub → Party Master in ERPNext v15+.
 
-Link Existing Doctypes:
 
-While creating a party, link it to a Customer, Supplier, Employee, or other ERPNext DocTypes.
+2. Define your Party Master hierarchy.
 
-Use the "Linked DocType" and "Linked Party" fields.
 
-Monitor & Report:
+3. Link existing Customers/Suppliers/Employees or create new linked doctypes.
 
-View the party tree to analyze structure and relationships.
 
-Add balance tracking or custom filters as needed.
+4. Explore consolidated reports, multi-currency tracking, and hierarchical analytics.
 
-# 💼 Use Cases
-Group-level Financial Consolidation across suppliers or customers.
 
-Hierarchical Sales/Procurement Reporting based on party groups.
 
-Tracking Relationships between business units, employees, and shareholders.
 
-Regional or Departmental Breakdown of external and internal parties.
+---
 
-#🎯 Benefits
-Streamlines multi-party management under a single unified interface.
+🎯 Call to Action
 
-Provides a clear overview of business relationships.
+UPH is more than a feature—it’s a fundamental architectural improvement.
 
-Reduces redundancy and improves data accuracy.
+Benefits for ERPNext core:
 
-Enables deeper insights through hierarchical reports.
+Native multi-role support
 
-Improves scalability and maintenance in large organizations.
+Eliminates duplicate records
 
-# 📜 License
-This project is licensed under the GNU General Public License v3.0.
+Enterprise-grade MDM with hierarchical and consolidated reporting
+
+
+We welcome feedback and collaboration to align UPH with ERPNext core standards.
+
+
+---
+
+💼 Use Cases
+
+Group-level financial consolidation
+
+Hierarchical sales/procurement reporting
+
+Mapping relationships among business units, employees, shareholders
+
+Departmental or regional party organization
+
+
+
+---
+
+📜 License
+
+Licensed under GNU General Public License v3.0.
 Free to use, extend, and contribute.
 
+---
