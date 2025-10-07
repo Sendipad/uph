@@ -10,34 +10,6 @@ app_license = "gpl-3.0"
 
 required_apps = ["erpnext"]
 
-# Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "uph",
-# 		"logo": "/assets/uph/logo.png",
-# 		"title": "Unified Party Hub",
-# 		"route": "/uph",
-# 		"has_permission": "uph.api.permission.has_app_permission"
-# 	}
-# ]
-
-# Includes in <head>
-# ------------------
-
-# include js, css files in header of desk.html
-# app_include_css = "/assets/uph/css/uph.css"
-# app_include_js = "/assets/uph/js/uph.js"
-
-# include js, css files in header of web template
-# web_include_css = "/assets/uph/css/uph.css"
-# web_include_js = "/assets/uph/js/uph.js"
-
-# include custom scss in every website theme (without file extension ".scss")
-# website_theme_scss = "uph/public/scss/website"
-
-# include js, css files in header of web form
-# webform_include_js = {"doctype": "public/js/doctype.js"}
-# webform_include_css = {"doctype": "public/css/doctype.css"}
 app_include_js = [
     "uph.bundle.js",
     "public/js/rule_builder/rule_builder.js",  # NOT rule_builder_app.js
@@ -62,89 +34,15 @@ doctype_js = {
 # include app icons in desk
 # app_include_icons = "uph/public/icons.svg"
 boot_session = "uph.party.boot.add_pm_doctypes"
-# Home Pages
-# ----------
 
-# application home page (will override Website Settings)
-# home_page = "login"
-
-# website user home page (by Role)
-# role_home_page = {
-# 	"Role": "home_page"
-# }
-
-# Generators
-# ----------
-
-# automatically create page for each record of this doctype
-# website_generators = ["Web Page"]
-
-# Jinja
-# ----------
-
-# add methods and filters to jinja environment
-# jinja = {
-# 	"methods": "uph.utils.jinja_methods",
-# 	"filters": "uph.utils.jinja_filters"
-# }
-
-# Installation
-# ------------
 
 after_install = "uph.setup.install.setup"
-# after_install = "uph.install.after_install"
 
-# Uninstallation
-# ------------
+# after_migrate = [
+#    "uph.hub.services.registry.sync_rule_service_types",
+#    "uph.setup.install.on_migrate",
+# ]
 
-# before_uninstall = "uph.uninstall.before_uninstall"
-# after_uninstall = "uph.uninstall.after_uninstall"
-
-# Integration Setup
-# ------------------
-# To set up dependencies/integrations with other apps
-# Name of the app being installed is passed as an argument
-
-# before_app_install = "uph.utils.before_app_install"
-# after_app_install = "uph.utils.after_app_install"
-
-# Integration Cleanup
-# -------------------
-# To clean up dependencies/integrations with other apps
-# Name of the app being uninstalled is passed as an argument
-
-# before_app_uninstall = "uph.utils.before_app_uninstall"
-# after_app_uninstall = "uph.utils.after_app_uninstall"
-
-# Desk Notifications
-# ------------------
-# See frappe.core.notifications.get_notification_config
-
-# notification_config = "uph.notifications.get_notification_config"
-
-# Permissions
-# -----------
-# Permissions evaluated in scripted ways
-after_migrate = [
-    "uph.hub.services.registry.sync_rule_service_types",
-    "uph.setup.install.on_migrate",
-]
-
-# permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
-#
-# has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
-# }
-
-# DocType Class
-# ---------------
-# Override standard doctype classes
-
-# override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
-# }
 tx_doctype_with_party_master = [
     "Sales Invoice",
     "Purchase Invoice",
@@ -220,6 +118,8 @@ global_search_doctypes = {
         {"doctype": "Party Master", "index": 0},
     ]
 }
+export_python_type_annotations = True
+
 # Scheduled Tasks
 # ---------------
 
@@ -313,7 +213,6 @@ global_search_doctypes = {
 # ]
 
 # Automatically update python controller files with type annotations for this app.
-export_python_type_annotations = True
 
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
