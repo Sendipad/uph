@@ -164,7 +164,7 @@ uph.utils.FieldOptionHelper = {
     }
 
     frappe.call({
-      method: "brh.unified_data_tools.utils.field.get_field_options",
+      method: "uph.party.controllers.field.get_field_options",
       args: { doctype: documentType },
       callback: (r) => {
         if (Array.isArray(r.message)) {
