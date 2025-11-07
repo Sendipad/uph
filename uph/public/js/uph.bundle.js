@@ -1,7 +1,7 @@
 //file:apps/uph/uph/public/js/uph.bundle.js
 import "./utils/party.js";
 import "./utils/party_master_manager.js";
-import "./utils/.js";
+import "./utils/utils.js";
 import "./utils/field_option_helper.js";
 //import "./rule_builder/rule_service_configs.js";
 //import "./utils/rule_ui_config_registry";

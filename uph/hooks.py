@@ -55,41 +55,12 @@ tx_doctype_with_party_master = [
     "Expense Claim",
 ]
 # Document Events
-# ---------------
 # Hook on document methods and events
 parties_type = ["Customer", "Supplier", "Employee"]
 doc_events = {
     "*": {
-        "before_insert": [
-            "uph.unified_data_tools.doc_hooks.run_deduplication_job_on_doc",
-            "uph.unified_data_tools.doc_hooks.run_record_integrity_rule_on_doc",
-            "uph.unified_data_tools.doc_hooks.generate_custom_remarks_on_doc",
-        ],
-        "before_save": [
-            "uph.unified_data_tools.doc_hooks.run_deduplication_job_on_doc",
-            "uph.unified_data_tools.doc_hooks.run_record_integrity_rule_on_doc",
-            "uph.unified_data_tools.doc_hooks.generate_custom_remarks_on_doc",
-        ],
         "validate": [
             "uph.party.controllers.party.validate_party_master_on_target_party_type",
-            "uph.unified_data_tools.doc_hooks.run_deduplication_job_on_doc",
-            "uph.unified_data_tools.doc_hooks.run_record_integrity_rule_on_doc",
-            "uph.unified_data_tools.doc_hooks.generate_custom_remarks_on_doc",
-        ],
-        "on_submit": [
-            "uph.unified_data_tools.doc_hooks.run_deduplication_job_on_doc",
-            "uph.unified_data_tools.doc_hooks.run_record_integrity_rule_on_doc",
-            "uph.unified_data_tools.doc_hooks.generate_custom_remarks_on_doc",
-        ],
-        "on_cancel": [
-            "uph.unified_data_tools.doc_hooks.run_deduplication_job_on_doc",
-            "uph.unified_data_tools.doc_hooks.run_record_integrity_rule_on_doc",
-            "uph.unified_data_tools.doc_hooks.generate_custom_remarks_on_doc",
-        ],
-        "on_update_after_submit": [
-            "uph.unified_data_tools.doc_hooks.run_deduplication_job_on_doc",
-            "uph.unified_data_tools.doc_hooks.run_record_integrity_rule_on_doc",
-            "uph.unified_data_tools.doc_hooks.generate_custom_remarks_on_doc",
         ],
         "on_update": [
             "uph.party.controllers.party.validate_party_master_on_target_party_type"
