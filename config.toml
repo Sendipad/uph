@@ -6,7 +6,7 @@ defaultContentLanguageInSubdir = true
 languageCode = "en-us"
 
 [params]
-  BookLogo = "logo.png"
+  BookLogo = "uph-logo.png"
   BookSearch = true
   BookSearchIndex = true
   BookEditPath = "docs/content"
