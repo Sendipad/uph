@@ -21,7 +21,6 @@ languageCode = "en-us"
     weight = 2
     contentDir = "content/ar"
     languageDirection = "rtl"
-# Add this to your config.toml
 
 [menu]
 
