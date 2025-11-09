@@ -21,6 +21,28 @@ languageCode = "en-us"
     weight = 2
     contentDir = "content/ar"
     languageDirection = "rtl"
+# Add this to your config.toml
+
+[menu]
+
+  [[menu.main]]
+    identifier = "documentation"
+    name = "Documentation"
+    url = "/"
+    weight = 1
+
+  [[menu.main]]
+    identifier = "quickstart"
+    name = "Quick Start"
+    url = "/quick-start/"
+    weight = 2
+
+  [[menu.main]]
+    identifier = "github"
+    name = "GitHub"
+    url = "https://github.com/sendipad/uph"
+    weight = 3
+    pre = "<i class='fab fa-github'></i> "  # optional, adds GitHub icon
 
 [taxonomies]
   tag = "tags"
