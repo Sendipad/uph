@@ -5,3 +5,15 @@ body,
 * {
   font-family: "Cairo", sans-serif !important;
 }
+.badge {
+  padding: 0.2em 0.5em;
+  border-radius: 0.3em;
+  font-size: 0.8em;
+  color: #fff;
+}
+.badge.success {
+  background-color: #4caf50;
+}
+.badge.warning {
+  background-color: #ff9800;
+}

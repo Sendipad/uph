@@ -9,7 +9,8 @@ languageCode = "en-us"
   BookLogo = "uph-logo.png"
   BookSearch = true
   BookSearchIndex = true
-  BookEditPath = "docs/content"
+  BookRepo = "https://github.com/sendipad/uph"
+  BookEditPath = "edit/docs/content"
   BookTheme = "auto"
   customCSS = ["custom.css"]
 [languages]
