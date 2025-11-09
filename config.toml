@@ -11,6 +11,8 @@ languageCode = "en-us"
   BookSearchIndex = true
   BookRepo = "https://github.com/sendipad/uph"
   BookEditPath = "edit/docs/content"
+  BookEdit = true
+
   BookTheme = "auto"
   customCSS = ["custom.css"]
 [languages]
