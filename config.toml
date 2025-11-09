@@ -1,0 +1,27 @@
+baseURL = "https://sendipad.github.io/uph/"
+title = "Unified Party Hub"
+theme = "book"
+defaultContentLanguage = "en"
+defaultContentLanguageInSubdir = true
+languageCode = "en-us"
+
+[params]
+  BookLogo = "logo.png"
+  BookSearch = true
+  BookSearchIndex = true
+  BookEditPath = "docs/content"
+
+[languages]
+  [languages.en]
+    languageName = "English"
+    weight = 1
+    contentDir = "content/en"
+  [languages.ar]
+    languageName = "العربية"
+    weight = 2
+    contentDir = "content/ar"
+    languageDirection = "rtl"
+
+[taxonomies]
+  tag = "tags"
+  category = "categories"
