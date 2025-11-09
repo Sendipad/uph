@@ -10,7 +10,8 @@ languageCode = "en-us"
   BookSearch = true
   BookSearchIndex = true
   BookEditPath = "docs/content"
-
+  BookTheme = "auto"
+  customCSS = ["custom.css"]
 [languages]
   [languages.en]
     languageName = "English"
