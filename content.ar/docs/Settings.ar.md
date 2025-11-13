@@ -6,7 +6,7 @@ weight: 4
 <strong>عند تثبيت التطبيق</strong>، ستكون معظم الإعدادات متاحة بشكل <strong>ديناميكي</strong>. <strong>عليك فقط أن تتعلم المزيد</strong> لضمان سير كل شيء بسلاسة.
 {{< /hint >}}
 
-إعدادات الطرف الرئيسي (Party Master Settings) → جدول <strong>أنواع الأطراف</strong> (Party Types)
+## إعدادات الطرف الرئيسي (Party Master Settings) → جدول <strong>أنواع الأطراف</strong> (Party Types)
 
 سيتم تعيين جميع أنواع الأطراف من أنواع الأطراف في ERPNext هنا.
 
@@ -17,7 +17,7 @@ weight: 4
 
 ---
 
-## 8.2 أنواع مستندات المعاملات (Transaction doctypes)
+##  أنواع مستندات المعاملات (Transaction doctypes)
 
 إعدادات الطرف الرئيسي (Party Master Settings) → جدول <strong>أنواع المستندات</strong> (Document Types)
 
