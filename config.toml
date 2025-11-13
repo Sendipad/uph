@@ -6,6 +6,17 @@ defaultContentLanguageInSubdir = true
 languageCode = "en-us"
 disablePathToLower = true
 enableGitInfo = true
+# Needed for mermaid/katex shortcodes
+[markup]
+[markup.goldmark.renderer]
+  unsafe = true
+
+[markup.tableOfContents]
+  startLevel = 1
+
+[markup.highlight]
+  style = 'base16-snazzy'
+  
 [params]
   BookLogo = "uph-logo.png"
   BookSearch = true
