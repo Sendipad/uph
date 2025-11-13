@@ -10,8 +10,9 @@ languageCode = "en-us"
   BookSearch = true
   BookSearchIndex = true
   BookRepo = "https://github.com/sendipad/uph"
-  BookEditPath = "edit/docs/content"
+  BookEditPath = "{{ .Site.Params.BookRepo }}/edit/docs/{{ .Path }}"
   BookEdit = true
+  BookDateFormat = 'January 2, 2006'
 
   BookTheme = "auto"
   customCSS = ["custom.css"]
