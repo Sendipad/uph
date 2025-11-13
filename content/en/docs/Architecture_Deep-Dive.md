@@ -1,5 +1,9 @@
-Architecture Deep-Dive
-1 Entity Relationship
+---
+title: "Architecture Deep-Dive"
+weight: 2
+---
+* Architecture Deep-Dive * \
+** Entity Relationship ** \
 ```mermaid
 erDiagram
     PARTY_MASTER ||--o{ PARTY_MASTER_ROLE : "has"
