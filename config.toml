@@ -9,9 +9,9 @@ languageCode = "en-us"
   BookLogo = "uph-logo.png"
   BookSearch = true
   BookSearchIndex = true
+  BookEdit = true
   BookRepo = "https://github.com/sendipad/uph"
   BookEditPath = "{{ .Site.Params.BookRepo }}/edit/docs/{{ .Path }}"
-  BookEdit = true
   BookDateFormat = 'January 2, 2006'
 
   BookTheme = "auto"
