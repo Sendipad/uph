@@ -5,41 +5,60 @@ weight: 2
 * Architecture Deep-Dive * \
 ** Entity Relationship ** \
 ```mermaid
-erDiagram
-    PARTY_MASTER ||--o{ PARTY_MASTER_ROLE : "has"
-    PARTY_MASTER ||--o{ CUSTOMER_EUR : "1-N (EUR)"
-    PARTY_MASTER ||--o{ CUSTOMER_USD : "1-N (USD)"
-    PARTY_MASTER ||--o{ SUPPLIER_JPY : "1-N (JPY)"
-    PARTY_MASTER ||--o{ EMPLOYEE : "1-N (optional)"
-    PARTY_MASTER ||--o{ GL_ENTRY : "1-N (always)"
+stateDiagram-v2
+    [*] --> PartyMaster_Created : "Create Party Master\n(is_group = 0)"
+    
+    PartyMaster_Created --> Role_Decision : "User clicks\n'Create Party'"
 
-    CUSTOMER_EUR ||--o{ SALES_INVOICE_EUR : "1-N"
-    CUSTOMER_USD ||--o{ SALES_INVOICE_USD : "1-N"
-    SUPPLIER_JPY ||--o{ PURCHASE_INVOICE_JPY : "1-N"
+    state Role_Decision <<choice>>
+    Role_Decision --> Customer_EUR : "Choose Customer\n+ EUR"
+    Role_Decision --> Customer_USD : "Choose Customer\n+ USD"
+    Role_Decision --> Supplier_JPY : "Choose Supplier\n+ JPY"
+    Role_Decision --> Employee : "Choose Employee\n(any curr)"
 
-    PARTY_MASTER {
-        string party_number PK
-        string party_name
-        string is_group
+    state Customer_EUR {
+        [*] --> Validate_EUR
+        Validate_EUR --> Create_C_EUR : "No other Customer\nwith EUR ?"
+        Create_C_EUR --> [*]
+        Validate_EUR --> [*] : "Duplicate EUR\n→ Throw"
     }
-    CUSTOMER_EUR {
-        string name PK
-        string party_master FK
-        string default_currency "EUR"
+
+    state Customer_USD {
+        [*] --> Validate_USD
+        Validate_USD --> Create_C_USD : "No other Customer\nwith USD ?"
+        Create_C_USD --> [*]
+        Validate_USD --> [*] : "Duplicate USD\n→ Throw"
     }
-    CUSTOMER_USD {
-        string name PK
-        string party_master FK
-        string default_currency "USD"
+
+    state Supplier_JPY {
+        [*] --> Validate_JPY
+        Validate_JPY --> Create_S_JPY : "No other Supplier\nwith JPY ?"
+        Create_S_JPY --> [*]
+        Validate_JPY --> [*] : "Duplicate JPY\n→ Throw"
     }
-    SUPPLIER_JPY {
-        string name PK
-        string party_master FK
-        string default_currency "JPY"
+
+    %% GL tagging happens automatically
+    Customer_EUR --> GL_Entry_EUR : "Sales Invoice\nsubmitted"
+    Customer_USD --> GL_Entry_USD : "Sales Invoice\nsubmitted"
+    Supplier_JPY --> GL_Entry_JPY : "Purchase Invoice\nsubmitted"
+
+    state GL_Entry_EUR {
+        [*] --> Tag_PM_EUR
+        Tag_PM_EUR --> [*]
     }
-    GL_ENTRY {
-        string name PK
-        string party_master FK
-        string account_currency
+    state GL_Entry_USD {
+        [*] --> Tag_PM_USD
+        Tag_PM_USD --> [*]
     }
+    state GL_Entry_JPY {
+        [*] --> Tag_PM_JPY
+        Tag_PM_JPY --> [*]
+    }
+
+    %% Final aggregated state
+    GL_Entry_EUR --> One_Statement : "Party Master\nStatement"
+    GL_Entry_USD --> One_Statement
+    GL_Entry_JPY --> One_Statement
+
+    One_Statement --> [*] : "Multi-currency\nnet exposure"
 ```
