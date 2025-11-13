@@ -13,10 +13,46 @@ Unified Party Hub is the only open-source plug-in that replaces scattered Custom
 <a href="https://github.com/sendipad/uph" class="book-btn outline">⭐ Star on GitHub</a>
 </div>
 <div class="badges">
-<img src="https://img.shields.io/github/v/release/sendipad/uph?label=latest">
-<img src="https://img.shields.io/badge/ERPNext-14%2B-green">
-<img src="https://img.shields.io/github/license/sendipad/uph">
-<img src="https://img.shields.io/github/downloads/sendipad/uph/total">
+ <div class="book-hero">
+
+# Unified Party Hub {anchor=false}
+Manage all parties in ERPNext with a single master record.\
+{{< badge style="success" title="Work On Production" value="Pass" >}}	
+[{{< badge style="info" title="Version" value="1.0" >}}](https://github.com/sendipad/uph/releases)
+[{{< badge style="default" title="License" value="MIT" >}}](https://github.com/sendipad/uph/blob/main/LICENSE)
+
+{{< button href="/docs/introduction" >}}Get Started{{</button>}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
 </div>
 </div>
 <!--  Feature grid  -->
