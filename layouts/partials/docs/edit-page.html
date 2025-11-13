@@ -1,0 +1,11 @@
+{{/* Overrides the default edit-page.html partial for complex paths */}}
+{{ $path := replace .File.Path .Lang "" }}
+{{ $path = replace $path "content." "" }}
+{{ $path = strings.TrimLeft "/" $path }}
+{{ $path = strings.TrimRight "." $path }}
+{{ $url := printf "%s/edit/docs/%s" $.Site.Params.BookRepo $path }}
+
+<a href="{{ $url | safeURL }}" title='{{ T "Edit this page" }}' rel="noopener" target="_blank">
+  {{ with partial "svgs/icon-edit.svg" . }} {{ . }} {{ end }}
+  {{ T "Edit this page" }}
+</a>
