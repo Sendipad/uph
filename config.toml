@@ -4,16 +4,18 @@ theme = "book"
 defaultContentLanguage = "en"
 defaultContentLanguageInSubdir = true
 languageCode = "en-us"
-
+disablePathToLower = true
+enableGitInfo = true
 [params]
   BookLogo = "uph-logo.png"
   BookSearch = true
+  BookSection = 'docs'
   BookSearchIndex = true
   BookEdit = true
   BookRepo = "https://github.com/sendipad/uph"
+  BookLastChangeLink = '{{ .Site.Params.BookRepo }}/commit/{{ .GitInfo.Hash }}'
   BookEditPath = "{{ .Site.Params.BookRepo }}/edit/docs/{{ .Path }}"
   BookDateFormat = 'January 2, 2006'
-
   BookTheme = "auto"
   customCSS = ["custom.css"]
 [languages]
