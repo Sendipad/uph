@@ -7,7 +7,7 @@ layout: landing
 
 # Unified Party Hub {anchor=false}
 Manage all parties in ERPNext with a single master record.\
-{{< badge style="info" value="Work On Production" >}}	
+{{< badge style="success" title="Work On Production" value="Pass" >}}	
 [{{< badge style="info" title="Version" value="1.0" >}}](https://github.com/sendipad/uph/releases)
 [{{< badge style="default" title="License" value="MIT" >}}](https://github.com/sendipad/uph/blob/main/LICENSE)
 
