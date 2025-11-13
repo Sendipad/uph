@@ -1,6 +1,6 @@
 ---
-title:"Supplier invoice you with EUR, USD and AED
-wright:1
+title:"Supplier invoice you with EUR, USD and AED" 
+weight:1
 ---
 
 {{ % hint info %}} 
