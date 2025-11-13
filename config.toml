@@ -19,11 +19,11 @@ languageCode = "en-us"
   [languages.en]
     languageName = "English"
     weight = 1
-    contentDir = "content/en"
+    contentDir = "content.en"
   [languages.ar]
     languageName = "العربية"
     weight = 2
-    contentDir = "content/ar"
+    contentDir = "content.ar"
     languageDirection = "rtl"
 
 [menu]
