@@ -25,7 +25,6 @@ defaultContentLanguageInSubdir = true
     contentDir = "content.ar"
     languageDirection = "rtl"
 
-
 # ===============================================
 # Markup Configuration
 # ===============================================
@@ -40,7 +39,6 @@ defaultContentLanguageInSubdir = true
   [markup.highlight]
     style = "base16-snazzy"
 
-
 # ===============================================
 # Theme Parameters
 # ===============================================
@@ -51,19 +49,17 @@ defaultContentLanguageInSubdir = true
   BookSearch = true
   BookSearchIndex = true
 
-  # MAIN FIXES
-  BookSection= ["docs", "posts" ] 
-  BookFlat = true        # ALLOWS custom menu items (Blog) to appear
-
+  # Automatically include all sections (docs + posts)
+  BookSection = "*"  
+  BookFlat = true            # Allows manual menu items to appear
   BookDateFormat = "January 2, 2006"
   customCSS = ["custom.css"]
 
-  # GitHub links
+  # GitHub integration
   BookEdit = true
   BookRepo = "https://github.com/Sendipad/uph"
   BookEditPath = "edit/docs/"
   BookLastChangeLink = '{{ .Site.Params.BookRepo }}/commit/{{ .GitInfo.Hash }}'
-
 
 # ===============================================
 # Sidebar & Top Menu Configuration
@@ -89,23 +85,23 @@ defaultContentLanguageInSubdir = true
     parent = "Docs"
     weight = 20
 
-  # ---- Other Site Links ----
-  [[menu.main]]
-    name = "Showcases"
-    pageRef = "/showcases/"
-    weight = 30
-
   # ---- Blog Section (Sidebar Link) ----
   [[menu.main]]
     name = "Blog"
     pageRef = "/posts/"
-    weight = 40
+    weight = 50
+
+  # ---- Showcases Section ----
+  [[menu.main]]
+    name = "Showcases"
+    pageRef = "/showcases/"
+    weight = 60
 
   # ---- GitHub Quick Link ----
   [[menu.main]]
     name = "GitHub (Top Link)"
     url = "https://github.com/Sendipad/uph/"
-    weight = 50
+    weight = 100
 
   # Footer area
   [[menu.after]]
@@ -113,11 +109,10 @@ defaultContentLanguageInSubdir = true
     url = "https://github.com/Sendipad/uph/"
     weight = 10
 
-
 # ===============================================
 # Taxonomies
 # ===============================================
 
 [taxonomies]
   tag = "tags"
-  category = "categories" 
+  category = "categories"
