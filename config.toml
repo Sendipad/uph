@@ -52,6 +52,7 @@ defaultContentLanguageInSubdir = true
   BookSearchIndex = true
 
   # MAIN FIXES
+  BookSection= ["docs", "posts" ] 
   BookFlat = true        # ALLOWS custom menu items (Blog) to appear
 
   BookDateFormat = "January 2, 2006"
