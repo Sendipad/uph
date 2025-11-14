@@ -33,3 +33,11 @@ body,
 .custom-sidebar-menu ul.custom-links li a:hover {
     text-decoration: underline;
 }
+.custom-sidebar-menu .custom-links .static-text {
+    font-weight: bold;
+    margin: 10px 0 5px 0;
+    display: block;
+    padding-left: 10px;
+    color: #555;
+}
+
