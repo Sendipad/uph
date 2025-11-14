@@ -1,0 +1,42 @@
+@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap");
+
+html,
+body,
+* {
+  font-family: "Cairo", sans-serif !important;
+}
+.badge {
+  padding: 0.2em 0.5em;
+  border-radius: 0.3em;
+  font-size: 0.8em;
+  color: #fff;
+}
+.badge.success {
+  background-color: #4caf50;
+}
+.badge.warning {
+  background-color: #ff9800;
+}
+.custom-sidebar-menu ul.custom-links {
+    margin-top: 20px;
+    padding-left: 0;
+    list-style: none;
+}
+
+.custom-sidebar-menu ul.custom-links li a {
+    display: block;
+    padding: 5px 10px;
+    color: #007acc;
+    text-decoration: none;
+}
+
+.custom-sidebar-menu ul.custom-links li a:hover {
+    text-decoration: underline;
+}
+.custom-sidebar-menu .custom-links .static-text {
+    font-weight: bold;
+    margin: 10px 0 5px 0;
+    display: block;
+    padding-left: 10px;
+    color: #555;
+}
