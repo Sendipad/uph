@@ -9,7 +9,8 @@ categories : [
 ---
 
 {{< hint danger >}} 
-<strong> Case:</strong> Supplier (Alpha Export LLC) invoices you in<strong>EUR, USD</strong> and <strong> AED </strong> <br>
+**Case:** 
+Supplier (Alpha Export LLC) invoices you in<strong>EUR, USD</strong> and <strong> AED </strong> <br>
 This guide shows how to configure a multi-currency supplier and record transactions accurately.
 
 {{< /hint >}} 
