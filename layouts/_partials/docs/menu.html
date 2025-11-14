@@ -7,7 +7,7 @@
 
   {{/* 2. Language switcher */}}
   {{ if gt (len .Site.Languages) 1 }}
-    {{ partial "docs/langswitcher" . }}
+    {{ partial "themes/book/layouts/_partials/docs/langswitcher.html" . }}
   {{ end }}
 
   {{/* 3. Docs tree */}}
