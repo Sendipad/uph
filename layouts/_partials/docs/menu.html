@@ -1,25 +1,23 @@
-{{/* ===============================
-   Custom Hugo-book Sidebar Menu
-   =============================== */}}
-
 <nav class="custom-sidebar-menu">
 
-  {{/* 1. Docs Tree (automatic) */}}
+  {{/* 1. Search box */}}
+  {{ if .Site.Params.BookSearch }}
+    {{ partial "docs/search" . }}
+  {{ end }}
+
+  {{/* 2. Language switcher */}}
+  {{ if gt (len .Site.Languages) 1 }}
+    {{ partial "docs/langswitcher" . }}
+  {{ end }}
+
+  {{/* 3. Docs tree */}}
   {{ partial "docs/menu-filetree" . }}
 
-  {{/* 2. Custom Manual Links */}}
+  {{/* 4. Custom links */}}
   <ul class="custom-links">
-    <li class="menu-item">
-      <a href="/uph/{{ .Lang }}/posts/">Blog</a>
-    </li>
-    <li class="menu-item">
-      <a href="/uph/{{ .Lang }}/showcases/">Showcases</a>
-    </li>
-    <li class="menu-item">
-      <a href="https://github.com/Sendipad/uph/" target="_blank">GitHub</a>
-    </li>
+    <li><a href="/uph/{{ .Lang }}/posts/">Blog</a></li>
+    <li><a href="/uph/{{ .Lang }}/showcases/">Showcases</a></li>
+    <li><a href="https://github.com/Sendipad/uph/" target="_blank">GitHub</a></li>
   </ul>
 
 </nav>
-
-{{/* Optional: you can style this menu in custom.css */}}
