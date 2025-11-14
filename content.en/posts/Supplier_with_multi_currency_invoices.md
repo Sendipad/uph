@@ -14,7 +14,8 @@ categories : [
 ]
 menu : 
   main: 
-   parent: Showcases
+    parent: Showcases # Corrected: Use standard key-value structure for nested menu items.
+    # Optionally add a weight here if you need to control the order within the Showcases group
 ---
 
 {{< hint info >}} 
