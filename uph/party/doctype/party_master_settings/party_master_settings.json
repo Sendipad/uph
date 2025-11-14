@@ -3,6 +3,7 @@
  "allow_rename": 1,
  "creation": "2025-04-05 17:27:20.040931",
  "doctype": "DocType",
+ "documentation": "https://sendipad.github.io/uph/en/docs/introduction/Settings/",
  "engine": "InnoDB",
  "field_order": [
   "party_type_rules_section",
@@ -51,7 +52,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-04-09 16:13:15.186054",
+ "modified": "2025-11-14 16:17:50.141750",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party Master Settings",
@@ -69,6 +70,7 @@
   }
  ],
  "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []
