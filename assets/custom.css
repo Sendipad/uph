@@ -17,3 +17,19 @@ body,
 .badge.warning {
   background-color: #ff9800;
 }
+.custom-sidebar-menu ul.custom-links {
+    margin-top: 20px;
+    padding-left: 0;
+    list-style: none;
+}
+
+.custom-sidebar-menu ul.custom-links li a {
+    display: block;
+    padding: 5px 10px;
+    color: #007acc;
+    text-decoration: none;
+}
+
+.custom-sidebar-menu ul.custom-links li a:hover {
+    text-decoration: underline;
+}
