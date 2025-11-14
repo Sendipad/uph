@@ -4,7 +4,7 @@
 
 baseURL = "https://sendipad.github.io/uph/"
 title = "Unified Party Hub"
-theme = "hugo-book"
+theme = "book"
 languageCode = "en-us"
 disablePathToLower = true
 enableGitInfo = true
@@ -93,7 +93,7 @@ defaultContentLanguageInSubdir = true # Enables /en/ and /ar/ subdirectories
     weight = 2
 
   [[menu.main]]
-    name = 'Blog Posts' # New main link to your blog section
+    name = 'Blog' # New main link to your blog section
     pageRef = '/posts/'
     weight = 3
 
