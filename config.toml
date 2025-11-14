@@ -87,7 +87,7 @@ defaultContentLanguageInSubdir = true
 
   # ---- Blog Section (Sidebar Link) ----
   [[menu.main]]
-    name = "Blog"
+    name = "Posts"
     pageRef = "/posts/"
     weight = 50
 
