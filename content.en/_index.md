@@ -21,7 +21,7 @@ Manage all parties in ERPNext with a single master record.\
 [{{< badge style="info" title="Version" value="1.0" >}}](https://github.com/sendipad/uph/releases)
 [{{< badge style="default" title="License" value="MIT" >}}](https://github.com/sendipad/uph/blob/main/LICENSE)
 
-{{< button href="/docs/introduction" >}}Get Started{{</button>}}
+{{< button href="content.en/docs/introduction" >}}Get Started{{</button>}}
 
 
 
