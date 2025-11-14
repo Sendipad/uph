@@ -1,4 +1,5 @@
 ---
+draft: false
 title: "Supplier invoice you with EUR, USD and AED"
 weight: 3
 tags : [
