@@ -10,11 +10,10 @@ categories: [
 ]
 ---
 
-{{< hint info >}}
-<strong>Case:</strong> You operate a production site with <strong>1,000+ Customers</strong>.  
-Many of them belong to the same commercial entity but use different <strong>default currencies</strong>.  
-You want to migrate all customers into the new <strong>Party Master</strong> structure quickly, accurately, and without data loss.
-{{< /hint >}}
+> [!NOTE]
+> **Case:** You operate a production site with **1,000+ Customers**.  
+> Many of them belong to the same commercial entity but use different **default currencies**.  
+> You want to migrate all customers into the new **Party Master** structure quickly, accurately, and without data loss.
 
 ## Goal
 Enable a smooth migration where:
@@ -54,12 +53,14 @@ Enable a smooth migration where:
      (Using name similarity, currency, and grouping logic)  
    - Select the correct Customer(s) to link them to the Party Master and save
 
-5. ## Existing Transactional Documents Automatically Sync .
+5. ## Existing Transactional Documents Automatically Sync  
    After linking a Customer to a Party Master:  
-   - All existing transactions (Invoices, Deliveries, Payments, Journal Entry Acounts…) automatically get their **Party Master** field filled  [Document Types in Settings]({{< ref "introduction/Settings.md">}}) 
-   - No impact on all accounting data like GL Entry ,invoice status or amounting .
+   - All existing transactions (Invoices, Deliveries, Payments, Journal Entry Accounts…) automatically get their **Party Master** field filled:  
+     [Document Types in Settings]({{< ref "introduction/settings.md" >}})  
+   - No impact on accounting data like GL Entries, invoice status, or amounts.  
+
    👉 See:  
-   **[How existing documents sync Party Master automatically]({{< ref "Advanced/background_sync_party_master_field_following_change_on_party.md" >}})**
+   **[How existing documents sync Party Master automatically]({{< ref "advanced/background_sync_party_master_field_following_change_on_party.md" >}})**
 
 {{% /steps %}}
 
