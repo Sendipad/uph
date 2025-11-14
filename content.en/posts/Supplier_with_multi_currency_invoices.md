@@ -19,21 +19,21 @@ menu :
     # Optionally add a weight here if you need to control the order within the Showcases group
 ---
 
-{{< hint info >}} 
-Your supplier <strong>Alpha Export LLC</strong> invoices you in <strong>EUR</strong> and <strong>USD</strong>.
+{{< hint warning >}} 
+<strong> Case:</strong> Supplier (Alpha Export LLC) invoices you in<strong>EUR</strong> and <strong>USD</strong>.
 {{< /hint >}} 
 
 {{% steps %}}
-1. ## Party Master Settings → Party Type (Table)
+1. ## Enable Multi-Party Mode.
+   Go to Party Master Settings → Party Type (Table)
    <strong>Supplier</strong> → <strong>Allow Multi Party</strong> = ✅, <strong>Rule Field</strong> = `default_currency` 
    
-2. ## Go to Party Master, Alpha Export LLC
-   Create Party default is supplier → <strong>currency</strong> = <strong>EUR</strong> → <strong>Save</strong>.
-   Again Create Party again → <strong>currency</strong> = <strong>USD</strong> → <strong>Save</strong>.
+2. ## Create the Party Master and its Linked Parties( Supplier).
+   Create Alpha Export LLC Party Master,as Supplier and from action menu create Link and select Currency, with a single click you can create linked supplier with all enabled currency in your system.
    
-3. ## Go to Purchase Invoice
-   → Choose <strong>Alpha Export USD</strong> → <strong>currency</strong> = <strong>USD</strong> → <strong>Submit</strong>.
+3. ## Create Purchase Invoice.
+    Choose <strong>Alpha Export LLC as Party Master</strong> → if more than one supplier linked to this Party Master then a dialog popup will show with all options as selection.
    
-4. ## Party Account Statement
-   Balances in <strong>EUR</strong> & <strong>USD</strong> side-by-side.
+4. ## 360 view of Party Account Statement.
+   Balances in <strong>EUR</strong> & <strong>USD</strong> and any currency this supplier used to transact with you side-by-side.
 {{% /steps %}}
