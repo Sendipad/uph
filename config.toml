@@ -52,7 +52,6 @@ defaultContentLanguageInSubdir = true
   BookSearchIndex = true
 
   # MAIN FIXES
-  BookSection = "docs"   # Sidebar docs tree
   BookFlat = true        # ALLOWS custom menu items (Blog) to appear
 
   BookDateFormat = "January 2, 2006"
