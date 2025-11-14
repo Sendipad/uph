@@ -1,26 +1,28 @@
 <nav class="custom-sidebar-menu">
 
   {{ partial "docs/brand" . }}
+
   {{ if .Site.Params.BookSearch }}
     {{ partial "docs/search" . }}
   {{ end }}
 
-  {{/* 2. Language switcher */}}
   {{ if gt (len .Site.Languages) 1 }}
     {{ partial "docs/languages" . }}
   {{ end }}
 
-  {{/* 3. Docs tree */}}
-  {{ partial "docs/menu-filetree" . }}
+  {{/* 1. Docs tree */}}
+  <div class="docs-tree">
+    {{ partial "docs/menu-filetree" . }}
+  </div>
 
-  {{/* 4. Custom links */}}
-<ul class="custom-links">
-  {{/* Static text above the first link */}}
-  <li class="static-text">{{ i18n "learnSectionLabel" }}</li>
-
-  <li><a href="/uph/{{ .Lang }}/posts/">Learn by Use Cases</a></li>
-  <li><a href="/uph/{{ .Lang }}/showcases/">Showcases</a></li>
-  <li><a href="https://github.com/Sendipad/uph/" target="_blank">GitHub</a></li>
-</ul>
+  {{/* 2. Custom links at the bottom */}}
+  <div class="custom-links-wrapper">
+    <ul class="custom-links">
+      <li class="static-text">{{ i18n "learnSectionLabel" }}</li>
+      <li><a href="/uph/{{ .Lang }}/posts/">Learn by Use Cases</a></li>
+      <li><a href="/uph/{{ .Lang }}/showcases/">Showcases</a></li>
+      <li><a href="https://github.com/Sendipad/uph/" target="_blank">GitHub</a></li>
+    </ul>
+  </div>
 
 </nav>
