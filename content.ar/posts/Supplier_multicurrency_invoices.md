@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "المورّد يصدر لك فاتورة بعملات يورو و دولار و درهم"
-weight: 20
+weight: 61
 tags : [
     "usage",
     "case",
@@ -15,7 +15,7 @@ categories : [
 ]
 menu : 
   main: 
-    parent: Blog
+    parent: Posts
 ---
 
 {{< hint info >}} 
