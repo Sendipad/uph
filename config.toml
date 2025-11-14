@@ -44,6 +44,7 @@ defaultContentLanguageInSubdir = true # Enables /en/ and /ar/ subdirectories
 
 [params]
   BookLogo = "uph-logo.png"
+  BookFlat=true
   BookSearch = true
   BookSection = 'docs' # Tells the theme where the main documentation lives
   BookSearchIndex = true
