@@ -95,7 +95,7 @@ defaultContentLanguageInSubdir = true # Enables /en/ and /ar/ subdirectories
   [[menu.main]]
     name = 'Blog' # New main link to your blog section
     pageRef = '/posts/'
-    weight = 3
+    weight = 50
 
   [[menu.main]]
     name = 'GitHub (Top Link)'
