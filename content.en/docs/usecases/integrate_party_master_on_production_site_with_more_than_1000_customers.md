@@ -56,11 +56,11 @@ Enable a smooth migration where:
 5. ## Existing Transactional Documents Automatically Sync  
    After linking a Customer to a Party Master:  
    - All existing transactions (Invoices, Deliveries, Payments, Journal Entry Accounts…) automatically get their **Party Master** field filled:  
-     [Document Types in Settings]({{< ref "introduction/settings.md" >}})  
+     [Document Types in Settings]("introduction/settings.md")  
    - No impact on accounting data like GL Entries, invoice status, or amounts.  
 
    👉 See:  
-   **[How existing documents sync Party Master automatically]({{< ref "advanced/background_sync_party_master_field_following_change_on_party.md" >}})**
+   **[How existing documents sync Party Master automatically](advanced/background_sync_party_master_field_following_change_on_party.md")
 
 {{% /steps %}}
 
