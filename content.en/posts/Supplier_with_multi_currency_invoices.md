@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Supplier invoice you with EUR, USD and AED"
-weight: 3
+weight: 20
 tags : [
     "usage",
     "case",
@@ -15,7 +15,7 @@ categories : [
 ]
 menu : 
   main: 
-    parent: Blog Posts # Corrected: Use standard key-value structure for nested menu items.
+    parent: Blog # Corrected: Use standard key-value structure for nested menu items.
     # Optionally add a weight here if you need to control the order within the Showcases group
 ---
 
