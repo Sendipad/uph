@@ -9,7 +9,7 @@ layout: landing
 One Legal Entity – One Master Record 
 Unified Party Hub is the only open-source plug-in that replaces scattered Customer, Supplier, Employee masters in ERPNext with a single Party Master tree.
 <div style="margin:1.5rem 0;">
-<a href="./en/posts/quick-start/" class="book-btn">Get Started in 5 min</a>
+<a href="./posts/quick-start/" class="book-btn">Get Started in 5 min</a>
 <a href="https://github.com/sendipad/uph" class="book-btn outline">⭐ Star on GitHub</a>
 </div>
 <div class="badges">
@@ -21,7 +21,7 @@ Manage all parties in ERPNext with a single master record.\
 [{{< badge style="info" title="Version" value="1.0" >}}](https://github.com/sendipad/uph/releases)
 [{{< badge style="default" title="License" value="MIT" >}}](https://github.com/sendipad/uph/blob/main/LICENSE)
 
-{{< button href="en/docs/introduction/introduction" >}}Get Started{{</button>}}
+{{< button href="/docs/introduction/introduction" >}}Get Started{{</button>}}
  
 </div>
 </div>
