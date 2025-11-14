@@ -6,7 +6,8 @@ defaultContentLanguageInSubdir = true
 languageCode = "en-us"
 disablePathToLower = true
 enableGitInfo = true
-# Needed for mermaid/katex shortcodes
+
+# Needed for mermaid/katex shortcodes and HTML tags within markdown
 [markup]
 [markup.goldmark.renderer]
   unsafe = true
@@ -24,11 +25,18 @@ enableGitInfo = true
   BookSearchIndex = true
   BookEdit = true
   BookRepo = "https://github.com/sendipad/uph"
+  
+  # KEEP BookLastChangeLink as is (uses Hugo templating)
   BookLastChangeLink = '{{ .Site.Params.BookRepo }}/commit/{{ .GitInfo.Hash }}'
-  BookEditPath = 'https://github.com/sendipad/uph/edit/docs/{{ .Path }}'
+  
+  # FIXED: Use simple relative path for BookEditPath. 
+  # The custom override partial (edit.html) will handle the complex stripping.
+  BookEditPath = "edit/docs/" 
+  
   BookDateFormat = 'January 2, 2006'
   BookTheme = "auto"
   customCSS = ["custom.css"]
+
 [languages]
   [languages.en]
     languageName = "English"
@@ -40,26 +48,41 @@ enableGitInfo = true
     contentDir = "content.ar"
     languageDirection = "rtl"
 
+# FIXED: Use standard [[menu.main]] for the primary sidebar navigation
 [menu]
-
   [[menu.main]]
-    identifier = "documentation"
-    name = "Documentation"
-    url = "/"
+    name = 'Documentation'
+    pageRef = '/docs/introduction/' # Use a specific page or the root '/'
     weight = 1
 
+  # Nested items often rely on the directory structure, but can be defined explicitly:
   [[menu.main]]
-    identifier = "quickstart"
-    name = "Quick Start"
-    url = "/quick-start/"
+    name = 'Example'
+    pageRef = '/docs/example/'
+    weight = 10
+    parent = 'Documentation'
+
+  [[menu.main]]
+    name = 'UseCases'
+    pageRef = '/docs/shortcodes/buttons/'
+    weight = 20
+    parent = 'Documentation'
+
+  [[menu.main]]
+    name = 'Showcases'
+    pageRef = '/showcases/'
     weight = 2
 
   [[menu.main]]
-    identifier = "github"
-    name = "GitHub"
-    url = "https://github.com/sendipad/uph"
+    name = 'GitHub (Top Link)'
+    url = 'https://github.com/Sendipad/uph/'
     weight = 3
-    pre = "<i class='fab fa-github'></i> "  # optional, adds GitHub icon
+
+# [[menu.after]] is correct for a menu block after the main sidebar content
+[[menu.after]]
+  name = 'GitHub'
+  url = 'https://github.com/Sendipad/uph/'
+  weight = 10
 
 [taxonomies]
   tag = "tags"
