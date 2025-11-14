@@ -50,7 +50,7 @@ defaultContentLanguageInSubdir = true
   BookSearchIndex = true
 
   # Automatically include all sections (docs + posts)
-  BookSection = "*"  
+  BookSection = "docs"  
   BookFlat = true            # Allows manual menu items to appear
   BookDateFormat = "January 2, 2006"
   customCSS = ["custom.css"]
