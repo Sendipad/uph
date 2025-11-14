@@ -1,6 +1,6 @@
 <nav class="custom-sidebar-menu">
 
-  {{/* 1. Search box */}}
+  {{ partial "docs/brand" . }}
   {{ if .Site.Params.BookSearch }}
     {{ partial "docs/search" . }}
   {{ end }}
