@@ -4,7 +4,7 @@
 
 baseURL = "https://sendipad.github.io/uph/"
 title = "Unified Party Hub"
-theme = "book"
+theme = "hugo-book"
 languageCode = "en-us"
 disablePathToLower = true
 enableGitInfo = true
@@ -45,10 +45,10 @@ defaultContentLanguageInSubdir = true # Enables /en/ and /ar/ subdirectories
 [params]
   BookLogo = "uph-logo.png"
   BookSearch = true
-  BookSection = 'docs' # Tells the theme where the main documentation lives
+  BookSection = '*' # Tells the theme where the main documentation lives
   BookSearchIndex = true
   BookDateFormat = 'January 2, 2006'
-  BookTheme = "auto"
+  BookTheme = "light"
   customCSS = ["custom.css"]
   
   # --- GitHub Repository Settings ---
