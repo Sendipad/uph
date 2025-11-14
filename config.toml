@@ -69,7 +69,7 @@ defaultContentLanguageInSubdir = true # Enables /en/ and /ar/ subdirectories
 [menu]
   # Primary Sidebar Menu Items
   [[menu.main]]
-    name = 'Documentation'
+    name = 'Docs'
     pageRef = '/docs/introduction/'
     weight = 1
 
@@ -79,13 +79,13 @@ defaultContentLanguageInSubdir = true # Enables /en/ and /ar/ subdirectories
     name = 'Example'
     pageRef = '/docs/example/'
     weight = 10
-    parent = 'Documentation'
+    parent = 'Docs'
 
   [[menu.main]]
     name = 'UseCases'
     pageRef = '/docs/shortcodes/buttons/'
     weight = 20
-    parent = 'Documentation'
+    parent = 'Docs'
 
   [[menu.main]]
     name = 'Showcases'
