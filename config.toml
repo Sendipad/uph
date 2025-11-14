@@ -1,41 +1,17 @@
+# ===============================================
+# Hugo Site Configuration (config.toml)
+# ===============================================
+
 baseURL = "https://sendipad.github.io/uph/"
 title = "Unified Party Hub"
 theme = "book"
-defaultContentLanguage = "en"
-defaultContentLanguageInSubdir = true
 languageCode = "en-us"
 disablePathToLower = true
 enableGitInfo = true
 
-# Needed for mermaid/katex shortcodes and HTML tags within markdown
-[markup]
-[markup.goldmark.renderer]
-  unsafe = true
-
-[markup.tableOfContents]
-  startLevel = 1
-
-[markup.highlight]
-  style = 'base16-snazzy'
-  
-[params]
-  BookLogo = "uph-logo.png"
-  BookSearch = true
-  BookSection = 'docs'
-  BookSearchIndex = true
-  BookEdit = true
-  BookRepo = "https://github.com/sendipad/uph"
-  
-  # KEEP BookLastChangeLink as is (uses Hugo templating)
-  BookLastChangeLink = '{{ .Site.Params.BookRepo }}/commit/{{ .GitInfo.Hash }}'
-  
-  # FIXED: Use simple relative path for BookEditPath. 
-  # The custom override partial (edit.html) will handle the complex stripping.
-  BookEditPath = "edit/docs/" 
-  
-  BookDateFormat = 'January 2, 2006'
-  BookTheme = "auto"
-  customCSS = ["custom.css"]
+# Multi-language Configuration
+defaultContentLanguage = "en"
+defaultContentLanguageInSubdir = true # Enables /en/ and /ar/ subdirectories
 
 [languages]
   [languages.en]
@@ -46,16 +22,59 @@ enableGitInfo = true
     languageName = "العربية"
     weight = 2
     contentDir = "content.ar"
-    languageDirection = "rtl"
+    languageDirection = "rtl" # Sets right-to-left layout for Arabic
 
-# FIXED: Use standard [[menu.main]] for the primary sidebar navigation
+# ===============================================
+# Markup Configuration (Required for shortcodes and HTML)
+# ===============================================
+
+[markup]
+  [markup.goldmark.renderer]
+    unsafe = true # Allows raw HTML tags (like <strong>) and complex shortcodes
+  
+  [markup.tableOfContents]
+    startLevel = 1 # Start TOC generation at H1
+
+  [markup.highlight]
+    style = 'base16-snazzy'
+
+# ===============================================
+# Theme Parameters (params)
+# ===============================================
+
+[params]
+  BookLogo = "uph-logo.png"
+  BookSearch = true
+  BookSection = 'docs' # Tells the theme where the main documentation lives
+  BookSearchIndex = true
+  BookDateFormat = 'January 2, 2006'
+  BookTheme = "auto"
+  customCSS = ["custom.css"]
+  
+  # --- GitHub Repository Settings ---
+  BookEdit = true
+  BookRepo = "https://github.com/sendipad/uph"
+  
+  # BookEditPath is simplified here because the custom partial handles the stripping.
+  # If you remove the partial, change this to the full template string.
+  BookEditPath = "edit/docs/" 
+  
+  # Last change link template
+  BookLastChangeLink = '{{ .Site.Params.BookRepo }}/commit/{{ .GitInfo.Hash }}'
+  
+# ===============================================
+# Menu Configuration (Sidebar Navigation)
+# ===============================================
+
 [menu]
+  # Primary Sidebar Menu Items
   [[menu.main]]
     name = 'Documentation'
-    pageRef = '/docs/introduction/' # Use a specific page or the root '/'
+    pageRef = '/docs/introduction/'
     weight = 1
 
-  # Nested items often rely on the directory structure, but can be defined explicitly:
+  # Note: The 'Example' and 'UseCases' will only appear if their parent page 
+  # ('Documentation') is rendered as an expand/collapse item.
   [[menu.main]]
     name = 'Example'
     pageRef = '/docs/example/'
@@ -74,15 +93,25 @@ enableGitInfo = true
     weight = 2
 
   [[menu.main]]
-    name = 'GitHub (Top Link)'
-    url = 'https://github.com/Sendipad/uph/'
+    name = 'Blog Posts' # New main link to your blog section
+    pageRef = '/posts/'
     weight = 3
 
-# [[menu.after]] is correct for a menu block after the main sidebar content
-[[menu.after]]
-  name = 'GitHub'
-  url = 'https://github.com/Sendipad/uph/'
-  weight = 10
+  [[menu.main]]
+    name = 'GitHub (Top Link)'
+    url = 'https://github.com/Sendipad/uph/'
+    weight = 4
+    # Optional: pre = "<i class='fab fa-github'></i> " 
+
+  # Menu items to appear after the main navigation block (e.g., permanent links)
+  [[menu.after]]
+    name = 'GitHub'
+    url = 'https://github.com/Sendipad/uph/'
+    weight = 10
+
+# ===============================================
+# Taxonomies
+# ===============================================
 
 [taxonomies]
   tag = "tags"
