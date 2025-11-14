@@ -17,6 +17,25 @@ body,
 .badge.warning {
   background-color: #ff9800;
 }
+/* Make sidebar a flex container, vertical */
+.custom-sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Docs tree takes remaining space */
+.custom-sidebar-menu .docs-tree {
+    flex: 1 1 auto;
+    overflow-y: auto; /* scroll if too long */
+}
+
+/* Custom links stay at bottom */
+.custom-sidebar-menu .custom-links-wrapper {
+    flex-shrink: 0;
+}
+
+/* Your existing styling for links */
 .custom-sidebar-menu ul.custom-links {
     margin-top: 20px;
     padding-left: 0;
@@ -33,6 +52,7 @@ body,
 .custom-sidebar-menu ul.custom-links li a:hover {
     text-decoration: underline;
 }
+
 .custom-sidebar-menu .custom-links .static-text {
     font-weight: bold;
     margin: 10px 0 5px 0;
@@ -40,4 +60,3 @@ body,
     padding-left: 10px;
     color: #555;
 }
-
