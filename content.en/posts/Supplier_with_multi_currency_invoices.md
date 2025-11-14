@@ -12,7 +12,9 @@ categories : [
     "Usage Cases",
     "examples",
 ]
-menu : "main" 
+menu : 
+  main: 
+   parent: Showcases
 ---
 
 {{< hint info >}} 
