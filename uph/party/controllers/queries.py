@@ -910,12 +910,17 @@ def get_counts_of_unposted_or_cancelled_vouchers(
 
     union_query = "\nUNION ALL\n".join(all_queries)
 
+    # FIX: prevent empty SQL execution
+    if not union_query or not union_query.strip():
+        return []
+
     flattened_values = []
     for vals in all_values:
         flattened_values.extend(vals)
 
     result = frappe.db.sql(union_query, flattened_values, as_dict=True)
     return result
+
 
 
 @frappe.whitelist()

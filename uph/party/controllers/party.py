@@ -100,8 +100,7 @@ Here is the Master validation function
 
 
 def validate_party_master_on_document_types(doc, method=None):
-    mapping = get_doctypes_functional_fields_mapping_as_dict()
-    doctype = doc.doctype
+    
 
     if (
         frappe.flags.in_patch
@@ -109,10 +108,10 @@ def validate_party_master_on_document_types(doc, method=None):
         or frappe.flags.in_migrate
         or frappe.flags.in_import
         or frappe.flags.in_setup_wizard
-        or doctype not in mapping
     ):
         return
-
+    mapping = get_doctypes_functional_fields_mapping_as_dict()
+    doctype = doc.doctype
     map_conf = mapping.get(doctype)
     if not map_conf:
         return

@@ -19,7 +19,7 @@
   "party_type",
   "party_type_fieldname",
   "party_master_custom_field",
-  "is_party_gl_effected"
+  "warn_not_submitted_document"
  ],
  "fields": [
   {
@@ -124,23 +124,24 @@
   },
   {
    "default": "0",
-   "description": "Check If this DocType has Direct effect on Party General Ledger",
-   "fieldname": "is_party_gl_effected",
+   "description": "Checked will show warn message if Draft or Cancelled(Not Edited) Document exists",
+   "fieldname": "warn_not_submitted_document",
    "fieldtype": "Check",
-   "label": "Is Party GL effected"
+   "label": "Warn If Un-Submitted Documents"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-05-01 21:59:06.313328",
+ "modified": "2025-11-15 19:33:31.396245",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party Master Settings DocType",
  "owner": "Administrator",
  "permissions": [],
  "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

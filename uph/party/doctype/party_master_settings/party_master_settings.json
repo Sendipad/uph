@@ -11,7 +11,12 @@
   "doctype_fields_mapping_section",
   "document_types",
   "party_master_to_party_sync_fields_section",
-  "party_master_fields"
+  "party_master_fields",
+  "party_master_tab",
+  "tree_view_section",
+  "auto_expand_levels",
+  "column_break_jote",
+  "hide_balance"
  ],
  "fields": [
   {
@@ -46,13 +51,39 @@
    "fieldtype": "Table",
    "label": "Party Types",
    "options": "Party Master Settings Party Type"
+  },
+  {
+   "fieldname": "party_master_tab",
+   "fieldtype": "Tab Break",
+   "label": "Party Master"
+  },
+  {
+   "default": "3",
+   "fieldname": "auto_expand_levels",
+   "fieldtype": "Int",
+   "label": "Party Master Tree View Expand Lvele"
+  },
+  {
+   "fieldname": "column_break_jote",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tree_view_section",
+   "fieldtype": "Section Break",
+   "label": "Tree View"
+  },
+  {
+   "default": "1",
+   "fieldname": "hide_balance",
+   "fieldtype": "Check",
+   "label": "Hide Balance in Tree"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-11-14 16:17:50.141750",
+ "modified": "2025-11-15 18:36:09.179468",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party Master Settings",

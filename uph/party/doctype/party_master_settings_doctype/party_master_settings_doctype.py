@@ -19,7 +19,6 @@ class PartyMasterSettingsDocType(Document):
 		document_type: DF.Link
 		enabled: DF.Check
 		is_dynamic_party_type: DF.Check
-		is_party_gl_effected: DF.Check
 		is_system_generated: DF.Check
 		parent: DF.Data
 		parent_doctype: DF.Link | None
@@ -30,5 +29,6 @@ class PartyMasterSettingsDocType(Document):
 		party_type: DF.Link | None
 		party_type_fieldname: DF.Literal[None]
 		reqd: DF.Check
+		warn_not_submitted_document: DF.Check
 	# end: auto-generated types
 	pass

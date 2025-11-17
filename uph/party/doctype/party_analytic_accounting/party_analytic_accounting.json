@@ -1,7 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "field:analytic_name",
+ "autoname": "format:{party_master}-{###}",
  "creation": "2023-08-01 22:43:30.540525",
  "default_view": "List",
  "doctype": "DocType",
@@ -9,24 +9,24 @@
  "engine": "InnoDB",
  "field_order": [
   "details_section",
+  "type",
   "party_master",
+  "title",
   "analytic_name",
-  "party_acount",
-  "party",
   "column_break_uxoa",
   "enabled",
   "is_default",
-  "party_type"
+  "status",
+  "apply_to_all_companies",
+  "apply_to_all_parties",
+  "section_break_fana",
+  "allowed_companies",
+  "validaty_section",
+  "effective_from",
+  "column_break_jufz",
+  "effective_to"
  ],
  "fields": [
-  {
-   "fieldname": "party_type",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Party Type ",
-   "options": "Party Type",
-   "reqd": 1
-  },
   {
    "default": "1",
    "fieldname": "enabled",
@@ -37,26 +37,9 @@
    "fieldname": "analytic_name",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Analytic Name",
+   "label": "Display Name",
    "reqd": 1,
    "unique": 1
-  },
-  {
-   "fetch_from": "party_type.party_type",
-   "fieldname": "party_acount",
-   "fieldtype": "Link",
-   "hidden": 1,
-   "in_list_view": 1,
-   "label": "Party Acount",
-   "options": "DocType"
-  },
-  {
-   "fieldname": "party",
-   "fieldtype": "Dynamic Link",
-   "in_list_view": 1,
-   "label": "Party",
-   "options": "party_acount",
-   "reqd": 1
   },
   {
    "fieldname": "party_master",
@@ -79,16 +62,77 @@
    "fieldname": "details_section",
    "fieldtype": "Section Break",
    "label": "Details"
+  },
+  {
+   "default": "Business Unit",
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "label": "Type",
+   "options": "Site\nBusiness Unit\nBranch\nTerritory\nCost Center\nFactory / Plant",
+   "reqd": 1
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Active\nInactive\nArchived"
+  },
+  {
+   "fieldname": "validaty_section",
+   "fieldtype": "Section Break",
+   "label": "Validaty"
+  },
+  {
+   "fieldname": "effective_from",
+   "fieldtype": "Date",
+   "label": "Effective From"
+  },
+  {
+   "fieldname": "column_break_jufz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "effective_to",
+   "fieldtype": "Date",
+   "label": "Effective To"
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title"
+  },
+  {
+   "default": "1",
+   "fieldname": "apply_to_all_companies",
+   "fieldtype": "Check",
+   "label": "apply to all companies"
+  },
+  {
+   "default": "1",
+   "fieldname": "apply_to_all_parties",
+   "fieldtype": "Check",
+   "label": "Apply To All Parties"
+  },
+  {
+   "fieldname": "section_break_fana",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "allowed_companies",
+   "fieldtype": "Table",
+   "label": "Allowed Companies",
+   "options": "Party Analytic Accounting Allowed Company"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-03-16 20:22:34.896144",
+ "modified": "2025-11-16 22:41:50.251448",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party Analytic Accounting",
- "naming_rule": "By fieldname",
+ "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [
   {
@@ -105,6 +149,7 @@
   }
  ],
  "quick_entry": 1,
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],

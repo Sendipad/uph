@@ -13,13 +13,19 @@ class PartyAnalyticAccounting(Document):
 
 	if TYPE_CHECKING:
 		from frappe.types import DF
+		from uph.party.doctype.party_analytic_accounting_allowed_company.party_analytic_accounting_allowed_company import PartyAnalyticAccountingAllowedCompany
 
+		allowed_companies: DF.Table[PartyAnalyticAccountingAllowedCompany]
 		analytic_name: DF.Data
+		apply_to_all_companies: DF.Check
+		apply_to_all_parties: DF.Check
+		effective_from: DF.Date | None
+		effective_to: DF.Date | None
 		enabled: DF.Check
 		is_default: DF.Check
-		party: DF.DynamicLink
-		party_acount: DF.Link | None
 		party_master: DF.Link
-		party_type: DF.Link
+		status: DF.Literal["Active", "Inactive", "Archived"]
+		title: DF.Data | None
+		type: DF.Literal["Site", "Business Unit", "Branch", "Territory", "Cost Center", "Factory / Plant"]
 	# end: auto-generated types
 	pass

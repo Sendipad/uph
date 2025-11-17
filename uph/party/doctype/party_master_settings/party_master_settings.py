@@ -23,7 +23,9 @@ class PartyMasterSettings(Document):
         from uph.party.doctype.party_master_settings_doctype.party_master_settings_doctype import PartyMasterSettingsDocType
         from uph.party.doctype.party_master_settings_party_type.party_master_settings_party_type import PartyMasterSettingsPartyType
 
+        auto_expand_levels: DF.Int
         document_types: DF.Table[PartyMasterSettingsDocType]
+        hide_balance: DF.Check
         party_master_fields: DF.Table[PartyMasterSettingsDocField]
         party_types: DF.Table[PartyMasterSettingsPartyType]
     # end: auto-generated types

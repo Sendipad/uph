@@ -6,63 +6,182 @@ frappe.treeview_settings["Party Master"] = {
 	ignore_fields: ["parent_party_master"],
 
 	onload: function (treeview) {
-		// ✅ Custom Add Child handler using Quick Entry
-		treeview.make_new_node = function (parent_node) {
+		// ✅ Load settings from Party Master Settings Doctype
+		treeview.load_settings = function () {
+			return Promise.all([
+				frappe.db.get_single_value("Party Master Settings", "auto_expand_levels"),
+				frappe.db.get_single_value("Party Master Settings", "hide_balance")
+			]).then(([levels, hide_balance]) => {
+				treeview.settings = {
+					expand_levels: levels || 3,
+					hide_balance: hide_balance || 0
+				};
+				console.log("Party Master Settings loaded:", treeview.settings);
+				return treeview.settings;
+			}).catch(err => {
+				// Default if settings not found
+				treeview.settings = {
+					expand_levels: 3,
+					hide_balance: 0
+				};
+				return treeview.settings;
+			});
+		};
+
+		// Load settings immediately
+		treeview.load_settings();
+
+		// ✅ Helper: Get company from tree args (most reliable)
+		treeview.get_company = function () {
+			return cur_tree?.args?.company || frappe.defaults.get_user_default("Company");
+		};
+
+		// ✅ Custom add child method
+		treeview.custom_make_new_node = function (parent_node) {
+			if (!parent_node || !parent_node.expandable) {
+				frappe.msgprint(__("Select a group node first."));
+				return;
+			}
+
 			frappe.ui.form.make_quick_entry(
 				"Party Master",
 				function (doc) {
-					if (doc && doc.name) {
+					if (doc?.name) {
 						frappe.show_alert({
 							message: __("Created new Party Master {0}", [doc.party_name || doc.name]),
 							indicator: "green",
 						});
-						treeview.reload();
+						if (cur_tree && parent_node) {
+							parent_node.loaded = false;
+							parent_node.expanded = false;
+							cur_tree.load_children(parent_node);
+						}
 					}
 				},
-				null, // init callback
+				null,
 				{
-					doctype: "Party Master", // 🔧 required for backend
-					parent_party_master: parent_node?.data?.value || null,
+					doctype: "Party Master",
+					parent_party_master: parent_node.data?.value || null,
 				},
-				null, // force
-				frappe.ui.form.PartyMasterQuickEntryForm, // your custom class
+				null,
+				frappe.ui.form.PartyMasterQuickEntryForm
 			);
 		};
+
+		// ✅ Expand to configured levels
+		treeview.expand_configured_levels = function () {
+			if (!cur_tree?.root_node || !treeview.settings) {
+				console.warn("Tree not ready for expansion");
+				return;
+			}
+			
+			const max_levels = treeview.settings.expand_levels;
+			if (max_levels <= 0) return; // Don't expand if set to 0
+			
+			const expand_recursive = (node, current_level) => {
+				if (current_level >= max_levels || !node.expandable) return;
+				
+				cur_tree.load_children(node).then(() => {
+					setTimeout(() => {
+						Object.values(cur_tree.nodes).forEach(child => {
+							if (child.parent_node === node) {
+								expand_recursive(child, current_level + 1);
+							}
+						});
+					}, 100);
+				});
+			};
+			
+			expand_recursive(cur_tree.root_node, 0);
+		};
+
+		// ✅ Add Financial Statement buttons
+		for (let report of [
+			"Party Account Statement",
+			"Party Account Balances",
+			"Chronological Party Ledger"
+		]) {
+			treeview.page.add_inner_button(
+				__(report),
+				function () {
+					const company = treeview.get_company();
+					if (!company) {
+						frappe.msgprint(__("Please select a Company first"));
+						return;
+					}
+					frappe.set_route("query-report", report, { company: company });
+				},
+				__("Financial Statements")
+			);
+		}
 	},
 
 	on_get_node: function (nodes, deep = false) {
-		if (frappe.boot.user.can_read.indexOf("GL Entry") == -1) return;
-		let party_master = deep
-			? nodes.reduce((pm, node) => [...pm, ...node.data], [])
-			: nodes.map((node) => node.label);
+		const treeview = frappe.views.trees["Party Master"];
+		
+		// ✅ CHECK SETTINGS: Only fetch if hide_balance is NOT enabled (e.g., show balance)
+		if (treeview.settings?.hide_balance) return;
+		if (!frappe.boot.user.can_read.includes("GL Entry")) return;
+
+		let party_masters = deep
+			? nodes.flatMap(node => node.data || [])
+			: nodes;
+
+		if (!party_masters.length) return;
 
 		frappe.call({
 			method: "uph.party.doctype.party_master.party_master.get_party_master_balances",
-			args: { name: party_master, company: cur_tree.args.company },
-			callback: function (r) {
+			args: { 
+				name: party_masters, 
+				company: cur_tree.args.company 
+			},
+			callback: (r) => {
 				if (!r.message) return;
-				r.message.forEach((pm) => {
+				
+				r.message.forEach(pm => {
 					const node = cur_tree.nodes[pm.name];
 					if (!node || node.is_root) return;
-					node.$tree_link.find(".balance-area").remove();
-					const balance_text = pm.balances
-						.map((balance) => {
+					
+					const balance_html = pm.balances
+						.map(balance => {
 							const is_dr = balance.amount >= 0;
 							const arrow = is_dr ? "▲" : "▼";
 							const color = is_dr ? "red" : "green";
 							return `<span style="color:${color}">${arrow} ${format_currency(
 								Math.abs(balance.amount),
-								balance.currency,
+								balance.currency
 							)}</span>`;
 						})
 						.join(" / ");
-					$(`<span class="balance-area pull-right">${balance_text}</span>`).insertAfter(
-						node.$tree_link.find("a"),
-					);
+					
+					node.$tree_link.find(".balance-area").remove();
+					$(`<span class="balance-area pull-right">${balance_html}</span>`)
+						.insertAfter(node.$tree_link.find("a"));
 				});
-			},
+			}
 		});
 	},
+
+	menu_items: [
+		{
+			label: __("View List"),
+			action: function () {
+				frappe.set_route("List", "Party Master");
+			},
+		},
+		{
+			label: __("Print"),
+			action: function () {
+				this.print_tree();
+			},
+		},
+		{
+			label: __("Refresh"),
+			action: function () {
+				this.make_tree();
+			},
+		}
+	],
 
 	filters: [
 		{
@@ -77,15 +196,17 @@ frappe.treeview_settings["Party Master"] = {
 			fieldtype: "Link",
 			options: "Party Master",
 			label: __("Party Master"),
+			disable_onchange: true,
 			onchange: function () {
+				const party_master = this.get_value();
 				const treeview = frappe.views.trees["Party Master"];
-				const input = this.$input;
-				const party_master = input ? input.get_value() : null;
-
+				
 				if (!party_master) {
-					treeview.root_value = null;
-					treeview.root_label = treeview.opts.root_label;
-					treeview.make_tree();
+					cur_tree.root_value = null;
+					cur_tree.root_label = cur_tree.opts.root_label;
+					delete cur_tree.args.name;
+					treeview.set_title();
+					cur_tree.make_tree();
 					return;
 				}
 
@@ -97,25 +218,29 @@ frappe.treeview_settings["Party Master"] = {
 						fieldname: ["is_group", "parent_party_master"],
 					},
 					callback: (r) => {
-						if (r.message.is_group) {
-							treeview.root_value = party_master;
-							treeview.root_label = party_master;
-							treeview.make_tree();
-						} else {
-							const parent = r.message.parent_party_master;
-							treeview.root_value = parent;
-							treeview.root_label = parent;
-							treeview.make_tree();
+						if (!r.message) return;
+						
+						const { is_group, parent_party_master } = r.message;
+						const new_root = is_group ? party_master : (parent_party_master || cur_tree.opts.root_label);
+						
+						cur_tree.root_value = new_root;
+						cur_tree.root_label = new_root;
+						cur_tree.args.name = party_master;
+						treeview.set_title();
+						
+						cur_tree.make_tree();
+						
+						setTimeout(() => {
+							treeview.expand_configured_levels();
+						}, 500);
+						
+						if (!is_group && party_master) {
 							setTimeout(() => {
-								const parent_node = cur_tree.nodes[parent];
-								if (parent_node) {
-									const leaf_node = cur_tree.nodes[party_master];
-									if (leaf_node) {
-										leaf_node.show();
-										leaf_node.parent_node.expand();
-									}
+								const leaf_node = cur_tree.nodes[party_master];
+								if (leaf_node) {
+									cur_tree.on_node_click(leaf_node);
 								}
-							}, 500);
+							}, 2000);
 						}
 					},
 				});
@@ -125,22 +250,28 @@ frappe.treeview_settings["Party Master"] = {
 
 	post_render: function (treeview) {
 		treeview.page.set_title(__("Chart of Party"));
+		
+		// Wait for settings to load before expanding
+		setTimeout(() => {
+			treeview.expand_configured_levels();
+		}, 500);
+		
 		treeview.page.set_primary_action(__("New"), function () {
 			frappe.ui.form.make_quick_entry(
 				"Party Master",
 				(doc) => {
-					if (doc && doc.name) {
+					if (doc?.name) {
 						frappe.show_alert({
 							message: __("Created new Party Master {0}", [doc.party_name || doc.name]),
 							indicator: "green",
 						});
-						treeview.reload();
+						treeview.make_tree();
 					}
 				},
 				null,
 				{ doctype: "Party Master" },
 				null,
-				frappe.ui.form.PartyMasterQuickEntryForm,
+				frappe.ui.form.PartyMasterQuickEntryForm
 			);
 		});
 	},
@@ -150,19 +281,31 @@ frappe.treeview_settings["Party Master"] = {
 			label: __("Add Child"),
 			condition: (node) => node.expandable,
 			click: function (node) {
-				frappe.views.trees["Party Master"].make_new_node(node);
+				frappe.views.trees["Party Master"].custom_make_new_node(node);
 			},
 			btnClass: "hidden-xs",
 		},
 		{
 			label: __("Edit"),
+			condition: (node) => !node.is_root,
 			click: (node) => frappe.set_route("Form", "Party Master", node.label),
+			btnClass: "hidden-xs",
+		},
+		{
+			label: __("Create Party"),
+			condition: (node) => !node.is_root && !node.expandable,
+			click: function (node) {
+				uph.party.create_party_for_party_master_from_node(node.label);
+			},
 			btnClass: "hidden-xs",
 		},
 		{
 			label: __("View Ledger"),
 			click: function (node) {
-				frappe.route_options = { party_master: node.label, company: cur_tree.args.company };
+				frappe.route_options = { 
+					party_master: node.label, 
+					company: frappe.views.trees["Party Master"].get_company() 
+				};
 				frappe.set_route("query-report", "Party Account Statement");
 			},
 			btnClass: "hidden-xs",
