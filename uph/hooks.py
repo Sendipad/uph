@@ -28,6 +28,11 @@ doctype_js = {
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
+# hooks.py
+after_migrate = [
+    "uph.setup.install.create_party_analytic_accounting_dimension",
+    "uph.setup.install.create_party_master_tree"
+]
 
 # Svg Icons
 # ------------------
@@ -36,7 +41,6 @@ doctype_js = {
 boot_session = "uph.party.boot.add_pm_doctypes"
 
 
-after_install = "uph.setup.install.setup"
 
 # after_migrate = [
 #    "uph.hub.services.registry.sync_rule_service_types",

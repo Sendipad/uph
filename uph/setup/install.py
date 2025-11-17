@@ -4,30 +4,38 @@ from uph.party.doctype.party_master_settings.party_master_settings import (
     setup_initial_document_types,
     setup_party_types_table,
 )
+def full_setup():
+    run_pending_setup()
 
 
 def setup():
     setup_initial_document_types()
     setup_party_types_table()
 
-
 def on_migrate():
-    # Your logic here, e.g., updating some records
+    """Run after migrate"""
+    run_pending_setup()
+
+
+def run_pending_setup():
+    """Run new setup safely for existing sites"""
     setup_initial_document_types()
     setup_party_types_table()
     create_party_master_tree()
-
-
+    create_party_analytic_accounting_dimension()
 def post_install():
+    """Run at install time"""
     settings = frappe.get_doc("Party Master Settings")
     settings.flags.document_types_same = False
-    settings.sync_update_to_doctype_fields(force_update=True)
+    if hasattr(settings, "sync_update_to_doctype_fields"):
+        settings.sync_update_to_doctype_fields(force_update=True)
     settings.save()
-
+    
+    run_pending_setup()
 
 def create_party_master_tree():
     tree_node = frappe.get_all("Party Master")
-    if tree_node or len(tree_node) > 0:
+    if tree_node:
         return
 
     def create_node(name, number, is_group=1, parent=None, ptype=None):
@@ -48,8 +56,26 @@ def create_party_master_tree():
     create_node(_("Local Customer"), "1320", parent=customer.name, ptype="Customer")
 
     creditor = create_node(_("Creditor"), "2000")
-    supplier = create_node(
-        _("Supplier"), "2100", parent=creditor.name, ptype="Supplier"
-    )
+    supplier = create_node(_("Supplier"), "2100", parent=creditor.name, ptype="Supplier")
     create_node(_("Foreign Supplier"), "2110", parent=supplier.name, ptype="Supplier")
     create_node(_("Local Supplier"), "2120", parent=supplier.name, ptype="Supplier")
+
+def create_party_analytic_accounting_dimension():
+    if not frappe.db.exists("Accounting Dimension", "Party Analytic Accounting"): 
+        doc = frappe.get_doc({
+            "doctype": "Accounting Dimension",
+            "name": "Party Analytic Accounting",
+            "document_type": "Party Analytic Accounting",
+            "label": "Party Analytic Accounting",
+            "fieldname": "party_analytic_accounting",
+            "disabled": False
+        })
+        doc.insert(ignore_permissions=True)
+
+  
+        
+def full_setup():
+    setup_initial_document_types()
+    setup_party_types_table()
+    create_party_master_tree()
+    create_party_analytic_accounting_dimension()
