@@ -25,7 +25,9 @@ class PartyMasterSettings(Document):
 
         auto_expand_levels: DF.Int
         document_types: DF.Table[PartyMasterSettingsDocType]
+        enforce_strict_currency: DF.Check
         hide_balance: DF.Check
+        override_party_details_api: DF.Check
         party_master_fields: DF.Table[PartyMasterSettingsDocField]
         party_types: DF.Table[PartyMasterSettingsPartyType]
     # end: auto-generated types
