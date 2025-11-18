@@ -1,6 +1,6 @@
 import frappe
 from uph.party.controllers.queries import get_linked_parties_list
-__version__ = "1.0.2"
+__version__ = "2.1.0"
 
 
 UPH_cached_key_map={
