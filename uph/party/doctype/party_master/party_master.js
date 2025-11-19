@@ -286,72 +286,83 @@ function get_child_table() {
 
 
 function open_secondary_roles_dialog(frm) {
-	const dialog = new frappe.ui.Dialog({
-		title: __("Add Party Roles"),
-		fields: [
-			{
-				label: __("Activate Multi Roles"),
-				fieldname: "has_secondary_role_party",
-				fieldtype: "Check",
-				reqd: 1,
-				default: 1,
-				read_only: 1,
-				description: __("Activate a single party can play multiple roles customer, supplier, employee using the same base party data")
-			},
-			{
-				label: __("Roles"),
-				fieldname: "roles",
-				fieldtype: "Table MultiSelect",
-				options: "Party Master Role",
-				reqd: 1,
-				get_data(txt) {
-					let existing = [frm.doc.party_type];
-					if (frm.doc.roles) existing = existing.concat(frm.doc.roles.map(r => r.party_type_role));
-					return frappe.db.get_list("Party Master Role", {
-						fields: ["name"],
-						filters: [["name", "not in", existing], ["name", "like", `%${txt}%`]],
-						limit: 20
-					});
-				}
-			}
-		],
-		size: "small",
-		primary_action_label: __("Add"),
-		primary_action(values) {
-			if (!values.roles || !values.roles.length) {
-				frappe.msgprint(__("Please select at least one role."));
-				return;
-			}
+    // Get existing child table roles
+    const existing_roles = frm.doc.roles ? frm.doc.roles.map(r => r.party_type_role) : [];
 
-			// mark multi-role active
-			frm.set_value("has_secondary_role_party", 1);
+    // Build available roles from frappe.boot.party_account_types
+    let party_types = Object.keys(frappe.boot.party_account_types).filter(
+        p => p !== frm.doc.primary_role && !existing_roles.includes(p)
+    );
 
-			// Convert Table MultiSelect results into proper child table format
-			// Clear existing roles array if needed
-			if (!frm.doc.roles) frm.doc.roles = [];
+    // Dynamically build check fields
+    const check_fields = party_types.map(role_name => ({
+        label: role_name,
+        fieldname: `role_${role_name.replace(/\s+/g, '_')}`,
+        fieldtype: "Check",
+        default: 0
+    }));
 
-			const existing_roles = frm.doc.roles.map(r => r.party_type_role);
-			values.roles.forEach(role_doc => {
-				if (!existing_roles.includes(role_doc.name)) {
-					frm.doc.roles.push({ party_type_role: role_doc.name });
-				}
-			});
+    // If no roles are available, alert the user
+    if (check_fields.length === 0) {
+        frappe.msgprint(__("All secondary roles are already assigned."));
+        return;
+    }
 
-			frm.refresh_field("roles");
+    // Create dialog
+    const dialog = new frappe.ui.Dialog({
+        title: __("Add Secondary Roles"),
+        size: "small",
+        fields: [
+            {
+                label: __("Activate Multi Roles"),
+                fieldname: "has_secondary_role_party",
+                fieldtype: "Check",
+                default: 1,
+                read_only: 1
+            },
+            ...check_fields
+        ],
+        primary_action_label: __("Add"),
+        primary_action(values) {
+            // Collect checked roles
+            const selected_roles = check_fields
+                .filter(f => values[f.fieldname])
+                .map(f => f.label);
 
-			// Save document
-			frm.save()
-				.then(() => {
-					dialog.hide();
-					frm.reload_doc();
-					frappe.show_alert({ message: __("Secondary roles added and form saved"), indicator: "green" });
-				})
-				.catch(err => {
-					frappe.msgprint(__("Error saving form. Check console."));
-					console.error(err);
-				});
-		}
-	});
+            if (!selected_roles.length) {
+                frappe.msgprint(__("Please select at least one role."));
+                return;
+            }
 
-	dialog.show();
+            // Ensure child table exists
+            frm.doc.roles = frm.doc.roles || [];
+
+            // Add selected roles to child table
+            selected_roles.forEach(role_name => {
+                if (!frm.doc.roles.some(r => r.party_type_role === role_name)) {
+                    const row = frappe.model.add_child(frm.doc, "Party Master Role", "roles");
+                    row.party_type_role = role_name; // mandatory field
+                }
+            });
+
+            // Refresh child table and save
+            frm.refresh_field("roles");
+
+            frm.save().then(() => {
+                dialog.hide();
+                frm.reload_doc();
+                frappe.show_alert({
+                    message: __("Secondary roles added successfully"),
+                    indicator: "green"
+                });
+            }).catch(err => {
+                frappe.msgprint(__("Error saving form. Check console."));
+                console.error(err);
+            });
+        }
+    });
+
+    dialog.show();
 }
+
+
