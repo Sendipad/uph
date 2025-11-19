@@ -291,7 +291,9 @@ function open_secondary_roles_dialog(frm) {
 
     // Build available roles from frappe.boot.party_account_types
     let party_types = Object.keys(frappe.boot.party_account_types).filter(
-        p => p !== frm.doc.primary_role && !existing_roles.includes(p)
+        p => p !== frm.doc.primary_role && 
+		         p !== frm.doc.party_type &&    
+		!existing_roles.includes(p)
     );
 
     // Dynamically build check fields
