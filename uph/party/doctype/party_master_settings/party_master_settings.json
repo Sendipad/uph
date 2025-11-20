@@ -6,6 +6,7 @@
  "documentation": "https://sendipad.github.io/uph/en/docs/introduction/Settings/",
  "engine": "InnoDB",
  "field_order": [
+  "general_configuration_section",
   "override_party_details_api",
   "column_break_qzjp",
   "enforce_strict_currency",
@@ -19,7 +20,9 @@
   "tree_view_section",
   "auto_expand_levels",
   "column_break_jote",
-  "hide_balance"
+  "hide_balance",
+  "paa_tab",
+  "enable_party_analytic_accounting"
  ],
  "fields": [
   {
@@ -97,13 +100,30 @@
    "fieldname": "enforce_strict_currency",
    "fieldtype": "Check",
    "label": "Enforce Strict Currency Accounting"
+  },
+  {
+   "fieldname": "general_configuration_section",
+   "fieldtype": "Section Break",
+   "label": "General Configuration"
+  },
+  {
+   "default": "1",
+   "fieldname": "paa_tab",
+   "fieldtype": "Tab Break",
+   "label": "PAA"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_party_analytic_accounting",
+   "fieldtype": "Check",
+   "label": "Enable Party Analytic Accounting"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-11-17 22:05:55.274012",
+ "modified": "2025-11-20 15:33:13.192380",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party Master Settings",

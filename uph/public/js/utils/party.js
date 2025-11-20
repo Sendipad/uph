@@ -967,3 +967,36 @@ create_party_for_party_master_dialog : function (frm) {
 		});
 	},
 };
+// Wrap ERPNext's get_filtered_dimensions
+const original_get_filtered_dimensions = erpnext.queries.get_filtered_dimensions;
+
+erpnext.queries.get_filtered_dimensions = function(doc, child_fields, dimension, company) {
+    if (dimension === "party_analytic_accounting") {
+        // Determine correct party field dynamically based on doctype
+        let party_fieldname;
+        if (SALES_DOCTYPES.includes(doc.doctype)) {
+            party_fieldname = "customer";
+        } else if (PURCHASE_DOCTYPES.includes(doc.doctype)) {
+            party_fieldname = "supplier";
+        } else if (doc.doctype === "Payment Entry") {
+            party_fieldname = "party";
+        } else {
+            // fallback
+            party_fieldname = "party";
+        }
+
+        const party_value = doc[party_fieldname] || null;
+
+        return {
+            query: "uph.party.controllers.queries.get_party_analytic_accounting_filtered",
+            filters: {
+                party_master: doc.party_master,
+                party: party_value,
+                company: company
+            }
+        };
+    }
+
+    // fallback to ERPNext default for other dimensions
+    return original_get_filtered_dimensions.apply(this, arguments);
+};

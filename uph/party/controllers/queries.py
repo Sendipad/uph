@@ -921,7 +921,67 @@ def get_counts_of_unposted_or_cancelled_vouchers(
     result = frappe.db.sql(union_query, flattened_values, as_dict=True)
     return result
 
+#starting implementation of party analytic accounting query, it must be improved in future
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_party_analytic_accounting_filtered(doctype, txt, searchfield, start, page_len, filters, reference_doctype=None):
+    from frappe.utils import nowdate
 
+    party_master = filters.get("party_master")
+    party = filters.get("party")
+    company = filters.get("company")
+    
+    if not party_master:
+        return []
+
+    conditions = ["enabled = 1"]
+    if party_master:
+        conditions.append("party_master = %(party_master)s")
+    if txt:
+        conditions.append("analytic_name LIKE %(txt)s")
+    
+    today = nowdate()
+    conditions.append("(effective_from IS NULL OR effective_from <= %(today)s)")
+    conditions.append("(effective_to IS NULL OR effective_to >= %(today)s)")
+
+    query = f"""
+        SELECT name, analytic_name
+        FROM `tabParty Analytic Accounting`
+        WHERE {" AND ".join(conditions)}
+        LIMIT {start}, {page_len}
+    """
+
+    values = {
+        "party_master": party_master,
+        "txt": f"%{txt}%",
+        "today": today
+    }
+
+    paa_records = frappe.db.sql(query, values, as_dict=True)
+
+    results = []
+    for paa in paa_records:
+        party_linked = frappe.db.exists({
+            "doctype": "Party Analytic Accounting Party",
+            "parent": paa.name,
+            "parenttype": "Party Analytic Accounting",
+            "parentfield": "parties",
+            "party": party
+        }) if party else True
+
+        company_linked = frappe.db.exists({
+            "doctype": "Party Analytic Accounting Allowed Company",
+            "parent": paa.name,
+            "parenttype": "Party Analytic Accounting",
+            "parentfield": "companies",
+            "company": company
+        }) if company else True
+
+        if party_linked and company_linked:
+            # tuple: (value, label, optional description)
+            results.append((paa.name, paa.analytic_name, paa.analytic_name))
+
+    return results
 
 @frappe.whitelist()
 def make_warning_for_not_submitted_voucher(party_master, as_count=False):

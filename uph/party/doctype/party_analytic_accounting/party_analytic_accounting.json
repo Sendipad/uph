@@ -1,26 +1,28 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "format:{party_master}-{###}",
+ "autoname": "format:PAA-{party_master}-{###}",
  "creation": "2023-08-01 22:43:30.540525",
  "default_view": "List",
+ "description": "This record enforces the principle of Accounting Non-Duplication for the Party Master. It eliminates the need to create redundant accounts for the same customer or supplier (e.g., customer branches) solely for segmented reporting or financial data separation. Instead, it is used to define and assign unique Analytical Accounting Dimensions to each related entity of the Party Master. This approach maintains a single, unified Party record while enabling detailed financial segmentation and reporting through customized analytical dimensions (PAA), significantly boosting accounting governance efficiency and reducing Chart of Accounts complexity.",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
   "details_section",
+  "title",
   "type",
   "party_master",
-  "title",
   "analytic_name",
   "column_break_uxoa",
   "enabled",
   "is_default",
   "status",
-  "apply_to_all_companies",
-  "apply_to_all_parties",
+  "allow_or_restrict",
   "section_break_fana",
-  "allowed_companies",
+  "companies",
+  "column_break_grmf",
+  "parties",
   "validaty_section",
   "effective_from",
   "column_break_jufz",
@@ -100,35 +102,43 @@
   {
    "fieldname": "title",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Title"
   },
   {
-   "default": "1",
-   "fieldname": "apply_to_all_companies",
-   "fieldtype": "Check",
-   "label": "apply to all companies"
-  },
-  {
-   "default": "1",
-   "fieldname": "apply_to_all_parties",
-   "fieldtype": "Check",
-   "label": "Apply To All Parties"
-  },
-  {
    "fieldname": "section_break_fana",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Rule Applied"
   },
   {
-   "fieldname": "allowed_companies",
+   "fieldname": "column_break_grmf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "parties",
    "fieldtype": "Table",
-   "label": "Allowed Companies",
+   "label": "Applicable For Parties",
+   "options": "Party Analytic Accounting Party"
+  },
+  {
+   "fieldname": "companies",
+   "fieldtype": "Table",
+   "label": "Applicable On Companies",
    "options": "Party Analytic Accounting Allowed Company"
+  },
+  {
+   "default": "Allow",
+   "fieldname": "allow_or_restrict",
+   "fieldtype": "Select",
+   "label": "Allowed or Restrict to Below Rule ",
+   "options": "Allow\nRestrict",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-11-16 22:41:50.251448",
+ "modified": "2025-11-20 17:28:51.230685",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party Analytic Accounting",
@@ -150,8 +160,11 @@
  ],
  "quick_entry": 1,
  "row_format": "Dynamic",
+ "search_fields": "analytic_name",
+ "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
+ "title_field": "analytic_name",
  "track_changes": 1
 }
