@@ -930,58 +930,73 @@ def get_party_analytic_accounting_filtered(doctype, txt, searchfield, start, pag
     party_master = filters.get("party_master")
     party = filters.get("party")
     company = filters.get("company")
-    
-    if not party_master:
+    today = nowdate()
+
+    if not party_master and not party:
         return []
 
-    conditions = ["enabled = 1"]
-    if party_master:
-        conditions.append("party_master = %(party_master)s")
+    # Base conditions
+    conditions = ["paa.enabled = 1",
+                  "(paa.effective_from IS NULL OR paa.effective_from <= %(today)s)",
+                  "(paa.effective_to IS NULL OR paa.effective_to >= %(today)s)"]
+
     if txt:
-        conditions.append("analytic_name LIKE %(txt)s")
-    
-    today = nowdate()
-    conditions.append("(effective_from IS NULL OR effective_from <= %(today)s)")
-    conditions.append("(effective_to IS NULL OR effective_to >= %(today)s)")
+        conditions.append("paa.analytic_name LIKE %(txt)s")
+
+    # Join conditions
+    join_conditions = []
+    # For parties filter
+    if party:
+        join_conditions.append("""
+            EXISTS (
+                SELECT 1 FROM `tabParty Analytic Accounting Party` pa
+                WHERE pa.parent = paa.name
+                AND pa.parentfield = 'parties'
+                AND pa.party = %(party)s
+            )
+        """)
+    # For company filter
+    if company:
+        join_conditions.append("""
+            EXISTS (
+                SELECT 1 FROM `tabParty Analytic Accounting Allowed Company` pc
+                WHERE pc.parent = paa.name
+                AND pc.parentfield = 'companies'
+                AND pc.company = %(company)s
+            )
+        """)
+
+    # Combine conditions with allow_or_restrict
+    # Allow: include only if linked
+    # Restrict: exclude if not linked
+    # This can be handled in WHERE clause
+    # We'll join only linked parties/companies if Restrict
+    # For simplicity, we first filter by linked records only
+    where_clause = " AND ".join(conditions + join_conditions)
 
     query = f"""
-        SELECT name, analytic_name
-        FROM `tabParty Analytic Accounting`
-        WHERE {" AND ".join(conditions)}
+        SELECT
+            paa.name AS value,
+            paa.analytic_name AS label,
+            paa.analytic_name AS description
+        FROM `tabParty Analytic Accounting` paa
+        WHERE {where_clause}
+        ORDER BY paa.analytic_name
         LIMIT {start}, {page_len}
     """
 
     values = {
         "party_master": party_master,
+        "party": party,
+        "company": company,
         "txt": f"%{txt}%",
         "today": today
     }
 
-    paa_records = frappe.db.sql(query, values, as_dict=True)
+    results = frappe.db.sql(query, values, as_dict=True)
 
-    results = []
-    for paa in paa_records:
-        party_linked = frappe.db.exists({
-            "doctype": "Party Analytic Accounting Party",
-            "parent": paa.name,
-            "parenttype": "Party Analytic Accounting",
-            "parentfield": "parties",
-            "party": party
-        }) if party else True
-
-        company_linked = frappe.db.exists({
-            "doctype": "Party Analytic Accounting Allowed Company",
-            "parent": paa.name,
-            "parenttype": "Party Analytic Accounting",
-            "parentfield": "companies",
-            "company": company
-        }) if company else True
-
-        if party_linked and company_linked:
-            # tuple: (value, label, optional description)
-            results.append((paa.name, paa.analytic_name, paa.analytic_name))
-
-    return results
+    # convert to tuples for Frappe Link field
+    return [(r.value, r.label, r.description) for r in results]
 
 @frappe.whitelist()
 def make_warning_for_not_submitted_voucher(party_master, as_count=False):
