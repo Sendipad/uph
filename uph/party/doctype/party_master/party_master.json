@@ -39,6 +39,7 @@
   "image",
   "gender",
   "roles",
+  "normalized_party_name",
   "section_break_ulyl",
   "default_currency",
   "is_internal_party",
@@ -671,6 +672,14 @@
    "label": "Parties",
    "options": "Party Master Parties",
    "read_only": 1
+  },
+  {
+   "fieldname": "normalized_party_name",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Normalized Party Name",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
@@ -678,7 +687,7 @@
  "is_calendar_and_gantt": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2025-11-15 20:02:35.411173",
+ "modified": "2025-11-23 20:44:05.679216",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party Master",

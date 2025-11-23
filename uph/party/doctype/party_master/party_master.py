@@ -24,6 +24,7 @@ from uph.party.controllers.queries import (
     get_party_master_parties,
     get_party_master_parties_db,
 )
+from uph.party.controllers.mdm import normalize_text
 
 
 class PartyMaster(NestedSet):
@@ -71,6 +72,7 @@ class PartyMaster(NestedSet):
         mobile_no: DF.ReadOnly | None
         naming_series: DF.Literal["{party_number}", ".{parent_party_master}.", "PM-{party_name}"]
         national_id: DF.Data | None
+        normalized_party_name: DF.Data | None
         old_parent: DF.Link | None
         parent_party_master: DF.Link | None
         parties: DF.Table[PartyMasterParties]
@@ -164,6 +166,8 @@ class PartyMaster(NestedSet):
             frappe.throw(_("Default Party Type is Mandatory"))
 
     def before_save(self):
+        if self.party_name:
+             self.normalized_party_name = normalize_text(self.party_name)
         frappe.cache.hdel(uph.make_key("Party Master.parties"), self.name)
         old = self.get_doc_before_save()
         if old and self.parent_party_master != old.parent_party_master:
