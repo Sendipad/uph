@@ -3,25 +3,48 @@
 
 frappe.ui.form.on("Party Analytic Accounting", {
     refresh(frm) {
-        frm.get_field("parties").grid.wrapper
-            .find('.grid-add-row').hide();
-        if (!frm.doc.party_master) return;
+        // Hide add-row buttons for parties child table
+        hide_parties_add_button(frm);
 
-        frm.fields_dict["parties"].grid.add_custom_button(
-            __("Fetch Related Parties"),
-            () => open_related_parties_dialog(frm)
-        );
-
+        // Add custom button only if party_master exists
+        if (frm.doc.party_master) {
+            frm.fields_dict["parties"].grid.add_custom_button(
+                __("Fetch Related Parties"),
+                () => open_related_parties_dialog(frm)
+            );
+        }
     },
+
     parties_add(frm, cdt, cdn) {
-        frm.get_field("parties").grid.wrapper
-            .find('.grid-add-row').hide();
+        hide_parties_add_button(frm);
     },
+
     parties_remove(frm, cdt, cdn) {
-        frm.get_field("parties").grid.wrapper
-            .find('.grid-add-row').hide();
+        hide_parties_add_button(frm);
     },
+
+    // ★ NEW: Enabled toggle logic
+    enabled(frm) {
+        if (!frm.doc.enabled) {
+            // When disabled → automatically set status
+            if (frm.doc.status !== "Inactive" && frm.doc.status !== "Archived") {
+                frm.set_value("status", "Inactive");
+            }
+        } else {
+            // Optional: when enabled, return status to Active if desired
+            if (frm.doc.status === "Inactive" || frm.doc.status === "Archived") {
+                frm.set_value("status", "Active");
+            }
+        }
+    }
 });
+
+// Helper function
+function hide_parties_add_button(frm) {
+    frm.get_field("parties").grid.wrapper
+        .find('.grid-add-row')
+        .hide();
+}
 
 
 function open_related_parties_dialog(frm) {

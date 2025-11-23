@@ -156,6 +156,8 @@ def validate_party_master_on_document_types(doc, method=None):
                     party, party_type
                 )
             )
+        
+        validate_party_analytic_accounting(d, new_party_master)
 
     if is_child:
         for d in doc.get_all_children():
@@ -166,6 +168,28 @@ def validate_party_master_on_document_types(doc, method=None):
 
     for msg in alert_msg:
         frappe.msgprint(title=_("Party Master Auto-set"), msg=msg, alert=1)
+
+
+def validate_party_analytic_accounting(doc, party_master):
+    if not doc.get("party_analytic_accounting"):
+        return
+
+    # Check if PAA is enabled globally
+    if not frappe.db.get_single_value(
+        "Party Master Settings", "enable_party_analytic_accounting"
+    ):
+        return
+
+    paa_party_master = frappe.db.get_value(
+        "Party Analytic Accounting", doc.party_analytic_accounting, "party_master"
+    )
+
+    if paa_party_master != party_master:
+        frappe.throw(
+            _(
+                "Party Analytic Accounting {0} belongs to Party Master {1}, but this document is linked to {2}"
+            ).format(doc.party_analytic_accounting, paa_party_master, party_master)
+        )
 
 
 def validate_party_master_on_target_party_type(doc, method):
