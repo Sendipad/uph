@@ -24,7 +24,7 @@ uph.party = {
 		}
 
 		frappe.call({
-			method: "uph.party.controllers.queries.get_party_master_parties",
+			method: "uph.controllers.queries.get_party_master_parties",
 			args: filters,
 			callback: function (r) {
 				if (r.message) {
@@ -109,14 +109,14 @@ uph.party = {
 						uphdialog.set_df_property("party_type", "options", party_type);
 						uphdialog.set_value("party_type", party_type[0]);
 						/*uphdialog.fields_dict.party_type.df.onchange=function(){
-                    
-                            let selected_pt = uphdialog.get_value("party_type");
-                            let party_data = parties.filter(p => p.party_type === selected_pt);
-                            if (party_data) {
-                                let party=party_data.map(p => p.name);
-                                uphdialog.set_df_property("party","options",party);
-                            }
-                        }*/
+				    
+							let selected_pt = uphdialog.get_value("party_type");
+							let party_data = parties.filter(p => p.party_type === selected_pt);
+							if (party_data) {
+								let party=party_data.map(p => p.name);
+								uphdialog.set_df_property("party","options",party);
+							}
+						}*/
 					}
 					uphdialog.set_df_property("is_default_for_party_master", "hidden", 1);
 					if (
@@ -131,7 +131,7 @@ uph.party = {
 						let values = uphdialog.get_values();
 						if (values.is_default_for_party_master) {
 							frappe.call({
-								method: "uph.party.controllers.party.set_party_as_default_for_party_master",
+								method: "uph.controllers.party.set_party_as_default_for_party_master",
 								args: {
 									party: values.party,
 									party_type: values.party_type,
@@ -160,100 +160,100 @@ uph.party = {
 	},
 
 
-// ✅ NEW: Create party from tree node (fetches doc then calls dialog)
-create_party_for_party_master_from_node :function (party_master_name) {
-    frappe.db.get_doc('Party Master', party_master_name).then(doc => {
-        uph.party.create_party_for_party_master_dialog_from_doc(doc);
-    });
-},
+	// ✅ NEW: Create party from tree node (fetches doc then calls dialog)
+	create_party_for_party_master_from_node: function (party_master_name) {
+		frappe.db.get_doc('Party Master', party_master_name).then(doc => {
+			uph.party.create_party_for_party_master_dialog_from_doc(doc);
+		});
+	},
 
-// ✅ REFACTORED: Dialog function that works with any Party Master doc
-create_party_for_party_master_dialog_from_doc : function (doc) {
-    let party_type = [doc.party_type];
+	// ✅ REFACTORED: Dialog function that works with any Party Master doc
+	create_party_for_party_master_dialog_from_doc: function (doc) {
+		let party_type = [doc.party_type];
 
-    if (doc.roles?.length > 0) {
-        party_type = [
-            ...new Set([doc.party_type, ...doc.roles.map((role) => role.party_type_role)]),
-        ];
-    }
+		if (doc.roles?.length > 0) {
+			party_type = [
+				...new Set([doc.party_type, ...doc.roles.map((role) => role.party_type_role)]),
+			];
+		}
 
-    const dialog = new frappe.ui.Dialog({
-        title: __("Create Party As"),
-        fields: [
-            {
-                fieldname: "party_type",
-                fieldtype: "Select",
-                label: __("Select Party Type"),
-                options: party_type,
-                reqd: 1,
-                onchange() {
-                    const selected = dialog.get_value("party_type");
-                    const showCurrency = ["Customer", "Supplier"].includes(selected);
-                    dialog.set_df_property("default_currency", "hidden", !showCurrency);
-                    dialog.set_df_property("default_currency", "reqd", showCurrency ? 1 : 0);
-                },
-            },
-            {
-                fieldname: "default_currency",
-                fieldtype: "Select",
-                label: __("Default Currency"),
-                options: erpnext.get_presentation_currency_list() || [],
-            },
-            {
-                fieldname: "save",
-                fieldtype: "Check",
-                label: __("Save"),
-                default: 0,
-                description: __("Check this if you want to save the party without routing to Edit"),
-            },
-        ],
-        primary_action_label: __("Edit Before Save"),
-        primary_action(values) {
-            const args = {
-                source_name: doc.name,
-                target_doctype: values.party_type,
-                rule_field_value: values.default_currency,
-                save: values.save || false,
-            };
+		const dialog = new frappe.ui.Dialog({
+			title: __("Create Party As"),
+			fields: [
+				{
+					fieldname: "party_type",
+					fieldtype: "Select",
+					label: __("Select Party Type"),
+					options: party_type,
+					reqd: 1,
+					onchange() {
+						const selected = dialog.get_value("party_type");
+						const showCurrency = ["Customer", "Supplier"].includes(selected);
+						dialog.set_df_property("default_currency", "hidden", !showCurrency);
+						dialog.set_df_property("default_currency", "reqd", showCurrency ? 1 : 0);
+					},
+				},
+				{
+					fieldname: "default_currency",
+					fieldtype: "Select",
+					label: __("Default Currency"),
+					options: erpnext.get_presentation_currency_list() || [],
+				},
+				{
+					fieldname: "save",
+					fieldtype: "Check",
+					label: __("Save"),
+					default: 0,
+					description: __("Check this if you want to save the party without routing to Edit"),
+				},
+			],
+			primary_action_label: __("Edit Before Save"),
+			primary_action(values) {
+				const args = {
+					source_name: doc.name,
+					target_doctype: values.party_type,
+					rule_field_value: values.default_currency,
+					save: values.save || false,
+				};
 
-            frappe.call({
-                method: "uph.party.doctype.party_master.party_master.create_party_from_party_master",
-                args,
-                callback(r) {
-                    if (!r.exc && r.message) {
-                        dialog.hide();
+				frappe.call({
+					method: "uph.party.doctype.party_master.party_master.create_party_from_party_master",
+					args,
+					callback(r) {
+						if (!r.exc && r.message) {
+							dialog.hide();
 
-                        if (values.save) {
-                            frappe.msgprint({
-                                message: __("Party Created Successfully"),
-                                indicator: "green",
-                            });
-                        } else {
-                            const new_doc = r.message;
-                            frappe.model.with_doctype(new_doc.doctype, () => {
-                                const created_doc = frappe.model.get_new_doc(new_doc.doctype);
-                                Object.keys(new_doc).forEach((key) => {
-                                    if (key !== "name" && key !== "doctype") {
-                                        created_doc[key] = new_doc[key];
-                                    }
-                                });
-                                frappe.set_route("Form", new_doc.doctype, created_doc.name);
-                            });
-                        }
-                    }
-                },
-            });
-        },
-    });
+							if (values.save) {
+								frappe.msgprint({
+									message: __("Party Created Successfully"),
+									indicator: "green",
+								});
+							} else {
+								const new_doc = r.message;
+								frappe.model.with_doctype(new_doc.doctype, () => {
+									const created_doc = frappe.model.get_new_doc(new_doc.doctype);
+									Object.keys(new_doc).forEach((key) => {
+										if (key !== "name" && key !== "doctype") {
+											created_doc[key] = new_doc[key];
+										}
+									});
+									frappe.set_route("Form", new_doc.doctype, created_doc.name);
+								});
+							}
+						}
+					},
+				});
+			},
+		});
 
-    dialog.set_value("party_type", doc.party_type);
-    dialog.show();
-},
+		dialog.set_value("party_type", doc.party_type);
+		dialog.show();
+	},
 
-// ✅ KEEP: Your original form function as a wrapper
-create_party_for_party_master_dialog : function (frm) {
-    uph.party.create_party_for_party_master_dialog_from_doc(frm.doc);
-},
+	// ✅ KEEP: Your original form function as a wrapper
+	create_party_for_party_master_dialog: function (frm) {
+		uph.party.create_party_for_party_master_dialog_from_doc(frm.doc);
+	},
 
 
 
@@ -344,7 +344,7 @@ create_party_for_party_master_dialog : function (frm) {
 		dialog.set_value("party_type", frm.doc.party_type);
 		dialog.show();
 	},
-	
+
 	get_fieldnames: function (frm) {
 		if (SALES_DOCTYPES.includes(frm.doc.doctype)) {
 			return {
@@ -476,7 +476,7 @@ create_party_for_party_master_dialog : function (frm) {
 			filters.party_type = frm.party_type;
 		}
 		frm.set_query("party_master", () => ({
-			query: "uph.party.controllers.queries.party_master_link_query",
+			query: "uph.controllers.queries.party_master_link_query",
 			filters: filters,
 		}));
 	},
@@ -632,7 +632,7 @@ create_party_for_party_master_dialog : function (frm) {
 		};
 
 		frappe.call({
-			method: "uph.party.controllers.party.get_party_master_details_with_parties",
+			method: "uph.controllers.party.get_party_master_details_with_parties",
 			args: args,
 			callback: (r) => {
 				if (r.exc) {
@@ -711,7 +711,7 @@ create_party_for_party_master_dialog : function (frm) {
 				cdn,
 			) {
 				return {
-					query: "uph.party.controllers.queries.party_master_link_query",
+					query: "uph.controllers.queries.party_master_link_query",
 
 					filters: {
 						/* your filter logic */
@@ -740,7 +740,7 @@ create_party_for_party_master_dialog : function (frm) {
 			filters.party_type = frm.party_type;
 		}
 		frappe.call({
-			method: "uph.party.controllers.queries.get_party_master_parties",
+			method: "uph.controllers.queries.get_party_master_parties",
 			args: filters,
 			callback: function (r) {
 				if (r.message) {
@@ -858,7 +858,7 @@ create_party_for_party_master_dialog : function (frm) {
 		}
 
 		frappe.call({
-			method: "uph.party.controllers.party.check_duplicate_voucher_party_master",
+			method: "uph.controllers.party.check_duplicate_voucher_party_master",
 			args: args,
 			callback: function (r) {
 				if (!r.exc && r.message && r.message.duplicates) {
@@ -873,8 +873,8 @@ create_party_for_party_master_dialog : function (frm) {
 								(d) => `
                             <li style="margin-bottom: 10px;">
                                 <a href="/app/${frappe.router.slug(
-																	frm.doctype,
-																)}/${encodeURIComponent(d.name)}" 
+									frm.doctype,
+								)}/${encodeURIComponent(d.name)}" 
                                    target="_blank">
                                     ${d.name}
                                 </a>
@@ -896,7 +896,7 @@ create_party_for_party_master_dialog : function (frm) {
 								primary_action_label: __("Proceed Anyway"),
 								primary_action: () => {
 									frappe.call({
-										method: "uph.party.controllers.party.allow_duplicate_submission",
+										method: "uph.controllers.party.allow_duplicate_submission",
 										args: {
 											doctype: frm.doctype,
 											docname: frm.doc.name,
@@ -970,33 +970,33 @@ create_party_for_party_master_dialog : function (frm) {
 // Wrap ERPNext's get_filtered_dimensions
 const original_get_filtered_dimensions = erpnext.queries.get_filtered_dimensions;
 
-erpnext.queries.get_filtered_dimensions = function(doc, child_fields, dimension, company) {
-    if (dimension === "party_analytic_accounting") {
-        // Determine correct party field dynamically based on doctype
-        let party_fieldname;
-        if (SALES_DOCTYPES.includes(doc.doctype)) {
-            party_fieldname = "customer";
-        } else if (PURCHASE_DOCTYPES.includes(doc.doctype)) {
-            party_fieldname = "supplier";
-        } else if (doc.doctype === "Payment Entry") {
-            party_fieldname = "party";
-        } else {
-            // fallback
-            party_fieldname = "party";
-        }
+erpnext.queries.get_filtered_dimensions = function (doc, child_fields, dimension, company) {
+	if (dimension === "party_analytic_accounting") {
+		// Determine correct party field dynamically based on doctype
+		let party_fieldname;
+		if (SALES_DOCTYPES.includes(doc.doctype)) {
+			party_fieldname = "customer";
+		} else if (PURCHASE_DOCTYPES.includes(doc.doctype)) {
+			party_fieldname = "supplier";
+		} else if (doc.doctype === "Payment Entry") {
+			party_fieldname = "party";
+		} else {
+			// fallback
+			party_fieldname = "party";
+		}
 
-        const party_value = doc[party_fieldname] || null;
+		const party_value = doc[party_fieldname] || null;
 
-        return {
-            query: "uph.party.controllers.queries.get_party_analytic_accounting_filtered",
-            filters: {
-                party_master: doc.party_master,
-                party: party_value,
-                company: company
-            }
-        };
-    }
+		return {
+			query: "uph.controllers.queries.get_party_analytic_accounting_filtered",
+			filters: {
+				party_master: doc.party_master,
+				party: party_value,
+				company: company
+			}
+		};
+	}
 
-    // fallback to ERPNext default for other dimensions
-    return original_get_filtered_dimensions.apply(this, arguments);
+	// fallback to ERPNext default for other dimensions
+	return original_get_filtered_dimensions.apply(this, arguments);
 };

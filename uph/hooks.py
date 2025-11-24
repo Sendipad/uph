@@ -64,19 +64,19 @@ parties_type = ["Customer", "Supplier", "Employee"]
 doc_events = {
     "*": {
         "validate": [
-            "uph.party.controllers.party.validate_party_master_on_target_party_type",
+            "uph.controllers.party.validate_party_master_on_target_party_type",
         ],
         "on_update": [
-            "uph.party.controllers.party.validate_party_master_on_target_party_type"
+            "uph.controllers.party.validate_party_master_on_target_party_type"
         ],
         "on_change": [
-            "uph.party.controllers.party.validate_party_master_on_document_types"
+            "uph.controllers.party.validate_party_master_on_document_types"
         ],
         "on_trash": [
-            "uph.party.controllers.party.validate_party_master_on_target_party_type"
+            "uph.controllers.party.validate_party_master_on_target_party_type"
         ],
         "before_validate": [
-            "uph.party.controllers.party.validate_party_master_on_document_types"
+            "uph.controllers.party.validate_party_master_on_document_types"
         ],
     }
 }

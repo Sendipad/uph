@@ -1,10 +1,11 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "format:DQR-{YYYY}-{#####}",
  "creation": "2025-11-23 18:49:00.209627",
  "doctype": "DocType",
  "engine": "InnoDB",
-"field_order": [
+ "field_order": [
   "rule_name",
   "document_type",
   "trigger",
@@ -106,10 +107,11 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-11-23 18:49:00.209627",
+ "modified": "2025-11-23 22:16:57.443935",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Data Quality Rule",
+ "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [
   {

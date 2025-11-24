@@ -1,5 +1,5 @@
 import frappe
-from uph.party.controllers.queries import get_linked_parties_list
+from uph.controllers.queries import get_linked_parties_list
 __version__ = "2.1.0"
 
 

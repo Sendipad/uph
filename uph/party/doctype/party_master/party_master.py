@@ -15,16 +15,16 @@ from frappe.query_builder import DocType, Case
 from functools import reduce
 from frappe.query_builder.custom import ConstantColumn
 from uph.party.utils import get_mapped_fieldnames
-from uph.party.controllers.party import (
+from uph.controllers.party import (
     get_party_type_validation_rule,
     update_linked_party_to_party_master_count,
 )
 import uph
-from uph.party.controllers.queries import (
+from uph.controllers.queries import (
     get_party_master_parties,
     get_party_master_parties_db,
 )
-from uph.party.controllers.mdm import normalize_text
+from uph.controllers.utils import normalize_text
 
 
 class PartyMaster(NestedSet):

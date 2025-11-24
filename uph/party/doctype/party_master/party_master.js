@@ -72,7 +72,7 @@ frappe.ui.form.on("Party Master", {
 				},
 				__("Action")
 			);
-frm.add_custom_button( __("Add Secondary Roles"), () => { open_secondary_roles_dialog(frm); }, __("Action"), );
+			frm.add_custom_button(__("Add Secondary Roles"), () => { open_secondary_roles_dialog(frm); }, __("Action"),);
 			frm.add_custom_button(
 				__("Account Statement"),
 				() => {
@@ -87,13 +87,13 @@ frm.add_custom_button( __("Add Secondary Roles"), () => { open_secondary_roles_d
 				() => show_linked_parties(frm),
 				__("View")
 			);
-if (frm.doc.total_linked_party && frm.doc.total_linked_party > 0) {
-    frm.add_custom_button(
-        __("Reassign Linked Parties"),
-        () => build_parties_dialog(frm, "to_reassign"),
-        __("Action")
-    );
-}
+			if (frm.doc.total_linked_party && frm.doc.total_linked_party > 0) {
+				frm.add_custom_button(
+					__("Reassign Linked Parties"),
+					() => build_parties_dialog(frm, "to_reassign"),
+					__("Action")
+				);
+			}
 
 		}
 
@@ -109,79 +109,79 @@ if (frm.doc.total_linked_party && frm.doc.total_linked_party > 0) {
 
 		frm.toggle_display("roles", frm.doc.has_secondary_role_party === 1);
 	},
-	
+
 });
 
 // ---------------------- Utility Functions ----------------------
 function build_parties_dialog(frm, action) {
-    const child_table = get_child_table();
-    const parties_dialog_fields = [
-        { label: __("Parties"), fieldname: "parties", fieldtype: "Table", read_only: 1, fields: child_table, cannot_add_rows: true },
-    ];
+	const child_table = get_child_table();
+	const parties_dialog_fields = [
+		{ label: __("Parties"), fieldname: "parties", fieldtype: "Table", read_only: 1, fields: child_table, cannot_add_rows: true },
+	];
 
-    const filters = [];
-    if (action === "to_assign") {
-        filters.push(["party_master", "is", "not set"]);
-    } else if (action === "to_reassign") {
-        parties_dialog_fields.push({
-            label: __("To Party Master"),
-            fieldname: "to_party_master",
-            fieldtype: "Link",
-            options: "Party Master",
-            reqd: 1,
-        });
-        filters.push(["party_master", "=", frm.doc.name]);
-    }
+	const filters = [];
+	if (action === "to_assign") {
+		filters.push(["party_master", "is", "not set"]);
+	} else if (action === "to_reassign") {
+		parties_dialog_fields.push({
+			label: __("To Party Master"),
+			fieldname: "to_party_master",
+			fieldtype: "Link",
+			options: "Party Master",
+			reqd: 1,
+		});
+		filters.push(["party_master", "=", frm.doc.name]);
+	}
 
-    frm.call({
-        doc: frm.doc,
-        method: "fetch_parties_list",
-        args: { filters },
-        callback: (r) => {
-            if (!r.message) return;
+	frm.call({
+		doc: frm.doc,
+		method: "fetch_parties_list",
+		args: { filters },
+		callback: (r) => {
+			if (!r.message) return;
 
-            parties_dialog_fields[0].data = r.message;
-            parties_dialog_fields[0].get_data = () => r.message;
+			parties_dialog_fields[0].data = r.message;
+			parties_dialog_fields[0].get_data = () => r.message;
 
-            const d = new frappe.ui.Dialog({
-                title: __("Parties Allocations"),
-                fields: parties_dialog_fields,
-                size: "large",
-                primary_action_label: "Linking Parties",
-                primary_action(values) {
-                    const selections = values.parties.filter((x) => x.__checked);
-                    if (!selections.length) {
-                        frappe.msgprint(__("No Selection"));
-                        return;
-                    }
+			const d = new frappe.ui.Dialog({
+				title: __("Parties Allocations"),
+				fields: parties_dialog_fields,
+				size: "large",
+				primary_action_label: "Linking Parties",
+				primary_action(values) {
+					const selections = values.parties.filter((x) => x.__checked);
+					if (!selections.length) {
+						frappe.msgprint(__("No Selection"));
+						return;
+					}
 
-                    const new_party_master = action === "to_reassign" ? values.to_party_master : frm.doc.name;
-                    const selection_map = selections.map((elem) => ({
-                        new_party_master,
-                        party_type: elem.party_type,
-                        party: elem.party,
-                    }));
+					const new_party_master = action === "to_reassign" ? values.to_party_master : frm.doc.name;
+					const selection_map = selections.map((elem) => ({
+						new_party_master,
+						party_type: elem.party_type,
+						party: elem.party,
+					}));
 
-                    frm.call({
-                        doc: frm.doc,
-                        method: "assign_new_party_master_for_parties",
-                        args: { selections: selection_map },
-                        callback: (r) => {
-                            if (!r.exc) {
-                                frappe.msgprint(__("Parties successfully linked!"));
-                                d.hide();
-                                frm.reload_doc();
-                            } else {
-                                frappe.msgprint(__("Something went wrong. Please check console."));
-                                console.error(r.exc);
-                            }
-                        },
-                    });
-                },
-            });
-            d.show();
-        },
-    });
+					frm.call({
+						doc: frm.doc,
+						method: "assign_new_party_master_for_parties",
+						args: { selections: selection_map },
+						callback: (r) => {
+							if (!r.exc) {
+								frappe.msgprint(__("Parties successfully linked!"));
+								d.hide();
+								frm.reload_doc();
+							} else {
+								frappe.msgprint(__("Something went wrong. Please check console."));
+								console.error(r.exc);
+							}
+						},
+					});
+				},
+			});
+			d.show();
+		},
+	});
 }
 
 function update_buttons(frm) {
@@ -263,7 +263,7 @@ function show_linked_parties(frm) {
 	];
 
 	frappe.call({
-		method: "uph.party.controllers.queries.get_party_master_parties",
+		method: "uph.controllers.queries.get_party_master_parties",
 		args: { party_master: frm.doc.name },
 		callback(r) {
 			if (r.message) {
@@ -286,85 +286,85 @@ function get_child_table() {
 
 
 function open_secondary_roles_dialog(frm) {
-    // Get existing child table roles
-    const existing_roles = frm.doc.roles ? frm.doc.roles.map(r => r.party_type_role) : [];
+	// Get existing child table roles
+	const existing_roles = frm.doc.roles ? frm.doc.roles.map(r => r.party_type_role) : [];
 
-    // Build available roles from frappe.boot.party_account_types
-    let party_types = Object.keys(frappe.boot.party_account_types).filter(
-        p => p !== frm.doc.primary_role && 
-		         p !== frm.doc.party_type &&    
-		!existing_roles.includes(p)
-    );
+	// Build available roles from frappe.boot.party_account_types
+	let party_types = Object.keys(frappe.boot.party_account_types).filter(
+		p => p !== frm.doc.primary_role &&
+			p !== frm.doc.party_type &&
+			!existing_roles.includes(p)
+	);
 
-    // Dynamically build check fields
-    const check_fields = party_types.map(role_name => ({
-        label: role_name,
-        fieldname: `role_${role_name.replace(/\s+/g, '_')}`,
-        fieldtype: "Check",
-        default: 0
-    }));
+	// Dynamically build check fields
+	const check_fields = party_types.map(role_name => ({
+		label: role_name,
+		fieldname: `role_${role_name.replace(/\s+/g, '_')}`,
+		fieldtype: "Check",
+		default: 0
+	}));
 
-    // If no roles are available, alert the user
-    if (check_fields.length === 0) {
-        frappe.msgprint(__("All secondary roles are already assigned."));
-        return;
-    }
+	// If no roles are available, alert the user
+	if (check_fields.length === 0) {
+		frappe.msgprint(__("All secondary roles are already assigned."));
+		return;
+	}
 
-    // Create dialog
-    const dialog = new frappe.ui.Dialog({
-        title: __("Add Secondary Roles"),
-        size: "small",
-        fields: [
-            {
-                label: __("Activate Multi Roles"),
-                fieldname: "has_secondary_role_party",
-                fieldtype: "Check",
-                default: 1,
-                read_only: 1
-            },
-            ...check_fields
-        ],
-        primary_action_label: __("Add"),
-        primary_action(values) {
-            // Collect checked roles
-            const selected_roles = check_fields
-                .filter(f => values[f.fieldname])
-                .map(f => f.label);
+	// Create dialog
+	const dialog = new frappe.ui.Dialog({
+		title: __("Add Secondary Roles"),
+		size: "small",
+		fields: [
+			{
+				label: __("Activate Multi Roles"),
+				fieldname: "has_secondary_role_party",
+				fieldtype: "Check",
+				default: 1,
+				read_only: 1
+			},
+			...check_fields
+		],
+		primary_action_label: __("Add"),
+		primary_action(values) {
+			// Collect checked roles
+			const selected_roles = check_fields
+				.filter(f => values[f.fieldname])
+				.map(f => f.label);
 
-            if (!selected_roles.length) {
-                frappe.msgprint(__("Please select at least one role."));
-                return;
-            }
+			if (!selected_roles.length) {
+				frappe.msgprint(__("Please select at least one role."));
+				return;
+			}
 
-            // Ensure child table exists
-            frm.doc.roles = frm.doc.roles || [];
+			// Ensure child table exists
+			frm.doc.roles = frm.doc.roles || [];
 
-            // Add selected roles to child table
-            selected_roles.forEach(role_name => {
-                if (!frm.doc.roles.some(r => r.party_type_role === role_name)) {
-                    const row = frappe.model.add_child(frm.doc, "Party Master Role", "roles");
-                    row.party_type_role = role_name; // mandatory field
-                }
-            });
+			// Add selected roles to child table
+			selected_roles.forEach(role_name => {
+				if (!frm.doc.roles.some(r => r.party_type_role === role_name)) {
+					const row = frappe.model.add_child(frm.doc, "Party Master Role", "roles");
+					row.party_type_role = role_name; // mandatory field
+				}
+			});
 
-            // Refresh child table and save
-            frm.refresh_field("roles");
+			// Refresh child table and save
+			frm.refresh_field("roles");
 
-            frm.save().then(() => {
-                dialog.hide();
-                frm.reload_doc();
-                frappe.show_alert({
-                    message: __("Secondary roles added successfully"),
-                    indicator: "green"
-                });
-            }).catch(err => {
-                frappe.msgprint(__("Error saving form. Check console."));
-                console.error(err);
-            });
-        }
-    });
+			frm.save().then(() => {
+				dialog.hide();
+				frm.reload_doc();
+				frappe.show_alert({
+					message: __("Secondary roles added successfully"),
+					indicator: "green"
+				});
+			}).catch(err => {
+				frappe.msgprint(__("Error saving form. Check console."));
+				console.error(err);
+			});
+		}
+	});
 
-    dialog.show();
+	dialog.show();
 }
 
 

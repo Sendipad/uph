@@ -25,7 +25,7 @@ uph.hub.docfields = {
 		}
 
 		frappe.call({
-			method: "uph.party.controllers.field.get_field_path",
+			method: "uph.controllers.utils.get_field_path",
 			args: { doctype: document_type, basefieldname: basefieldname },
 			callback: (r) => {
 				if (r.message?.fields) {
@@ -54,7 +54,7 @@ uph.utils.FieldOptionHelper = {
 
 			// استدعاء API جلب الحقول المشتركة للمجموعة دفعة واحدة
 			frappe.call({
-				method: "uph.party.controllers.field.get_common_fields_in_doctypes",
+				method: "uph.controllers.utils.get_common_fields_in_doctypes",
 				args: { doctypes: JSON.stringify(documentType) },
 				callback: (r) => {
 					if (Array.isArray(r.message)) {
@@ -75,7 +75,7 @@ uph.utils.FieldOptionHelper = {
 		}
 
 		frappe.call({
-			method: "uph.party.controllers.field.get_field_options",
+			method: "uph.controllers.utils.get_field_options",
 			args: { doctype: documentType },
 			callback: (r) => {
 				if (Array.isArray(r.message)) {
@@ -158,69 +158,69 @@ uph.utils.FieldOptionHelper = {
   cache: {},
 
   load({ documentType, callback }) {
-    if (this.cache[documentType]) {
-      callback?.(this.cache[documentType]);
-      return;
-    }
+	if (this.cache[documentType]) {
+	  callback?.(this.cache[documentType]);
+	  return;
+	}
 
-    frappe.call({
-      method: "uph.party.controllers.field.get_field_options",
-      args: { doctype: documentType },
-      callback: (r) => {
-        if (Array.isArray(r.message)) {
-          this.cache[documentType] = r.message;
-          callback?.(r.message);
-        } else {
-          callback?.([]); // fallback
-        }
-      },
-    });
+	frappe.call({
+	  method: "uph.controllers.utils.get_field_options",
+	  args: { doctype: documentType },
+	  callback: (r) => {
+		if (Array.isArray(r.message)) {
+		  this.cache[documentType] = r.message;
+		  callback?.(r.message);
+		} else {
+		  callback?.([]); // fallback
+		}
+	  },
+	});
   },
 
 
   applyAutocomplete(frm, options, fieldnames = [], tableField = null) {
-    const values = options.map((f) => f.value);
-    if (tableField) {
-      // Child table fields
-      const grid = frm.fields_dict[tableField]?.grid;
-      if (!grid) return;
+	const values = options.map((f) => f.value);
+	if (tableField) {
+	  // Child table fields
+	  const grid = frm.fields_dict[tableField]?.grid;
+	  if (!grid) return;
 
-      fieldnames.forEach((fieldname) => {
-        grid.update_docfield_property(fieldname, "options", values);
-        grid.grid_rows?.forEach((row) => {
-          const field = row.grid_form?.fields_dict?.[fieldname];
-          if (field) {
-            field.df.options = values;
-            field.refesh();
-          }
-        });
-      });
+	  fieldnames.forEach((fieldname) => {
+		grid.update_docfield_property(fieldname, "options", values);
+		grid.grid_rows?.forEach((row) => {
+		  const field = row.grid_form?.fields_dict?.[fieldname];
+		  if (field) {
+			field.df.options = values;
+			field.refesh();
+		  }
+		});
+	  });
 
-      frm.refresh_field(tableField);
-    } else {
-      // Parent fields: needs force input rebuild
-      fieldnames.forEach((fieldname) => {
-        frm.set_df_property(fieldname, "options", values);
-        frm.fields_dict[fieldname].make_input();
-        frm.refresh_field(fieldname);
-      });
-    }
+	  frm.refresh_field(tableField);
+	} else {
+	  // Parent fields: needs force input rebuild
+	  fieldnames.forEach((fieldname) => {
+		frm.set_df_property(fieldname, "options", values);
+		frm.fields_dict[fieldname].make_input();
+		frm.refresh_field(fieldname);
+	  });
+	}
   },
 
 
   getFieldType(documentType, fieldPath) {
-    const field = this.cache[documentType]?.find((f) => f.value === fieldPath);
-    return field?.fieldtype || "Data";
+	const field = this.cache[documentType]?.find((f) => f.value === fieldPath);
+	return field?.fieldtype || "Data";
   },
 
 
   getField(documentType, fieldPath) {
-    return this.cache[documentType]?.find((f) => f.value === fieldPath) || null;
+	return this.cache[documentType]?.find((f) => f.value === fieldPath) || null;
   },
 
 
   hasFieldOption(documentType, fieldPath) {
-    return !!this.cache[documentType]?.some((f) => f.value === fieldPath);
+	return !!this.cache[documentType]?.some((f) => f.value === fieldPath);
   },
 };
 */

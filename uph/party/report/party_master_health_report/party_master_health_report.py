@@ -11,7 +11,7 @@ from frappe import _
 # from frappe.query_builder.custom import ConstantColumn
 
 # from frappe.query_builder import DocType
-from uph.party.controllers.queries import (
+from uph.controllers.queries import (
     get_unlinked_party,
     # get_party_master_parties_db,
 )

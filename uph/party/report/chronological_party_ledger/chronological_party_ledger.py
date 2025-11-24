@@ -14,7 +14,7 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
     get_dimension_with_children,
 )
 """
-from uph.party.controllers.queries import (
+from uph.controllers.queries import (
     get_party_master_parties_db,
 )
 

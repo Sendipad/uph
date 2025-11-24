@@ -1,7 +1,7 @@
 # Copyright (c) 2025, Abdo Mohammed Ruzaqi and contributors
 # For license information, please see license.txt
 import frappe
-from uph.party.controllers.queries import (
+from uph.controllers.queries import (
     get_party_master_parties,
     get_party_master_parties_db,
 )

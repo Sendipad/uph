@@ -26,7 +26,7 @@ $(document).on("app_ready", function () {
 			setup: function (frm) {
 				frm.set_query("party_master", function (doc) {
 					return {
-						query: "uph.party.controllers.queries.party_master_link_query",
+						query: "uph.controllers.queries.party_master_link_query",
 						filters: {
 							party_type: frm.doc.doctype,
 						},
@@ -49,7 +49,7 @@ $(document).on("app_ready", function () {
 								__("Reset As Default for Party Master"),
 								function () {
 									frappe.call({
-										method: "uph.party.controllers.party.set_party_as_default_for_party_master",
+										method: "uph.controllers.party.set_party_as_default_for_party_master",
 										args: {
 											party: frm.doc.name,
 											party_type: frm.doc.doctype,
@@ -82,7 +82,7 @@ $(document).on("app_ready", function () {
 									reqd: 1,
 									get_query() {
 										return {
-											query: "uph.party.controllers.queries.get_party_master",
+											query: "uph.controllers.queries.get_party_master",
 											filters: { party_type: frm.doc.doctype },
 										};
 									},
@@ -202,7 +202,7 @@ $(document).on("app_ready", function () {
 				if (listview.page.fields_dict.party_master) {
 					listview.page.fields_dict.party_master.get_query = function () {
 						return {
-							query: "uph.party.controllers.queries.get_party_master",
+							query: "uph.controllers.queries.get_party_master",
 							filters: {
 								party_type: listview.doctype,
 							},
@@ -231,7 +231,7 @@ $(document).on("app_ready", function () {
 						if (!frm.fields_dict["posting_date"] || !frm.doc?.posting_date) return;
 						uph.party.check_duplicate_voucher_for_party_master(frm);
 					},
-					refresh: function (frm) {},
+					refresh: function (frm) { },
 				});
 			})(doctype, fieldname);
 		} else if (doctype !== child && fieldname) {

@@ -4,7 +4,7 @@ from collections import defaultdict
 from datetime import datetime
 
 import frappe
-from uph.party.controllers.queries import (
+from uph.controllers.queries import (
     get_party_master_parties_db,
     get_leaf_party_master_list_from_any_node,
 )
@@ -16,7 +16,7 @@ from frappe.query_builder.custom import ConstantColumn
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
     get_accounting_dimensions,
 )
-from uph.party.controllers.queries import get_counts_of_unposted_or_cancelled_vouchers
+from uph.controllers.queries import get_counts_of_unposted_or_cancelled_vouchers
 
 
 def execute(filters=None):

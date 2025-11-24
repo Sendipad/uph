@@ -678,8 +678,7 @@
    "fieldtype": "Data",
    "hidden": 1,
    "label": "Normalized Party Name",
-   "no_copy": 1,
-   "read_only": 1
+   "no_copy": 1
   }
  ],
  "grid_page_length": 50,
@@ -687,7 +686,7 @@
  "is_calendar_and_gantt": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2025-11-23 20:44:05.679216",
+ "modified": "2025-11-24 17:26:57.732210",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party Master",
