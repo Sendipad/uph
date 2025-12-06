@@ -5,7 +5,7 @@
    "label": "Party Stats"
   }
  ],
- "content": "[{\"type\":\"chart\",\"data\":{\"chart_name\":\"Party Stats\",\"col\":12}},{\"type\":\"spacer\",\"data\":{\"col\":12}},{\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Your Shortcuts</b></span>\",\"col\":12}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Master Tree\",\"col\":3}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Supplier\",\"col\":3}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Dashboard\",\"col\":3}},{\"type\":\"spacer\",\"data\":{\"col\":12}},{\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports \\u0026 Masters</b></span>\",\"col\":12}},{\"type\":\"card\",\"data\":{\"card_name\":\"Party Masters\",\"col\":4}},{\"type\":\"card\",\"data\":{\"card_name\":\"Key Reports\",\"col\":4}},{\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}}]",
+ "content": "[{\"id\":\"GeJ9n__5yT\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Party Stats\",\"col\":12}},{\"id\":\"PiIVe_vpuC\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"FbfhiOv15Y\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Your Shortcuts</b></span>\",\"col\":12}},{\"id\":\"v8FRSYwoId\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Master Tree\",\"col\":3}},{\"id\":\"tqAUEihqIe\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"id\":\"sqbiF_EtCc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Supplier\",\"col\":3}},{\"id\":\"kn19toGIeu\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Dashboard\",\"col\":3}},{\"id\":\"Vd2Oq_2xz0\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"3Y4wrxJdUy\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"b8GpTrrb6M\",\"type\":\"card\",\"data\":{\"card_name\":\"Party Masters\",\"col\":4}},{\"id\":\"qw05p5ygfo\",\"type\":\"card\",\"data\":{\"card_name\":\"Key Reports\",\"col\":4}},{\"id\":\"w60LMHrve_\",\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}}]",
  "creation": "2025-04-23 14:56:48.972543",
  "custom_blocks": [],
  "docstatus": 0,
@@ -16,7 +16,7 @@
  "idx": 0,
  "indicator_color": "blue",
  "is_hidden": 0,
- "label": "Party",
+ "label": "Unified Party Hub",
  "links": [
   {
    "hidden": 0,
@@ -146,10 +146,10 @@
    "type": "Link"
   }
  ],
- "modified": "2025-12-06 20:40:00.000000",
+ "modified": "2025-12-06 21:34:36.742454",
  "modified_by": "Administrator",
  "module": "Party",
- "name": "Party",
+ "name": "Unified Party Hub",
  "number_cards": [],
  "owner": "Administrator",
  "parent_page": "",
@@ -188,9 +188,9 @@
   {
    "color": "Grey",
    "label": "Party Dashboard",
-   "link_to": "Party",
+   "link_to": "",
    "type": "Dashboard"
   }
  ],
- "title": "Party"
+ "title": "Unified Party Hub"
 }
