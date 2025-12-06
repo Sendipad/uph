@@ -12,7 +12,6 @@ required_apps = ["erpnext"]
 
 app_include_js = [
     "uph.bundle.js",
-    "public/js/rule_builder/rule_builder.js",  # NOT rule_builder_app.js
 ]
 # include js in page
 # page_js = {"page" : "public/js/file.js"}
@@ -23,7 +22,7 @@ docment_type_with_custom_js = ["Sales Invoice", "Payment Entry", "Journal Entry"
 doctype_js = {
     "Sales Invoice": "public/js/erpnext/sales_invoice.js",
     "Payment Entry": "public/js/erpnext/payment_entry.js",
-    "Journal Entry": "puplic/js/erpnext/journal_entry.js",
+    "Journal Entry": "public/js/erpnext/journal_entry.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -42,10 +41,7 @@ boot_session = "uph.party.boot.add_pm_doctypes"
 
 
 
-# after_migrate = [
-#    "uph.hub.services.registry.sync_rule_service_types",
-#    "uph.setup.install.on_migrate",
-# ]
+
 
 tx_doctype_with_party_master = [
     "Sales Invoice",
@@ -59,33 +55,47 @@ tx_doctype_with_party_master = [
     "Expense Claim",
 ]
 # Document Events
-# Hook on document methods and events
+# ============================================================================
+# IMPORTANT: We use wildcard hooks with smart early-exit for performance
+# The wrapper functions check cached doctype lists and exit in <1ms for 
+# unconfigured doctypes, avoiding the overhead of full validation logic
+# ============================================================================
 parties_type = ["Customer", "Supplier", "Employee"]
+
 doc_events = {
     "*": {
+        # Smart wrappers with early-exit for transactional doctypes
         "validate": [
-            "uph.controllers.party.validate_party_master_on_target_party_type",
-        ],
-        "on_update": [
-            "uph.controllers.party.validate_party_master_on_target_party_type"
-        ],
-        "on_change": [
-            "uph.controllers.party.validate_party_master_on_document_types"
-        ],
-        "on_trash": [
-            "uph.controllers.party.validate_party_master_on_target_party_type"
+            "uph.controllers.party.validate_party_master_on_document_types_smart",
         ],
         "before_validate": [
-            "uph.controllers.party.validate_party_master_on_document_types"
+            "uph.controllers.party.validate_party_master_on_document_types_smart"
+        ],
+        "on_change": [
+            "uph.controllers.party.validate_party_master_on_document_types_smart"
         ],
     }
 }
+
+# Explicit hooks for party types (Customer, Supplier, Employee)
+# These always run validation since they're core party types
+for party_type in parties_type:
+    doc_events[party_type] = {
+        "validate": [
+            "uph.controllers.party.validate_party_master_on_target_party_type_smart",
+        ],
+        "on_update": [
+            "uph.controllers.party.validate_party_master_on_target_party_type_smart"
+        ],
+        "on_trash": [
+            "uph.controllers.party.validate_party_master_on_target_party_type_smart"
+        ],
+    }
 
 # doc_events = {
 # 	"*": {
 # 		"on_update": "method",
 # 		"on_cancel": "method",
-# 		"on_trash": "method"
 # 	}
 # }
 global_search_doctypes = {

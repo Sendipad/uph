@@ -10,9 +10,15 @@ def add_pm_doctypes(bootinfo):
 @frappe.whitelist()
 @redis_cache()
 def get_pm_doctypes():
-    return frappe.db.sql(
-        'Select parent_doctype,document_type,party_fieldname from `tabParty Master Settings DocType` where enabled=1 and parenttype="Party Master Settings"',
-        as_list=1,
+    """
+    SECURE: Using Frappe ORM instead of raw SQL.
+    Returns list of enabled Party Master Settings DocTypes.
+    """
+    return frappe.get_all(
+        "Party Master Settings DocType",
+        filters={"enabled": 1, "parenttype": "Party Master Settings"},
+        fields=["parent_doctype", "document_type", "party_fieldname"],
+        as_list=True
     )
 
 
@@ -21,15 +27,25 @@ def get_pm_doctypes():
 
 @frappe.whitelist()
 def get_party_master_depends_on_fields():
+    """
+    SECURE: Using Frappe ORM instead of raw SQL.
+    Returns dict mapping doctypes to party fieldnames.
+    """
     key = "UPH: get_party_master_depends_on_fields"
-    party_fields = frappe.cache.get_value(key)
-    if party_fields:
-        return party_fields
-    fields = frappe.db.sql(
-        'Select parent_doctype,party_fieldname from `tabParty Master Settings DocType` where enabled=1 and parenttype="Party Master Settings"',
-        as_list=1,
+    
+    if cached := frappe.cache.get_value(key):
+        return cached
+    
+    fields = frappe.get_all(
+        "Party Master Settings DocType",
+        filters={"enabled": 1, "parenttype": "Party Master Settings"},
+        fields=["parent_doctype", "party_fieldname"],
+        as_list=True
     )
+    
     if fields:
         party_fields = {f[0]: f[1] for f in fields}
-        frappe.cache.set_value(key, party_fields)
-    return party_fields
+        frappe.cache.set_value(key, party_fields, expires_in_sec=3600)
+        return party_fields
+    
+    return {}

@@ -3,12 +3,7 @@ from frappe.utils import getdate, date_diff
 from uph.controllers.mdm.normalization import normalize_text
 from uph.controllers.mdm.utils import get_field_value
 
-try:
-    from rapidfuzz import fuzz, process
-except ImportError:
-    from difflib import SequenceMatcher
-    fuzz = None
-    process = None
+from rapidfuzz import fuzz, process
 
 class ScoringStrategy:
     def score(self, doc_val, cand_val, condition, is_normalized=False):
@@ -57,64 +52,50 @@ class FuzzyMatch(ScoringStrategy):
 
     def score_lists(self, doc_vals, cand_vals, condition, is_normalized=False):
         # Optimized list comparison using rapidfuzz.process
-        if process and fuzz:
-            # Convert all to string once, filtering out None
-            query_strings = [str(v) for v in doc_vals if v is not None]
-            choice_strings = [str(v) for v in cand_vals if v is not None]
-            
-            if not query_strings or not choice_strings:
-                return 0.0
-
-            max_similarity = 0.0
-            
-            # Determine processor
-            # If already normalized, we don't need to normalize again.
-            # rapidfuzz.utils.default_process is a good default if we don't need custom normalization.
-            # Or None if we want raw string comparison.
-            processor = None if is_normalized else normalize_text
-            
-            # For each query, find best match in choices
-            for query in query_strings:
-                result = process.extractOne(
-                    query,
-                    choice_strings,
-                    scorer=fuzz.token_set_ratio,
-                    processor=processor
-                )
-                if result:
-                    score = result[1]
-                    if score > max_similarity:
-                        max_similarity = score
-            
-            threshold = (condition.minimum_similarity if condition.minimum_similarity is not None else 80)
-            if max_similarity >= threshold:
-                return condition.weight * (max_similarity / 100.0)
-            return 0.0
+        # Convert all to string once, filtering out None
+        query_strings = [str(v) for v in doc_vals if v is not None]
+        choice_strings = [str(v) for v in cand_vals if v is not None]
         
-        return super().score_lists(doc_vals, cand_vals, condition, is_normalized=is_normalized)
+        if not query_strings or not choice_strings:
+            return 0.0
+
+        max_similarity = 0.0
+        
+        # Determine processor
+        # If already normalized, we don't need to normalize again.
+        # rapidfuzz.utils.default_process is a good default if we don't need custom normalization.
+        # Or None if we want raw string comparison.
+        processor = None if is_normalized else normalize_text
+        
+        # For each query, find best match in choices
+        for query in query_strings:
+            result = process.extractOne(
+                query,
+                choice_strings,
+                scorer=fuzz.token_set_ratio,
+                processor=processor
+            )
+            if result:
+                score = result[1]
+                if score > max_similarity:
+                    max_similarity = score
+        
+        threshold = (condition.minimum_similarity if condition.minimum_similarity is not None else 80)
+        if max_similarity >= threshold:
+            return condition.weight * (max_similarity / 100.0)
+        return 0.0
 
     def _calculate_fuzzy(self, s1, s2, condition, is_normalized=False):
-        if fuzz:
-            if is_normalized:
-                n1, n2 = s1, s2
-            else:
-                n1 = normalize_text(s1)
-                n2 = normalize_text(s2)
-                
-            if not n1 or not n2:
-                return 0.0
-            similarity = fuzz.token_set_ratio(n1, n2) / 100.0
+        if is_normalized:
+            n1, n2 = s1, s2
         else:
-            # Fallback
-            if is_normalized:
-                n1, n2 = s1, s2
-            else:
-                n1 = normalize_text(s1)
-                n2 = normalize_text(s2)
-                
-            if not n1 or not n2:
-                return 0.0
-            similarity = SequenceMatcher(None, n1, n2).ratio()
+            n1 = normalize_text(s1)
+            n2 = normalize_text(s2)
+            
+        if not n1 or not n2:
+            return 0.0
+            
+        similarity = fuzz.token_set_ratio(n1, n2) / 100.0
         
         threshold = (condition.minimum_similarity if condition.minimum_similarity is not None else 80) / 100.0
         if similarity >= threshold:

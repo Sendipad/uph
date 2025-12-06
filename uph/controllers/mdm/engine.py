@@ -1,13 +1,239 @@
+"""
+Data Quality Validation Engine
+
+Main entry point for data quality checks via Frappe hooks.
+Integrates with Data Quality Policy system.
+"""
+
 import frappe
 from frappe import _
 from frappe.utils import get_link_to_form
-from uph.controllers.mdm.blocking import get_blocking_filters
-from uph.controllers.mdm.strategies import calculate_score
 
+
+def validate_data_quality(doc, method):
+    """
+    Main hook entry point for data quality validation.
+    Called by Frappe on validate and on_submit events.
+    
+    Args:
+        doc: Document being validated
+        method: Hook method name (validate/on_submit)
+    """
+    # Skip during import/patch/install
+    if frappe.flags.in_import or frappe.flags.in_patch or frappe.flags.in_install:
+        return
+    
+    # Get active policies for this doctype and trigger
+    policies = get_active_policies(doc.doctype, method)
+    
+    if not policies:
+        return
+    
+    violations = []
+    
+    for policy in policies:
+        # Check if policy should execute
+        if not policy.should_execute(doc, method):
+            continue
+        
+        # Execute policy
+        try:
+            result = policy.execute(doc)
+        except Exception as e:
+            frappe.log_error(
+                f"Error executing policy {policy.name}: {str(e)}",
+                "Data Quality Policy Execution Error"
+            )
+            continue
+        
+        # Log execution (async to avoid slowing down save)
+        frappe.enqueue(
+            "uph.controllers.mdm.bulk_scanner.log_execution",
+            policy=policy.name,
+            document_type=policy.document_type,
+            trigger_type=get_trigger_type(method),
+            execution_mode="Single",
+            result=result,
+            doc_name=doc.name,
+            action_taken=None,  # Set after handling
+            queue="short"
+        )
+        
+        # Handle violations
+        if result.get("matches"):
+            priority = 1 if policy.action == "Block" else 2
+            violations.append((policy, result, priority))
+    
+    # Handle highest priority violation
+    if violations:
+        violations.sort(key=lambda x: x[2])
+        policy, result, _ = violations[0]
+        handle_policy_violation(policy, result, doc)
+
+
+def get_active_policies(doctype, method):
+    """
+    Fetch active policies for doctype and trigger.
+    Uses caching for performance.
+    """
+    trigger_map = {"validate": "On Save", "on_submit": "On Submit"}
+    trigger = trigger_map.get(method)
+    
+    if not trigger:
+        return []
+    
+    # Cache key
+    cache_key = f"quality_policies:{doctype}:{trigger}"
+    
+    # Check cache
+    if cached := frappe.cache().get_value(cache_key):
+        return cached
+    
+    # Fetch from DB
+    policy_list = frappe.get_all(
+        "Data Quality Policy",
+        filters={
+            "document_type": doctype,
+            "trigger": trigger,
+            "enabled": 1
+        },
+        order_by="priority asc",
+        limit=50
+    )
+    
+    # Load full docs
+    policies = [
+        frappe.get_cached_doc("Data Quality Policy", p.name)
+        for p in policy_list
+    ]
+    
+    # Cache for 5 minutes
+    frappe.cache().set_value(cache_key, policies, expires_in_sec=300)
+    
+    return policies
+
+
+def handle_policy_violation(policy, result, doc):
+    """
+    Handle policy violation based on action.
+    
+    Args:
+        policy: Data Quality Policy
+        result: Execution result with matches
+        doc: Document being validated
+    """
+    matches = result.get("matches", [])
+    
+    # Build message
+    msg = f"<b>{_('Data Quality Alert:')}</b> "
+    
+    if policy.custom_message:
+        msg += policy.custom_message + "<br>"
+    else:
+        msg += _("Potential duplicates found for policy '{0}'").format(policy.policy_name) + "<br>"
+    
+    msg += "<ul>"
+    for match in matches[:5]:  # Show top 5
+        msg += f"<li>{get_link_to_form(doc.doctype, match['docname'])} "
+        msg += f"({_('Score')}: {match['score']:.1f})</li>"
+    
+    if len(matches) > 5:
+        msg += f"<li>... and {len(matches) - 5} more</li>"
+    
+    msg += "</ul>"
+    
+    # Take action
+    if policy.action == "Block":
+        frappe.throw(msg, title=_(f"{policy.policy_name} - Blocked"))
+    elif policy.action == "Warn":
+        frappe.msgprint(msg, title=_(f"{policy.policy_name} - Warning"), indicator="orange")
+    
+    # Log action taken
+    frappe.enqueue(
+        "uph.controllers.mdm.bulk_scanner.log_execution",
+        policy=policy.name,
+        document_type=policy.document_type,
+        trigger_type=get_trigger_type("validate"),
+        execution_mode="Single",
+        result=result,
+        doc_name=doc.name,
+        action_taken="Blocked" if policy.action == "Block" else "Warned",
+        queue="short"
+    )
+
+
+def get_trigger_type(method):
+    """Convert hook method to trigger type."""
+    mapping = {
+        "validate": "On Save",
+        "on_submit": "On Submit"
+    }
+    return mapping.get(method, "Manual")
+
+
+# API Functions for manual execution
+
+@frappe.whitelist()
+def test_policy(policy_name, doc_name):
+    """
+    Test a policy against a specific document.
+    Used by "Test Rule" button in UI.
+    """
+    policy = frappe.get_doc("Data Quality Policy", policy_name)
+    doc = frappe.get_doc(policy.document_type, doc_name)
+    
+    result = policy.execute(doc)
+    
+    return {
+        "policy": policy.policy_name,
+        "document": doc_name,
+        "matches": result.get("matches", []),
+        "stats": result.get("stats", {})
+    }
+
+
+@frappe.whitelist()
+def find_potential_duplicates(doc, rule_name):
+    """
+    Legacy function for backward compatibility.
+    Now redirects to policy-based execution.
+    """
+    # This function is kept for compatibility with existing code
+    # It creates a temporary policy-like execution
+    
+    from uph.controllers.mdm.quality_engine import QualityCheckEngine
+    
+    rule = frappe.get_cached_doc("Data Quality Rule", rule_name)
+    
+    # Create temporary policy object
+    class TempPolicy:
+        def __init__(self):
+            self.max_candidates = 1000
+            self.threshold_score = 80
+            self.enable_blocking = True
+    
+    engine = QualityCheckEngine(doc, TempPolicy(), rule)
+    return engine.find_matches()
+
+
+# Legacy DuplicateFinder class for backward compatibility
 class DuplicateFinder:
+    """
+    Legacy class - kept for backward compatibility.
+    New code should use QualityCheckEngine from quality_engine.py
+    """
+    
     def __init__(self, doc, rule_name):
         self.doc = doc
-        self.rule = frappe.get_cached_doc("Data Quality Rule", rule_name)
+        self.rule_name = rule_name
+        frappe.msgprint(
+            "DuplicateFinder is deprecated. Use QualityCheckEngine instead.",
+            indicator="orange"
+        )
+    
+    def find_duplicates(self):
+        return find_potential_duplicates(self.doc, self.rule_name)
+
     
     def find_duplicates(self):
         if self.should_skip():
@@ -39,11 +265,15 @@ class DuplicateFinder:
             "docstatus": ["<", 2]
         }
         
+        # TEMPORARY: Disable blocking for testing
         # Get optimized blocking filters
-        or_filters = get_blocking_filters(self.doc, conditions)
+        # or_filters = get_blocking_filters(self.doc, conditions)
+        # 
+        # if not or_filters:
+        #     return []
         
-        if not or_filters:
-            return []
+        # For now, fetch all records (limited to 1000 for performance)
+        or_filters = None
 
         # Fields to fetch
         field_list = ["name"]

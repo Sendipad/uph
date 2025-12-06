@@ -139,7 +139,7 @@ $(document).on("app_ready", function () {
 						d.show();
 					});
 				} else if (!frm.is_new()) {
-					frm.add_custom_button(__("Parent Party :{0}", [frm.doc.party_master]), function () {
+					frm.add_custom_button(__("Parent Party: {0}", [frm.doc.party_master]), function () {
 						frappe.set_route("Form", "Party Master", frm.doc.party_master);
 					});
 					frm.add_custom_button(

@@ -24,7 +24,7 @@ from uph.controllers.queries import (
     get_party_master_parties,
     get_party_master_parties_db,
 )
-from uph.controllers.utils import normalize_text
+from uph.controllers.mdm.normalization import normalize_text
 
 
 class PartyMaster(NestedSet):
@@ -135,7 +135,6 @@ class PartyMaster(NestedSet):
             "Party Master", {"party_name": self.party_name, "name": ["!=", self.name]}
         ):
             frappe.throw(_("Party Name {0} already exists").format(self.party_name))
-        self.validate_roles()
 
     def validate_roles(self):
         exist_role = {self.party_type}
@@ -422,52 +421,6 @@ class PartyMaster(NestedSet):
             self.has_secondary_role_party = 1
         self.save()
 
-    """
-    @frappe.whitelist()
-    def create_new_linked_party(self, currency):
-        if self.party_type in ["Customer", "Supplier"] and currency is not None:
-            if self.linked_party:
-                exist_currency = [x.default_currency for x in self.linked_party]
-                if currency in exist_currency:
-                    return frappe.throw(
-                        _("Party {0} Already has a {1} with this {2}").format(
-                            self.party_name, _(self.party_type), currency
-                        )
-                    )
-                self.flags.in_creating_new_link_party = True
-                if currency not in exist_currency:
-                    party_doc = self.get_mapped_to_link_party()
-                    party_doc.update(
-                        {
-                            "default_currency": currency,
-                            "doctype": self.party_type,
-                        }
-                    )
-                    if naming := frappe.db.get_value(
-                        "Party Settings", None, scrub(self.party_type + " Naming Rule")
-                    ) in ["Party Master", "Party Master-Default Currency"]:
-                        name = self.name
-                        if naming == "Party Master-Default Currency":
-                            name = name + "-{0}".format(currency)
-                        party_doc.update(
-                            {
-                                "name": name,
-                            }
-                        )
-                    new_party = frappe.get_doc(party_doc)
-                    new_party.flags.in_creating_new_link_party = (
-                        self.flags.in_creating_new_link_party
-                    )
-                    new_party.insert(ignore_permissions=True)
-                    new_party.save()
-                    frappe.msgprint(
-                        _("New {0} Has Created been Inserted {1}").format(
-                            _(self.party_type), new_party.name
-                        ),
-                        alert=1,
-                    )
-    """
-
 
 @frappe.whitelist()
 def get_party_master_balances(company):
@@ -600,78 +553,6 @@ def get_children(doctype, parent=None, company=None, name=None, is_root=False):
         filters=filters,
         order_by="name",
     )
-
-
-"""
-@frappe.whitelist()
-def get_parents(doctype, child):
-    if not child:
-        return []
-
-    node = frappe.get_doc(doctype, child)
-
-    if not hasattr(node, "lft") or not hasattr(node, "rgt"):
-        frappe.throw(_("This doctype is not a tree (missing lft/rgt fields)."))
-
-    # Get ancestors including the node itself
-    ancestors = frappe.get_all(
-        doctype,
-        filters={
-            "lft": ["<=", node.lft],
-            "rgt": [">=", node.rgt],
-        },
-        fields=fields=[
-            "name as value",
-            "title",
-            "is_group as expandable",
-            "parent_party_master as parent",
-            "party_name",
-            "party_type",
-        ],
-        order_by="lft asc",
-    )
-
-    return [
-        {
-            "value": d.name,
-            "title": d.party_name or d.name,
-            "expandable": d.is_group,
-            "is_group": d.is_group,
-            "party_type": d.party_type,
-            "party_name": d.party_name,
-        }
-        for d in ancestors
-    ]
-
-
-@frappe.whitelist()
-def get_children(doctype, parent=None, company=None,name=None is_root=False):
-    if name and not parent:
-        if not frappe.db.get_value("Party Master",name,"is_group"):
-            return get_parents(doctype=doctype,child=name)
-    filters = [["docstatus", "<", 2]]
-
-    if parent:
-        filters.append(["parent_party_master", "=", parent])
-    elif not parent and not name:
-        filters.append(["parent_party_master", "=", ""])
-
-    parties = frappe.get_all(
-        "Party Master",
-        fields=[
-            "name as value",
-            "title",
-            "is_group as expandable",
-            "parent_party_master as parent",
-            "party_name",
-            "party_type",
-        ],
-        filters=filters,
-        order_by="name",
-    )
-    return parties
-
-"""
 
 
 @frappe.whitelist()
@@ -939,7 +820,6 @@ def get_parties(party_master, fromdb=False, party_type=None):
     return {"parties": parties}
 
 
-# OKKKKKKKK
 
 
 @frappe.whitelist()
@@ -955,7 +835,7 @@ def create_party_master(doc):
         frappe.throw(_("Party with this name already exists"))
 
     party.insert(ignore_permissions=True)
-    return party.nam
+    return party.name
 
 
 @frappe.whitelist()

@@ -82,7 +82,7 @@ def update_cached(hash,field,value):
         #frappe.cache.hdel("UPH_hash:All Unset Parties")
         
     
-    frappe.cache.hset(UPH_cached_key_map[key], field, value)
+    frappe.cache.hset(key, field, value)
     #    frappe.cache.hset(UPH_cached_key_map[key], field, None)
     
 
@@ -127,7 +127,7 @@ def get_cached_party_master_parties(party_master,party_type=None):
             return [p for p in parties if p.get('party_type')==party_type] or []
         return parties 
 
-def update_chached_party_master_parties(party_master):
+def update_cached_party_master_parties(party_master):
     if isinstance(party_master,str):
         party_master=[party_master]
     key =get_pm_parties_key()
@@ -136,14 +136,14 @@ def update_chached_party_master_parties(party_master):
         if parties:
             frappe.cache.hset(key,p,parties)
     
-def update_chached_party_to_pm_data(party_type,party,new_party_master=None,old_party_master=None):
+def update_cached_party_to_pm_data(party_type,party,new_party_master=None,old_party_master=None):
     if old_party_master == new_party_master:
         return
     pm_parties_key=get_pm_parties_key()
     party_to_pm=get_party_to_pm_key(party_type)
-    if old_party_master and (parties:=frappe.cache.hget(get_pm_parties_key,old_party_master)):
+    if old_party_master and (parties:=frappe.cache.hget(pm_parties_key, old_party_master)):
         parties=[p for p in parties if not (p.get('name')==party and p.get('party_type')==party_type)]
-        frappe.cache.hget(get_pm_parties_key,old_party_master,parties)
+        frappe.cache.hset(pm_parties_key, old_party_master, parties)
     party_master=new_party_master if new_party_master else "None"
     frappe.cache.hset(party_to_pm,party,party_master)
     if new_party_master:

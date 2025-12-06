@@ -115,5 +115,5 @@ def test_arabic():
     currency="YER"
     frappe.response["charset"] = "utf-8"
 
-    frappe.local.lang == "ar"
+    frappe.local.lang = "ar"
     return money_in_words(amount,currency)

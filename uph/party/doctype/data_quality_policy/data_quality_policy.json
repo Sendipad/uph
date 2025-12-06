@@ -1,0 +1,202 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:policy_name",
+ "creation": "2025-11-25 22:15:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "policy_name",
+  "data_quality_rule",
+  "document_type",
+  "column_break_1",
+  "enabled",
+  "priority",
+  "section_break_trigger",
+  "trigger",
+  "schedule",
+  "schedule_time",
+  "section_break_scope",
+  "filter_condition",
+  "apply_to_new_only",
+  "section_break_action",
+  "action",
+  "threshold_score",
+  "custom_message",
+  "section_break_bypass",
+  "bypass_roles",
+  "section_break_performance",
+  "enable_blocking",
+  "max_candidates"
+ ],
+ "fields": [
+  {
+   "fieldname": "policy_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Policy Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "data_quality_rule",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Data Quality Rule",
+   "options": "Data Quality Rule",
+   "reqd": 1
+  },
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Document Type",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Enabled"
+  },
+  {
+   "default": "1",
+   "description": "Lower number = higher priority",
+   "fieldname": "priority",
+   "fieldtype": "Int",
+   "label": "Priority"
+  },
+  {
+   "fieldname": "section_break_trigger",
+   "fieldtype": "Section Break",
+   "label": "When to Run (Trigger)"
+  },
+  {
+   "fieldname": "trigger",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Trigger",
+   "options": "On Save\nOn Submit\nScheduled",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.trigger=='Scheduled'",
+   "fieldname": "schedule",
+   "fieldtype": "Select",
+   "label": "Schedule Frequency",
+   "options": "\nDaily\nWeekly\nMonthly"
+  },
+  {
+   "depends_on": "eval:doc.schedule=='Daily'",
+   "fieldname": "schedule_time",
+   "fieldtype": "Time",
+   "label": "Schedule Time"
+  },
+  {
+   "fieldname": "section_break_scope",
+   "fieldtype": "Section Break",
+   "label": "Where to Apply (Scope)"
+  },
+  {
+   "description": "Python expression to filter documents (e.g., doc.grand_total > 1000)",
+   "fieldname": "filter_condition",
+   "fieldtype": "Code",
+   "label": "Filter Condition",
+   "options": "Python"
+  },
+  {
+   "default": "0",
+   "fieldname": "apply_to_new_only",
+   "fieldtype": "Check",
+   "label": "Apply to New Documents Only"
+  },
+  {
+   "fieldname": "section_break_action",
+   "fieldtype": "Section Break",
+   "label": "What to Do (Action)"
+  },
+  {
+   "fieldname": "action",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Action",
+   "options": "Block\nWarn\nLog Only",
+   "reqd": 1
+  },
+  {
+   "default": "80",
+   "description": "Minimum score to trigger action",
+   "fieldname": "threshold_score",
+   "fieldtype": "Float",
+   "label": "Threshold Score",
+   "reqd": 1
+  },
+  {
+   "fieldname": "custom_message",
+   "fieldtype": "Text",
+   "label": "Custom Message"
+  },
+  {
+   "fieldname": "section_break_bypass",
+   "fieldtype": "Section Break",
+   "label": "Who Can Bypass"
+  },
+  {
+   "fieldname": "bypass_roles",
+   "fieldtype": "Table",
+   "label": "Bypass Roles",
+   "options": "Has Role"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_performance",
+   "fieldtype": "Section Break",
+   "label": "Performance Settings"
+  },
+  {
+   "default": "1",
+   "fieldname": "enable_blocking",
+   "fieldtype": "Check",
+   "label": "Enable Blocking Strategy"
+  },
+  {
+   "default": "1000",
+   "fieldname": "max_candidates",
+   "fieldtype": "Int",
+   "label": "Max Candidates to Check"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-11-25 22:41:51.946971",
+ "modified_by": "Administrator",
+ "module": "Party",
+ "name": "Data Quality Policy",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

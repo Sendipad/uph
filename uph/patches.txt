@@ -6,3 +6,4 @@ uph.party.setup
 # Patches added in this section will be executed after doctypes are migrated
 uph.patches.add_indexes
 uph.patches.setup_pm_fields
+uph.patches.populate_normalized_party_name

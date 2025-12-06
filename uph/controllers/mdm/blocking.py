@@ -16,8 +16,21 @@ def get_blocking_filters(doc, conditions):
         # We'll skip child table fields for blocking unless we implement custom SQL.
         if "." in condition.field:
             continue
-            
+        
+        # Get the field value
+        # If the field is a normalized field (e.g., normalized_party_name),
+        # we need to derive it from the source field if it's not already set
         field_value = doc.get(condition.field)
+        
+        # Handle normalized fields: if field starts with "normalized_" and is empty,
+        # try to derive it from the source field
+        if not field_value and condition.field.startswith("normalized_"):
+            source_field = condition.field.replace("normalized_", "", 1)
+            source_value = doc.get(source_field)
+            if source_value:
+                from uph.controllers.mdm.normalization import normalize_text
+                field_value = normalize_text(source_value)
+        
         if not field_value:
             continue
 
@@ -40,4 +53,5 @@ def get_blocking_filters(doc, conditions):
                 # If short, exact match
                 or_filters.append([condition.field, "=", val])
                 
+    frappe.errprint(f"Generated blocking filters: {or_filters}")
     return or_filters

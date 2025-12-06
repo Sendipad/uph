@@ -316,81 +316,133 @@ def setup_party_master_custom_fields():
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
 def get_party_master_list(doctype, txt, searchfield, start, page_len, filters):
+    """
+    SECURE: Rewritten using pypika query builder to prevent SQL injection.
+    Returns list of Party Masters for link field searches.
+    
+    Security fixes:
+    - No string formatting in SQL
+    - All parameters properly escaped by pypika
+    - Field names validated against meta
+    """
+    from frappe.query_builder import DocType
+    from frappe.query_builder.functions import Locate
+    from functools import reduce
+    import operator
+    
+    # Force doctype to Party Master (avoid injection via doctype param)
     doctype = "Party Master"
     meta = frappe.get_meta(doctype)
-    party_type_cond = ""
-    and_cond = ["docstatus < 2"]
+    PartyMaster = DocType("Party Master")
+    
+    # === Build field list (validated against meta) ===
     fields = ["name"]
-    searchfield = meta.get_search_fields()
-
-    if meta.get("show_title_field_in_link") and meta.get("title_field"):
-        tf = meta.get("title_field")
-        if tf not in searchfield:
-            searchfield.insert(1, tf)
-        fields.append(meta.get("title_field"))
-    if len(searchfield) > 0:
-        fields.extend(searchfield)
-    fields = unique(fields)
-    if pt := filters.get("party_type"):
-        parent_party_role = frappe.db.get_all(
-            "Party Master Role", filters={"party_type_role": pt}, pluck="parent"
-        )
-        parent_party_role = tuple(parent_party_role)
-        party_type_cond = f" and (party_type = '{pt}' OR name IN {parent_party_role})"
-    elif not filters.get("party_type") and filters.get("on_doctype"):
-        pt = get_party_type_from_doctype(filters.get("on_doctype"))
-        parent_party_role = frappe.db.get_all(
-            "Party Master Role", filters={"party_type_role": pt}, pluck="parent"
-        )
-        party_type_cond = " and (party_type ={0} OR name in {1})".format(
-            pt, set(parent_party_role)
-        )
-
-    if isinstance(filters, dict):
-        filters_items = filters.items()
-        for key, value in filters_items:
-            if key != "party_type" and key != "on_doctype":
-                if meta.has_field(key):
-                    and_cond.append(
-                        "{key} = {value}".format(key=key, value=filters.get(key))
-                    )
-
-    elif isinstance(filters, list):
-        for f in filters:
-            if meta.has_field(f[1]):
-                if isinstance(f[3], list):
-                    and_cond += f" and {f[1]} {f[2]} {tuple(f[3])}"
-                else:
-                    and_cond += f" and {f[1]} {f[2]} {f[3]}"
-    search_parm = ""
-    if len(searchfield) > 0:
-        txt_parm = " or ".join(field + " like %(txt)s" for field in searchfield)
-        search_parm = f"and ({txt_parm})"
-
-    query = frappe.db.sql(
-        f"""
-                        select {fields} from `tabParty Master`
-                        where {and_cond} {party_type_cond} {key} 
-                        order by
-			(case when locate(%(_txt)s, name) > 0 then locate(%(_txt)s, name) else 99999 end),
-			(case when locate(%(_txt)s, party_name) > 0 then locate(%(_txt)s, party_name) else 99999 end),
-			idx desc,
-			name, party_name
-		limit {page_len} offset {start}""".format(
-            fields=", ".join(fields),
-            key=search_parm,
-            and_cond=" and ".join(and_cond),
-            party_type_cond=party_type_cond,
-            start=start,
-            page_len=page_len,
-            txt="%(txt)s",
-        ),
-        {
-            "txt": "%%%s%%" % txt,
-            "_txt": txt.replace("%", ""),
-            "start": start,
-            "page_len": page_len,
-        },
+    search_fields = meta.get_search_fields() or []
+    
+    # Add title field if configured
+    if meta.get("show_title_field_in_link") and (tf := meta.get("title_field")):
+        if tf not in search_fields:
+            search_fields.insert(0, tf)
+        if tf not in fields:
+            fields.append(tf)
+    
+    # Validate all search fields exist in meta
+    for field in search_fields:
+        if meta.has_field(field) and field not in fields:
+            fields.append(field)
+    
+    # === Build base query ===
+    query = frappe.qb.from_(PartyMaster).select(
+        *[getattr(PartyMaster, f) for f in fields]
     )
-
-    return query
+    
+    # Base filter: exclude cancelled docs
+    query = query.where(PartyMaster.docstatus < 2)
+    
+    # === Party type filter (SECURE - no string formatting) ===
+    if party_type := filters.get("party_type"):
+        # Subquery for party masters with secondary roles
+        PartyMasterRole = DocType("Party Master Role")
+        secondary_role_subquery = (
+            frappe.qb.from_(PartyMasterRole)
+            .select(PartyMasterRole.parent)
+            .where(PartyMasterRole.party_type_role == party_type)
+        )
+        
+        # Main party type OR has secondary role
+        query = query.where(
+            (PartyMaster.party_type == party_type) |
+            PartyMaster.name.isin(secondary_role_subquery)
+        )
+    
+    elif on_doctype := filters.get("on_doctype"):
+        # Get party type from doctype
+        pt = get_party_type_from_doctype(on_doctype)
+        if pt:
+            PartyMasterRole = DocType("Party Master Role")
+            secondary_role_subquery = (
+                frappe.qb.from_(PartyMasterRole)
+                .select(PartyMasterRole.parent)
+                .where(PartyMasterRole.party_type_role == pt)
+            )
+            query = query.where(
+                (PartyMaster.party_type == pt) |
+                PartyMaster.name.isin(secondary_role_subquery)
+            )
+    
+    # === Additional filters from filters dict (SECURE) ===
+    if isinstance(filters, dict):
+        for key, value in filters.items():
+            if key not in ("party_type", "on_doctype") and meta.has_field(key):
+                query = query.where(getattr(PartyMaster, key) == value)
+    elif isinstance(filters, list):
+        for filter_item in filters:
+            if len(filter_item) >= 3:
+                field, operator_str, value = filter_item[0], filter_item[1], filter_item[2]
+                if meta.has_field(field):
+                    field_obj = getattr(PartyMaster, field)
+                    # Map operator strings to pypika operators
+                    if operator_str == "=":
+                        query = query.where(field_obj == value)
+                    elif operator_str == "!=":
+                        query = query.where(field_obj != value)
+                    elif operator_str == "in":
+                        query = query.where(field_obj.isin(value))
+                    # Add more operators as needed
+    
+    # === Text search across search fields (SECURE) ===
+    if txt and search_fields:
+        # Build OR conditions for text search
+        search_conditions = []
+        for field in search_fields:
+            if meta.has_field(field):
+                search_conditions.append(
+                    getattr(PartyMaster, field).like(f"%{txt}%")
+                )
+        
+        if search_conditions:
+            # Combine with OR
+            combined_search = reduce(operator.or_, search_conditions)
+            query = query.where(combined_search)
+    
+    # === Order by relevance (SECURE - pypika handles escaping) ===
+    if txt:
+        # Order by: closest match in name, then party_name, then idx
+        cleaned_txt = txt.replace("%", "")  # Remove wildcards for LOCATE
+        query = query.orderby(
+            Locate(cleaned_txt, PartyMaster.name),
+            Locate(cleaned_txt, PartyMaster.party_name),
+            PartyMaster.idx.desc(),
+            PartyMaster.name,
+            PartyMaster.party_name
+        )
+    else:
+        query = query.orderby(PartyMaster.name)
+    
+    # === Pagination (SECURE - int conversion prevents injection) ===
+    start = int(start) if start else 0
+    page_len = int(page_len) if page_len else 20
+    query = query.limit(page_len).offset(start)
+    
+    # Execute and return
+    return query.run()

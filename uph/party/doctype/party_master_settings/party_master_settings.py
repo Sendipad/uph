@@ -37,8 +37,15 @@ class PartyMasterSettings(Document):
         self.validate_party_master_fields_options()
 
     def on_update(self):
+        # Clear caches
         frappe.cache.delete_key(uph.make_key(f"{self.doctype}.party_types"))
         frappe.cache.delete_key(uph.make_key(f"{self.doctype}.document_types"))
+        
+        # Clear UPH controller caches (for smart hooks)
+        from uph.controllers.cache_utils import clear_settings_cache
+        clear_settings_cache()
+        
+        # Existing logic
         self.create_pm_fields_on_party_doctype()
         self.sync_update_to_doctype_fields()
 
