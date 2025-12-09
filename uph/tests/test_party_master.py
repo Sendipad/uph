@@ -43,3 +43,34 @@ class TestPartyMaster(FrappeTestCase):
         pm = frappe.get_doc({"doctype": "Party Master", "party_name": "  Test Normalize  ", "party_type": "Customer", "parent_party_master": self.root_group})
         pm.insert(ignore_permissions=True)
         self.assertIsNotNone(pm.normalized_party_name)
+
+    def test_set_party_master_kwargs(self):
+        """Ensure set_party_master accepts unexpected kwargs (like 'data' from API)"""
+        if not self.root_group: self.skipTest("No root group")
+        
+        # Create a party to link
+        party = frappe.get_doc({
+            "doctype": "Customer",
+            "customer_name": unique_name("Test Customer"),
+            "customer_group": "All Customer Groups",
+            "customer_type": "Company",
+            "territory": "All Territories"
+        }).insert(ignore_permissions=True)
+        
+        pm = frappe.get_doc({
+            "doctype": "Party Master",
+            "party_name": unique_name("Master for Link"),
+            "party_type": "Customer",
+            "parent_party_master": self.root_group
+        }).insert(ignore_permissions=True)
+        
+        selection = [{"doctype": "Customer", "name": party.name, "party_type": "Customer"}]
+        
+        # This should not raise TypeError
+        try:
+            pm.set_party_master(selection, data="unexpected_data")
+        except TypeError:
+            self.fail("set_party_master raised TypeError with unexpected kwargs")
+
+        party.reload()
+        self.assertEqual(party.party_master, pm.name)

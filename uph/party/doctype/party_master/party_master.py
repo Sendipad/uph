@@ -284,12 +284,15 @@ class PartyMaster(NestedSet):
                 )
 
     @frappe.whitelist()
-    def set_party_master(self, selection):
+    def set_party_master(self, selection=None, **kwargs):
+        if not selection and kwargs.get('data'):
+            selection = kwargs.get('data')
+
         if not selection:
             frappe.throw(_("Must Select at least one Party"))
         if selection:
             for p in selection:
-                party = frappe.get_doc(p.party_type, p.name)
+                party = frappe.get_doc(p.get("party_type"), p.get("name"))
                 if party.get("party_master") is None or party.get("party_master") == "":
                     party.set("party_master", self.name)
                     party.save()
@@ -300,8 +303,8 @@ class PartyMaster(NestedSet):
                         ),
                     )
             # self.set_total_linked_party()
-            self.save()
             self.reload()
+            self.save()
 
     """ This Will Fetch simarlarty Parties(Customer ,Supplier or Employee) Based on party_type and Roles
         And for Unset party Master from the Parties and will order Return Result based On party
