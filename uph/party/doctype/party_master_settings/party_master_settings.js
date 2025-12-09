@@ -48,31 +48,14 @@
 });
 
 frappe.ui.form.on("Party Master Settings Party Type", {
+    form_render: function(frm, cdt, cdn) {
+        update_party_type_rule_field(frm, cdt, cdn);
+    },
     allowed: function(frm, cdt, cdn) {
-        let row = locals[cdt][cdn];
-        if (!row.party_type || row.allowed === 0) return;
-        
-        // Only proceed if allowed is checked
-        if (row.allowed === 1) {
-            frappe.model.with_doctype(row.party_type, () => {
-                let meta = frappe.get_meta(row.party_type);
-                let fieldnames = meta.fields
-                    .filter(d => !frappe.model.no_value_type.includes(d.fieldtype))
-                    .map(d => d.fieldname);
-                
-                let grid = frm.fields_dict.party_types.grid;
-                let grid_row = grid.get_row(row.name);
-                
-                if (grid_row) {
-                    // Assuming 'rule_fieldname' is a Select field
-                    // If it's a Link field, this approach needs to change
-                    grid_row.get_field("rule_fieldname").df.options = fieldnames.join("\n");
-                    grid_row.get_field("rule_fieldname").refresh();
-                }
-            });
-        }
+        update_party_type_rule_field(frm, cdt, cdn);
     }
 });
+
 
 frappe.ui.form.on("Party Master Settings DocType", {
     form_render: function(frm, cdt, cdn) {
@@ -127,3 +110,26 @@ function update_selection_fields(frm, cdt, cdn) {
 }
     
  	
+
+function update_party_type_rule_field(frm, cdt, cdn) {
+    let row = locals[cdt][cdn];
+    if (!row.party_type || row.allowed === 0) return;
+
+    frappe.model.with_doctype(row.party_type, () => {
+        let meta = frappe.get_meta(row.party_type);
+        let fieldnames = meta.fields
+            .filter(d => !frappe.model.no_value_type.includes(d.fieldtype))
+            .map(d => d.fieldname);
+
+        let grid = frm.fields_dict.party_types.grid;
+        let grid_row = grid.get_row(row.name);
+
+        if (grid_row) {
+            let field = grid_row.get_field("rule_fieldname");
+            if (field) {
+                field.df.options = fieldnames.join("\n");
+                field.refresh();
+            }
+        }
+    });
+}
