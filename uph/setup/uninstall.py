@@ -1,41 +1,27 @@
 import frappe
 def before_uninstall():
     """Called before app uninstall to clean up safely"""
-    
-    # Step 1: Check if any Party Master links exist
-    doctypes_with_pm = [
-        "Customer", "Supplier", "Employee", 
-        "Sales Invoice", "Purchase Invoice", "Payment Entry"
-    ]
-    
-    has_data = False
-    for dt in doctypes_with_pm:
-        if frappe.db.count(dt, {"party_master": ["is", "set"]}):
-            has_data = True
-            break
-    
-    if has_data:
-        frappe.throw("""
-            Cannot uninstall UPH - Active Party Master links exist!
-            
-            Options:
-            1. Run migration to unlink all parties first
-            2. Use 'force_uninstall' flag (DANGEROUS - will orphan data)
-        """)
-    
-    # Step 2: Remove custom fields gracefully
+    disable_accounting_dimension()
     remove_custom_fields()
+
 def remove_custom_fields():
     """Remove custom fields added by UPH"""
-    custom_fields = frappe.get_all(
-        "Custom Field",
-        filters={"module": "Unified Party Hub"},
-        pluck="name"
-    )
+    fields_to_remove = frappe.get_all("Custom Field", filters={"fieldname": "party_master", "options": "Party Master", "fieldtype": "Link"}, pluck="name")
+    fields_to_remove += frappe.get_all("Custom Field", filters={"fieldname": "is_default_for_party_master"}, pluck="name")
+    fields_to_remove += frappe.get_all("Custom Field", filters={"fieldname": "party_analytic_accounting", "options": "Party Analytic Accounting", "fieldtype": "Link"}, pluck="name")
     
-    for cf_name in custom_fields:
-        # Set read_only and hidden instead of deleting
-        frappe.db.set_value("Custom Field", cf_name, {
-            "read_only": 1,
-            "hidden": 1
-        })
+    for field_name in fields_to_remove:
+        frappe.delete_doc("Custom Field", field_name, ignore_missing=True)
+        
+    # Also attempt to delete by module if any remain with different names but in our module
+    module_fields = frappe.get_all("Custom Field", filters={"module": "party"}, pluck="name")
+    for field_name in module_fields:
+        frappe.delete_doc("Custom Field", field_name, ignore_missing=True)
+
+def disable_accounting_dimension():
+    """Disable Party Analytic Accounting dimension"""
+    if frappe.db.exists("Accounting Dimension", "Party Analytic Accounting"):
+        dim=frappe.get_doc("Accounting Dimension", "Party Analytic Accounting")
+        dim.disabled=1
+        dim.save(ignore_permissions=True)
+

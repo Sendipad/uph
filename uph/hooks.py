@@ -29,9 +29,10 @@ doctype_js = {
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 # hooks.py
 after_migrate = [
-    "uph.setup.install.create_party_analytic_accounting_dimension",
-    "uph.setup.install.create_party_master_tree"
+    "uph.setup.install.run_pending_setup"
 ]
+
+before_uninstall = "uph.setup.uninstall.before_uninstall"
 
 # Svg Icons
 # ------------------

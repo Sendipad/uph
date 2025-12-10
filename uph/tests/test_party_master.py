@@ -15,6 +15,7 @@ class TestPartyMaster(FrappeTestCase):
     def test_create_party_master(self):
         if not self.root_group: self.skipTest("No root group")
         pm = frappe.get_doc({"doctype": "Party Master", "party_name": unique_name("Test PM"), "party_type": "Customer", "parent_party_master": self.root_group, "is_group": 0})
+        pm.flags.update_party_number = True
         pm.insert(ignore_permissions=True)
         self.assertTrue(frappe.db.exists("Party Master", pm.name))
         self.assertIsNotNone(pm.party_number)
@@ -40,7 +41,8 @@ class TestPartyMaster(FrappeTestCase):
 
     def test_normalized_party_name(self):
         if not self.root_group: self.skipTest("No root group")
-        pm = frappe.get_doc({"doctype": "Party Master", "party_name": "  Test Normalize  ", "party_type": "Customer", "parent_party_master": self.root_group})
+        pm = frappe.get_doc({"doctype": "Party Master", "party_name": unique_name("Test Normalize"), "party_type": "Customer", "parent_party_master": self.root_group})
+        pm.flags.update_party_number = True
         pm.insert(ignore_permissions=True)
         self.assertIsNotNone(pm.normalized_party_name)
 
