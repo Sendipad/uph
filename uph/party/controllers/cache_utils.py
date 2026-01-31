@@ -21,23 +21,28 @@ def clear_all_caches():
     Should be called when Party Master Settings is updated.
     """
     cache = frappe.cache()
+
+    # 1. Clear Settings-based caches
     keys = [
         CACHE_KEY_CONFIGURED_DOCTYPES,
         CACHE_KEY_PARTY_TYPES,
         CACHE_KEY_PM_DOCTYPES,
         CACHE_KEY_DEPENDS_ON,
         CACHE_KEY_FUNCTIONAL_MAPPING,
+        "uph_PartyTypeListName",  # From uph.__init__
     ]
     for key in keys:
         cache.delete_value(key)
 
-    # Also clear the frappe.get_cached_doc cache for Party Master Settings
-    frappe.clear_document_cache("Party Master Settings", "Party Master Settings")
+    # 2. Clear Hash Maps (Pattern based deletion or known keys)
+    # Ideally we should use delete_keys if we had a pattern, but here we explicitly clear known hash maps
+    from uph import UPH_cached_key_map
 
-    # Clear redis_cache decorated functions if any remain (though we are moving them here)
-    # The below are for backward compatibility if other modules import them
-    # But strictly speaking we should only use the methods in this file
-    pass
+    for key_name, hash_key in UPH_cached_key_map.items():
+        cache.delete_value(hash_key)
+
+    # 3. Clear Document Cache
+    frappe.clear_document_cache("Party Master Settings", "Party Master Settings")
 
 
 def get_configured_doctypes():

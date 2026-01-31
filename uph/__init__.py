@@ -7,25 +7,24 @@ __version__ = "2.3.0"
 
 UPH_cached_key_map = {
     # Hash Key to get linked_parties list for Party Master Ordered by primary role and is_default
-    "parties": "UPH_hash:PartyMaster|List_Parties",  # Hash Key to get linked_parties list for Party Master Ordered by primary role and is_default Ordered by primary role and is_default
-    "get_parties": "UPH_hash:PartyMaster|List_Parties",  # Hash Key to get linked_parties list for Party Master Ordered by primary role and is_default
-    "get_party_master_parties": "UPH_hash:PartyMaster|List_Parties",  # Hash Key to get linked_parties list for Party Master Ordered by primary role and is_default
+    "parties": "UPH:PartyMaster|List_Parties",
+    "get_parties": "UPH:PartyMaster|List_Parties",
+    "get_party_master_parties": "UPH:PartyMaster|List_Parties",
     # Hash key to store each Party Master and its Role as List
-    "Party Master Role": "UPH_hash:PartyMaster|Roles List",
-    "get_party_master_roles": "UPH_hash:PartyMaster|Roles List",
-    "get_pm_roles": "UPH_hash:PartyMaster|Roles List",
-    "party_master.roles": "UPH_hash:PartyMaster|Roles List",
-    "roles": "UPH_hash:PartyMaster|Roles List",
+    "Party Master Role": "UPH:PartyMaster|Roles List",
+    "get_party_master_roles": "UPH:PartyMaster|Roles List",
+    "get_pm_roles": "UPH:PartyMaster|Roles List",
+    "party_master.roles": "UPH:PartyMaster|Roles List",
+    "roles": "UPH:PartyMaster|Roles List",
     # get List of each Party Type with Unset Party Master As hash field is Party type
-    # field will be the party type like customer or return the whole list for all party Types
-    "get_unset_party_master_parties_list": "UPH_hash: All Unset Parties",
-    "unseted_parties": "UPH_hash: All Unset Parties",
-    # For list of all party mapped to party master It's hash with key the party Type doctype
-    "get_party_to_pm_list": "UPH_hash:PartiesToPartyMaster",
-    "get_parties_to_pm_list": "UPH_hash:PartiesToPartyMaster",
-    "get_all_parties_to_pm_map": "UPH_hash:PartiesToPartyMaster",
+    "get_unset_party_master_parties_list": "UPH:All Unset Parties",
+    "unseted_parties": "UPH:All Unset Parties",
+    # For list of all party mapped to party master
+    "get_party_to_pm_list": "UPH:PartiesToPartyMaster",
+    "get_parties_to_pm_list": "UPH:PartiesToPartyMaster",
+    "get_all_parties_to_pm_map": "UPH:PartiesToPartyMaster",
     "functional_document_as_dict": "UPH:functional_doctypes",
-    "document_type": "UPH:functional_doctypes",  # require field key
+    "document_type": "UPH:functional_doctypes",
 }
 
 
@@ -140,7 +139,7 @@ def update_cached_party_master_parties(party_master):
         party_master = [party_master]
     key = get_pm_parties_key()
     for p in party_master:
-        parties = get_linked_parties_list(party_master)
+        parties = get_linked_parties_list(p)
         if parties:
             frappe.cache.hset(key, p, parties)
 
@@ -169,11 +168,11 @@ def update_cached_party_to_pm_data(
 
 
 def get_pm_parties_key():
-    return "PartyMaster|List_Parties"
+    return "UPH:PartyMaster|List_Parties"
 
 
 def get_party_to_pm_key(party_type):
-    return f"PartyToPartyMaster | {party_type}"
+    return f"UPH:PartyToPartyMaster|{party_type}"
 
 
 def get_cached_party_to_pm_map(party_type, party):

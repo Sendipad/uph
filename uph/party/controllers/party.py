@@ -88,6 +88,33 @@ def validate_party_master_on_document_types(doc, method=None):
     fetch_if_not_exist = not meta.get_field(party_field).reqd
     alert_msg = []
 
+    # Pre-fetch logic for performance
+    party_master_map = {}
+
+    if is_child:
+        items = doc.get_all_children()
+        # Collect all parties to fetch in one go
+        parties_to_fetch = set()
+        default_party_type = map_conf.get("party_type")
+
+        for d in items:
+            if d.doctype != document_type:
+                continue
+            p = d.get(party_field)
+            pt = default_party_type or d.get(party_type_field)
+            if p and pt:
+                parties_to_fetch.add((pt, p))
+
+        # Bulk Fetch
+        for pt, p_list in _group_by_party_type(parties_to_fetch).items():
+            if not p_list:
+                continue
+            results = frappe.get_all(
+                pt, filters={"name": ["in", p_list]}, fields=["name", "party_master"]
+            )
+            for r in results:
+                party_master_map[(pt, r.name)] = r.party_master
+
     def set_or_validate_party_master(d):
         party = d.get(party_field)
         party_type = map_conf.get("party_type") or d.get(party_type_field)
@@ -96,7 +123,12 @@ def validate_party_master_on_document_types(doc, method=None):
         if not (party and party_type):
             return
 
-        new_party_master = frappe.db.get_value(party_type, party, "party_master")
+        # Use pre-fetched map if available, else fall back (e.g. for main doc)
+        if is_child:
+            new_party_master = party_master_map.get((party_type, party))
+        else:
+            new_party_master = frappe.db.get_value(party_type, party, "party_master")
+
         should_autoset = (
             not party_master
             and new_party_master
@@ -109,11 +141,12 @@ def validate_party_master_on_document_types(doc, method=None):
 
         if should_autoset:
             d.party_master = new_party_master
-            alert_msg.append(
-                _("Party Master for {0} set to {1} automatically").format(
-                    d.doctype, new_party_master
-                )
+            msg = _("Party Master for {0} set to {1} automatically").format(
+                d.doctype, new_party_master
             )
+            if msg not in alert_msg:
+                alert_msg.append(msg)
+
         elif not party_master or party_master != new_party_master:
             frappe.throw(
                 _("Party Master mismatch or missing for Party {0} ({1})").format(
@@ -132,6 +165,14 @@ def validate_party_master_on_document_types(doc, method=None):
 
     for msg in alert_msg:
         frappe.msgprint(title=_("Party Master Auto-set"), msg=msg, alert=1)
+
+
+def _group_by_party_type(party_tuples):
+    """Helper to group (party_type, party) tuples by party_type"""
+    grouped = {}
+    for pt, p in party_tuples:
+        grouped.setdefault(pt, []).append(p)
+    return grouped
 
 
 def validate_party_analytic_accounting(doc, party_master):

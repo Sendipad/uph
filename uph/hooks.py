@@ -28,7 +28,8 @@ doctype_js = {
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 # hooks.py
-after_migrate = ["uph.setup.install.run_pending_setup"]
+after_migrate = "uph.setup.install.on_migrate"
+after_install = "uph.setup.install.after_install"
 
 before_uninstall = "uph.setup.uninstall.before_uninstall"
 
