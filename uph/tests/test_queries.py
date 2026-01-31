@@ -8,6 +8,7 @@ from uph.party.controllers.queries import (
     get_leaf_party_master_list_from_any_node,
     usage_counts_on_reference_doctype,
     get_all_vouchers_documents_with_null_or_another_party_master,
+    query_similar_name_or_number,
 )
 from uph.tests.setup_mixin import AccountsTestMixin
 
@@ -187,6 +188,36 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
 
         result = get_counts_of_unposted_or_cancelled_vouchers("_Test Company")
         self.assertIsInstance(result, list)
+
+    def test_query_similar_name_or_number(self):
+        # Create a party master
+        pm_name = "Duplicate Check PM"
+        pm_number = "PM-DUP-001"
+        pm = frappe.get_doc(
+            {
+                "doctype": "Party Master",
+                "party_name": pm_name,
+                "party_number": pm_number,
+                "is_group": 0,
+                "party_type": "Customer",
+            }
+        ).insert(ignore_permissions=True)
+
+        # 1. Exact Name match
+        res = query_similar_name_or_number(party_name=pm_name)
+        self.assertEqual(res.get("exact_name"), pm.name)
+
+        # 2. Case variation (normalization check)
+        res = query_similar_name_or_number(party_name=pm_name.upper())
+        self.assertEqual(res.get("exact_name"), pm.name)
+
+        # 3. Exact Number match
+        res = query_similar_name_or_number(party_number=pm_number)
+        self.assertEqual(res.get("exact_number"), pm.name)
+
+        # 4. No match
+        res = query_similar_name_or_number(party_name="Non Existent PM")
+        self.assertNotIn("exact_name", res)
 
 
 def create_customer(name, party_master=None):

@@ -672,3 +672,36 @@ def get_party_analytic_accounting_filtered(
         filters={"party_master": pm, "name": ["like", f"%{txt}%"]},
         as_list=1,
     )
+
+
+@frappe.whitelist()
+def query_similar_name_or_number(party_name=None, party_number=None):
+    """
+    Check for existing Party Master with same or similar name/number.
+    Returns dict with exact matches found.
+    """
+    from uph.party.utils import normalize_text
+
+    res = {}
+    if party_name:
+        normalized = normalize_text(party_name)
+        # Check exact name (case-insensitive via DB or normalized field)
+        exact_name = frappe.db.get_value(
+            "Party Master", {"party_name": party_name}, "name"
+        )
+        if not exact_name:
+            exact_name = frappe.db.get_value(
+                "Party Master", {"normalized_party_name": normalized}, "name"
+            )
+
+        if exact_name:
+            res["exact_name"] = exact_name
+
+    if party_number:
+        exact_number = frappe.db.get_value(
+            "Party Master", {"party_number": party_number}, "name"
+        )
+        if exact_number:
+            res["exact_number"] = exact_number
+
+    return res

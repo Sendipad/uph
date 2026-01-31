@@ -37,7 +37,7 @@ yarn.lock
 config.json
 uph/public/dist/
 UPH_ARCHITECTURE.md
-ANALYTICS.md
+ANALYTICS_WALKTHROUGH.md
 ERP_NEXT_ARCHITECTURE.md
 # IDEs and System
 .DS_Store
