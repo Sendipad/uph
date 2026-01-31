@@ -2,7 +2,7 @@ import frappe
 from uph.party.controllers.queries import get_linked_parties_list
 from uph.party.controllers.queries import get_leaf_party_master_list_from_any_node
 
-__version__ = "2.2.2"
+__version__ = "2.3.0"
 
 
 UPH_cached_key_map = {

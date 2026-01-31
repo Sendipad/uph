@@ -53,15 +53,13 @@ frappe.ui.form.on("Party Master", {
 	},
 
 	refresh(frm) {
-		if (frm.doc.is_group) {
-			frm.dashboard.hide();
-		} else {
-			frm.dashboard.show();
-		}
+		frm.dashboard.show();
 
 		frm.old_parent = frm.doc.parent_party_master || null;
 
 		if (!frm.is_new()) {
+			set_party_master_dashboard_indicators(frm);
+
 			frm.set_df_property("parent_party_master", "read_only", 1);
 			frm.set_df_property("party_number", "read_only", 1);
 
@@ -112,7 +110,6 @@ frappe.ui.form.on("Party Master", {
 
 });
 
-// ---------------------- Utility Functions ----------------------
 function build_parties_dialog(frm, action) {
 	const child_table = get_child_table();
 	const parties_dialog_fields = [
@@ -368,3 +365,46 @@ function open_secondary_roles_dialog(frm) {
 }
 
 
+function set_party_master_dashboard_indicators(frm) {
+	if (frm.doc.__onload && frm.doc.__onload.dashboard_info) {
+		const dashboard_info = frm.doc.__onload.dashboard_info;
+		// Standard Frappe dashboard refresh handles clearing
+
+		if (dashboard_info.length > 0) {
+			dashboard_info.forEach((info) => {
+				const color = info.total_unpaid > 0 ? "orange" : info.total_unpaid < 0 ? "red" : "green";
+				const unpaid_label =
+					info.total_unpaid > 0
+						? __("Net Receivable: {0}", [format_currency(info.total_unpaid, info.currency)])
+						: info.total_unpaid < 0
+							? __("Net Payable: {0}", [format_currency(Math.abs(info.total_unpaid), info.currency)])
+							: __("No Outstanding Balance");
+
+				// Add company/currency context if multi-company
+				const prefix = dashboard_info.length > 1 ? `${info.company} (${info.currency}): ` : "";
+
+				if (info.annual_sales) {
+					frm.dashboard.add_indicator(
+						`${prefix}${__("Annual Sales: {0}", [format_currency(info.annual_sales, info.currency)])}`,
+						"blue"
+					);
+				}
+				if (info.annual_purchases) {
+					frm.dashboard.add_indicator(
+						`${prefix}${__("Annual Purchases: {0}", [format_currency(info.annual_purchases, info.currency)])}`,
+						"blue"
+					);
+				}
+
+				frm.dashboard.add_indicator(`${prefix}${unpaid_label}`, color);
+
+				if (info.unpaid_count) {
+					frm.dashboard.add_indicator(
+						`${prefix}${__("Total Unpaid Invoices: {0}", [info.unpaid_count])}`,
+						info.unpaid_count > 0 ? "orange" : "green"
+					);
+				}
+			});
+		}
+	}
+}

@@ -705,3 +705,89 @@ def query_similar_name_or_number(party_name=None, party_number=None):
             res["exact_number"] = exact_number
 
     return res
+
+
+@frappe.whitelist()
+def get_party_master_dashboard_info(party_master_name):
+    from erpnext.accounts.party import get_dashboard_info as get_erp_dashboard_info
+    from collections import defaultdict
+
+    # 1. Get all leaf Party Masters under this node (direct or hierarchical)
+    pm_doc = frappe.get_cached_doc("Party Master", party_master_name)
+    target_pms = [party_master_name]
+
+    if pm_doc.is_group:
+        # Get all leaf nodes under this group
+        target_pms = get_leaf_party_master_list_from_any_node(
+            {"party_master": party_master_name}
+        )
+
+    if not target_pms:
+        return []
+
+    # 2. Get all linked parties for these PMs
+    parties = get_party_master_parties_db(target_pms, all_roles=True)
+
+    if not parties:
+        return []
+
+    # 3. Fetch dashboard info for each linked party
+    aggregated = defaultdict(
+        lambda: {
+            "annual_sales": 0,
+            "annual_purchases": 0,
+            "total_unpaid": 0,
+            "unpaid_count": 0,
+        }
+    )
+
+    for p in parties:
+        p_type = p.get("party_type")
+        p_name = p.get("party")
+
+        if not (p_type and p_name):
+            continue
+
+        # ERPNext's get_dashboard_info returns a list of dicts (one per company)
+        info_list = get_erp_dashboard_info(p_type, p_name)
+
+        # Get unpaid invoice count
+        unpaid_invoices = frappe.get_all(
+            "Sales Invoice" if p_type == "Customer" else "Purchase Invoice",
+            filters={
+                p_type.lower(): p_name,
+                "docstatus": 1,
+                "outstanding_amount": (">", 0),
+            },
+            fields=["count(*) as count"],
+        )
+        p_unpaid_count = unpaid_invoices[0].count if unpaid_invoices else 0
+
+        for info in info_list:
+            key = (info["company"], info["currency"])
+            stats = aggregated[key]
+
+            if p_type == "Customer":
+                stats["annual_sales"] += info.get("billing_this_year", 0)
+                stats["total_unpaid"] += info.get("total_unpaid", 0)
+            elif p_type == "Supplier":
+                stats["annual_purchases"] += info.get("billing_this_year", 0)
+                stats["total_unpaid"] -= info.get("total_unpaid", 0)
+
+            stats["unpaid_count"] += p_unpaid_count
+
+    # 4. Format for frontend
+    result = []
+    for (company, currency), stats in aggregated.items():
+        result.append(
+            {
+                "company": company,
+                "currency": currency,
+                "annual_sales": stats["annual_sales"],
+                "annual_purchases": stats["annual_purchases"],
+                "total_unpaid": stats["total_unpaid"],
+                "unpaid_count": stats["unpaid_count"],
+            }
+        )
+
+    return result

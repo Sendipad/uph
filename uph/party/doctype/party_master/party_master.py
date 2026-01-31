@@ -141,6 +141,13 @@ class PartyMaster(NestedSet):
     # end: auto-generated types
     def onload(self):
         self.set("parties", get_party_master_parties(self.name))
+        self.load_dashboard_info()
+
+    def load_dashboard_info(self):
+        from uph.party.controllers.queries import get_party_master_dashboard_info
+
+        info = get_party_master_dashboard_info(self.name)
+        self.set_onload("dashboard_info", info)
 
     def autoname(self):
         if not self.party_number:

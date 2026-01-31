@@ -1,4 +1,5 @@
 import frappe
+import uph
 from frappe.tests.utils import FrappeTestCase
 from uph.party.controllers.queries import (
     party_master_link_query,
@@ -9,6 +10,7 @@ from uph.party.controllers.queries import (
     usage_counts_on_reference_doctype,
     get_all_vouchers_documents_with_null_or_another_party_master,
     query_similar_name_or_number,
+    get_party_master_dashboard_info,
 )
 from uph.tests.setup_mixin import AccountsTestMixin
 
@@ -218,6 +220,62 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
         # 4. No match
         res = query_similar_name_or_number(party_name="Non Existent PM")
         self.assertNotIn("exact_name", res)
+
+    def test_get_party_master_dashboard_info(self):
+        # Create a Party Master
+        pm = frappe.get_doc(
+            {
+                "doctype": "Party Master",
+                "party_name": "Dashboard Test PM",
+                "is_group": 0,
+                "party_type": "Customer",
+            }
+        ).insert(ignore_permissions=True)
+
+        # Create a Customer linked to it
+        customer = frappe.get_doc(
+            {
+                "doctype": "Customer",
+                "customer_name": "PM Linked Customer",
+                "party_master": pm.name,
+            }
+        ).insert(ignore_permissions=True)
+
+        # Create a Sales Invoice to generate some stats
+        si = frappe.get_doc(
+            {
+                "doctype": "Sales Invoice",
+                "customer": customer.name,
+                "company": self.company,
+                "currency": frappe.get_cached_value(
+                    "Company", self.company, "default_currency"
+                ),
+                "posting_date": frappe.utils.nowdate(),
+                "due_date": frappe.utils.nowdate(),
+                "items": [
+                    {
+                        "item_code": "_Test Item",
+                        "qty": 1,
+                        "rate": 100,
+                        "income_account": "Sales - _TC",
+                        "cost_center": "Main - _TC",
+                    }
+                ],
+            }
+        ).insert(ignore_permissions=True)
+        si.submit()
+
+        # Check dashboard info
+        frappe.cache.delete_value(uph.make_key("Party Master.parties"))
+        info = get_party_master_dashboard_info(pm.name)
+        self.assertTrue(len(info) > 0)
+
+        # Find entry for our company
+        comp_info = next((i for i in info if i["company"] == self.company), None)
+        self.assertIsNotNone(comp_info)
+        self.assertEqual(comp_info["annual_sales"], 100)
+        self.assertEqual(comp_info["total_unpaid"], 100)
+        self.assertEqual(comp_info["unpaid_count"], 1)
 
 
 def create_customer(name, party_master=None):

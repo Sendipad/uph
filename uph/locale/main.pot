@@ -1,14 +1,14 @@
 # Translations template for Unified Party Hub.
-# Copyright (C) 2025 Abdo Mohammed Ruzaqi
+# Copyright (C) 2026 Abdo Mohammed Ruzaqi
 # This file is distributed under the same license as the Unified Party Hub project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Unified Party Hub VERSION\n"
 "Report-Msgid-Bugs-To: ruzaqi@gmail.com\n"
-"POT-Creation-Date: 2025-11-18 21:12+0307\n"
-"PO-Revision-Date: 2025-11-18 21:12+0307\n"
+"POT-Creation-Date: 2026-01-31 22:10+0307\n"
+"PO-Revision-Date: 2026-01-31 22:10+0307\n"
 "Last-Translator: ruzaqi@gmail.com\n"
 "Language-Team: ruzaqi@gmail.com\n"
 "MIME-Version: 1.0\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.13.1\n"
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:523
+#: uph/public/js/utils/party.js:499
 msgid " (Currency)"
 msgstr ""
 
@@ -32,23 +32,25 @@ msgid ""
 " Account Must be of Group where it has child accounts for each Currency"
 msgstr ""
 
-#. Header text in the Party Workspace
-#: uph/party/workspace/party/party.json
-msgid "<span class=\"h4\"><b></b></span><b>Reports &amp; Masters</b>"
+#: uph/party/controllers/mdm.py:273
+msgid "<b>Data Quality Alert:</b> Potential duplicates found for rule '{0}'"
 msgstr ""
 
 #. Header text in the Party Workspace
 #: uph/party/workspace/party/party.json
-msgid "<span class=\"h4\">Party</span>"
+msgid "<span class=\"h4\"><b>Reports &amp; Masters</b></span>"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
+#. Header text in the Party Workspace
+#: uph/party/workspace/party/party.json
+msgid "<span class=\"h4\"><b>Your Shortcuts</b></span>"
+msgstr ""
+
 #: uph/public/js/utils/party_master_manager.js:52
 #: uph/public/js/utils/party_master_manager.js:121
 msgid "A Unique Party Name Must be filled"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
 #: uph/public/js/utils/party_master_manager.js:72
 msgid "A Unique Party Number Must Be set or leave it"
 msgstr ""
@@ -79,12 +81,13 @@ msgstr ""
 msgid "Account No"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:77
+#: uph/party/doctype/party_master/party_master.js:75
 msgid "Account Statement"
 msgstr ""
 
 #. Label of a Tab Break field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
+#: uph/party/doctype/party_master/party_master_dashboard.py:10
 msgid "Accounting"
 msgstr ""
 
@@ -102,23 +105,19 @@ msgstr ""
 msgid "Accounts Name"
 msgstr ""
 
+#: uph/party/doctype/party_master/party_master.js:71
 #: uph/party/doctype/party_master/party_master.js:73
-#: uph/party/doctype/party_master/party_master.js:75
-#: uph/party/doctype/party_master/party_master.js:94
+#: uph/party/doctype/party_master/party_master.js:92
 msgid "Action"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11 uph/public/js/utils/utils.js:67
-#: uph/public/js/utils/utils.js:154 uph/public/js/utils/utils.js:194
+#: uph/public/js/utils/utils.js:65 uph/public/js/utils/utils.js:152
+#: uph/public/js/utils/utils.js:192
 msgid "Actions"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:293
+#: uph/party/doctype/party_master/party_master.js:316
 msgid "Activate Multi Roles"
-msgstr ""
-
-#: uph/party/doctype/party_master/party_master.js:299
-msgid "Activate a single party can play multiple roles customer, supplier, employee using the same base party data"
 msgstr ""
 
 #. Option for the 'Status' (Select) field in DocType 'Party Analytic
@@ -129,11 +128,11 @@ msgstr ""
 msgid "Active"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:319
+#: uph/party/doctype/party_master/party_master.js:324
 msgid "Add"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_tree.js:281
+#: uph/party/doctype/party_master/party_master_tree.js:337
 msgid "Add Child"
 msgstr ""
 
@@ -143,12 +142,13 @@ msgstr ""
 msgid "Add Columns In Company Currency"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:290
-msgid "Add Party Roles"
+#: uph/party/doctype/party_master/party_master.js:73
+#: uph/party/doctype/party_master/party_master.js:312
+msgid "Add Secondary Roles"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:75
-msgid "Add Secondary Roles"
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.js:111
+msgid "Add Selected"
 msgstr ""
 
 #. Label of a HTML field in DocType 'Party Master'
@@ -156,12 +156,10 @@ msgstr ""
 msgid "Address HTML"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
 #: uph/public/js/utils/party_master_manager.js:149
 msgid "Address Line 1"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
 #: uph/public/js/utils/party_master_manager.js:150
 msgid "Address Line 2"
 msgstr ""
@@ -194,14 +192,23 @@ msgstr ""
 msgid "All Currency"
 msgstr ""
 
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.js:82
+msgid "All related parties have already been added."
+msgstr ""
+
+#: uph/party/doctype/party_master/party_master.js:306
+msgid "All secondary roles are already assigned."
+msgstr ""
+
+#. Option for the 'Allowed or Restrict to Below Rule ' (Select) field in
+#. DocType 'Party Analytic Accounting'
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
+msgid "Allow"
+msgstr ""
+
 #. Label of a Check field in DocType 'Party Master Settings Party Type'
 #: uph/party/doctype/party_master_settings_party_type/party_master_settings_party_type.json
 msgid "Allow Multi Party"
-msgstr ""
-
-#. Label of a Table field in DocType 'Party Analytic Accounting'
-#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
-msgid "Allowed Companies"
 msgstr ""
 
 #. Label of a Table field in DocType 'Party Master'
@@ -209,9 +216,27 @@ msgstr ""
 msgid "Allowed To Transact With"
 msgstr ""
 
-#. Label of a Check field in DocType 'Party Analytic Accounting'
+#. Label of a Select field in DocType 'Party Analytic Accounting'
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
-msgid "Apply To All Parties"
+msgid "Allowed or Restrict to Below Rule "
+msgstr ""
+
+#: uph/party/doctype/party_master/party_master.js:394
+msgid "Annual Purchases: {0}"
+msgstr ""
+
+#: uph/party/doctype/party_master/party_master.js:388
+msgid "Annual Sales: {0}"
+msgstr ""
+
+#. Label of a Table field in DocType 'Party Analytic Accounting'
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
+msgid "Applicable For Parties"
+msgstr ""
+
+#. Label of a Table field in DocType 'Party Analytic Accounting'
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
+msgid "Applicable On Companies"
 msgstr ""
 
 #. Option for the 'Status' (Select) field in DocType 'Party Master'
@@ -225,22 +250,21 @@ msgstr ""
 msgid "Archived"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/utils.js:148
+#: uph/public/js/utils/utils.js:146
 msgid "Are you sure you want to unlink this Party Master?"
 msgstr ""
 
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:223
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:229
 #: uph/party/report/party_account_balances/party_account_balances.py:177
 #: uph/party/report/party_account_statement/party_account_statement.html:102
 #: uph/party/report/party_account_statement/party_account_statement.py:153
 msgid "Balance"
 msgstr ""
 
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:251
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:257
 #: uph/party/report/party_account_balances/party_account_balances.py:167
 #: uph/party/report/party_account_balances/party_account_balances.py:195
-#: uph/party/report/party_account_statement/party_account_statement.py:653
+#: uph/party/report/party_account_statement/party_account_statement.py:654
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:749
 msgid "Balance ({0})"
 msgstr ""
@@ -269,36 +293,41 @@ msgstr ""
 msgid "Business Unit"
 msgstr ""
 
+#: uph/party/doctype/party_master/party_master_dashboard.py:33
+msgid "Buying"
+msgstr ""
+
 #: uph/party/report/party_ledger/party_ledger.py:352
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/party.js:911
+#: uph/public/js/utils/party.js:887
 msgid "Cancel"
 msgstr ""
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:390
+#: uph/party/doctype/party_master_settings/party_master_settings.py:406
 msgid "Cannot create Party Master field in {0}"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:256
+#: uph/party/doctype/party_master/party_master.py:304
 msgid "Cannot delete Party Master that is linked to other Parties"
+msgstr ""
+
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.py:74
+msgid "Cannot delete because this Party Analytic Accounting is used in {0} GL Entry records."
 msgstr ""
 
 #: uph/regional/arabic.py:50
 msgid "Cent"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/party.js:929
+#: uph/public/js/utils/party.js:905
 msgid "Change Posting Date"
 msgstr ""
 
 #: uph/party/doctype/party_master/party_master_tree.js:3
-#: uph/party/doctype/party_master/party_master_tree.js:252
+#: uph/party/doctype/party_master/party_master_tree.js:308
 msgid "Chart of Party"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:207
-#: uph/public/js/utils/party.js:296
+#: uph/public/js/utils/party.js:242
 msgid "Check this if you want to save the party without routing to Edit"
 msgstr ""
 
@@ -318,14 +347,23 @@ msgstr ""
 msgid "Child Document Types require explicit Parent Doctype configuration"
 msgstr ""
 
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.py:55
+msgid "Child party {0} does not have party or party type set."
+msgstr ""
+
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.py:62
+msgid "Child party {0} does not match parent Party Master {1}"
+msgstr ""
+
 #. Name of a report
+#. Label of a Link in the Party Workspace
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.json
 #: uph/party/report/party_account_balances/party_account_balances.js:235
 #: uph/party/report/party_account_statement/party_account_statement.js:273
+#: uph/party/workspace/party/party.json
 msgid "Chronological Party Ledger"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
 #: uph/public/js/utils/party_master_manager.js:153
 msgid "City"
 msgstr ""
@@ -340,8 +378,8 @@ msgstr ""
 msgid "Closed"
 msgstr ""
 
-#: uph/party/report/party_account_statement/party_account_statement.py:340
-#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:307
+#: uph/party/report/party_account_statement/party_account_statement.py:341
+#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:309
 msgid "Closing (Opening + Total)"
 msgstr ""
 
@@ -350,7 +388,7 @@ msgstr ""
 #. Label of a Link field in DocType 'Party Master Accounts'
 #: uph/party/doctype/party_analytic_accounting_allowed_company/party_analytic_accounting_allowed_company.json
 #: uph/party/doctype/party_master/party_master.json
-#: uph/party/doctype/party_master/party_master_tree.js:191
+#: uph/party/doctype/party_master/party_master_tree.js:247
 #: uph/party/doctype/party_master_accounts/party_master_accounts.json
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.js:15
 #: uph/party/report/party_account_balances/party_account_balances.js:8
@@ -405,7 +443,7 @@ msgstr ""
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
 #: uph/party/report/party_account_balances/party_account_balances.js:70
 #: uph/party/report/party_account_statement/party_account_statement.js:164
-#: uph/party/report/party_account_statement/party_account_statement.py:613
+#: uph/party/report/party_account_statement/party_account_statement.py:614
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.js:132
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:709
 #: uph/party/report/party_ledger/party_ledger.js:121
@@ -414,11 +452,10 @@ msgstr ""
 msgid "Cost Center"
 msgstr ""
 
-#: uph/party/controllers/party.py:441
+#: uph/party/controllers/party.py:429
 msgid "Could not update documents {0}"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
 #: uph/public/js/utils/party_master_manager.js:155
 msgid "Country"
 msgstr ""
@@ -427,51 +464,49 @@ msgstr ""
 msgid "Counts"
 msgstr ""
 
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:97
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:119
-#: uph/party/report/party_account_statement/party_account_statement.py:308
-#: uph/party/report/party_account_statement/party_account_statement.py:343
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:103
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:125
+#: uph/party/report/party_account_statement/party_account_statement.py:309
+#: uph/party/report/party_account_statement/party_account_statement.py:344
 #: uph/party/report/party_ledger/party_ledger.py:261
 #: uph/party/report/party_ledger/party_ledger.py:270
 msgid "Cr"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:411
+#: uph/public/js/utils/party.js:387
 msgid "Create & Save"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/utils.js:102
+#: uph/public/js/utils/utils.js:100
 msgid "Create New Party Master"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:69
-#: uph/party/doctype/party_master/party_master_tree.js:295
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:396
+#: uph/party/doctype/party_master/party_master.js:67
+#: uph/party/doctype/party_master/party_master_tree.js:351
+#: uph/public/js/utils/party.js:372
 msgid "Create Party"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:181
-#: uph/public/js/utils/party.js:270
+#: uph/public/js/utils/party.js:181
 msgid "Create Party As"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_tree.js:51
-#: uph/party/doctype/party_master/party_master_tree.js:265
+#: uph/party/doctype/party_master/party_master_tree.js:50
+#: uph/party/doctype/party_master/party_master_tree.js:321
 msgid "Created new Party Master {0}"
 msgstr ""
 
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:216
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:222
 #: uph/party/report/party_account_statement/party_account_statement.html:101
 #: uph/party/report/party_account_statement/party_account_statement.py:148
-#: uph/party/report/party_account_statement/party_account_statement.py:557
-#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:651
+#: uph/party/report/party_account_statement/party_account_statement.py:558
+#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:653
 #: uph/party/report/party_ledger/party_ledger.py:476
 msgid "Credit"
 msgstr ""
 
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:244
-#: uph/party/report/party_account_statement/party_account_statement.py:646
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:250
+#: uph/party/report/party_account_statement/party_account_statement.py:647
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:742
 msgid "Credit ({0})"
 msgstr ""
@@ -486,38 +521,38 @@ msgstr ""
 msgid "Credit Limits"
 msgstr ""
 
-#: uph/setup/install.py:58
+#: uph/setup/install.py:60
 msgid "Creditor"
 msgstr ""
 
 #. Label of a Link field in DocType 'Party Master Parties'
-#: uph/party/doctype/party_master/party_master.js:283
+#: uph/party/doctype/party_master/party_master.js:280
 #: uph/party/doctype/party_master_parties/party_master_parties.json
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:197
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:203
 #: uph/party/report/party_account_balances/party_account_balances.js:138
 #: uph/party/report/party_account_balances/party_account_balances.py:183
 #: uph/party/report/party_account_statement/party_account_statement.js:215
-#: uph/party/report/party_account_statement/party_account_statement.py:543
+#: uph/party/report/party_account_statement/party_account_statement.py:544
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.js:183
-#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:637
+#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:639
 #: uph/party/report/party_ledger/party_ledger.js:96
 #: uph/party/report/party_ledger/party_ledger.py:462
 #: uph/party/report/party_master_ledger/party_master_ledger.js:96
 msgid "Currency"
 msgstr ""
 
-#: uph/party/report/party_account_statement/party_account_statement.py:328
+#: uph/party/report/party_account_statement/party_account_statement.py:329
 msgid "Current Period Total"
 msgstr ""
 
 #. Option for the 'Party Type' (Select) field in DocType 'Party Master Parties'
+#. Label of a Link in the Party Workspace
 #. Label of a shortcut in the Party Workspace
 #: uph/party/doctype/party_master_parties/party_master_parties.json
-#: uph/party/workspace/party/party.json uph/setup/install.py:54
+#: uph/party/workspace/party/party.json uph/setup/install.py:56
 msgid "Customer"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
 #: uph/public/js/utils/party_master_manager.js:156
 msgid "Customer POS Id"
 msgstr ""
@@ -533,33 +568,33 @@ msgstr ""
 msgid "Date"
 msgstr ""
 
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:209
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:215
 #: uph/party/report/party_account_statement/party_account_statement.html:100
 #: uph/party/report/party_account_statement/party_account_statement.py:143
-#: uph/party/report/party_account_statement/party_account_statement.py:550
-#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:644
+#: uph/party/report/party_account_statement/party_account_statement.py:551
+#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:646
 #: uph/party/report/party_ledger/party_ledger.py:469
 msgid "Debit"
 msgstr ""
 
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:237
-#: uph/party/report/party_account_statement/party_account_statement.py:639
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:243
+#: uph/party/report/party_account_statement/party_account_statement.py:640
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:735
 msgid "Debit ({0})"
 msgstr ""
 
-#: uph/setup/install.py:53
+#: uph/setup/install.py:55
 msgid "Debitor"
 msgstr ""
 
 #. Label of a Link field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:199
-#: uph/public/js/utils/party.js:288 uph/public/js/utils/party.js:407
+#: uph/public/js/utils/party.js:203 uph/public/js/utils/party.js:227
+#: uph/public/js/utils/party.js:383
 msgid "Default Currency"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:164
+#: uph/party/doctype/party_master/party_master.py:210
 msgid "Default Party Type is Mandatory"
 msgstr ""
 
@@ -578,7 +613,7 @@ msgstr ""
 msgid "Default ordering"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:608
+#: uph/public/js/utils/party.js:584
 msgid "Default set successfully"
 msgstr ""
 
@@ -591,6 +626,10 @@ msgstr ""
 #. Label of a Section Break field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
 msgid "Defaults"
+msgstr ""
+
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.py:76
+msgid "Delete Not Allowed"
 msgstr ""
 
 #. Option for the 'Status' (Select) field in DocType 'Party Master'
@@ -646,7 +685,7 @@ msgstr ""
 msgid "Document Type"
 msgstr ""
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:181
+#: uph/party/doctype/party_master_settings/party_master_settings.py:197
 msgid "Document Type and Parent Doctype are Required"
 msgstr ""
 
@@ -667,11 +706,11 @@ msgstr ""
 msgid "Download PDF"
 msgstr ""
 
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:97
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:119
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:103
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:125
 #: uph/party/report/party_account_statement/party_account_statement.html:115
-#: uph/party/report/party_account_statement/party_account_statement.py:308
-#: uph/party/report/party_account_statement/party_account_statement.py:343
+#: uph/party/report/party_account_statement/party_account_statement.py:309
+#: uph/party/report/party_account_statement/party_account_statement.py:344
 #: uph/party/report/party_ledger/party_ledger.py:261
 #: uph/party/report/party_ledger/party_ledger.py:270
 msgid "Dr"
@@ -681,21 +720,24 @@ msgstr ""
 msgid "Draft"
 msgstr ""
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:246
+#: uph/party/controllers/mdm.py:280
+msgid "Duplicate Blocked"
+msgstr ""
+
+#: uph/party/doctype/party_master_settings/party_master_settings.py:262
 msgid "Duplicate Document Type mapping found at row {0}"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/party.js:916
+#: uph/public/js/utils/party.js:892
 msgid "Duplicate Documents Found"
 msgstr ""
 
-#: uph/party/controllers/party.py:211
+#: uph/party/controllers/party.py:199
 msgid "Duplicate Exists"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/party.js:892 uph/public/js/utils/party.js:957
+#: uph/party/controllers/mdm.py:282 uph/public/js/utils/party.js:868
+#: uph/public/js/utils/party.js:933
 msgid "Duplicate Warning"
 msgstr ""
 
@@ -711,16 +753,15 @@ msgstr ""
 msgid "Dynamic type As Parent"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_tree.js:289
+#: uph/party/doctype/party_master/party_master_tree.js:345
 msgid "Edit"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:210
-#: uph/public/js/utils/party.js:299
+#: uph/public/js/utils/party.js:245 uph/public/js/utils/party.js:249
 msgid "Edit Before Save"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:430
+#: uph/public/js/utils/party.js:406
 msgid "Edit in Full Form"
 msgstr ""
 
@@ -736,7 +777,6 @@ msgstr ""
 
 #. Label of a Read Only field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
 #: uph/public/js/utils/party_master_manager.js:147
 msgid "Email Id"
 msgstr ""
@@ -755,6 +795,11 @@ msgstr ""
 #. Label of a Check field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
 msgid "Enable Buying"
+msgstr ""
+
+#. Label of a Check field in DocType 'Party Master Settings'
+#: uph/party/doctype/party_master_settings/party_master_settings.json
+msgid "Enable Party Analytic Accounting"
 msgstr ""
 
 #. Label of a Check field in DocType 'Party Master'
@@ -794,36 +839,26 @@ msgstr ""
 msgid "Enforce Strict Currency Accounting"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/utils.js:185
+#: uph/public/js/utils/utils.js:183
 msgid "Error"
 msgstr ""
 
-#: uph/party/controllers/test/test_create_pm_records.py:50
-msgid "Error creating Party Master records"
-msgstr ""
-
-#: uph/party/controllers/test/test_create_pm_records.py:104
-msgid "Error creating Party Master {0}"
-msgstr ""
-
-#: uph/party/controllers/party.py:443
+#: uph/party/controllers/party.py:431
 msgid "Error exist as no mapping Could be this function run before update cache"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:610
+#: uph/public/js/utils/party.js:586
 msgid "Error saving document: {0}"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:350
+#: uph/party/doctype/party_master/party_master.js:358
 msgid "Error saving form. Check console."
 msgstr ""
 
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:230
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:236
 msgid "Exchange Rate"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
 #: uph/public/js/utils/party_master_manager.js:62
 #: uph/public/js/utils/party_master_manager.js:117
 msgid "Exists: "
@@ -834,12 +869,16 @@ msgstr ""
 msgid "Factory / Plant"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:639
+#: uph/public/js/utils/party.js:615
 msgid "Failed to load Party Master details."
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:210
+#: uph/party/doctype/party_master/party_master.js:207
 msgid "Fetch From :"
+msgstr ""
+
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.js:12
+msgid "Fetch Related Parties"
 msgstr ""
 
 #. Label of a Select field in DocType 'Party Master Settings Party Type'
@@ -852,11 +891,11 @@ msgstr ""
 msgid "Fieldname"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_tree.js:114
+#: uph/party/doctype/party_master/party_master_tree.js:116
 msgid "Financial Statements"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:1120
+#: uph/party/doctype/party_master/party_master.py:1100
 msgid "Following fields are mandatory to create address:"
 msgstr ""
 
@@ -874,11 +913,11 @@ msgstr ""
 msgid "For Group"
 msgstr ""
 
-#: uph/setup/install.py:55
+#: uph/setup/install.py:57
 msgid "Foreign Customer"
 msgstr ""
 
-#: uph/setup/install.py:60
+#: uph/setup/install.py:62
 msgid "Foreign Supplier"
 msgstr ""
 
@@ -911,6 +950,11 @@ msgstr ""
 #. Label of a Link field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
 msgid "Gender"
+msgstr ""
+
+#. Label of a Section Break field in DocType 'Party Master Settings'
+#: uph/party/doctype/party_master_settings/party_master_settings.json
+msgid "General Configuration"
 msgstr ""
 
 #. Option for the 'Legal Entity Type' (Select) field in DocType 'Party Master'
@@ -979,6 +1023,10 @@ msgstr ""
 msgid "Hide Warnings Message"
 msgstr ""
 
+#: uph/party/doctype/party_master/party_master_dashboard.py:44
+msgid "Human Resources"
+msgstr ""
+
 #. Description of the 'Party Type' (Link) field in DocType 'Party Master
 #. Settings DocType'
 #: uph/party/doctype/party_master_settings_doctype/party_master_settings_doctype.json
@@ -1017,11 +1065,11 @@ msgstr ""
 msgid "Industry"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:1065
+#: uph/party/doctype/party_master/party_master.py:1045
 msgid "Invalid data format for selection. Expected list of lists."
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:583
+#: uph/public/js/utils/party.js:559
 msgid "Invalid selection. Please choose a valid party."
 msgstr ""
 
@@ -1059,6 +1107,11 @@ msgstr ""
 msgid "Journal Entry"
 msgstr ""
 
+#. Label of a Card Break in the Party Workspace
+#: uph/party/workspace/party/party.json
+msgid "Key Reports"
+msgstr ""
+
 #. Option for the 'Legal Entity Type' (Select) field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
 msgid "LLC"
@@ -1083,34 +1136,32 @@ msgstr ""
 msgid "Legal Identity"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11 uph/public/js/utils/utils.js:91
+#: uph/public/js/utils/utils.js:89
 msgid "Link"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11 uph/public/js/utils/utils.js:73
-#: uph/public/js/utils/utils.js:75
+#: uph/public/js/utils/utils.js:71 uph/public/js/utils/utils.js:73
 msgid "Link to Party Master"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/utils.js:123
+#: uph/public/js/utils/utils.js:121
 msgid "Linked new Party Master {0}"
 msgstr ""
 
-#: uph/party/report/party_master_health_report/party_master_health_report.py:30
+#: uph/party/report/party_master_health_report/party_master_health_report.py:27
 msgid "Linked vs Unlinked Party Stats"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:197
-#: uph/party/doctype/party_master/party_master.js:208
+#: uph/party/doctype/party_master/party_master.js:194
+#: uph/party/doctype/party_master/party_master.js:205
 msgid "Linking Existing {0} ({1})"
 msgstr ""
 
-#: uph/setup/install.py:56
+#: uph/setup/install.py:58
 msgid "Local Customer"
 msgstr ""
 
-#: uph/setup/install.py:61
+#: uph/setup/install.py:63
 msgid "Local Supplier"
 msgstr ""
 
@@ -1130,11 +1181,11 @@ msgstr ""
 msgid "Match Exist Party Master on Voucher To Party"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:1123
+#: uph/party/doctype/party_master/party_master.py:1103
 msgid "Missing Values Required"
 msgstr ""
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:380
+#: uph/party/doctype/party_master_settings/party_master_settings.py:396
 msgid "Missing document_type in docfield"
 msgstr ""
 
@@ -1144,35 +1195,33 @@ msgstr ""
 msgid "Mobile No"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
 #: uph/public/js/utils/party_master_manager.js:145
 msgid "Mobile Number"
 msgstr ""
 
 #. Label of a Section Break field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
 #: uph/public/js/utils/party_master_manager.js:143
 msgid "More Details"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:128
+#: uph/party/doctype/party_master/party_master.py:175
 msgid "Must Mention Reason to put This Party {0} as Disputed"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:394
+#: uph/party/doctype/party_master/party_master.py:445
 msgid "Must Select at Least One Party"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:286
+#: uph/party/doctype/party_master/party_master.py:337
 msgid "Must Select at least one Party"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:995
+#: uph/party/doctype/party_master/party_master.py:975
 msgid "Must Set Party Master"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:415
+#: uph/party/doctype/party_master/party_master.py:466
 msgid "Must Set at least One Secondary Role"
 msgstr ""
 
@@ -1181,9 +1230,9 @@ msgstr ""
 msgid "NGO"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:281
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:64
-#: uph/public/js/utils/party.js:789
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.js:105
+#: uph/party/doctype/party_master/party_master.js:278
+#: uph/public/js/utils/party.js:64 uph/public/js/utils/party.js:765
 msgid "Name"
 msgstr ""
 
@@ -1192,12 +1241,33 @@ msgstr ""
 msgid "National ID"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_tree.js:259
+#: uph/party/doctype/party_master/party_master.js:380
+msgid "Net Payable: {0}"
+msgstr ""
+
+#: uph/party/doctype/party_master/party_master.js:378
+msgid "Net Receivable: {0}"
+msgstr ""
+
+#: uph/party/doctype/party_master/party_master_tree.js:315
 msgid "New"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:154
+#: uph/party/doctype/party_master/party_master.js:381
+msgid "No Outstanding Balance"
+msgstr ""
+
+#: uph/party/doctype/party_master/party_master.js:151
 msgid "No Selection"
+msgstr ""
+
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.js:59
+msgid "No related parties found."
+msgstr ""
+
+#. Label of a Data field in DocType 'Party Master'
+#: uph/party/doctype/party_master/party_master.json
+msgid "Normalized Party Name"
 msgstr ""
 
 #. Label of a Link field in DocType 'Party Master'
@@ -1210,11 +1280,11 @@ msgstr ""
 msgid "On Hold"
 msgstr ""
 
-#: uph/party/report/party_account_statement/party_account_statement.py:356
+#: uph/party/report/party_account_statement/party_account_statement.py:357
 msgid "On Hold Vouchers:"
 msgstr ""
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:174
+#: uph/party/doctype/party_master_settings/party_master_settings.py:190
 msgid "Only System Managers are allowed to update this settings."
 msgstr ""
 
@@ -1229,9 +1299,9 @@ msgstr ""
 msgid "Opening"
 msgstr ""
 
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:108
-#: uph/party/report/party_account_statement/party_account_statement.py:306
-#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:272
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:114
+#: uph/party/report/party_account_statement/party_account_statement.py:307
+#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:274
 msgid "Opening Balance"
 msgstr ""
 
@@ -1255,6 +1325,11 @@ msgstr ""
 msgid "Override Party Details API "
 msgstr ""
 
+#. Label of a Tab Break field in DocType 'Party Master Settings'
+#: uph/party/doctype/party_master_settings/party_master_settings.json
+msgid "PAA"
+msgstr ""
+
 #. Label of a Link field in DocType 'Party Master Settings DocType'
 #: uph/party/doctype/party_master_settings_doctype/party_master_settings_doctype.json
 msgid "Parent DocType"
@@ -1264,13 +1339,8 @@ msgstr ""
 msgid "Parent Doctype fields auto-lock for non-child document types"
 msgstr ""
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:190
+#: uph/party/doctype/party_master_settings/party_master_settings.py:206
 msgid "Parent Doctype is Required at row {0}"
-msgstr ""
-
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/utils.js:142
-msgid "Parent Party :{0}"
 msgstr ""
 
 #. Label of a Link field in DocType 'Party Master'
@@ -1278,24 +1348,29 @@ msgstr ""
 msgid "Parent Party Master"
 msgstr ""
 
-#: uph/party/controllers/test/test_create_pm_records.py:81
-msgid "Parent Party Master {0} does not exist"
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.py:50
+msgid "Parent Party Master is not set."
+msgstr ""
+
+#: uph/public/js/utils/utils.js:140
+msgid "Parent Party: {0}"
 msgstr ""
 
 #. Label of a Table field in DocType 'Party Master'
-#: uph/party/doctype/party_master/party_master.js:86
-#: uph/party/doctype/party_master/party_master.js:119
-#: uph/party/doctype/party_master/party_master.js:262
-#: uph/party/doctype/party_master/party_master.js:272
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.js:98
+#: uph/party/doctype/party_master/party_master.js:84
+#: uph/party/doctype/party_master/party_master.js:116
+#: uph/party/doctype/party_master/party_master.js:259
+#: uph/party/doctype/party_master/party_master.js:269
 #: uph/party/doctype/party_master/party_master.json
 msgid "Parties"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:147
+#: uph/party/doctype/party_master/party_master.js:144
 msgid "Parties Allocations"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:171
+#: uph/party/doctype/party_master/party_master.js:168
 msgid "Parties successfully linked!"
 msgstr ""
 
@@ -1305,28 +1380,31 @@ msgstr ""
 msgid "Partnership"
 msgstr ""
 
+#. Label of a Dynamic Link field in DocType 'Party Analytic Accounting Party'
 #. Label of a Dynamic Link field in DocType 'Party Master Parties'
 #. Name of a Workspace
-#: uph/party/doctype/party_master/party_master.js:280
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.js:104
+#: uph/party/doctype/party_analytic_accounting_party/party_analytic_accounting_party.json
+#: uph/party/doctype/party_master/party_master.js:277
 #: uph/party/doctype/party_master_parties/party_master_parties.json
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.js:23
 #: uph/party/report/party_account_balances/party_account_balances.js:16
 #: uph/party/report/party_account_statement/party_account_statement.js:23
-#: uph/party/report/party_account_statement/party_account_statement.py:593
+#: uph/party/report/party_account_statement/party_account_statement.py:594
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.js:16
-#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:688
+#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:689
 #: uph/party/report/party_ledger/party_ledger.py:519
 #: uph/party/workspace/party/party.json
 msgid "Party"
 msgstr ""
 
-#: uph/party/controllers/party.py:256
+#: uph/party/controllers/party.py:244
 msgid "Party : {0} Has been deleted"
 msgstr ""
 
 #. Name of a report
 #. Label of a Link in the Party Workspace
-#: uph/party/doctype/party_master/party_master_dashboard.py:43
+#: uph/party/doctype/party_master/party_master_dashboard.py:58
 #: uph/party/report/party_account_balances/party_account_balances.json
 #: uph/party/workspace/party/party.json
 msgid "Party Account Balances"
@@ -1347,10 +1425,12 @@ msgid "Party Accounting Ledger"
 msgstr ""
 
 #. Name of a DocType
+#. Label of a Link in the Party Workspace
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
 #: uph/party/report/party_account_balances/party_account_balances.js:56
 #: uph/party/report/party_account_statement/party_account_statement.js:150
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.js:118
+#: uph/party/workspace/party/party.json
 msgid "Party Analytic Accounting"
 msgstr ""
 
@@ -1359,9 +1439,22 @@ msgstr ""
 msgid "Party Analytic Accounting Allowed Company"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:228
-#: uph/public/js/utils/party.js:317 uph/public/js/utils/party.js:425
+#. Name of a DocType
+#: uph/party/doctype/party_analytic_accounting_party/party_analytic_accounting_party.json
+msgid "Party Analytic Accounting Party"
+msgstr ""
+
+#: uph/party/controllers/party.py:153
+msgid "Party Analytic Accounting {0} belongs to Party Master {1}, but this document is linked to {2}"
+msgstr ""
+
+#: uph/public/js/utils/party.js:401
 msgid "Party Created Successfully"
+msgstr ""
+
+#. Label of a shortcut in the Party Workspace
+#: uph/party/workspace/party/party.json
+msgid "Party Dashboard"
 msgstr ""
 
 #. Label of a Text field in DocType 'Party Master'
@@ -1375,37 +1468,40 @@ msgstr ""
 msgid "Party FieldName"
 msgstr ""
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:218
+#: uph/party/doctype/party_master_settings/party_master_settings.py:234
 msgid "Party Fieldname \"{0}\" does not exist in {1} (row {2})"
 msgstr ""
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:226
+#: uph/party/doctype/party_master_settings/party_master_settings.py:242
 msgid "Party Fieldname at the target Document Type at row {0} must be either a Link or Dynamic Link"
 msgstr ""
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:210
+#: uph/party/doctype/party_master_settings/party_master_settings.py:226
 msgid "Party Fieldname is required at the target Document Type at row {0}"
 msgstr ""
 
 #. Name of a report
+#. Label of a Link in the Party Workspace
 #: uph/party/report/party_ledger/party_ledger.json
+#: uph/party/workspace/party/party.json
 msgid "Party Ledger"
 msgstr ""
 
 #. Label of a Link field in DocType 'Party Analytic Accounting'
 #. Name of a DocType
 #. Label of a Tab Break field in DocType 'Party Master Settings'
+#. Label of a Link in the Party Workspace
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
 #: uph/party/doctype/party_master/party_master.json
-#: uph/party/doctype/party_master/party_master_tree.js:198
+#: uph/party/doctype/party_master/party_master_tree.js:254
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 #: uph/party/report/party_account_balances/party_account_balances.py:152
-#: uph/party/report/party_account_statement/party_account_statement.py:576
-#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:671
+#: uph/party/report/party_account_statement/party_account_statement.py:577
+#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:672
 #: uph/party/report/party_ledger/party_ledger.js:22
 #: uph/party/report/party_master_health_report/party_master_health_report.js:13
 #: uph/party/report/party_master_ledger/party_master_ledger.js:22
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11 uph/public/js/utils/utils.js:78
+#: uph/party/workspace/party/party.json uph/public/js/utils/utils.js:76
 msgid "Party Master"
 msgstr ""
 
@@ -1419,7 +1515,7 @@ msgstr ""
 msgid "Party Master Accounts"
 msgstr ""
 
-#: uph/party/controllers/party.py:168
+#: uph/party/controllers/party.py:134
 msgid "Party Master Auto-set"
 msgstr ""
 
@@ -1434,7 +1530,9 @@ msgid "Party Master Fields"
 msgstr ""
 
 #. Name of a report
+#. Label of a Link in the Party Workspace
 #: uph/party/report/party_master_health_report/party_master_health_report.json
+#: uph/party/workspace/party/party.json
 msgid "Party Master Health Report"
 msgstr ""
 
@@ -1454,7 +1552,9 @@ msgid "Party Master Role"
 msgstr ""
 
 #. Name of a DocType
+#. Label of a Link in the Party Workspace
 #: uph/party/doctype/party_master_settings/party_master_settings.json
+#: uph/party/workspace/party/party.json
 msgid "Party Master Settings"
 msgstr ""
 
@@ -1466,10 +1566,6 @@ msgstr ""
 #. Name of a DocType
 #: uph/party/doctype/party_master_settings_doctype/party_master_settings_doctype.json
 msgid "Party Master Settings DocType"
-msgstr ""
-
-#: uph/party/controllers/queries.py:489
-msgid "Party Master Settings DocType does not exist!"
 msgstr ""
 
 #. Name of a DocType
@@ -1496,12 +1592,12 @@ msgstr ""
 msgid "Party Master and Company are Mandatory"
 msgstr ""
 
-#: uph/party/controllers/party.py:149
+#: uph/party/controllers/party.py:113
 msgid "Party Master for {0} set to {1} automatically"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:33
-#: uph/public/js/utils/party.js:561 uph/public/js/utils/party.js:750
+#: uph/public/js/utils/party.js:33 uph/public/js/utils/party.js:537
+#: uph/public/js/utils/party.js:726
 msgid "Party Master has no Parties Linked"
 msgstr ""
 
@@ -1509,24 +1605,29 @@ msgstr ""
 msgid "Party Master is Mandatory"
 msgstr ""
 
-#: uph/party/controllers/party.py:186
+#: uph/party/controllers/party.py:174
 msgid "Party Master is mandatory for {0},<br> You can unset Mandatory in Party Master Settings"
 msgstr ""
 
-#: uph/party/controllers/party.py:155
+#: uph/party/controllers/party.py:119
 msgid "Party Master mismatch or missing for Party {0} ({1})"
 msgstr ""
 
-#: uph/party/controllers/party.py:194
+#: uph/party/controllers/party.py:182
 msgid "Party Master {0} Could be not Exists or is group or has not Role of {1} or not enabled"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:524
+#: uph/party/doctype/party_master/party_master.py:611
 msgid "Party Master {0} does not exist"
 msgstr ""
 
-#: uph/party/controllers/party.py:212
+#: uph/party/controllers/party.py:200
 msgid "Party Master {0} has a Party {1} with {2}"
+msgstr ""
+
+#. Label of a Card Break in the Party Workspace
+#: uph/party/workspace/party/party.json
+msgid "Party Masters"
 msgstr ""
 
 #. Label of a Data field in DocType 'Party Master'
@@ -1536,12 +1637,12 @@ msgstr ""
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.js:10
 #: uph/party/report/party_account_balances/party_account_balances.py:157
 #: uph/party/report/party_account_statement/party_account_statement.js:10
-#: uph/party/report/party_account_statement/party_account_statement.py:571
-#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:665
+#: uph/party/report/party_account_statement/party_account_statement.py:572
+#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:667
 msgid "Party Name"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:135
+#: uph/party/doctype/party_master/party_master.py:182
 msgid "Party Name {0} already exists"
 msgstr ""
 
@@ -1550,7 +1651,7 @@ msgstr ""
 msgid "Party Number"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:115
+#: uph/party/doctype/party_master/party_master.py:162
 msgid "Party Number is Mandatory for Root Group Node"
 msgstr ""
 
@@ -1578,11 +1679,14 @@ msgstr ""
 msgid "Party Stats"
 msgstr ""
 
+#. Label of a Link field in DocType 'Party Analytic Accounting Party'
 #. Label of a Link field in DocType 'Party Master'
 #. Label of a Select field in DocType 'Party Master Parties'
 #. Label of a Link field in DocType 'Party Master Settings DocType'
 #. Label of a Link field in DocType 'Party Master Settings Party Type'
-#: uph/party/doctype/party_master/party_master.js:282
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.js:103
+#: uph/party/doctype/party_analytic_accounting_party/party_analytic_accounting_party.json
+#: uph/party/doctype/party_master/party_master.js:279
 #: uph/party/doctype/party_master/party_master.json
 #: uph/party/doctype/party_master_parties/party_master_parties.json
 #: uph/party/doctype/party_master_settings_doctype/party_master_settings_doctype.json
@@ -1590,9 +1694,9 @@ msgstr ""
 #: uph/party/report/party_account_balances/party_account_balances.js:109
 #: uph/party/report/party_account_balances/party_account_balances.py:147
 #: uph/party/report/party_account_statement/party_account_statement.js:186
-#: uph/party/report/party_account_statement/party_account_statement.py:587
+#: uph/party/report/party_account_statement/party_account_statement.py:588
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.js:154
-#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:682
+#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:683
 #: uph/party/report/party_ledger/party_ledger.py:507
 msgid "Party Type"
 msgstr ""
@@ -1632,7 +1736,7 @@ msgstr ""
 msgid "Party Type Rules"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:148
+#: uph/party/doctype/party_master/party_master.py:194
 msgid "Party Type {0} can not be duplicate"
 msgstr ""
 
@@ -1641,7 +1745,7 @@ msgstr ""
 msgid "Party Types"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:951
+#: uph/party/doctype/party_master/party_master.py:931
 msgid "Party with this name already exists"
 msgstr ""
 
@@ -1654,15 +1758,19 @@ msgstr ""
 msgid "Pay"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_tree.js:109
+#: uph/party/doctype/party_master/party_master_tree.js:111
 msgid "Please select a Company first"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:574
+#: uph/public/js/utils/party.js:550
 msgid "Please select a party."
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:322
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.js:117
+msgid "Please select at least one party."
+msgstr ""
+
+#: uph/party/doctype/party_master/party_master.js:332
 msgid "Please select at least one role."
 msgstr ""
 
@@ -1671,9 +1779,9 @@ msgstr ""
 msgid "Portal Users"
 msgstr ""
 
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:184
-#: uph/party/report/party_account_statement/party_account_statement.py:517
-#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:611
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:190
+#: uph/party/report/party_account_statement/party_account_statement.py:518
+#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:613
 #: uph/party/report/party_ledger/party_ledger.py:442
 msgid "Posting Date"
 msgstr ""
@@ -1683,7 +1791,6 @@ msgstr ""
 msgid "Primary Address"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
 #: uph/public/js/utils/party_master_manager.js:148
 msgid "Primary Address Details"
 msgstr ""
@@ -1693,7 +1800,6 @@ msgstr ""
 msgid "Primary Address and Contact"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
 #: uph/public/js/utils/party_master_manager.js:144
 msgid "Primary Contact Details"
 msgstr ""
@@ -1703,7 +1809,7 @@ msgstr ""
 msgid "Primary Party Master"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_tree.js:173
+#: uph/party/doctype/party_master/party_master_tree.js:229
 msgid "Print"
 msgstr ""
 
@@ -1712,14 +1818,13 @@ msgstr ""
 msgid "Print Language"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/party.js:896
+#: uph/public/js/utils/party.js:872
 msgid "Proceed Anyway"
 msgstr ""
 
 #: uph/party/report/party_account_balances/party_account_balances.js:81
 #: uph/party/report/party_account_statement/party_account_statement.js:175
-#: uph/party/report/party_account_statement/party_account_statement.py:630
+#: uph/party/report/party_account_statement/party_account_statement.py:631
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.js:143
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:726
 msgid "Project"
@@ -1736,7 +1841,7 @@ msgstr ""
 msgid "Purchasing DocType"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:92
+#: uph/party/doctype/party_master/party_master.js:90
 msgid "Reassign Linked Parties"
 msgstr ""
 
@@ -1753,20 +1858,19 @@ msgctxt "Voucher Type"
 msgid "Receive"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_tree.js:179
+#: uph/party/doctype/party_master/party_master_tree.js:235
 msgid "Refresh"
 msgstr ""
 
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:264
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:270
 #: uph/party/report/party_account_statement/party_account_statement.html:98
-#: uph/party/report/party_account_statement/party_account_statement.py:536
-#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:630
+#: uph/party/report/party_account_statement/party_account_statement.py:537
+#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:632
 #: uph/party/report/party_ledger/party_ledger.py:448
 msgid "Remarks"
 msgstr ""
 
-#. Label of a Card Break in the Party Workspace
-#: uph/party/workspace/party/party.json
+#: uph/party/doctype/party_master/party_master_dashboard.py:55
 msgid "Reports"
 msgstr ""
 
@@ -1787,8 +1891,14 @@ msgstr ""
 msgid "Reselect, if the chosen contact is edited after save"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11 uph/public/js/utils/utils.js:49
+#: uph/public/js/utils/utils.js:47
 msgid "Reset As Default for Party Master"
+msgstr ""
+
+#. Option for the 'Allowed or Restrict to Below Rule ' (Select) field in
+#. DocType 'Party Analytic Accounting'
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
+msgid "Restrict"
 msgstr ""
 
 #: uph/party/report/party_account_balances/party_account_balances.js:191
@@ -1800,13 +1910,22 @@ msgstr ""
 msgid "Right"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:302
-msgid "Roles"
+#. Label of a Section Break field in DocType 'Party Analytic Accounting'
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
+msgid "Rule Applied"
+msgstr ""
+
+#: uph/public/js/utils/party.js:234
+msgid "Rule Value"
 msgstr ""
 
 #: uph/party/report/party_account_statement/party_account_statement.js:103
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.js:71
 msgid "SHow Voucher stats and Counts"
+msgstr ""
+
+#: uph/public/js/utils/party.js:203
+msgid "Salary Currency"
 msgstr ""
 
 #. Name of a role
@@ -1827,41 +1946,39 @@ msgstr ""
 msgid "Salutation"
 msgstr ""
 
-#: uph/party/controllers/test/test_create_pm_records.py:13
-msgid "Sample Party Master records already exist"
-msgstr ""
-
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:205
-#: uph/public/js/utils/party.js:294
+#: uph/public/js/utils/party.js:240 uph/public/js/utils/party.js:245
 msgid "Save"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:347
-msgid "Secondary roles added and form saved"
+#: uph/party/doctype/party_master/party_master.js:354
+msgid "Secondary roles added successfully"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:571
+#: uph/public/js/utils/party.js:547
 msgid "Select"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:46
-#: uph/public/js/utils/party.js:51 uph/public/js/utils/party.js:539
-#: uph/public/js/utils/party.js:758 uph/public/js/utils/party.js:763
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.js:93
+msgid "Select Parties to Add"
+msgstr ""
+
+#: uph/public/js/utils/party.js:46 uph/public/js/utils/party.js:51
+#: uph/public/js/utils/party.js:515 uph/public/js/utils/party.js:734
+#: uph/public/js/utils/party.js:739
 msgid "Select Party"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:57
-#: uph/public/js/utils/party.js:186 uph/public/js/utils/party.js:275
-#: uph/public/js/utils/party.js:401 uph/public/js/utils/party.js:529
-#: uph/public/js/utils/party.js:781
+#: uph/public/js/utils/party.js:57 uph/public/js/utils/party.js:186
+#: uph/public/js/utils/party.js:377 uph/public/js/utils/party.js:505
+#: uph/public/js/utils/party.js:757
 msgid "Select Party Type"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:569
+#: uph/public/js/utils/party.js:545
 msgid "Select a Party"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_tree.js:42
+#: uph/party/doctype/party_master/party_master_tree.js:40
 msgid "Select a group node first."
 msgstr ""
 
@@ -1874,6 +1991,10 @@ msgstr ""
 #: uph/party/report/party_ledger/party_ledger.js:139
 #: uph/party/report/party_master_ledger/party_master_ledger.js:139
 msgid "Selected Voucher Not Include"
+msgstr ""
+
+#: uph/party/doctype/party_master/party_master_dashboard.py:21
+msgid "Selling"
 msgstr ""
 
 #. Option for the 'Document Categories' (Select) field in DocType 'Party Master
@@ -1891,11 +2012,11 @@ msgstr ""
 msgid "Series"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:799
+#: uph/public/js/utils/party.js:775
 msgid "Set"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:546
+#: uph/public/js/utils/party.js:522
 msgid "Set As Default {0}"
 msgstr ""
 
@@ -1907,17 +2028,16 @@ msgstr ""
 msgid "Set From Date Must be priore Dates to To current Date"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:130
+#: uph/public/js/utils/party.js:130
 msgid "Set Party"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:225
+#: uph/party/doctype/party_master/party_master.py:273
 msgid "Setting Primary role of same Party Type is Not Allowed"
 msgstr ""
 
 #. Label of a Tab Break field in DocType 'Party Master'
 #. Label of a Card Break in the Party Workspace
-#. Label of a Link in the Party Workspace
 #: uph/party/doctype/party_master/party_master.json
 #: uph/party/workspace/party/party.json
 msgid "Settings"
@@ -1926,11 +2046,6 @@ msgstr ""
 #. Option for the 'Party Type' (Select) field in DocType 'Party Master Parties'
 #: uph/party/doctype/party_master_parties/party_master_parties.json
 msgid "Shareholder"
-msgstr ""
-
-#. Paragraph text in the Party Workspace
-#: uph/party/workspace/party/party.json
-msgid "Shortcut"
 msgstr ""
 
 #: uph/party/report/party_account_statement/party_account_statement.js:91
@@ -1976,7 +2091,7 @@ msgstr ""
 msgid "Sole Proprietor"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:175
+#: uph/party/doctype/party_master/party_master.js:172
 msgid "Something went wrong. Please check console."
 msgstr ""
 
@@ -1988,7 +2103,6 @@ msgstr ""
 msgid "Start Date"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
 #: uph/public/js/utils/party_master_manager.js:154
 msgid "State"
 msgstr ""
@@ -2002,7 +2116,7 @@ msgstr ""
 #. Label of a Select field in DocType 'Party Master'
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
 #: uph/party/doctype/party_master/party_master.json
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:204
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:210
 #: uph/party/report/party_account_balances/party_account_balances.py:207
 msgid "Status"
 msgstr ""
@@ -2018,18 +2132,15 @@ msgstr ""
 msgid "Submitted"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:144
+#: uph/public/js/utils/party.js:144
 msgid "Successfully Set {0} as Default for {1}"
 msgstr ""
 
-#: uph/party/controllers/test/test_create_pm_records.py:46
-msgid "Successfully created sample Party Master records"
-msgstr ""
-
 #. Option for the 'Party Type' (Select) field in DocType 'Party Master Parties'
+#. Label of a Link in the Party Workspace
 #. Label of a shortcut in the Party Workspace
 #: uph/party/doctype/party_master_parties/party_master_parties.json
-#: uph/party/workspace/party/party.json uph/setup/install.py:59
+#: uph/party/workspace/party/party.json uph/setup/install.py:61
 msgid "Supplier"
 msgstr ""
 
@@ -2042,23 +2153,19 @@ msgstr ""
 msgid "Suspended"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/utils.js:157
+#: uph/public/js/utils/utils.js:155
 msgid "Sync Party Master Details"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/utils.js:178
+#: uph/public/js/utils/utils.js:176
 msgid "Synchronization complete."
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/utils.js:186
+#: uph/public/js/utils/utils.js:184
 msgid "Synchronization failed. Please check the console."
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/utils.js:175
+#: uph/public/js/utils/utils.js:173
 msgid "Syncing details..."
 msgstr ""
 
@@ -2107,8 +2214,8 @@ msgstr ""
 msgid "Territory"
 msgstr ""
 
-#: uph/party/report/party_account_statement/party_account_statement.py:564
-#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:658
+#: uph/party/report/party_account_statement/party_account_statement.py:565
+#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:660
 #: uph/party/report/party_ledger/party_ledger.py:483
 msgid "The Balance"
 msgstr ""
@@ -2117,12 +2224,11 @@ msgstr ""
 msgid "The End Balance"
 msgstr ""
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:202
+#: uph/party/doctype/party_master_settings/party_master_settings.py:218
 msgid "The Parent Doctype at row {0} has no Child Table pointing to {1}"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/party.js:941
+#: uph/public/js/utils/party.js:917
 msgid "There Are Some Duplicate:"
 msgstr ""
 
@@ -2136,31 +2242,29 @@ msgstr ""
 msgid "This Party Master has no Parties linked to"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:529
+#: uph/party/doctype/party_master/party_master.py:616
 msgid "This doctype is not properly configured as a tree (missing lft/rgt fields)"
 msgstr ""
 
-#: uph/party/report/party_master_health_report/party_master_health_report.py:38
+#: uph/party/report/party_master_health_report/party_master_health_report.py:35
 msgid "This is Old Report Build query Again to get fresh Stats"
 msgstr ""
 
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:36
+#. Description of a DocType
+#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
+msgid "This record enforces the principle of Accounting Non-Duplication for the Party Master. It eliminates the need to create redundant accounts for the same customer or supplier (e.g., customer branches) solely for segmented reporting or financial data separation. Instead, it is used to define and assign unique Analytical Accounting Dimensions to each related entity of the Party Master. This approach maintains a single, unified Party record while enabling detailed financial segmentation and reporting through customized analytical dimensions (PAA), significantly boosting accounting governance efficiency and reducing Chart of Accounts complexity."
+msgstr ""
+
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:42
 msgid "This report is based on Transaction date (Timeline) If you want to see the transactions in the Party Master, please check the Party Master Transactions Report"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
 #: uph/public/js/utils/party_master_manager.js:48
 msgid "This will be the Primary Role for This Party"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/utils.js:160
+#: uph/public/js/utils/utils.js:158
 msgid "This will synchronize all details from Party Master as configured in settings. Continue?"
-msgstr ""
-
-#. Label of a Link in the Party Workspace
-#: uph/party/workspace/party/party.json
-msgid "Timeline Account Statement"
 msgstr ""
 
 #. Label of a Data field in DocType 'Party Analytic Accounting'
@@ -2175,7 +2279,7 @@ msgstr ""
 msgid "To Date"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:127
+#: uph/party/doctype/party_master/party_master.js:124
 msgid "To Party Master"
 msgstr ""
 
@@ -2186,6 +2290,10 @@ msgstr ""
 #. Label of a Int field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
 msgid "Total Linked Party"
+msgstr ""
+
+#: uph/party/doctype/party_master/party_master.js:403
+msgid "Total Unpaid Invoices: {0}"
 msgstr ""
 
 #. Label of a Section Break field in DocType 'Party Master Settings'
@@ -2205,17 +2313,15 @@ msgstr ""
 msgid "Under Review"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/utils.js:146
+#: uph/public/js/utils/utils.js:144
 msgid "Unlink Party Master"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
-#: uph/public/js/utils/party.js:936
+#: uph/public/js/utils/party.js:912
 msgid "Update Date"
 msgstr ""
 
-#: uph/party/controllers/party.py:433
+#: uph/party/controllers/party.py:421
 msgid "Uph:Party Master Field does not Exist on {0}"
 msgstr ""
 
@@ -2224,8 +2330,8 @@ msgstr ""
 msgid "Validaty"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.js:82
-#: uph/party/doctype/party_master/party_master.js:88
+#: uph/party/doctype/party_master/party_master.js:80
+#: uph/party/doctype/party_master/party_master.js:86
 #: uph/party/report/party_account_balances/party_account_balances.js:232
 #: uph/party/report/party_account_balances/party_account_balances.js:243
 #: uph/party/report/party_account_statement/party_account_statement.js:276
@@ -2233,31 +2339,31 @@ msgstr ""
 msgid "View"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_tree.js:303
+#: uph/party/doctype/party_master/party_master_tree.js:359
 msgid "View Ledger"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_tree.js:167
+#: uph/party/doctype/party_master/party_master_tree.js:223
 msgid "View List"
 msgstr ""
 
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:190
-#: uph/party/report/party_account_statement/party_account_statement.py:523
-#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:617
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:196
+#: uph/party/report/party_account_statement/party_account_statement.py:524
+#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:619
 #: uph/party/report/party_ledger/party_ledger.py:455
 msgid "Voucher No"
 msgstr ""
 
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:258
-#: uph/party/report/party_account_statement/party_account_statement.py:530
-#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:624
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:264
+#: uph/party/report/party_account_statement/party_account_statement.py:531
+#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:626
 #: uph/party/report/party_ledger/party_ledger.py:527
 msgid "Voucher Subtype"
 msgstr ""
 
-#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:271
-#: uph/party/report/party_account_statement/party_account_statement.py:604
-#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:699
+#: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:277
+#: uph/party/report/party_account_statement/party_account_statement.py:605
+#: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:700
 #: uph/party/report/party_ledger/party_ledger.py:490
 msgid "Voucher Type"
 msgstr ""
@@ -2275,7 +2381,7 @@ msgstr ""
 msgid "Warn If Un-Submitted Documents"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:867
+#: uph/public/js/utils/party.js:843
 msgid "Warning: Found {0} existing document(s) with the same Party Master and posting date:"
 msgstr ""
 
@@ -2298,15 +2404,14 @@ msgstr ""
 msgid "Write-Off"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:178
+#: uph/party/doctype/party_master/party_master.py:226
 msgid "You are not allowed to Change Party Number"
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:1 uph/public/js/utils/party.js:802
+#: uph/public/js/utils/party.js:778
 msgid "You must select a party."
 msgstr ""
 
-#: uph/public/dist/js/uph.bundle.NXA6G4RG.js:11
 #: uph/public/js/utils/party_master_manager.js:151
 msgid "ZIP Code"
 msgstr ""
@@ -2317,11 +2422,6 @@ msgstr ""
 
 #: uph/regional/arabic.py:98
 msgid "and"
-msgstr ""
-
-#. Label of a Check field in DocType 'Party Analytic Accounting'
-#: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
-msgid "apply to all companies"
 msgstr ""
 
 #: uph/party/report/party_account_balances/party_account_balances.js:43
@@ -2349,11 +2449,15 @@ msgstr ""
 msgid "{0} - {1}"
 msgstr ""
 
-#: uph/party/controllers/party.py:313 uph/party/controllers/party.py:420
+#: uph/party/controllers/party.py:301 uph/party/controllers/party.py:408
 msgid "{0} Count: {1}"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:277
+#: uph/public/js/utils/party.js:268
+msgid "{0} Created Successfully"
+msgstr ""
+
+#: uph/party/doctype/party_master/party_master.py:325
 msgid "{0} Named {1}'s details have been updated"
 msgstr ""
 
@@ -2362,13 +2466,18 @@ msgstr ""
 msgid "{0} and {1} are mandatory"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:295
+#: uph/party/doctype/party_master/party_master.py:346
 msgid "{0} has linked {1} {2}"
 msgstr ""
 
 #: uph/party/report/party_account_statement/party_account_statement.py:35
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:32
 msgid "{0} is mandatory"
+msgstr ""
+
+#. Count format of shortcut in the Party Workspace
+#: uph/party/workspace/party/party.json
+msgid "{} Active"
 msgstr ""
 
 #. Count format of shortcut in the Party Workspace
