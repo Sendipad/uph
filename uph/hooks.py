@@ -28,9 +28,7 @@ doctype_js = {
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 # hooks.py
-after_migrate = [
-    "uph.setup.install.run_pending_setup"
-]
+after_migrate = ["uph.setup.install.run_pending_setup"]
 
 before_uninstall = "uph.setup.uninstall.before_uninstall"
 
@@ -39,9 +37,6 @@ before_uninstall = "uph.setup.uninstall.before_uninstall"
 # include app icons in desk
 # app_include_icons = "uph/public/icons.svg"
 boot_session = "uph.party.boot.add_pm_doctypes"
-
-
-
 
 
 tx_doctype_with_party_master = [
@@ -58,7 +53,7 @@ tx_doctype_with_party_master = [
 # Document Events
 # ============================================================================
 # IMPORTANT: We use wildcard hooks with smart early-exit for performance
-# The wrapper functions check cached doctype lists and exit in <1ms for 
+# The wrapper functions check cached doctype lists and exit in <1ms for
 # unconfigured doctypes, avoiding the overhead of full validation logic
 # ============================================================================
 parties_type = ["Customer", "Supplier", "Employee"]
@@ -67,13 +62,13 @@ doc_events = {
     "*": {
         # Smart wrappers with early-exit for transactional doctypes
         "validate": [
-            "uph.controllers.party.validate_party_master_on_document_types_smart",
+            "uph.party.controllers.party.validate_party_master_on_document_types_smart",
         ],
         "before_validate": [
-            "uph.controllers.party.validate_party_master_on_document_types_smart"
+            "uph.party.controllers.party.validate_party_master_on_document_types_smart"
         ],
         "on_change": [
-            "uph.controllers.party.validate_party_master_on_document_types_smart"
+            "uph.party.controllers.party.validate_party_master_on_document_types_smart"
         ],
     }
 }
@@ -83,13 +78,13 @@ doc_events = {
 for party_type in parties_type:
     doc_events[party_type] = {
         "validate": [
-            "uph.controllers.party.validate_party_master_on_target_party_type_smart",
+            "uph.party.controllers.party.validate_party_master_on_target_party_type_smart",
         ],
         "on_update": [
-            "uph.controllers.party.validate_party_master_on_target_party_type_smart"
+            "uph.party.controllers.party.validate_party_master_on_target_party_type_smart"
         ],
         "on_trash": [
-            "uph.controllers.party.validate_party_master_on_target_party_type_smart"
+            "uph.party.controllers.party.validate_party_master_on_target_party_type_smart"
         ],
     }
 

@@ -8,13 +8,17 @@ class AccountsTestMixin:
     def create_party_master(
         self, party_name="_Test Party Master", parent_party_master="1310"
     ):
-        if not frappe.db.exists("Party Master", {"party_name": party_name}):
+        name = frappe.db.exists("Party Master", {"party_name": party_name})
+        if not name:
             pm = frappe.new_doc("Party Master")
             pm.party_name = party_name
             pm.parent_party_master = parent_party_master
+            pm.party_type = "Customer"
             pm.type = "Individual"
             pm.save()
             self.party_master = pm.name
+        else:
+            self.party_master = name
 
     def create_company(self, company_name="_Test Company", abbr="_TC"):
         self.company_abbr = abbr
@@ -34,6 +38,7 @@ class AccountsTestMixin:
             company = company.save()
 
         self.company = company.name
+        self.currency = company.default_currency
         self.cost_center = company.cost_center
         self.warehouse = "Stores - " + abbr
         self.finished_warehouse = "Finished Goods - " + abbr
@@ -49,7 +54,8 @@ class AccountsTestMixin:
     def create_customer(
         self, customer_name="_Test Customer", party_master=None, currency=None
     ):
-        if not frappe.db.exists("Customer", customer_name):
+        currency = currency or (getattr(self, "currency", None))
+        if not frappe.db.exists("Customer", {"customer_name": customer_name}):
             customer = frappe.new_doc("Customer")
             customer.customer_name = customer_name
             customer.type = "Individual"
@@ -60,12 +66,21 @@ class AccountsTestMixin:
             customer.save()
             self.customer = customer.name
         else:
-            self.customer = customer_name
+            self.customer = frappe.db.get_value(
+                "Customer", {"customer_name": customer_name}
+            )
+            update_data = {}
+            if party_master:
+                update_data["party_master"] = party_master
+            if currency:
+                update_data["default_currency"] = currency
+            if update_data:
+                frappe.db.set_value("Customer", self.customer, update_data)
 
     def create_supplier(
         self, supplier_name="_Test Supplier", party_master=None, currency=None
     ):
-        if not frappe.db.exists("Supplier", supplier_name):
+        if not frappe.db.exists("Supplier", {"supplier_name": supplier_name}):
             supplier = frappe.new_doc("Supplier")
             supplier.supplier_name = supplier_name
             supplier.supplier_type = "Individual"
@@ -79,7 +94,16 @@ class AccountsTestMixin:
             supplier.save()
             self.supplier = supplier.name
         else:
-            self.supplier = supplier_name
+            self.supplier = frappe.db.get_value(
+                "Supplier", {"supplier_name": supplier_name}
+            )
+            update_data = {}
+            if party_master:
+                update_data["party_master"] = party_master
+            if currency:
+                update_data["default_currency"] = currency
+            if update_data:
+                frappe.db.set_value("Supplier", self.supplier, update_data)
 
     def create_item(
         self,
@@ -194,7 +218,7 @@ class AccountsTestMixin:
                 frappe.get_doc(
                     {
                         "doctype": "Price List",
-                        "currency": "INR",
+                        "currency": self.currency,
                         "enabled": True,
                         "selling": True,
                         "buying": True,

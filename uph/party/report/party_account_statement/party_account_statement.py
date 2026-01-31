@@ -4,7 +4,7 @@ from collections import defaultdict
 from datetime import datetime
 
 import frappe
-from uph.controllers.queries import (
+from uph.party.controllers.queries import (
     get_party_master_parties_db,
     get_leaf_party_master_list_from_any_node,
 )
@@ -16,7 +16,7 @@ from frappe.query_builder.custom import ConstantColumn
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
     get_accounting_dimensions,
 )
-from uph.controllers.queries import get_counts_of_unposted_or_cancelled_vouchers
+from uph.party.controllers.queries import get_counts_of_unposted_or_cancelled_vouchers
 
 
 def execute(filters=None):
@@ -200,8 +200,9 @@ def get_data(filters, party_master):
         party_entries[(entry.get("party"), entry.get("party_type"))].append(entry)
 
     group_by_vn = filters.get("group_by") == "Group by Voucher (Consolidated)"
-    hide_equal = "Hide Equals Voucher" in filters.get("display_options", [])
-    hide_warning = "Hide Warnings Message" in filters.get("display_options", [])
+    display_options = filters.get("display_options") or []
+    hide_equal = "Hide Equals Voucher" in display_options
+    hide_warning = "Hide Warnings Message" in display_options
 
     def prepare_entries(key, party_master, balance, balance_in_cc, party_name):
         entries = party_entries.get(key, [])

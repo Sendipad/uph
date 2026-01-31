@@ -24,7 +24,7 @@ uph.party = {
 		}
 
 		frappe.call({
-			method: "uph.controllers.queries.get_party_master_parties",
+			method: "uph.party.controllers.queries.get_party_master_parties",
 			args: filters,
 			callback: function (r) {
 				if (r.message) {
@@ -131,7 +131,7 @@ uph.party = {
 						let values = uphdialog.get_values();
 						if (values.is_default_for_party_master) {
 							frappe.call({
-								method: "uph.controllers.party.set_party_as_default_for_party_master",
+								method: "uph.party.controllers.party.set_party_as_default_for_party_master",
 								args: {
 									party: values.party,
 									party_type: values.party_type,
@@ -169,10 +169,10 @@ uph.party = {
 
 	// ✅ REFACTORED: Dialog function that works with any Party Master doc
 	create_party_for_party_master_dialog_from_doc: function (doc) {
-		let party_type = [doc.party_type];
+		let party_types = [doc.party_type];
 
 		if (doc.roles?.length > 0) {
-			party_type = [
+			party_types = [
 				...new Set([doc.party_type, ...doc.roles.map((role) => role.party_type_role)]),
 			];
 		}
@@ -184,13 +184,41 @@ uph.party = {
 					fieldname: "party_type",
 					fieldtype: "Select",
 					label: __("Select Party Type"),
-					options: party_type,
+					options: party_types,
 					reqd: 1,
 					onchange() {
 						const selected = dialog.get_value("party_type");
-						const showCurrency = ["Customer", "Supplier"].includes(selected);
-						dialog.set_df_property("default_currency", "hidden", !showCurrency);
-						dialog.set_df_property("default_currency", "reqd", showCurrency ? 1 : 0);
+						if (!selected) return;
+
+						uph.get_party_type_party_master_rules(selected, (rules) => {
+							// Hide everything first
+							dialog.set_df_property("default_currency", "hidden", 1);
+							dialog.set_df_property("rule_field_value", "hidden", 1);
+							dialog.set_df_property("default_currency", "reqd", 0);
+							dialog.set_df_property("rule_field_value", "reqd", 0);
+
+							if (rules && rules.allowed && rules.rule_fieldname) {
+								if (rules.rule_fieldname === "default_currency" || rules.rule_fieldname === "salary_currency") {
+									// Fast path for Currency
+									dialog.set_df_property("default_currency", "label", rules.rule_fieldname === "salary_currency" ? __("Salary Currency") : __("Default Currency"));
+									dialog.set_df_property("default_currency", "hidden", 0);
+									dialog.set_df_property("default_currency", "reqd", 1);
+								} else {
+									// Dynamic path for other fields
+									frappe.model.with_doctype(selected, () => {
+										const meta = frappe.get_meta(selected);
+										const field = meta.fields.find(f => f.fieldname === rules.rule_fieldname);
+										if (field) {
+											dialog.set_df_property("rule_field_value", "label", field.label);
+											dialog.set_df_property("rule_field_value", "fieldtype", field.fieldtype);
+											dialog.set_df_property("rule_field_value", "options", field.options);
+											dialog.set_df_property("rule_field_value", "hidden", 0);
+											dialog.set_df_property("rule_field_value", "reqd", 1);
+										}
+									});
+								}
+							}
+						});
 					},
 				},
 				{
@@ -198,6 +226,13 @@ uph.party = {
 					fieldtype: "Select",
 					label: __("Default Currency"),
 					options: erpnext.get_presentation_currency_list() || [],
+					hidden: 1,
+				},
+				{
+					fieldname: "rule_field_value",
+					fieldtype: "Link",
+					label: __("Rule Value"),
+					hidden: 1,
 				},
 				{
 					fieldname: "save",
@@ -205,14 +240,19 @@ uph.party = {
 					label: __("Save"),
 					default: 0,
 					description: __("Check this if you want to save the party without routing to Edit"),
+					onchange() {
+						const save = dialog.get_value("save");
+						dialog.get_primary_btn().text(save ? __("Save") : __("Edit Before Save"));
+					}
 				},
 			],
 			primary_action_label: __("Edit Before Save"),
 			primary_action(values) {
+				const rule_value = values.default_currency || values.rule_field_value;
 				const args = {
 					source_name: doc.name,
 					target_doctype: values.party_type,
-					rule_field_value: values.default_currency,
+					rule_field_value: rule_value,
 					save: values.save || false,
 				};
 
@@ -224,21 +264,14 @@ uph.party = {
 							dialog.hide();
 
 							if (values.save) {
-								frappe.msgprint({
-									message: __("Party Created Successfully"),
+								frappe.show_alert({
+									message: __("{0} Created Successfully", [values.party_type]),
 									indicator: "green",
 								});
 							} else {
 								const new_doc = r.message;
-								frappe.model.with_doctype(new_doc.doctype, () => {
-									const created_doc = frappe.model.get_new_doc(new_doc.doctype);
-									Object.keys(new_doc).forEach((key) => {
-										if (key !== "name" && key !== "doctype") {
-											created_doc[key] = new_doc[key];
-										}
-									});
-									frappe.set_route("Form", new_doc.doctype, created_doc.name);
-								});
+								frappe.model.sync(new_doc);
+								frappe.set_route("Form", new_doc.doctype, new_doc.name);
 							}
 						}
 					},
@@ -419,7 +452,7 @@ uph.party = {
 			filters.party_type = frm.party_type;
 		}
 		frm.set_query("party_master", () => ({
-			query: "uph.controllers.queries.party_master_link_query",
+			query: "uph.party.controllers.queries.party_master_link_query",
 			filters: filters,
 		}));
 	},
@@ -575,7 +608,7 @@ uph.party = {
 		};
 
 		frappe.call({
-			method: "uph.controllers.party.get_party_master_details_with_parties",
+			method: "uph.party.controllers.party.get_party_master_details_with_parties",
 			args: args,
 			callback: (r) => {
 				if (r.exc) {
@@ -654,7 +687,7 @@ uph.party = {
 				cdn,
 			) {
 				return {
-					query: "uph.controllers.queries.party_master_link_query",
+					query: "uph.party.controllers.queries.party_master_link_query",
 
 					filters: {
 						/* your filter logic */
@@ -683,7 +716,7 @@ uph.party = {
 			filters.party_type = frm.party_type;
 		}
 		frappe.call({
-			method: "uph.controllers.queries.get_party_master_parties",
+			method: "uph.party.controllers.queries.get_party_master_parties",
 			args: filters,
 			callback: function (r) {
 				if (r.message) {
@@ -801,7 +834,7 @@ uph.party = {
 		}
 
 		frappe.call({
-			method: "uph.controllers.party.check_duplicate_voucher_party_master",
+			method: "uph.party.controllers.party.check_duplicate_voucher_party_master",
 			args: args,
 			callback: function (r) {
 				if (!r.exc && r.message && r.message.duplicates) {
@@ -839,7 +872,7 @@ uph.party = {
 								primary_action_label: __("Proceed Anyway"),
 								primary_action: () => {
 									frappe.call({
-										method: "uph.controllers.party.allow_duplicate_submission",
+										method: "uph.party.controllers.party.allow_duplicate_submission",
 										args: {
 											doctype: frm.doctype,
 											docname: frm.doc.name,
@@ -931,7 +964,7 @@ erpnext.queries.get_filtered_dimensions = function (doc, child_fields, dimension
 		const party_value = doc[party_fieldname] || null;
 
 		return {
-			query: "uph.controllers.queries.get_party_analytic_accounting_filtered",
+			query: "uph.party.controllers.queries.get_party_analytic_accounting_filtered",
 			filters: {
 				party_master: doc.party_master,
 				party: party_value,

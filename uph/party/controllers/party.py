@@ -10,46 +10,20 @@ Beside It Will reflect the Change of set Party Master on Party Type Doctype
 import frappe
 
 from uph.party.utils import get_mapped_fieldnames
-from frappe.utils.caching import redis_cache
 from pypika.functions import Coalesce
 
 from frappe import _
 from frappe.query_builder.functions import Count
-from uph.party.boot import get_pm_doctypes
 import uph
+from uph.party.controllers.cache_utils import (
+    get_doctypes_functional_fields_mapping_as_dict,
+    clear_all_caches,
+)
 
 
 # Caching
 def on_update_document_types_clear_cache():
-    get_pm_doctypes.clear_cache()
-    get_doctypes_functional_fields_mapping_as_dict.clear_cache()
-
-
-@redis_cache()
-def get_doctypes_functional_fields_mapping_as_dict():
-    doctypes = frappe.db.get_all(
-        "Party Master Settings DocType",
-        filters={"parenttype": "Party Master Settings"},
-        fields=[
-            "document_type",
-            "parent_doctype",
-            "is_dynamic_party_type",
-            "reqd",
-            "party_fieldname",
-            "party_type_fieldname",
-            "party_type",
-        ],
-    )
-    docs = {}
-    for d in doctypes:
-        doctype = d.get("parent_doctype")
-        document_type = d.get("document_type")
-        meta = frappe.get_meta(doctype)
-        if not meta.issingle:
-            docs.update({doctype: d})
-            if doctype != document_type:
-                docs.update({document_type: d})
-    return docs
+    clear_all_caches()
 
 
 def get_document_type_mapping_with_party_master(document_type):
@@ -91,17 +65,7 @@ def get_party_type_validation_rule(party_type):
     return frappe.local_cache("party_type_validation_rule", party_type, generator)
 
 
-################End Cache #################
-""" 
-Here is the Master validation function
-    
-    
-"""
-
-
 def validate_party_master_on_document_types(doc, method=None):
-    
-
     if (
         frappe.flags.in_patch
         or frappe.flags.in_install
@@ -156,7 +120,7 @@ def validate_party_master_on_document_types(doc, method=None):
                     party, party_type
                 )
             )
-        
+
         validate_party_analytic_accounting(d, new_party_master)
 
     if is_child:
@@ -469,14 +433,9 @@ def update_exists_docs_on_new_document_type_insert(document_type):
                 ),
             )
         )
-        return
-    doctype = mapping.get("document_type")
-    meta = frappe.get_meta(doctype)
-    if meta.issingle or not frappe.db.count(doctype):
-        return
-    # fieldname = mapping.get("party_fieldname")
 
-    # Uncomplete code
+    # If doctype is a group, we should probably handle it or skip
+    pass
 
 
 def update_linked_party_to_party_master_count(party_master):
@@ -523,8 +482,9 @@ def set_party_as_default_for_party_master(
 def check_duplicate_voucher_party_master(
     party_master, doctype, posting_date, current_name=None, doc=None
 ):
+    from uph.party.utils import get_mapped_fieldnames
+
     pfn = get_mapped_fieldnames(doctype, "party_fieldname")
-    total_fn = get_mapped_fieldnames(doctype, "total_fieldname")
     filters = {
         "party_master": party_master,
         "posting_date": posting_date,
@@ -536,9 +496,6 @@ def check_duplicate_voucher_party_master(
     fields = ["name", "owner"]
     if pfn:
         fields.append(pfn)
-    if total_fn:
-
-        fields.append(total_fn)
 
     duplicates = frappe.get_all(
         doctype,
@@ -551,8 +508,38 @@ def check_duplicate_voucher_party_master(
         for d in duplicates or []:
             if d.get(pfn):
                 d["party"] = d.get(pfn, "")
-            if d.get(total_fn):
-
-                d["total"] = d.get(total_fn, 0)
 
     return {"duplicates": duplicates}
+
+
+# Smart wrappers for hooks
+def validate_party_master_on_document_types_smart(doc, method=None):
+    from uph.party.controllers.cache_utils import is_configured_doctype
+
+    if is_configured_doctype(doc.doctype):
+        validate_party_master_on_document_types(doc, method)
+
+
+def validate_party_master_on_target_party_type_smart(doc, method):
+    from uph.party.controllers.cache_utils import is_configured_party_type
+
+    if is_configured_party_type(doc.doctype):
+        validate_party_master_on_target_party_type(doc, method)
+
+
+@frappe.whitelist()
+def get_party_master_details_with_parties(party_master, party_type=None):
+    if not party_master:
+        return {}
+
+    pm_doc = frappe.get_doc("Party Master", party_master)
+    from uph.party.controllers.queries import get_party_master_parties
+
+    parties = get_party_master_parties(party_master, party_type=party_type)
+
+    return {"party_master": pm_doc, "parties": parties}
+
+
+def allow_duplicate_submission(doctype, docname):
+    # This is a hook to bypass duplicate checks if needed
+    return False

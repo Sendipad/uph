@@ -4,7 +4,7 @@ from collections import defaultdict, Counter
 from copy import copy
 
 import frappe
-from uph.controllers.queries import (
+from uph.party.controllers.queries import (
     get_party_master_parties_db,
     get_leaf_party_master_list_from_any_node,
 )

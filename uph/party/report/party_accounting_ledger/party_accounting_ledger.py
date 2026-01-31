@@ -1,7 +1,7 @@
 # Copyright (c) 2025, Abdo Mohammed Ruzaqi and contributors
 # For license information, please see license.txt
 import frappe
-from uph.controllers.queries import (
+from uph.party.controllers.queries import (
     get_party_master_parties,
     get_party_master_parties_db,
 )
@@ -159,10 +159,13 @@ def get_data(filters, party_master):
         True if filters.get("group_by") == "Group by Voucher (Consolidated)" else False
     )
     hide_equal = (
-        True if "Hide Equals Voucher" in filters.get("display_options") else False
+        True
+        if filters.get("display_options")
+        and "Hide Equals Voucher" in filters.get("display_options")
+        else False
     )
 
-    def prepare_entries(key, party_master, balance, balance_in_cc,party_name):
+    def prepare_entries(key, party_master, balance, balance_in_cc, party_name):
         entries = party_entries.get(key, [])
         if not entries:
             return balance, balance_in_cc
@@ -171,62 +174,61 @@ def get_data(filters, party_master):
         last_index = -1
 
         for entry in entries:
-            debit = entry.get('debit') or 0
-            credit = entry.get('credit') or 0
-            debit_in_cc = entry.get('debit_in_cc') or 0
-            credit_in_cc = entry.get('credit_in_cc') or 0
+            debit = entry.get("debit") or 0
+            credit = entry.get("credit") or 0
+            debit_in_cc = entry.get("debit_in_cc") or 0
+            credit_in_cc = entry.get("credit_in_cc") or 0
 
             if group_by_vn:
-                current_vn = entry.get('voucher_no')
+                current_vn = entry.get("voucher_no")
 
                 if current_vn == last_vn:
                     row = data[last_index]
-                    row['debit'] += debit
-                    row['credit'] += credit
-                    row['balance'] += (debit - credit)
-                    balance=row.get('balance',0)
+                    row["debit"] += debit
+                    row["credit"] += credit
+                    row["balance"] += debit - credit
+                    balance = row.get("balance", 0)
 
                     if filters.get("in_company_currency"):
-                        row['debit_in_cc'] += debit_in_cc
-                        row['credit_in_cc'] += credit_in_cc
-                        row['balance_in_cc'] += (debit_in_cc - credit_in_cc)
-                        balance_in_cc=row.get('balance_in_cc')
+                        row["debit_in_cc"] += debit_in_cc
+                        row["credit_in_cc"] += credit_in_cc
+                        row["balance_in_cc"] += debit_in_cc - credit_in_cc
+                        balance_in_cc = row.get("balance_in_cc")
                     # After merging, check if debit == credit
-                    if hide_equal and row['debit'] == row['credit']:
+                    if hide_equal and row["debit"] == row["credit"]:
                         data.pop(last_index)
                         last_index -= 1
                         last_vn = None
                     continue
 
                 else:
-                    balance += (debit - credit)
-                    balance_in_cc += (debit_in_cc - credit_in_cc)
+                    balance += debit - credit
+                    balance_in_cc += debit_in_cc - credit_in_cc
 
                     new_row = {
                         **entry,
                         "balance": balance,
                         "balance_in_cc": balance_in_cc,
                         "party_master": party_master,
-                        "party_name":party_name,
+                        "party_name": party_name,
                     }
                     data.append(new_row)
                     last_vn = current_vn
                     last_index = len(data) - 1
 
             else:
-                balance += (debit - credit)
-                balance_in_cc += (debit_in_cc - credit_in_cc)
+                balance += debit - credit
+                balance_in_cc += debit_in_cc - credit_in_cc
 
                 new_row = {
                     **entry,
                     "balance": balance,
                     "balance_in_cc": balance_in_cc,
                     "party_master": party_master,
-                    "party_name":party_name,
-
+                    "party_name": party_name,
                 }
 
-                if hide_equal and new_row['debit'] == new_row['credit']:
+                if hide_equal and new_row["debit"] == new_row["credit"]:
                     continue
 
                 data.append(new_row)
@@ -666,7 +668,6 @@ def get_columns(filters):
             "fieldname": "party_name",
             "fieldtype": "Data",
         },
-        
         {
             "label": _("Party Master"),
             "fieldname": "party_master",
@@ -701,34 +702,33 @@ def get_columns(filters):
             "fieldtype": "Data",
             "width": 100,
         },
-                
     ]
     if filters.get("include_dimensions"):
         columns.append(
+            {
+                "label": _("Cost Center"),
+                "options": "Cost Center",
+                "fieldname": "cost_center",
+                "width": 100,
+            }
+        )
+        for dim in get_accounting_dimensions(as_list=False):
+            columns.append(
                 {
-                    "label": _("Cost Center"),
-                    "options": "Cost Center",
-                    "fieldname": "cost_center",
+                    "label": _(dim.label),
+                    "options": dim.label,
+                    "fieldname": dim.fieldname,
                     "width": 100,
                 }
             )
-        for dim in get_accounting_dimensions(as_list=False):
-                    columns.append(
-                        {
-                            "label": _(dim.label),
-                            "options": dim.label,
-                            "fieldname": dim.fieldname,
-                            "width": 100,
-                        }
-                    )
         columns.append(
-                    {
-                        "label": _("Project"),
-                        "options": "Project",
-                        "fieldname": "project",
-                        "width": 100,
-                    }
-                )
+            {
+                "label": _("Project"),
+                "options": "Project",
+                "fieldname": "project",
+                "width": 100,
+            }
+        )
     if filters.get("in_company_currency"):
         columns[9:9] = [
             {
@@ -753,6 +753,5 @@ def get_columns(filters):
                 "options": "company_currency",
             },
         ]
-        
 
     return columns

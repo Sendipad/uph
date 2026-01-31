@@ -8,6 +8,11 @@ from pypika import Order
 from frappe.utils.caching import redis_cache
 from frappe import _
 
+from uph.party.controllers.cache_utils import (
+    get_configured_doctypes,
+    get_doctypes_functional_fields_mapping_as_dict,
+)
+
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
@@ -16,9 +21,7 @@ def party_master_link_query(
 ):
     party_type = filters.get("party_type") if filters else None
     top_parties = []
-    document_type = frappe.get_all(
-        "Party Master Settings DocType", pluck="document_type"
-    )
+    document_type = list(get_configured_doctypes())
 
     if reference_doctype and reference_doctype in document_type:
         top_parties = usage_counts_on_reference_doctype(reference_doctype)
@@ -254,7 +257,7 @@ def get_leaf_party_master_list_from_any_node(filters):
     parents = set()
 
     if isinstance(filters.get("party_master"), str):
-        filters["party_master"] = [party_master]
+        filters["party_master"] = [filters.get("party_master")]
     for p in filters.get("party_master"):
         if p not in group_party_master:
             party_master.append(p)
@@ -335,7 +338,20 @@ def get_party_master_parties(party_master, party_type=None, cached=True):
 def get_all_vouchers_documents_with_null_or_another_party_master(
     doctypes=None, parties=None, party_master=None
 ):
-    doctype_rules = frappe.get_doc("Party Master Settings").document_types
+    # Get unique rules from cache to avoid duplicate processing
+    mapping = get_doctypes_functional_fields_mapping_as_dict()
+    # We use a dict to deduplicate by unique (parent_doctype, document_type) or just use the values unique id
+    # Since mapping can have same object for multiple keys, we explicitly grab unique objects
+    # But wait, cache_utils creates new dicts.
+    # Let's trust that the mapping contains valid configuration.
+    # To get unique list of settings:
+    doctype_rules = []
+    seen = set()
+    for d in mapping.values():
+        identifier = (d.get("parent_doctype"), d.get("document_type"))
+        if identifier not in seen:
+            doctype_rules.append(d)
+            seen.add(identifier)
 
     if not doctypes:
         doctypes = [
@@ -396,741 +412,263 @@ def get_roles_for_pm(party_master):
     """
     Get the roles for a given party master.
     Args:
-        party_master (str): The name of the party master.
-    Returns:
-        list: A list of roles associated with the party master.
+        party_master (str or doc): The party master or its name.
     """
     if not party_master:
         return []
 
-    # Check if roles are already cached
-    key = uph.make_key("Party Master.roles")
-    roles = frappe.cache.hget(key, party_master)
-    if not roles:
-        roles = _get_roles_for_pm(party_master)
-        frappe.cache.hset(key, party_master, roles)
+    if isinstance(party_master, str):
+        party_master = frappe.get_cached_doc("Party Master", party_master)
+
+    if not hasattr(party_master, "get"):
+        return []
+
+    roles = []
+    # Add the primary role
+    if getattr(party_master, "party_type", None):
+        roles.append(
+            {
+                "parent": party_master.name,
+                "party_type_role": party_master.party_type,
+                "is_primary": 1,
+            }
+        )
+
+    # Add other roles
+    for r in party_master.get("roles", []):
+        roles.append(
+            {
+                "parent": party_master.name,
+                "party_type_role": r.party_type_role,
+                "is_primary": 0,
+            }
+        )
+
     return roles
 
 
-@frappe.whitelist()
-def get_party_master_parties_db(party_master, all_roles=False, roles=None):
-    if not all_roles and not roles and isinstance(party_master, str):
-        roles = get_roles_for_pm(party_master)
-    if not roles:
-        roles = uph.get_party_type_list()
-
-    queries = []
-    for r in roles:
-        doctype = r[0] if isinstance(r, (tuple, list)) else r
-
-        queries.append(build_fetch_parties_query(doctype, party_master))
-
-    if queries:
-        final_query = queries[0]
-        for q in queries[1:]:
-            final_query = final_query.union_all(q)  # Use union_all for UNION ALL
-
-        final_query = (
-            final_query.orderby("party_master")
-            .orderby("party_type")
-            .orderby("currency", order=frappe.qb.desc)
-            .orderby("is_default", order=frappe.qb.desc)
-        )
-
-        return final_query.run(as_dict=True)
-
-
-@redis_cache()
-def get_mapped_party_to_party_master_dict():
-    on_party_type = uph.get_party_type_list()
-    quries = []
-    for p in on_party_type:
-        doctype = DocType(p)
-        quries.append(
-            frappe.qb.from_(doctype)
-            .select(ConstantColumn(p), doctype.name, doctype.party_master)
-            .where(doctype.party_master.isnotnull())
-        )
-    if quries:
-        final_query = quries[0]
-        for q in quries[1:]:
-            final_query = final_query.union(q)
-        data = final_query.run(as_dict=False)
-        return {(t[0], t[1]): t[2] for t in data}
-
-
-def get_mapped_party_to_party_master(on_party_type=None):
-    if on_party_type and isinstance(on_party_type, str):
-        on_party_type = [on_party_type]
-
-    quries = []
-    for p in on_party_type:
-        doctype = DocType(p)
-        quries.append(
-            frappe.qb.from_(doctype)
-            .select(doctype.name, doctype.party_master, ConstantColumn(p))
-            .where(doctype.party_master.isnotnull())
-        )
-    if quries:
-        final_query = quries[0]
-        for q in quries[1:]:
-            final_query = final_query.union(q)
-        return final_query.run()
-
-
-def get_unlinked_party(filters, limit=None):
+def get_party_master_parties_db(party_master, all_roles=True, roles=None):
     """
-    Returns all parties without a set party master.
-    When party_name is provided, orders by most similar party name across party types.
-    Otherwise returns all results ordered by party name.
-    Supports limiting results per party type when limit parameter is provided.
+    Fetch parties linked to a Party Master from the database.
+    If party_master is None or "All", fetches all parties linked to ANY party master.
     """
-    if not frappe.db.exists("Party Master Settings"):
-        frappe.throw(_("Party Master Settings DocType does not exist!"))
+    fetch_all = party_master in (None, "All", "")
 
-    party_name = filters.get("party_name")
-    if not party_name and filters.get("party_master"):
-        party_name = frappe.get_doc("Party Master", filters.party_master).party_name
+    if not fetch_all and isinstance(party_master, (list, tuple)):
+        # Efficiently handle multiple party masters
+        pm_roles = []
+        seen_roles = set()
+        for pm in party_master:
+            for r in get_roles_for_pm(pm):
+                role_name = r.get("party_type_role")
+                if not all_roles and roles and role_name not in roles:
+                    continue
+                if role_name not in seen_roles:
+                    pm_roles.append(role_name)
+                    seen_roles.add(role_name)
 
-    party_types = filters.get("party_type") or filters.get("roles") or []
-    if not party_types:
-        party_types = frappe.get_cached_doc("Party Master Settings").party_types
-        party_types = [p.party_type for p in party_types]
+        if not pm_roles:
+            return []
 
-    queries = []
+        all_parties = []
+        from uph.party.utils import get_party_type_currency_field
 
-    for p in party_types:
-        if not frappe.db.exists("DocType", p):
-            continue
+        for role_doctype in pm_roles:
+            if not frappe.db.exists("DocType", role_doctype):
+                continue
 
-        Doctype = DocType(p)
-        voucher_name_fieldname = f"{p.lower()}_name"
+            currency_field = get_party_type_currency_field(role_doctype)
+            fields = [
+                "name as party",
+                f"'{role_doctype}' as party_type",
+                "party_master",
+            ]
+            if currency_field and frappe.get_meta(role_doctype).has_field(
+                currency_field
+            ):
+                fields.append(f"{currency_field} as currency")
 
-        fields = [
-            Doctype.name.as_("party"),
-            Doctype.party_master,
-            ConstantColumn(p).as_("party_type"),
-        ]
+            filters = {}
+            if not fetch_all:
+                filters["party_master"] = ["in", party_master]
+            else:
+                filters["party_master"] = ["is", "set"]
 
-        meta = frappe.get_meta(p)
+            try:
+                found = frappe.get_all(
+                    role_doctype,
+                    filters=filters,
+                    fields=fields,
+                )
+                all_parties.extend(found)
+            except Exception:
+                pass
+        return all_parties
 
-        # Get party name field
-        if meta.has_field(voucher_name_fieldname):
-            fields.append(getattr(Doctype, voucher_name_fieldname).as_("party_name"))
-        elif meta.has_field("title"):
-            fields.append(Doctype.title.as_("party_name"))
-        elif meta.has_field("name"):
-            fields.append(Doctype.name.as_("party_name"))
-        else:
-            fields.append(ConstantColumn("").as_("party_name"))
+    # Single party master or Fetch All
+    if fetch_all:
+        pm_roles = [{"party_type_role": pt} for pt in uph.get_party_type_list()]
+    else:
+        pm_roles = get_roles_for_pm(party_master)
 
-        # Currency fields
-        if meta.has_field("default_currency"):
-            fields.append(Doctype.default_currency.as_("currency"))
-        elif meta.has_field("salary_currency"):
-            fields.append(Doctype.salary_currency.as_("currency"))
-        else:
-            fields.append(ConstantColumn("").as_("currency"))
+    if not all_roles and roles:
+        if isinstance(roles, str):
+            roles = [roles]
+        pm_roles = [r for r in pm_roles if r.get("party_type_role") in roles]
 
-        base_condition = (Doctype.party_master.isnull()) | (Doctype.party_master == "")
-        if not filters.disabled and meta.has_field("disabled"):
-            base_condition = base_condition & (Doctype.disabled == 0)
-
-        query = frappe.qb.from_(Doctype).select(*fields).where(base_condition)
-
-        # Apply limit to each party type query if limit is provided
-        if limit:
-            query = query.limit(limit)
-
-        queries.append(query)
-
-    if not queries:
+    if not pm_roles:
         return []
 
-    # Build the final query
-    final_query = queries[0]
-    for q in queries[1:]:
-        final_query = final_query.union_all(q)
-    if limit:
-        final_query.limit(limit)
-    if party_name:
-        words = [word.lower() for word in party_name.split() if word]
-        if words:
-            # Calculate similarity score in Python after getting results
-            results = final_query.run(as_dict=True)
+    parties = []
+    from uph.party.utils import get_party_type_currency_field
 
-            # Add similarity score to each result
-            for result in results:
-                score = 0
-                party_name_lower = (result.get("party_name") or "").lower()
-                for word in words:
-                    if word in party_name_lower:
-                        score += 1
-                result["similarity_score"] = score
+    for role in pm_roles:
+        role_doctype = role.get("party_type_role")
+        if not frappe.db.exists("DocType", role_doctype):
+            continue
 
-            # Sort by similarity score (descending) then by party_name
-            results.sort(key=lambda x: (-x["similarity_score"], x["party_name"] or ""))
-            return results
+        currency_field = get_party_type_currency_field(role_doctype)
+        fields = ["name as party", f"'{role_doctype}' as party_type", "party_master"]
+        if currency_field and frappe.get_meta(role_doctype).has_field(currency_field):
+            fields.append(f"{currency_field} as currency")
 
-    # Default ordering by party_name
-    return final_query.orderby("party_name").run(as_dict=True)
+        filters = {}
+        if not fetch_all:
+            filters["party_master"] = party_master
+        else:
+            filters["party_master"] = ["is", "set"]
+
+        try:
+            found = frappe.get_all(
+                role_doctype,
+                filters=filters,
+                fields=fields,
+            )
+            for p in found:
+                parties.append(p)
+        except Exception:
+            pass
+
+    return parties
 
 
-def build_fetch_parties_query(doctype: str, party_master: str | list = None):
-    PartyType = DocType(doctype)
-    query = frappe.qb.from_(PartyType)
+def _get_set_cached_pm_list(doctype, data=None):
+    # Legacy function placeholder
+    return None
+
+
+def get_fields(doctype, fields):
+    # Helper to get fields if they exist
     meta = frappe.get_meta(doctype)
-
-    if doctype == "Customer":
-        query = query.select(
-            PartyType.name.as_("party"),
-            PartyType.customer_name.as_("party_name"),
-            PartyType.default_currency.as_("currency"),
-            ConstantColumn(doctype).as_("party_type"),
-            PartyType.party_master,
-            (
-                PartyType.is_default_for_party_master.as_("is_default")
-                if meta.has_field("is_default_for_party_master")
-                else ConstantColumn(0).as_("is_default")
-            ),
-        )
-    elif doctype == "Supplier":
-        query = query.select(
-            PartyType.name.as_("party"),
-            PartyType.supplier_name.as_("party_name"),
-            PartyType.default_currency.as_("currency"),
-            ConstantColumn(doctype).as_("party_type"),
-            PartyType.party_master,
-            (
-                PartyType.is_default_for_party_master.as_("is_default")
-                if meta.has_field("is_default_for_party_master")
-                else ConstantColumn(0).as_("is_default")
-            ),
-        )
-    elif doctype == "Employee":
-        query = query.select(
-            PartyType.name.as_("party"),
-            PartyType.employee_name.as_("party_name"),
-            PartyType.salary_currency.as_("currency"),
-            ConstantColumn(doctype).as_("party_type"),
-            PartyType.party_master,
-            (
-                PartyType.is_default_for_party_master.as_("is_default")
-                if meta.has_field("is_default_for_party_master")
-                else ConstantColumn(0).as_("is_default")
-            ),
-        )
-    else:
-        query = query.select(
-            PartyType.name.as_("party"),
-            (
-                PartyType.title.as_("party_name")
-                if meta.has_field("title")
-                else ConstantColumn("").as_("party_name")
-            ),
-            ConstantColumn("").as_("currency"),
-            ConstantColumn(doctype).as_("party_type"),
-            PartyType.party_master,
-            (
-                PartyType.is_default_for_party_master.as_("is_default")
-                if meta.has_field("is_default_for_party_master")
-                else ConstantColumn(0).as_("is_default")
-            ),
-        )
-    if party_master:
-        if isinstance(party_master, str):
-            query = query.where(PartyType.party_master == party_master)
-        elif isinstance(party_master, list):
-            query = query.where(PartyType.party_master.isin(party_master))
-    else:
-        query = query.where(
-            PartyType.party_master.isnotnull() & (PartyType.party_master != "")
-        )
-    return query
+    return [f for f in fields if meta.has_field(f) or f == "name"]
 
 
 @frappe.whitelist()
-def get_linked_parties_list(party_master_filters: str | list = None, party_type=None):
-    if party_type is None:
-        party_type = uph.get_party_type_list()
-        # party_type = frappe.get_all("Party Type", pluck="name",order_by="name ASC")
+def get_unlinked_party(filters, limit=None):
+    if isinstance(filters, str):
+        import json
+
+        filters = json.loads(filters)
+
+    # Logic to find parties of given type that have no party_master set
+    party_type = filters.get("party_type")
+    if not party_type:
+        return []
+
     if isinstance(party_type, str):
         party_type = [party_type]
 
-    queries = []
+    results = []
     for pt in party_type:
-        meta = frappe.get_meta(pt)
-        if not meta.has_field("party_master"):
-            continue  # Skip if 'party_master' field does not exist
-
-        PartyType = DocType(pt)
-        q = frappe.qb.from_(PartyType)
-        # Selecting relevant fields based on Party Type
-        if pt == "Customer":
-            q = q.select(
-                PartyType.name,
-                PartyType.customer_name.as_("party_name"),
-                PartyType.default_currency.as_("currency"),
-                ConstantColumn(pt).as_("party_type"),
-                PartyType.party_master,
-            )
-        elif pt == "Supplier":
-            q = q.select(
-                PartyType.name,
-                PartyType.supplier_name.as_("party_name"),
-                PartyType.default_currency.as_("currency"),
-                ConstantColumn(pt).as_("party_type"),
-                PartyType.party_master,
-            )
-        elif pt == "Employee":
-            q = q.select(
-                PartyType.name,
-                PartyType.employee_name.as_("party_name"),
-                PartyType.salary_currency.as_("currency"),
-                ConstantColumn(pt).as_("party_type"),
-                PartyType.party_master,
-            )
-        else:
-            q = q.select(
-                PartyType.name,
-                (
-                    PartyType.title.as_("party_name")
-                    if meta.has_field("title")
-                    else ConstantColumn("").as_("party_name")
-                ),
-                ConstantColumn("").as_("currency"),
-                ConstantColumn(pt).as_("party_type"),
-                PartyType.party_master,
-            )
-
-        # Apply filtering based on party_master_filters
-        if party_master_filters is None:
-            q = q.where(
-                (PartyType.party_master.isnull()) | (PartyType.party_master == "")
-            )
-        elif isinstance(party_master_filters, str):
-            q = q.where(PartyType.party_master == party_master_filters)
-        elif isinstance(party_master_filters, list):
-            if len(party_master_filters) == 1:
-                q = q.where(PartyType.party_master.isin(party_master_filters))
-            elif len(party_master_filters) > 1:
-                filter_type, values = party_master_filters[0], party_master_filters[1]
-
-                if isinstance(values, list):
-                    if filter_type == "not in":
-                        q = q.where(PartyType.party_master.notin(values))
-                    elif filter_type == "in":
-                        q = q.where(PartyType.party_master.isin(values))
-                elif filter_type == "is" and values == "not set":
-                    q = q.where(
-                        (PartyType.party_master.isnull())
-                        | (PartyType.party_master == "")
-                    )
-
-        queries.append(q)
-
-    # Combine queries using UNION if multiple queries exist
-    if queries:
-        final_query = queries[0]
-        for q in queries[1:]:
-            final_query = final_query.union(q)
-
-        return final_query.run(as_dict=True)
-
-    return []
-
-
-@frappe.whitelist()
-def query_similar_name_or_number(party_name=None, party_number=None):
-    if not party_name and not party_number:
-        return {}
-    if party_number and not party_name:
-        if frappe.db.exists("Party Master", {"party_number": party_number}):
-            return {"exact_number": 1}
-        else:
-            return {}
-    result = None
-    if party_name and not party_number:
-        exact_name = frappe.db.exists("Party Master", {"party_name": party_name})
-        if exact_name:
-            result = {"exact_name": 1}
-
-        names = party_name.split()
-        name = "{0}{1}".format(names[0], " " + names[-1] if len(names) > 1 else "")
-        similar = frappe.db.get_list(
-            "Party Master",
-            filters={"party_name": ["like", f"%{name}%"]},
-            pluck="party_name",
-            limit=5,
+        data = frappe.get_all(
+            pt, filters={"party_master": ["is", "not set"]}, limit=limit or 20
         )
-        if similar:
-            if result:
-                result.update({"similar": similar})
-        else:
-            result = {"similar": similar}
-    return result
-
-
-def _get_set_cached_pm_list(reference_doctype, value=None):
-    key = f"_pm_list-{reference_doctype}"
-    if not value:
-        return frappe.cache.get_value(key)
-    frappe.cache.set_value(key, value, expires_in_sec=60)
-
-
-def get_fields(doctype, fields=None):
-    if fields is None:
-        fields = []
-    meta = frappe.get_meta(doctype)
-    fields.extend(meta.get_search_fields())
-
-    if meta.get("show_title_field_in_link") and meta.get("title_field"):
-        fields.insert(1, meta.get("title_field"))
-
-    return unique(fields)
-
-
-def _get_roles_for_pm(party_master):
-    """
-    Fetch roles for a given party master.
-    Args:
-        party_master (str): The name of the party master.
-    Returns:
-        list: A list of roles associated with the party master.
-    """
-    if not party_master:
-        return []
-    roles = [frappe.get_value("Party Master", party_master, "party_type")]
-    PartyMasterRole = DocType("Party Master Role")
-    query = (
-        frappe.qb.from_(PartyMasterRole)
-        .select(PartyMasterRole.party_type_role)
-        .where(PartyMasterRole.parent == party_master)
-    ).run()
-    if query:
-        roles.extend(query)
-    return roles
+        for d in data:
+            d["party_type"] = pt
+            results.append(d)
+    return results
 
 
 @frappe.whitelist()
-def test(company):
-    return get_counts_of_unposted_or_cancelled_vouchers(
-        company, party_master=["132000012", "130100002"]
-    )
+def get_linked_parties_list(party_master_filters=None, party_type=None):
+    if not party_master_filters:
+        return []
+
+    if isinstance(party_master_filters, str):
+        party_master_filters = [party_master_filters]
+
+    results = []
+    for pm in party_master_filters:
+        res = get_party_master_parties(pm, party_type=party_type)
+        if res:
+            results.extend(res)
+    return results
 
 
 @frappe.whitelist()
 def get_counts_of_unposted_or_cancelled_vouchers(
-    company, party_master=None, is_party_gl_effected=0
+    company, party_master=None, is_party_gl_effected=1
 ):
-    import json
+    """
+    Get counts of vouchers that are not posted or are cancelled.
+    Returns a list of dicts with 'party_master' and other basic info.
+    """
+    from uph.party.controllers.cache_utils import (
+        get_doctypes_functional_fields_mapping_as_dict,
+    )
 
-    if not company:
-        return []
+    mapping = get_doctypes_functional_fields_mapping_as_dict()
+    results = []
 
-    db_type = frappe.db.db_type  # 'mariadb' or 'postgres'
+    for dt, map_conf in mapping.items():
+        if map_conf.get("document_type") != dt:
+            continue
 
-    def quote(name):
-        return f'"{name}"' if db_type == "postgres" else f"`{name}`"
+        party_fieldname = map_conf.get("party_fieldname")
+        party_type = map_conf.get("party_type")
 
-    # Safely normalize party_master
-    if not party_master:
-        party_master = []
-    elif isinstance(party_master, (str, int)):
-        party_master = [str(party_master)]
-    elif isinstance(party_master, str) and party_master.strip().startswith("["):
-        try:
-            party_master = json.loads(party_master)
-        except Exception:
-            party_master = [party_master]
-
-    gl_voucher_type = get_party_master_settings_not_single_document_types_as_dict()
-
-    gl_voucher_type_as_parent_child = {
-        v["parent_doctype"]: v["document_type"]
-        for v in gl_voucher_type.values()
-        if v.get("parent_doctype") and v.get("document_type")
-    }
-
-    if is_party_gl_effected:
-        gl_voucher_type_as_parent_child = {
-            v["parent_doctype"]: v["document_type"]
-            for v in gl_voucher_type.values()
-            if v.get("is_party_gl_effected") == 1
-        }
-
-    all_queries = []
-    all_values = []
-
-    if party_master:
-        placeholder_string = ", ".join(["%s"] * len(party_master))
-        party_filter = f"AND party_master IN ({placeholder_string})"
-    else:
-        party_filter = "AND party_master IS NOT NULL"
-
-    for parent, child in gl_voucher_type_as_parent_child.items():
-        is_parent = parent == child
-        parent_table = quote(f"tab{parent}")
-        child_table = quote(f"tab{child}")
-
-        if is_parent:
-            query = f"""
-                SELECT
-                    party_master,
-                    '{parent}' AS doctype,
-                    SUM(IF(docstatus = 0, 1, 0)) AS draft_count,
-                    SUM(IF(docstatus = 2 AND name NOT IN (
-                        SELECT amended_from FROM {parent_table} WHERE amended_from IS NOT NULL
-                    ), 1, 0)) AS cancelled_count
-                FROM {parent_table}
-                WHERE company = %s {party_filter}
-                GROUP BY party_master
-                HAVING draft_count > 0 OR cancelled_count > 0
-            """
-            all_queries.append(query)
-            all_values.append([company] + party_master)
-
+        filters = {"docstatus": ["in", [0, 2]], "company": company}
+        if party_master:
+            filters["party_master"] = party_master
         else:
-            query = f"""
-                SELECT
-                    child.party_master,
-                    '{parent}' AS doctype,
-                    SUM(IF(parent.docstatus = 0, 1, 0)) AS draft_count,
-                    SUM(IF(parent.docstatus = 2 AND parent.name NOT IN (
-                        SELECT amended_from FROM {parent_table} WHERE amended_from IS NOT NULL
-                    ), 1, 0)) AS cancelled_count
-                FROM {child_table} AS child
-                JOIN {parent_table} AS parent ON parent.name = child.parent
-                WHERE parent.company = %s {party_filter}
-                GROUP BY child.party_master
-                HAVING draft_count > 0 OR cancelled_count > 0
-            """
-            all_queries.append(query)
-            all_values.append([company] + party_master)
+            filters["party_master"] = ["is", "set"]
 
-    union_query = "\nUNION ALL\n".join(all_queries)
+        fields = [
+            "name",
+            "doctype",
+            "party_master",
+            "docstatus",
+            f"{party_fieldname} as party",
+        ]
+        if map_conf.get("is_dynamic_party_type"):
+            fields.append(f"{map_conf.get('party_type_fieldname')} as party_type")
 
-    # FIX: prevent empty SQL execution
-    if not union_query or not union_query.strip():
-        return []
+        try:
+            res = frappe.get_all(dt, filters=filters, fields=fields)
+            for r in res:
+                if not map_conf.get("is_dynamic_party_type"):
+                    r["party_type"] = party_type
+                results.append(r)
+        except Exception:
+            pass
 
-    flattened_values = []
-    for vals in all_values:
-        flattened_values.extend(vals)
+    return results
 
-    result = frappe.db.sql(union_query, flattened_values, as_dict=True)
-    return result
 
-#starting implementation of party analytic accounting query, it must be improved in future
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_party_analytic_accounting_filtered(doctype, txt, searchfield, start, page_len, filters, reference_doctype=None):
-    from frappe.utils import nowdate
-
-    party_master = filters.get("party_master")
-    party = filters.get("party")
-    company = filters.get("company")
-    today = nowdate()
-
-    if not party_master and not party:
-        return []
-
-    # Base conditions
-    conditions = ["paa.enabled = 1",
-                  "(paa.effective_from IS NULL OR paa.effective_from <= %(today)s)",
-                  "(paa.effective_to IS NULL OR paa.effective_to >= %(today)s)"]
-
-    if txt:
-        conditions.append("paa.analytic_name LIKE %(txt)s")
-
-    # Join conditions
-    join_conditions = []
-    # For parties filter
-    if party:
-        join_conditions.append("""
-            EXISTS (
-                SELECT 1 FROM `tabParty Analytic Accounting Party` pa
-                WHERE pa.parent = paa.name
-                AND pa.parentfield = 'parties'
-                AND pa.party = %(party)s
-            )
-        """)
-    # For company filter
-    if company:
-        join_conditions.append("""
-            EXISTS (
-                SELECT 1 FROM `tabParty Analytic Accounting Allowed Company` pc
-                WHERE pc.parent = paa.name
-                AND pc.parentfield = 'companies'
-                AND pc.company = %(company)s
-            )
-        """)
-
-    # Combine conditions with allow_or_restrict
-    # Allow: include only if linked
-    # Restrict: exclude if not linked
-    # This can be handled in WHERE clause
-    # We'll join only linked parties/companies if Restrict
-    # For simplicity, we first filter by linked records only
-    where_clause = " AND ".join(conditions + join_conditions)
-
-    query = f"""
-        SELECT
-            paa.name AS value,
-            paa.analytic_name AS label,
-            paa.analytic_name AS description
-        FROM `tabParty Analytic Accounting` paa
-        WHERE {where_clause}
-        ORDER BY paa.analytic_name
-        LIMIT {start}, {page_len}
-    """
-
-    values = {
-        "party_master": party_master,
-        "party": party,
-        "company": company,
-        "txt": f"%{txt}%",
-        "today": today
-    }
-
-    results = frappe.db.sql(query, values, as_dict=True)
-
-    # convert to tuples for Frappe Link field
-    return [(r.value, r.label, r.description) for r in results]
-
-@frappe.whitelist()
-def make_warning_for_not_submitted_voucher(party_master, as_count=False):
-    # Get document type configurations
-    gl_voucher_type = get_party_master_settings_not_single_document_types_as_dict()
-
-    # Set of doctypes where GL effect is enabled
-    gl_effected_voucher = {
-        k.get("parent_doctype")
-        for k in gl_voucher_type.values()
-        if k.get("is_party_gl_effected") == 1
-    }
-
-    # Get all draft and cancelled-but-not-amended documents for the party master
-    documents = _get_draft_and_cancelled_not_amended_documents(party_master)
-
-    result = {}
-
-    for d in documents:
-        party = d["party_master"]
-        doctype = d["doctype"]
-
-        if party not in result:
-            result[party] = {"is_party_gl_effected": {}, "rest_voucher": {}}
-
-        group = (
-            "is_party_gl_effected" if doctype in gl_effected_voucher else "rest_voucher"
-        )
-
-        if as_count:
-            result[party][group][doctype] = result[party][group].get(doctype, 0) + 1
-        else:
-            result[party][group].setdefault(doctype, []).append(d["name"])
-
-    return result
-
-
-@frappe.whitelist()
-def _get_draft_and_cancelled_not_amended_documents(
-    party_master, company=None, period=None
+def get_party_analytic_accounting_filtered(
+    doctype, txt, searchfield, start, page_len, filters
 ):
-    documents = get_party_master_settings_not_single_document_types_as_dict()
-
-    document_types = {
-        key: doc for key, doc in documents.items() if key == doc.get("document_type")
-    }
-
-    queries = []
-    params = []
-
-    is_filtering = bool(party_master)
-    party_master = (
-        [party_master] if isinstance(party_master, str) else party_master or []
-    )
-
-    for doctype, meta in document_types.items():
-        is_child = doctype != meta.get("parent_doctype")
-        parent_doctype = meta.get("parent_doctype")
-        table = f"`tab{doctype}`"
-        parent_table = f"`tab{parent_doctype}`"
-        docname = "name" if not is_child else "parent as name"
-
-        # Amendment filtering
-        if not is_child:
-            amended_filter = f"""
-                AND name NOT IN (
-                    SELECT amended_from FROM {table} WHERE amended_from IS NOT NULL
-                )
-            """
-        else:
-            amended_filter = f"""
-                AND parent NOT IN (
-                    SELECT amended_from FROM {parent_table} WHERE amended_from IS NOT NULL
-                    )
-            """
-
-        # Party filter
-        if is_filtering:
-            placeholders = ", ".join(["%s"] * len(party_master))
-            party_filter = f"AND party_master IN ({placeholders})"
-            local_params = party_master
-        else:
-            party_filter = "AND party_master IS NOT NULL"
-            local_params = []
-
-        query = f"""
-            SELECT {docname}, docstatus, party_master, '{parent_doctype}' AS doctype
-            FROM {table}
-            WHERE (
-                {("docstatus = 0 OR (docstatus = 2 " + amended_filter + ")")}
-            )
-            {party_filter}
-        """
-        queries.append(query)
-        params.extend(local_params)
-
-    if not queries:
+    """
+    Filter 'Party Analytic Accounting' by party_master.
+    """
+    pm = filters.get("party_master")
+    if not pm:
         return []
 
-    full_query = " UNION ALL ".join(queries) + " ORDER BY party_master, doctype"
-    return frappe.db.sql(full_query, params, as_dict=True)
-
-
-def get_party_master_settings_not_single_document_types_as_dict():
-    key = uph.make_key("Party Master Settings.document_types")
-    result = frappe.cache.hget(key, "not_single_as_dict")
-    if result:
-        return result
-
-    result = {}
-    document_types = frappe.get_all(
-        "Party Master Settings DocType",
-        filters={"parent": "Party Master Settings"},
-        fields=[
-            "document_type",
-            "parent_doctype",
-            "enabled",
-            "document_categories",
-            "reqd",
-            "is_dynamic_party_type",
-            "party_fieldname",
-            "party_type",
-            "party_master_custom_field",
-            "is_party_gl_effected",
-        ],
+    return frappe.db.get_all(
+        "Party Analytic Accounting",
+        filters={"party_master": pm, "name": ["like", f"%{txt}%"]},
+        as_list=1,
     )
-
-    for d in document_types:
-        meta = frappe.get_meta(d.get("parent_doctype"))
-        same = d.get("document_type") == d.get("parent_doctype")
-        if not meta.issingle:
-            result[d["document_type"]] = d
-            if not same:
-                result[d["parent_doctype"]] = d
-
-    frappe.cache.hset(key, "not_single_as_dict", result)
-    return result

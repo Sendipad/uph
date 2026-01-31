@@ -50,7 +50,7 @@ function hide_parties_add_button(frm) {
 function open_related_parties_dialog(frm) {
 
     frappe.call({
-        method: "uph.controllers.queries.get_party_master_parties",
+        method: "uph.party.controllers.queries.get_party_master_parties",
         args: {
             party_master: frm.doc.party_master
         },

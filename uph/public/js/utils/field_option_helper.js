@@ -25,7 +25,7 @@ uph.hub.docfields = {
 		}
 
 		frappe.call({
-			method: "uph.controllers.utils.get_field_path",
+			method: "uph.party.utils.get_field_path",
 			args: { doctype: document_type, basefieldname: basefieldname },
 			callback: (r) => {
 				if (r.message?.fields) {
@@ -54,7 +54,7 @@ uph.utils.FieldOptionHelper = {
 
 			// استدعاء API جلب الحقول المشتركة للمجموعة دفعة واحدة
 			frappe.call({
-				method: "uph.controllers.utils.get_common_fields_in_doctypes",
+				method: "uph.party.utils.get_common_fields_in_doctypes",
 				args: { doctypes: JSON.stringify(documentType) },
 				callback: (r) => {
 					if (Array.isArray(r.message)) {
@@ -75,7 +75,7 @@ uph.utils.FieldOptionHelper = {
 		}
 
 		frappe.call({
-			method: "uph.controllers.utils.get_field_options",
+			method: "uph.party.utils.get_field_options",
 			args: { doctype: documentType },
 			callback: (r) => {
 				if (Array.isArray(r.message)) {
@@ -164,7 +164,7 @@ uph.utils.FieldOptionHelper = {
 	}
 
 	frappe.call({
-	  method: "uph.controllers.utils.get_field_options",
+	  method: "uph.party.controllers.field.get_field_options",
 	  args: { doctype: documentType },
 	  callback: (r) => {
 		if (Array.isArray(r.message)) {

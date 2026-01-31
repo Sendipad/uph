@@ -41,7 +41,7 @@ frappe.ui.form.PartyMasterQuickEntryForm = class PartyMasterQuickEntryForm exten
 						if (type === "Customer") this.dialog.set_value("group_type", "Customer Group");
 						else if (type === "Supplier") this.dialog.set_value("group_type", "Supplier Group");
 						else this.dialog.set_value("group_type", "");
-						this.dialog.refresh_field("group_type");
+						this.dialog.get_field("group_type").refresh();
 					};
 					field.read_only = 0;
 					field.hidden = 0;
@@ -54,7 +54,7 @@ frappe.ui.form.PartyMasterQuickEntryForm = class PartyMasterQuickEntryForm exten
 						const name = this.dialog.doc.party_name;
 						if (name) {
 							frappe.call({
-								method: "uph.controllers.queries.query_similar_name_or_number",
+								method: "uph.party.controllers.queries.query_similar_name_or_number",
 								args: { party_name: name },
 								debounce: 2000,
 								callback: (r) => {
@@ -109,17 +109,17 @@ frappe.ui.form.PartyMasterQuickEntryForm = class PartyMasterQuickEntryForm exten
 				const name = d.doc.party_name;
 				if (!name) return;
 				frappe.call({
-					method: "uph.controllers.queries.query_similar_name_or_number",
+					method: "uph.party.controllers.queries.query_similar_name_or_number",
 					args: { party_name: name },
 					debounce: 2000,
 					callback: (r) => {
 						if (r.message?.exact_name) {
 							const msg = `<p style="color:red"> ${__("Exists: ")} ${name} </p>`;
 							d.fields_dict.party_name.df.description = msg;
-							d.refresh_field("party_name");
+							d.get_field("party_name").refresh();
 						} else {
 							d.fields_dict.party_name.df.description = __("A Unique Party Name Must be filled");
-							d.refresh_field("party_name");
+							d.get_field("party_name").refresh();
 						}
 					},
 				});

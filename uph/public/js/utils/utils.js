@@ -1,14 +1,12 @@
 uph.party_type_pm_rules = {};
-function get_party_type_party_master_rules(party_type, callback) {
+uph.get_party_type_party_master_rules = function (party_type, callback) {
 	if (Object.keys(uph.party_type_pm_rules).length === 0) {
-		console.log("Fetching Party Type PM Rules");
 		frappe.call({
 			method:
 				"uph.party.doctype.party_master_settings.party_master_settings.get_party_type_party_master_rules_dict",
 			callback: function (r) {
 				if (r.message) {
 					Object.assign(uph.party_type_pm_rules, r.message);
-					console.log("Party Type PM Rules", uph.party_type_pm_rules);
 					callback(uph.party_type_pm_rules[party_type]);
 				} else {
 					callback(null);
@@ -26,13 +24,13 @@ $(document).on("app_ready", function () {
 			setup: function (frm) {
 				frm.set_query("party_master", function (doc) {
 					return {
-						query: "uph.controllers.queries.party_master_link_query",
+						query: "uph.party.controllers.queries.party_master_link_query",
 						filters: {
 							party_type: frm.doc.doctype,
 						},
 					};
 				});
-				get_party_type_party_master_rules(frm.doc.doctype, function (rules) {
+				uph.get_party_type_party_master_rules(frm.doc.doctype, function (rules) {
 					if (rules) {
 						frm.set_df_property("party_master", "reqd", rules.reqd);
 						frm.toggle_display("is_default_for_party_master", rules.allowed);
@@ -43,13 +41,13 @@ $(document).on("app_ready", function () {
 			refresh: function (frm) {
 				if (!frm.is_new()) {
 					frm.toggle_enable("party_master", !frm.doc.party_master);
-					get_party_type_party_master_rules(frm.doc.doctype, function (rules) {
+					uph.get_party_type_party_master_rules(frm.doc.doctype, function (rules) {
 						if (frm.doc.party_master && rules?.allowed) {
 							frm.add_custom_button(
 								__("Reset As Default for Party Master"),
 								function () {
 									frappe.call({
-										method: "uph.controllers.party.set_party_as_default_for_party_master",
+										method: "uph.party.controllers.party.set_party_as_default_for_party_master",
 										args: {
 											party: frm.doc.name,
 											party_type: frm.doc.doctype,
@@ -82,7 +80,7 @@ $(document).on("app_ready", function () {
 									reqd: 1,
 									get_query() {
 										return {
-											query: "uph.controllers.queries.get_party_master",
+											query: "uph.party.controllers.queries.get_party_master",
 											filters: { party_type: frm.doc.doctype },
 										};
 									},
@@ -202,7 +200,7 @@ $(document).on("app_ready", function () {
 				if (listview.page.fields_dict.party_master) {
 					listview.page.fields_dict.party_master.get_query = function () {
 						return {
-							query: "uph.controllers.queries.get_party_master",
+							query: "uph.party.controllers.queries.get_party_master",
 							filters: {
 								party_type: listview.doctype,
 							},

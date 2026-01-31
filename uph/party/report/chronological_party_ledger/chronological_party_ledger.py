@@ -14,7 +14,7 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
     get_dimension_with_children,
 )
 """
-from uph.controllers.queries import (
+from uph.party.controllers.queries import (
     get_party_master_parties_db,
 )
 
@@ -33,6 +33,12 @@ def execute(filters=None):
     columns = get_columns(filters)
     data = get_data(filters)
     chart = get_timeline_chart_by_currency(data)
+    hide_equal = (
+        True
+        if filters.get("display_options")
+        and "Hide Equals Voucher" in filters.get("display_options")
+        else False
+    )
     message = _(
         "This report is based on Transaction date (Timeline) If you want to see the transactions in the Party Master, please check the Party Master Transactions Report"
     )
@@ -161,13 +167,13 @@ def get_timeline_chart_by_currency(data):
 
 
 def string_to_hsl(s):
-    # FNV-1a Hash (lightweight, consistent)
-    hash_val = 2166136261
+    if not s:
+        return ""
+    s = str(s)
+    hash = 0
     for c in s:
-        hash_val ^= ord(c)
-        hash_val *= 16777619
-        hash_val &= 0xFFFFFFFF  # keep it 32-bit
-    hue = hash_val % 360
+        hash = ord(c) + ((hash << 5) - hash)
+    hue = hash % 360
     return f"hsl({hue}, 60%, 85%)"  # 85% lightness keeps it readable
 
 

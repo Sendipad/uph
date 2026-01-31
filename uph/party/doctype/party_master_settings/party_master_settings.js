@@ -1,7 +1,7 @@
 // Copyright (c) 2025, Abdo Mohammed Ruzaqi and contributors
 // For license information, please see license.txt
- frappe.ui.form.on("Party Master Settings", {
-    onload: function(frm) {
+frappe.ui.form.on("Party Master Settings", {
+    onload: function (frm) {
         // Prevent adding/removing rows for party_types grid
         if (frm.fields_dict['party_types']?.grid) {
             frm.fields_dict['party_types'].grid.cannot_add_rows = true;
@@ -10,18 +10,18 @@
             frm.refresh_field('party_types');
         }
     },
-    
-    refresh: function(frm) {
+
+    refresh: function (frm) {
         // Refresh the document_types grid
         frm.refresh_field('document_types');
-        
+
         // Update selection fields for existing rows
         if (frm.doc.document_types && frm.doc.document_types.length) {
             frm.doc.document_types.forEach(row => {
                 update_selection_fields(frm, "Party Master Settings DocType", row.name);
             });
         }
-        
+
         // Add description to document_types grid (only once)
         let grid = frm.fields_dict.document_types?.grid;
         if (grid) {
@@ -48,21 +48,21 @@
 });
 
 frappe.ui.form.on("Party Master Settings Party Type", {
-    form_render: function(frm, cdt, cdn) {
+    form_render: function (frm, cdt, cdn) {
         update_party_type_rule_field(frm, cdt, cdn);
     },
-    allowed: function(frm, cdt, cdn) {
+    allowed: function (frm, cdt, cdn) {
         update_party_type_rule_field(frm, cdt, cdn);
     }
 });
 
 
 frappe.ui.form.on("Party Master Settings DocType", {
-    form_render: function(frm, cdt, cdn) {
+    form_render: function (frm, cdt, cdn) {
         update_selection_fields(frm, cdt, cdn);
     },
-    
-    document_type: function(frm, cdt, cdn) {
+
+    document_type: function (frm, cdt, cdn) {
         update_selection_fields(frm, cdt, cdn);
     }
 });
@@ -73,14 +73,14 @@ function update_selection_fields(frm, cdt, cdn) {
 
     frappe.model.with_doctype(row.document_type, () => {
         let meta = frappe.get_meta(row.document_type);
-        
+
         let fieldnames = meta.fields
             .filter(d => !frappe.model.no_value_type.includes(d.fieldtype))
             .map(d => d.fieldname);
 
         let grid = frm.fields_dict.document_types?.grid;
         if (!grid) return;
-        
+
         let grid_row = grid.get_row(cdn);
         if (!grid_row) return;
 
@@ -90,7 +90,7 @@ function update_selection_fields(frm, cdt, cdn) {
             party_field.df.options = fieldnames.join("\n");
             party_field.refresh();
         }
-        
+
         const party_type_field = grid_row.get_field("party_type_fieldname");
         if (party_type_field) {
             party_type_field.df.options = fieldnames.join("\n");
@@ -102,14 +102,14 @@ function update_selection_fields(frm, cdt, cdn) {
             frappe.model.set_value(cdt, cdn, "party_fieldname", "");
         }
 
-        if (row.is_dynamic_party_type && row.party_type_fieldname && 
+        if (row.is_dynamic_party_type && row.party_type_fieldname &&
             !fieldnames.includes(row.party_type_fieldname)) {
             frappe.model.set_value(cdt, cdn, "party_type_fieldname", "");
         }
     });
 }
-    
- 	
+
+
 
 function update_party_type_rule_field(frm, cdt, cdn) {
     let row = locals[cdt][cdn];

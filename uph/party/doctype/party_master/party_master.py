@@ -15,16 +15,16 @@ from frappe.query_builder import DocType, Case
 from functools import reduce
 from frappe.query_builder.custom import ConstantColumn
 from uph.party.utils import get_mapped_fieldnames
-from uph.controllers.party import (
+from uph.party.controllers.party import (
     get_party_type_validation_rule,
     update_linked_party_to_party_master_count,
 )
 import uph
-from uph.controllers.queries import (
+from uph.party.controllers.queries import (
     get_party_master_parties,
     get_party_master_parties_db,
 )
-from uph.controllers.mdm.normalization import normalize_text
+from uph.party.utils import normalize_text
 
 
 class PartyMaster(NestedSet):
@@ -34,13 +34,23 @@ class PartyMaster(NestedSet):
     from typing import TYPE_CHECKING
 
     if TYPE_CHECKING:
-        from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import AllowedToTransactWith
-        from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import CustomerCreditLimit
+        from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import (
+            AllowedToTransactWith,
+        )
+        from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import (
+            CustomerCreditLimit,
+        )
         from erpnext.utilities.doctype.portal_user.portal_user import PortalUser
         from frappe.types import DF
-        from uph.party.doctype.party_master_accounts.party_master_accounts import PartyMasterAccounts
-        from uph.party.doctype.party_master_parties.party_master_parties import PartyMasterParties
-        from uph.party.doctype.party_master_role.party_master_role import PartyMasterRole
+        from uph.party.doctype.party_master_accounts.party_master_accounts import (
+            PartyMasterAccounts,
+        )
+        from uph.party.doctype.party_master_parties.party_master_parties import (
+            PartyMasterParties,
+        )
+        from uph.party.doctype.party_master_role.party_master_role import (
+            PartyMasterRole,
+        )
 
         account_manager: DF.Link | None
         accounts: DF.Table[PartyMasterAccounts]
@@ -66,11 +76,24 @@ class PartyMaster(NestedSet):
         is_internal_party: DF.Check
         is_primary_role: DF.Check
         language: DF.Link | None
-        legal_entity_type: DF.Literal["", "Sole Proprietor", "Partnership", "Corporation", "LLC", "NGO", "Freelancer", "Government", "Individual", "Other"]
+        legal_entity_type: DF.Literal[
+            "",
+            "Sole Proprietor",
+            "Partnership",
+            "Corporation",
+            "LLC",
+            "NGO",
+            "Freelancer",
+            "Government",
+            "Individual",
+            "Other",
+        ]
         lft: DF.Int
         market_segment: DF.Link | None
         mobile_no: DF.ReadOnly | None
-        naming_series: DF.Literal["{party_number}", ".{parent_party_master}.", "PM-{party_name}"]
+        naming_series: DF.Literal[
+            "{party_number}", ".{parent_party_master}.", "PM-{party_name}"
+        ]
         national_id: DF.Data | None
         normalized_party_name: DF.Data | None
         old_parent: DF.Link | None
@@ -92,7 +115,21 @@ class PartyMaster(NestedSet):
         rgt: DF.Int
         roles: DF.TableMultiSelect[PartyMasterRole]
         salutation: DF.Link | None
-        status: DF.Literal["Active", "Disabled", "Closed", "Credit Hold", "Delinquent", "Disputed", "Dormant", "Write-Off", "Approved", "On Hold", "Under Review", "Terminated", "Suspended"]
+        status: DF.Literal[
+            "Active",
+            "Disabled",
+            "Closed",
+            "Credit Hold",
+            "Delinquent",
+            "Disputed",
+            "Dormant",
+            "Write-Off",
+            "Approved",
+            "On Hold",
+            "Under Review",
+            "Terminated",
+            "Suspended",
+        ]
         tax_category: DF.Link | None
         tax_id: DF.Data | None
         tax_withholding_category: DF.Link | None
@@ -100,6 +137,7 @@ class PartyMaster(NestedSet):
         title: DF.Data | None
         total_linked_party: DF.Int
         type: DF.Literal["", "Company", "Individual", "Partnership"]
+
     # end: auto-generated types
     def onload(self):
         self.set("parties", get_party_master_parties(self.name))
@@ -166,7 +204,7 @@ class PartyMaster(NestedSet):
 
     def before_save(self):
         if self.party_name:
-             self.normalized_party_name = normalize_text(self.party_name)
+            self.normalized_party_name = normalize_text(self.party_name)
         frappe.cache.hdel(uph.make_key("Party Master.parties"), self.name)
         old = self.get_doc_before_save()
         if old and self.parent_party_master != old.parent_party_master:
@@ -285,8 +323,8 @@ class PartyMaster(NestedSet):
 
     @frappe.whitelist()
     def set_party_master(self, selection=None, **kwargs):
-        if not selection and kwargs.get('data'):
-            selection = kwargs.get('data')
+        if not selection and kwargs.get("data"):
+            selection = kwargs.get("data")
 
         if not selection:
             frappe.throw(_("Must Select at least one Party"))
@@ -426,49 +464,131 @@ class PartyMaster(NestedSet):
 
 
 @frappe.whitelist()
-def get_party_master_balances(company):
+def get_party_master_balances(company, name=None):
     from collections import defaultdict
     from frappe.query_builder import DocType, functions as fn
 
-    cache_key = f"UPH:Party Master Tree Balances::{company}"
+    # Use cache only for full company balances (no specific names) or hashed batches
+    import json
+    import hashlib
 
-    # Use cache if available
+    if isinstance(name, str):
+        try:
+            name = json.loads(name)
+        except Exception:
+            name = [name]
+
+    # Generate a deterministic cache key for the set of names
+    if name:
+        sorted_names = sorted(name) if isinstance(name, list) else [name]
+        name_hash = hashlib.md5(json.dumps(sorted_names).encode()).hexdigest()
+        cache_key = f"UPH:Party Master Tree Balances::{company}::{name_hash}"
+    else:
+        cache_key = f"UPH:Party Master Tree Balances::{company}::ALL"
+
     if cached := frappe.cache.get_value(cache_key):
         return cached
 
     GL = DocType("GL Entry")
-    parties = get_party_master_parties_db(party_master=None)
-    # Get (party_type, party) -> party_master map
-    party_map = {(p["party_type"], p["party"]): p["party_master"] for p in parties}
 
-    balances = (
-        frappe.qb.from_(GL)
-        .select(
-            GL.party,
-            GL.party_type,
-            GL.account_currency.as_("currency"),
-            (
-                fn.Sum(GL.debit_in_account_currency)
-                - fn.Sum(GL.credit_in_account_currency)
-            ).as_("balance"),
-        )
-        .where((GL.company == company) & GL.party.isnotnull())
-        .groupby(GL.party, GL.party_type)
-    ).run(as_dict=True)
+    # 1. Fetch all non-zero balance parties for this company once
+    # This is much faster than querying level by level or for thousands of specific nodes
+    gl_entries = frappe.db.sql(
+        """
+        SELECT 
+            party, party_type, account_currency as currency,
+            SUM(debit_in_account_currency - credit_in_account_currency) as balance
+        FROM `tabGL Entry`
+        WHERE company = %(company)s AND party IS NOT NULL AND is_cancelled = 0
+        GROUP BY party, party_type, account_currency
+        HAVING balance != 0
+    """,
+        {"company": company},
+        as_dict=True,
+    )
 
-    party_balances = defaultdict(list)
+    if not gl_entries:
+        return []
 
-    for entry in balances:
-        key = (entry["party_type"], entry["party"])
-        party_master = party_map.get(key)
-        if not party_master or not entry["balance"]:
+    # 2. Map (party_type, party) back to their Party Master
+    # Group by party_type for batch fetching
+    pt_to_parties = defaultdict(list)
+    for entry in gl_entries:
+        pt_to_parties[entry.party_type].append(entry.party)
+
+    party_to_pm = {}
+    for pt, p_names in pt_to_parties.items():
+        if not frappe.db.exists("DocType", pt):
             continue
-        party_balances[party_master].append(
-            {"currency": entry["currency"], "amount": entry["balance"]}
+
+        # Check if party_master field exists in this doctype
+        if not frappe.get_meta(pt).has_field("party_master"):
+            continue
+
+        pm_map = frappe.db.get_all(
+            pt, filters={"name": ["in", p_names]}, fields=["name", "party_master"]
         )
+        for m in pm_map:
+            if m.party_master:
+                party_to_pm[(pt, m.name)] = m.party_master
+
+    if not party_to_pm:
+        return []
+
+    # 3. Handle Hierarchical Aggregation
+    party_balances = defaultdict(list)
+    if name:
+        if isinstance(name, str):
+            name = [name]
+
+        # Map leaf PMs to requested PMs (self + ancestors)
+        leaf_to_req = defaultdict(list)
+        pm_names_in_gl = list(set(party_to_pm.values()))
+
+        map_query = """
+            SELECT leaf.name as leaf_name, req.name as req_name
+            FROM `tabParty Master` leaf
+            JOIN `tabParty Master` req ON leaf.lft >= req.lft AND leaf.rgt <= req.rgt
+            WHERE req.name IN %(req_names)s AND leaf.name IN %(leaf_names)s
+        """
+        mappings = frappe.db.sql(
+            map_query, {"req_names": name, "leaf_names": pm_names_in_gl}, as_dict=True
+        )
+        for m in mappings:
+            leaf_to_req[m.leaf_name].append(m.req_name)
+
+        # Init result for all requested names to avoid them "disappearing"
+        for n in name:
+            party_balances[n] = []
+    else:
+        # Full company: just map each party to its PM
+        leaf_to_req = {pm: [pm] for pm in set(party_to_pm.values())}
+
+    # 4. Final Summation
+    for entry in gl_entries:
+        pm_name = party_to_pm.get((entry.party_type, entry.party))
+        if not pm_name:
+            continue
+
+        target_req_pms = leaf_to_req.get(pm_name, [])
+        for req_pm in target_req_pms:
+            # Sum by currency
+            found = False
+            for existing in party_balances[req_pm]:
+                if existing["currency"] == entry.currency:
+                    existing["amount"] += entry.balance
+                    found = True
+                    break
+            if not found:
+                party_balances[req_pm].append(
+                    {"currency": entry.currency, "amount": entry.balance}
+                )
 
     result = [{"name": k, "balances": v} for k, v in party_balances.items()]
+
+    # Cache the result for 5 minutes
     frappe.cache.set_value(cache_key, result, expires_in_sec=300)
+
     return result
 
 
@@ -559,39 +679,6 @@ def get_children(doctype, parent=None, company=None, name=None, is_root=False):
 
 
 @frappe.whitelist()
-def get_children1(doctype, parent=None, company=None, **filters):
-    filters = filters or {}
-
-    # Remove frontend-added keys that don't exist in the DocType
-    for key in ["cmd", "is_root"]:
-        filters.pop(key, None)
-
-    if parent:
-        filters["parent_party_master"] = parent
-    else:
-        filters["parent_party_master"] = ""
-
-    party_masters = frappe.get_all(
-        "Party Master",
-        filters=filters,
-        fields=["name", "is_group", "party_type", "party_name"],
-        order_by="name",
-    )
-
-    return [
-        {
-            "value": d.name,
-            "title": d.party_name or d.name,
-            "expandable": d.is_group,
-            "is_group": d.is_group,
-            "party_type": d.party_type,
-            "party_name": d.party_name,
-        }
-        for d in party_masters
-    ]
-
-
-@frappe.whitelist()
 def get_next_party_master_number(parent=None, is_group=0):
     """Hierarchical numbering with proper padding and sibling checks."""
     import traceback
@@ -659,6 +746,7 @@ def create_party_from_party_master(
     source_name, target_doctype, save=None, target_doc=None, rule_field_value=None
 ):
     from frappe.model.mapper import get_mapped_doc
+    from frappe.utils import cint
 
     update = True if target_doc else False
     target_doc = frappe.get_doc(target_doctype, target_doc) if target_doc else None
@@ -710,7 +798,7 @@ def create_party_from_party_master(
         target_doc,
         set_missing_values,
     )
-    if save:
+    if cint(save):
         doc.save()
     return doc
 
@@ -821,8 +909,6 @@ def get_parties(party_master, fromdb=False, party_type=None):
 
     cache.set_value(key, parties, expires_in_sec=3600)
     return {"parties": parties}
-
-
 
 
 @frappe.whitelist()

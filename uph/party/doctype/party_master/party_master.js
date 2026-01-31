@@ -263,7 +263,7 @@ function show_linked_parties(frm) {
 	];
 
 	frappe.call({
-		method: "uph.controllers.queries.get_party_master_parties",
+		method: "uph.party.controllers.queries.get_party_master_parties",
 		args: { party_master: frm.doc.name },
 		callback(r) {
 			if (r.message) {

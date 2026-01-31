@@ -19,9 +19,15 @@ class PartyMasterSettings(Document):
 
     if TYPE_CHECKING:
         from frappe.types import DF
-        from uph.party.doctype.party_master_settings_docfield.party_master_settings_docfield import PartyMasterSettingsDocField
-        from uph.party.doctype.party_master_settings_doctype.party_master_settings_doctype import PartyMasterSettingsDocType
-        from uph.party.doctype.party_master_settings_party_type.party_master_settings_party_type import PartyMasterSettingsPartyType
+        from uph.party.doctype.party_master_settings_docfield.party_master_settings_docfield import (
+            PartyMasterSettingsDocField,
+        )
+        from uph.party.doctype.party_master_settings_doctype.party_master_settings_doctype import (
+            PartyMasterSettingsDocType,
+        )
+        from uph.party.doctype.party_master_settings_party_type.party_master_settings_party_type import (
+            PartyMasterSettingsPartyType,
+        )
 
         auto_expand_levels: DF.Int
         document_types: DF.Table[PartyMasterSettingsDocType]
@@ -31,6 +37,7 @@ class PartyMasterSettings(Document):
         override_party_details_api: DF.Check
         party_master_fields: DF.Table[PartyMasterSettingsDocField]
         party_types: DF.Table[PartyMasterSettingsPartyType]
+
     # end: auto-generated types
     def validate(self):
         self.validate_document_types()
@@ -40,11 +47,12 @@ class PartyMasterSettings(Document):
         # Clear caches
         frappe.cache.delete_key(uph.make_key(f"{self.doctype}.party_types"))
         frappe.cache.delete_key(uph.make_key(f"{self.doctype}.document_types"))
-        
+
         # Clear UPH controller caches (for smart hooks)
-        from uph.controllers.cache_utils import clear_settings_cache
-        clear_settings_cache()
-        
+        from uph.party.controllers.cache_utils import clear_all_caches
+
+        clear_all_caches()
+
         # Existing logic
         self.create_pm_fields_on_party_doctype()
         self.sync_update_to_doctype_fields()
