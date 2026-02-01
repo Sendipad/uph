@@ -15,6 +15,7 @@ from uph.tests.setup_mixin import AccountsTestMixin
 class TestPartyControllers(FrappeTestCase, AccountsTestMixin):
     def setUp(self):
         self.create_company()
+        self.create_item()
         self.create_party_master()
         self.create_customer(party_master=self.party_master)
 

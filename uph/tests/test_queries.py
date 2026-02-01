@@ -20,6 +20,7 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
     def setUp(self):
         clear_all_caches()
         self.create_company()
+        self.create_item()
         self.create_party_master()
 
     def test_get_party_master_parties(self):
