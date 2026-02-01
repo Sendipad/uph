@@ -27,7 +27,12 @@ def execute(filters=None):
         frappe.throw(_("Party Master is Mandatory"))
     parties = get_party_master_parties_db(filters.party_master)
     if not parties:
-        frappe.throw(_("This Party Master has no Parties linked to"))
+        return (
+            get_columns(filters),
+            [],
+            _("No Parties linked to this Party Master"),
+            None,
+        )
     filters["party"] = [p.party for p in parties]
     filters["parties"] = parties
     columns = get_columns(filters)

@@ -32,11 +32,26 @@ def after_install():
 
 def run_pending_setup():
     """Run new setup safely for existing sites"""
+    ensure_essential_erpnext_fixtures()
     setup_initial_document_types()
     setup_party_types_table()
     create_party_master_tree()
     create_party_analytic_accounting_dimension()
     create_gender_fixtures()
+
+
+def ensure_essential_erpnext_fixtures():
+    """Create essential ERPNext records needed for UPH installation if they are missing"""
+    for party_type, acc_type in [("Customer", "Receivable"), ("Supplier", "Payable")]:
+        if not frappe.db.exists("Party Type", party_type):
+            frappe.get_doc(
+                {
+                    "doctype": "Party Type",
+                    "party_type": party_type,
+                    "account_type": acc_type,
+                }
+            ).insert(ignore_permissions=True)
+    frappe.db.commit()
 
 
 def create_gender_fixtures():

@@ -41,7 +41,7 @@ def get_data(filters):
 
     arrange_balances = filters.arrange_balances
     columns = None if arrange_balances != "Horizontal" else []
-    parties = filters.parties or None
+    parties = filters.parties or []
     GL = DocType("GL Entry")
     where_conditions = (GL.company == filters.get("company")) & (GL.is_cancelled == 0)
 
