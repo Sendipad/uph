@@ -35,7 +35,7 @@ def get_document_type_mapping_with_party_master(document_type):
         for v in docs.values():
             if v.get("document_type") == document_type:
                 return v
-        frappe.db.get_value(
+        return frappe.db.get_value(
             "Party Master Settings DocType",
             {"parenttype": "Party Master Settings", "document_type": document_type},
             fields=[
@@ -471,33 +471,6 @@ def test_update_exists():
         return content
 
 
-# This will be called on insert new Document type in Party Master Setting and it has Exist documents
-def update_exists_docs_on_new_document_type_insert(document_type):
-    mapping_all = get_doctypes_functional_fields_mapping_as_dict()
-    mapping = mapping_all.get(document_type, {})
-    meta = frappe.get_meta(document_type, cache=False)
-    if not meta.has_field("party_master"):
-        frappe.log_error(
-            _("Uph:Party Master Field does not Exist on {0}").format(document_type),
-        )
-    if isinstance(document_type, str):
-        mapping = get_doctypes_functional_fields_mapping_as_dict().get(
-            document_type, {}
-        )
-    if not mapping:
-        frappe.log_error(
-            method=_("Could not update documents {0}").format(
-                document_type,
-                error=_(
-                    "Error exist as no mapping Could be this function run before update cache"
-                ),
-            )
-        )
-
-    # If doctype is a group, we should probably handle it or skip
-    pass
-
-
 def update_linked_party_to_party_master_count(party_master):
     if isinstance(party_master, str):
         party_master = frappe.get_doc("Party Master", party_master)
@@ -542,7 +515,6 @@ def set_party_as_default_for_party_master(
 def check_duplicate_voucher_party_master(
     party_master, doctype, posting_date, current_name=None, doc=None
 ):
-    from uph.party.utils import get_mapped_fieldnames
 
     pfn = get_mapped_fieldnames(doctype, "party_fieldname")
     filters = {

@@ -19,13 +19,6 @@ from frappe.custom.doctype.custom_field.custom_field import create_custom_field
 from uph.regional.arabic import money_in_words
 
 
-def test_arabic():
-    amount = 10000.00
-    currency = "YER"
-    frappe.local.lang == "ar"
-    return money_in_words(amount, currency)
-
-
 def get_common_party_with_party_master_fields():
     return {
         "party_name": "Customer : customer_name\nSupplier:supplier_name\nEmployee: employee_name",

@@ -3,12 +3,8 @@
 
 import frappe
 
-# from frappe.model.naming import set_name_by_naming_series, set_name_from_naming_options
 from frappe import _
 from frappe.utils.nestedset import NestedSet
-
-# from frappe.contacts.address_and_contact import (delete_contact_and_address,load_address_and_contact)
-# from frappe.utils import cint
 
 from frappe.query_builder import DocType, Case
 
@@ -19,7 +15,6 @@ from uph.party.controllers.party import (
     get_party_type_validation_rule,
     update_linked_party_to_party_master_count,
 )
-import uph
 from uph.party.controllers.queries import (
     get_party_master_parties,
     get_party_master_parties_db,
