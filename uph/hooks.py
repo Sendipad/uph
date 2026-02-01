@@ -126,7 +126,7 @@ export_python_type_annotations = True
 # Testing
 # -------
 
-# before_tests = "uph.install.before_tests"
+before_tests = "uph.tests.test_utils.before_tests"
 
 # Overriding Methods
 # ------------------------------
