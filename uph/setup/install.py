@@ -36,6 +36,16 @@ def run_pending_setup():
     setup_party_types_table()
     create_party_master_tree()
     create_party_analytic_accounting_dimension()
+    create_gender_fixtures()
+
+
+def create_gender_fixtures():
+    """Ensure core Gender records exist for tests and system consistency"""
+    for gender in ["Female", "Male", "Other"]:
+        if not frappe.db.exists("Gender", gender):
+            doc = frappe.new_doc("Gender")
+            doc.name = gender
+            doc.insert(ignore_permissions=True)
 
 
 def post_install():

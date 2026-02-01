@@ -91,8 +91,6 @@ jobs:
         run: |
           bench --site test_site install-app erpnext
           bench --site test_site execute erpnext.setup.setup_wizard.operations.install_fixtures.install --kwargs "{'country': 'United States'}"
-          bench --site test_site execute frappe.db.insert --args "('Gender', {'name': 'Female'})" --kwargs "{'ignore_if_duplicate': True}"
-          bench --site test_site execute frappe.db.insert --args "('Gender', {'name': 'Male'})" --kwargs "{'ignore_if_duplicate': True}"
 
       - name: Install UPH
         working-directory: frappe-bench
