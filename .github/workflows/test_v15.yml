@@ -90,9 +90,10 @@ jobs:
         working-directory: frappe-bench
         run: |
           bench --site test_site install-app erpnext
-          bench --site test_site install-app uph
-          # Complete ERPNext baseline setup using UPH utility
+          # Complete ERPNext baseline setup using UPH utility BEFORE installing UPH
+          # This ensures that standard records like Party Type (Customer, Supplier) exist.
           bench --site test_site execute uph.tests.test_utils.setup_erpnext_baseline
+          bench --site test_site install-app uph
 
       - name: Install UPH
         working-directory: frappe-bench
