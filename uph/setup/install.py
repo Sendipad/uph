@@ -4,9 +4,10 @@ from uph.party.doctype.party_master_settings.party_master_settings import (
     setup_initial_document_types,
     setup_party_types_table,
 )
-from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
-    make_dimension_in_accounting_doctypes,
-)
+
+# from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
+#     make_dimension_in_accounting_doctypes,
+# )
 
 
 def full_setup():
@@ -62,5 +63,10 @@ def create_party_master_tree():
 
 def create_party_analytic_accounting_dimension():
     """Create Accounting Dimension for Party Analytic Accounting"""
-    if not frappe.db.exists("Accounting Dimension", "Party Analytic Accounting"):
-        make_dimension_in_accounting_doctypes(dimension="Party Analytic Accounting")
+    if not frappe.db.exists(
+        "Accounting Dimension", {"document_type": "Party Analytic Accounting"}
+    ):
+        doc = frappe.new_doc("Accounting Dimension")
+        doc.document_type = "Party Analytic Accounting"
+        doc.label = _("Party Analytic Accounting")
+        doc.insert(ignore_permissions=True)
