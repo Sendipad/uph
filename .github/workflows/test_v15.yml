@@ -90,7 +90,16 @@ jobs:
         working-directory: frappe-bench
         run: |
           bench --site test_site install-app erpnext
-          bench --site test_site execute erpnext.setup.setup_wizard.operations.install_fixtures.install --kwargs "{'country': 'United States'}"
+          # Simulate Setup Wizard for a complete baseline
+          bench --site test_site execute erpnext.setup.setup_wizard.setup_wizard.setup_complete --kwargs "{
+            'company_name': '_Test Company',
+            'company_abbr': '_TC',
+            'country': 'United States',
+            'currency': 'USD',
+            'chart_of_accounts': 'Standard',
+            'full_name': 'Administrator',
+            'email': 'admin@example.com'
+          }"
 
       - name: Install UPH
         working-directory: frappe-bench

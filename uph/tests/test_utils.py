@@ -1,26 +1,35 @@
 import frappe
+from frappe.tests.utils import make_test_records
 
 
 def before_tests():
     """Setup necessary fixtures for tests, especially for clean environments like CI"""
+
+    # 1. Initialize ERPNext Test baseline (Company, Fiscal Year, etc.)
     setup_erpnext_test_fixtures()
+
+    # 2. Pre-load essential ERPNext test records that are commonly required by plugins
+    # This prevents LinkValidationError during automatic upfront preloading in v16+
+    for doctype in [
+        "Unit of Measure",
+        "Account",
+        "Cost Center",
+        "Item Group",
+        "Item",
+        "Warehouse",
+    ]:
+        try:
+            make_test_records(doctype, commit=True)
+        except Exception as e:
+            # We don't want to crash before_tests if some optional records fail,
+            # but we log it for debugging.
+            print(f"DEBUG: before_tests failed for {doctype}: {e}")
 
 
 def setup_erpnext_test_fixtures():
-    """Create essential ERPNext test records if they don't exist"""
-    # 1. Create Item Group
-    if not frappe.db.exists("Item Group", "_Test Item Group"):
-        frappe.get_doc(
-            {
-                "doctype": "Item Group",
-                "item_group_name": "_Test Item Group",
-                "parent_item_group": "All Item Groups",
-                "is_group": 0,
-            }
-        ).insert(ignore_permissions=True)
+    """Create essential ERPNext test baseline if it doesn't exist"""
 
-    # 2. Create Warehouse (requires a Company)
-    # Note: We use the default _Test Company typically used in ERPNext tests
+    # Ensure _Test Company exists
     if not frappe.db.exists("Company", "_Test Company"):
         try:
             from erpnext.setup.doctype.company.company import install_country_fixtures
@@ -39,18 +48,7 @@ def setup_erpnext_test_fixtures():
             }
         ).insert(ignore_permissions=True)
 
-    if not frappe.db.exists("Warehouse", "_Test Warehouse - _TC"):
-        frappe.get_doc(
-            {
-                "doctype": "Warehouse",
-                "warehouse_name": "_Test Warehouse",
-                "company": "_Test Company",
-                "warehouse_type": "Transit",
-                "is_group": 0,
-            }
-        ).insert(ignore_permissions=True)
-
-    # 3. Create Fiscal Year for current date
+    # Ensure Fiscal Year exists
     from frappe.utils import getdate, today
 
     current_date = getdate(today())
