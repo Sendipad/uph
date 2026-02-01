@@ -46,3 +46,21 @@ def post_install():
     settings.save()
 
     run_pending_setup()
+
+
+def create_party_master_tree():
+    """Create root node for Party Master if not exists"""
+    if not frappe.db.exists(
+        "Party Master", {"is_group": 1, "parent_party_master": None}
+    ):
+        doc = frappe.new_doc("Party Master")
+        doc.party_name = "All Party Masters"
+        doc.is_group = 1
+        doc.party_number = "1000"
+        doc.insert(ignore_permissions=True)
+
+
+def create_party_analytic_accounting_dimension():
+    """Create Accounting Dimension for Party Analytic Accounting"""
+    if not frappe.db.exists("Accounting Dimension", "Party Analytic Accounting"):
+        make_dimension_in_accounting_doctypes(dimension="Party Analytic Accounting")
