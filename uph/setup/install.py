@@ -73,10 +73,21 @@ def create_party_master_tree():
 
 def create_party_analytic_accounting_dimension():
     """Create Accounting Dimension for Party Analytic Accounting"""
-    if not frappe.db.exists(
-        "Accounting Dimension", {"document_type": "Party Analytic Accounting"}
-    ):
+    dimension_label = "Party Analytic Accounting"
+    if not frappe.db.exists("Accounting Dimension", {"label": dimension_label}):
         doc = frappe.new_doc("Accounting Dimension")
-        doc.document_type = "Party Analytic Accounting"
-        doc.label = _("Party Analytic Accounting")
+        doc.label = dimension_label
+        doc.document_type = "Party Master"
         doc.insert(ignore_permissions=True)
+
+    # Sync columns immediately (critical for CI environments)
+    doc = frappe.get_doc("Accounting Dimension", {"label": dimension_label})
+    from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
+        make_dimension_in_accounting_doctypes,
+    )
+
+    make_dimension_in_accounting_doctypes(doc)
+
+    # Ensure cache is fresh for all transactional doctypes
+    frappe.clear_cache(doctype="GL Entry")
+    frappe.db.commit()
