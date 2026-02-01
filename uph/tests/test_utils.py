@@ -22,7 +22,10 @@ def setup_erpnext_test_fixtures():
     # 2. Create Warehouse (requires a Company)
     # Note: We use the default _Test Company typically used in ERPNext tests
     if not frappe.db.exists("Company", "_Test Company"):
-        from erpnext.setup.default_after_install import install_country_fixtures
+        try:
+            from erpnext.setup.doctype.company.company import install_country_fixtures
+        except ImportError:
+            from erpnext.setup.default_after_install import install_country_fixtures
 
         install_country_fixtures("_Test Company", "United States")
 
