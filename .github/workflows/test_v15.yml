@@ -21,10 +21,18 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
 
-      redis:
-        image: redis:6-alpine
+      redis-cache:
+        image: redis:alpine
         ports:
-          - 6379:6379
+          - 13000:6379
+      redis-queue:
+        image: redis:alpine
+        ports:
+          - 11000:6379
+      redis-socketio:
+        image: redis:alpine
+        ports:
+          - 12000:6379
 
     steps:
       - name: Checkout
@@ -43,7 +51,12 @@ jobs:
       - name: Install System Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libmariadb-dev-compat libmariadb-dev
+          sudo apt-get install -y libmariadb-dev-compat libmariadb-dev mariadb-client
+
+      - name: Configure MariaDB
+        run: |
+          mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL character_set_server = 'utf8mb4'"
+          mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL collation_server = 'utf8mb4_unicode_ci'"
 
       - name: Install Frappe Bench
         run: pip install frappe-bench
@@ -55,28 +68,25 @@ jobs:
         working-directory: frappe-bench
         run: |
           bench set-config -g db_host 127.0.0.1
-          bench set-config -g redis_cache redis://127.0.0.1:6379
-          bench set-config -g redis_queue redis://127.0.0.1:6379
-          bench set-config -g redis_socketio redis://127.0.0.1:6379
+          bench set-config -g redis_cache redis://127.0.0.1:13000
+          bench set-config -g redis_queue redis://127.0.0.1:11000
+          bench set-config -g redis_socketio redis://127.0.0.1:12000
 
       - name: Install ERPNext
         working-directory: frappe-bench
         run: bench get-app erpnext --branch version-15
 
-      - name: Install UPH (Local)
+      - name: Install UPH
         working-directory: frappe-bench
-        run: |
-          mkdir -p apps/uph
-          rsync -a --exclude 'frappe-bench' $GITHUB_WORKSPACE/ apps/uph/
-          pip install -e apps/uph
-          echo "uph" >> sites/apps.txt
+        run: bench get-app uph $GITHUB_WORKSPACE
 
       - name: Create Site
         working-directory: frappe-bench
         run: |
-          bench new-site test_site --mariadb-root-password root --admin-password admin --no-mariadb-socket
+          bench new-site test_site --db-root-password root --admin-password admin --no-mariadb-socket
+          bench --site test_site set-config allow_tests true
 
-      - name: Install ERPNext and Run Setup Wizard
+      - name: Setup ERPNext
         working-directory: frappe-bench
         run: |
           bench --site test_site install-app erpnext
