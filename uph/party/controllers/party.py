@@ -215,11 +215,12 @@ def validate_party_master_on_target_party_type(doc, method):
     party_type_rule = get_party_type_validation_rule(party_type=doc.doctype)
 
     if method == "validate":
-        if (
-            party_type_rule.get("reqd")
-            and not doc.party_master
-            and not frappe.flags.in_test
-        ):
+        if party_type_rule.get("reqd") and not doc.party_master:
+            if frappe.flags.in_test and not getattr(
+                doc, "force_validate_party_master", False
+            ):
+                return
+
             frappe.throw(
                 _(
                     "Party Master is mandatory for {0},<br> You can unset Mandatory in Party Master Settings"

@@ -103,6 +103,7 @@ class TestPartyControllers(FrappeTestCase, AccountsTestMixin):
 
                 cust_no_pm = frappe.get_doc("Customer", self.customer)
                 cust_no_pm.party_master = None
+                cust_no_pm.force_validate_party_master = True
                 self.assertRaises(
                     frappe.ValidationError,
                     validate_party_master_on_target_party_type,
