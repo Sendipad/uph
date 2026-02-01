@@ -50,4 +50,19 @@ def setup_erpnext_test_fixtures():
             }
         ).insert(ignore_permissions=True)
 
+    # 3. Create Fiscal Year for current date
+    from frappe.utils import getdate, today
+
+    current_date = getdate(today())
+    year = str(current_date.year)
+    if not frappe.db.exists("Fiscal Year", year):
+        frappe.get_doc(
+            {
+                "doctype": "Fiscal Year",
+                "year": year,
+                "year_start_date": f"{year}-01-01",
+                "year_end_date": f"{year}-12-31",
+            }
+        ).insert(ignore_permissions=True)
+
     frappe.db.commit()
