@@ -207,8 +207,20 @@ frappe.treeview_settings["Party Master"] = {
 						})
 						.join(" / ");
 
+					// Legacy/Fallback for link update
 					const $link = node.$tree_link || $(`[data-node-id="${pm.name}"]`);
-					if ($link.length) {
+
+					// Align with Account Tree Style
+					if (node.$ul) {
+						// Clean previous
+						node.parent && node.parent.find(".balance-area").remove();
+
+						// Insert before Children UL (floats right)
+						$(`<span class="balance-area pull-right">${balance_html}</span>`)
+							.insertBefore(node.$ul);
+					} else if ($link.length) {
+						// Fallback for nodes without $ul (e.g. maybe leaves if tree struct differs?)
+						// But usually leaves have empty $ul or we can insert after link
 						$link.find(".balance-area").remove();
 						$(`<span class="balance-area pull-right">${balance_html}</span>`)
 							.appendTo($link);

@@ -1,0 +1,93 @@
+name: Test v15
+
+on:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  test:
+    name: Test v15
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    services:
+      mariadb:
+        image: mariadb:10.6
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
+
+      redis:
+        image: redis:6-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libmariadb-dev-compat libmariadb-dev
+
+      - name: Install Frappe Bench
+        run: pip install frappe-bench
+
+      - name: Initialize Bench
+        run: bench init --skip-redis-config-generation --frappe-branch version-15 frappe-bench
+
+      - name: Configure Bench
+        working-directory: frappe-bench
+        run: |
+          bench set-config -g db_host 127.0.0.1
+          bench set-config -g redis_cache redis://127.0.0.1:6379
+          bench set-config -g redis_queue redis://127.0.0.1:6379
+          bench set-config -g redis_socketio redis://127.0.0.1:6379
+
+      - name: Install ERPNext
+        working-directory: frappe-bench
+        run: bench get-app erpnext --branch version-15
+
+      - name: Install UPH (Local)
+        working-directory: frappe-bench
+        run: |
+          mkdir -p apps/uph
+          rsync -a --exclude 'frappe-bench' $GITHUB_WORKSPACE/ apps/uph/
+          pip install -e apps/uph
+          echo "uph" >> sites/apps.txt
+
+      - name: Create Site
+        working-directory: frappe-bench
+        run: |
+          bench new-site test_site --mariadb-root-password root --admin-password admin --no-mariadb-socket
+
+      - name: Install ERPNext and Run Setup Wizard
+        working-directory: frappe-bench
+        run: |
+          bench --site test_site install-app erpnext
+          bench --site test_site execute erpnext.setup.setup_wizard.operations.install_fixtures.install --kwargs "{'country': 'United States'}"
+
+      - name: Install UPH
+        working-directory: frappe-bench
+        run: |
+          bench --site test_site install-app uph
+
+      - name: Run Tests
+        working-directory: frappe-bench
+        run: |
+          bench --site test_site run-tests --app uph
