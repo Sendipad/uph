@@ -465,11 +465,7 @@ def get_party_master_parties_db(party_master, all_roles=True, roles=None):
                 continue
 
             currency_field = get_party_type_currency_field(role_doctype)
-            fields = [
-                "name as party",
-                f"'{role_doctype}' as party_type",
-                "party_master",
-            ]
+            fields = ["name as party", "party_master"]
             if currency_field and frappe.get_meta(role_doctype).has_field(
                 currency_field
             ):
@@ -487,15 +483,10 @@ def get_party_master_parties_db(party_master, all_roles=True, roles=None):
                     filters=filters,
                     fields=fields,
                 )
-                if not found:
-                    print(
-                        f"DEBUG: No parties found for multiple PMs {party_master} in {role_doctype}"
-                    )
+                for p in found:
+                    p["party_type"] = role_doctype
                 all_parties.extend(found)
-            except Exception as e:
-                print(
-                    f"DEBUG: Error fetching parties for {role_doctype} in multi-query: {e}"
-                )
+            except Exception:
                 pass
         return all_parties
 
@@ -522,7 +513,7 @@ def get_party_master_parties_db(party_master, all_roles=True, roles=None):
             continue
 
         currency_field = get_party_type_currency_field(role_doctype)
-        fields = ["name as party", f"'{role_doctype}' as party_type", "party_master"]
+        fields = ["name as party", "party_master"]
         if currency_field and frappe.get_meta(role_doctype).has_field(currency_field):
             fields.append(f"{currency_field} as currency")
 
@@ -538,14 +529,10 @@ def get_party_master_parties_db(party_master, all_roles=True, roles=None):
                 filters=filters,
                 fields=fields,
             )
-            if not found:
-                print(
-                    f"DEBUG: No parties found for PM(s) {party_master} in {role_doctype} with filters {filters}"
-                )
             for p in found:
+                p["party_type"] = role_doctype
                 parties.append(p)
-        except Exception as e:
-            print(f"DEBUG: Error fetching parties for {role_doctype}: {e}")
+        except Exception:
             pass
 
     return parties

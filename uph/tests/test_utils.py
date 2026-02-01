@@ -42,14 +42,9 @@ def setup_erpnext_baseline():
     from erpnext.setup.setup_wizard.setup_wizard import setup_complete
 
     if frappe.db.exists("Company", "_Test Company"):
-        print("DEBUG: _Test Company already exists. Skipping baseline setup.")
         return
 
     from frappe.utils import today
-
-    print(
-        f"DEBUG: Starting ERPNext baseline setup for _Test Company. Template: Standard, Country: Yemen"
-    )
 
     # These arguments match what ERPNext's setup wizard expects.
     # We use Yemen/YER to match AccountsTestMixin defaults.
@@ -70,11 +65,8 @@ def setup_erpnext_baseline():
         # Pass a frappe._dict to support attribute access inside setup_wizard
         frappe.flags.ignore_mandatory = True
         setup_complete(frappe._dict(args))
-    except Exception as e:
-        print(f"DEBUG: setup_erpnext_baseline failed: {e}")
-        import traceback
-
-        traceback.print_exc()
+    except Exception:
+        pass
     finally:
         frappe.flags.ignore_mandatory = False
 
@@ -98,4 +90,3 @@ def setup_erpnext_baseline():
 
     frappe.db.commit()
     frappe.clear_cache()
-    print("DEBUG: ERPNext baseline setup attempt complete.")
