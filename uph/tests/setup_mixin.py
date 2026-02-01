@@ -113,6 +113,12 @@ class AccountsTestMixin:
         company=None,
         valuation_rate=0,
     ):
+        if not company and hasattr(self, "company"):
+            company = self.company
+
+        if not warehouse and hasattr(self, "warehouse"):
+            warehouse = self.warehouse
+
         item = create_item(
             item_name,
             is_stock_item=is_stock,
