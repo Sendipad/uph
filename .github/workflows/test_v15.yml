@@ -95,11 +95,6 @@ jobs:
           # Then complete ERPNext baseline setup
           bench --site test_site execute uph.tests.test_utils.setup_erpnext_baseline
 
-      - name: Install UPH
-        working-directory: frappe-bench
-        run: |
-          bench --site test_site install-app uph
-
       - name: Run Tests
         working-directory: frappe-bench
         run: |
