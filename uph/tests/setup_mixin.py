@@ -6,7 +6,7 @@ from erpnext.stock.doctype.item.test_item import create_item
 
 class AccountsTestMixin:
     def create_party_master(
-        self, party_name="_Test Party Master", parent_party_master="1310"
+        self, party_name="_Test Party Master", parent_party_master="1000"
     ):
         name = frappe.db.exists("Party Master", {"party_name": party_name})
         if not name:
