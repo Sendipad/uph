@@ -90,16 +90,9 @@ jobs:
         working-directory: frappe-bench
         run: |
           bench --site test_site install-app erpnext
-          # Simulate Setup Wizard for a complete baseline
-          bench --site test_site execute erpnext.setup.setup_wizard.setup_wizard.setup_complete --kwargs "{
-            'company_name': '_Test Company',
-            'company_abbr': '_TC',
-            'country': 'United States',
-            'currency': 'USD',
-            'chart_of_accounts': 'Standard',
-            'full_name': 'Administrator',
-            'email': 'admin@example.com'
-          }"
+          bench --site test_site install-app uph
+          # Complete ERPNext baseline setup using UPH utility
+          bench --site test_site execute uph.tests.test_utils.setup_erpnext_baseline
 
       - name: Install UPH
         working-directory: frappe-bench

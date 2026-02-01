@@ -1,15 +1,18 @@
 import frappe
-from frappe.tests.utils import make_test_records
+
+try:
+    from frappe.tests.utils import make_test_records
+except ImportError:
+    from frappe.test_runner import make_test_records
 
 
 def before_tests():
     """Setup necessary fixtures for tests, especially for clean environments like CI"""
-
     # 1. Initialize ERPNext Test baseline (Company, Fiscal Year, etc.)
     setup_erpnext_test_fixtures()
 
-    # 2. Pre-load essential ERPNext test records that are commonly required by plugins
-    # This prevents LinkValidationError during automatic upfront preloading in v16+
+    # 2. Pre-load essential ERPNext test records
+    # This satisfies dependencies for tests that assume standard ERPNext data exists.
     for doctype in [
         "Unit of Measure",
         "Account",
@@ -21,34 +24,42 @@ def before_tests():
         try:
             make_test_records(doctype, commit=True)
         except Exception as e:
-            # We don't want to crash before_tests if some optional records fail,
-            # but we log it for debugging.
-            print(f"DEBUG: before_tests failed for {doctype}: {e}")
+            # We don't want to crash before_tests if some optional records fail.
+            pass
 
 
 def setup_erpnext_test_fixtures():
-    """Create essential ERPNext test baseline if it doesn't exist"""
-
-    # Ensure _Test Company exists
+    """Ensure basic records exist for preloading to succeed"""
     if not frappe.db.exists("Company", "_Test Company"):
         try:
-            from erpnext.setup.doctype.company.company import install_country_fixtures
-        except ImportError:
-            from erpnext.setup.default_after_install import install_country_fixtures
+            setup_erpnext_baseline()
+        except Exception as e:
+            print(f"DEBUG: setup_erpnext_baseline failed: {e}")
 
-        install_country_fixtures("_Test Company", "United States")
 
-        frappe.get_doc(
-            {
-                "doctype": "Company",
-                "company_name": "_Test Company",
-                "abbr": "_TC",
-                "default_currency": "USD",
-                "country": "United States",
-            }
-        ).insert(ignore_permissions=True)
+def setup_erpnext_baseline():
+    """Programmatically complete the ERPNext setup wizard for CI baseline"""
+    from erpnext.setup.setup_wizard.setup_wizard import setup_complete
 
-    # Ensure Fiscal Year exists
+    if frappe.db.exists("Company", "_Test Company"):
+        return
+
+    # These arguments match what ERPNext's setup wizard expects
+    args = {
+        "company_name": "_Test Company",
+        "company_abbr": "_TC",
+        "country": "United States",
+        "currency": "USD",
+        "chart_of_accounts": "Standard",
+        "full_name": "Administrator",
+        "email": "admin@example.com",
+        "timezone": "UTC",
+    }
+
+    # We call setup_complete with a single dictionary argument as expected by ERPNext
+    setup_complete(args)
+
+    # Ensure a Fiscal Year exists for the current year
     from frappe.utils import getdate, today
 
     current_date = getdate(today())
@@ -64,3 +75,5 @@ def setup_erpnext_test_fixtures():
         ).insert(ignore_permissions=True)
 
     frappe.db.commit()
+    frappe.clear_cache()
+    print("DEBUG: ERPNext baseline setup complete.")
