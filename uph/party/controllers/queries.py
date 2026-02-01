@@ -737,16 +737,14 @@ def get_party_master_dashboard_info(party_master_name):
         info_list = get_erp_dashboard_info(p_type, p_name)
 
         # Get unpaid invoice count
-        unpaid_invoices = frappe.get_all(
+        p_unpaid_count = frappe.db.count(
             "Sales Invoice" if p_type == "Customer" else "Purchase Invoice",
             filters={
                 p_type.lower(): p_name,
                 "docstatus": 1,
                 "outstanding_amount": (">", 0),
             },
-            fields=["count(*) as count"],
         )
-        p_unpaid_count = unpaid_invoices[0].count if unpaid_invoices else 0
 
         for info in info_list:
             key = (info["company"], info["currency"])
