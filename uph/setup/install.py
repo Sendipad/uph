@@ -44,7 +44,7 @@ def create_gender_fixtures():
     for gender in ["Female", "Male", "Other"]:
         if not frappe.db.exists("Gender", gender):
             doc = frappe.new_doc("Gender")
-            doc.name = gender
+            doc.gender = gender
             doc.insert(ignore_permissions=True)
 
 
