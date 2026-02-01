@@ -11,6 +11,7 @@ from frappe import _
 from uph.party.controllers.cache_utils import (
     get_configured_doctypes,
     get_doctypes_functional_fields_mapping_as_dict,
+    SmartCache,
 )
 
 
@@ -217,34 +218,35 @@ def usage_counts_on_reference_doctype(doctype, cached=True):
     meta = frappe.get_meta(doctype)
     if meta.issingle:
         return []
-    key = f"UPH:usage_count-{doctype}-{frappe.session.user}"
-    result = frappe.cache.get_value(key)
-    if result and cached:
-        return result
-    link_field = "party_master" if meta.has_field("party_master") else None
-    if not link_field:
-        return
-    Ref = DocType(doctype)
-    three_months_ago = add_months(nowdate(), -3)
 
-    top_used = (
-        frappe.qb.from_(Ref)
-        .select(getattr(Ref, link_field))
-        .where(
-            (Ref.creation >= three_months_ago)
-            & (getattr(Ref, link_field).isnotnull())
-            & (Ref.docstatus < 2)
-            & (Ref.owner == frappe.session.user)
+    def generator():
+        link_field = "party_master" if meta.has_field("party_master") else None
+        if not link_field:
+            return []
+        Ref = DocType(doctype)
+        three_months_ago = add_months(nowdate(), -3)
+
+        top_used = (
+            frappe.qb.from_(Ref)
+            .select(getattr(Ref, link_field))
+            .where(
+                (Ref.creation >= three_months_ago)
+                & (getattr(Ref, link_field).isnotnull())
+                & (Ref.docstatus < 2)
+                & (Ref.owner == frappe.session.user)
+            )
+            .groupby(getattr(Ref, link_field))
+            .orderby(Count("*"), order=Order.desc)
+            .limit(20)
+            .run()
         )
-        .groupby(getattr(Ref, link_field))
-        .orderby(Count("*"), order=Order.desc)
-        .limit(20)
-        .run()
-    )
-    if top_used:
-        result = [row[0] for row in top_used] if top_used else []
-        frappe.cache.set_value(key, result, expires_in_sec=86400)
-    return result or []
+        return [row[0] for row in top_used] if top_used else []
+
+    if cached:
+        key = SmartCache.make_key(f"usage_count-{doctype}", frappe.session.user)
+        return SmartCache.get_cached_value(key, generator, ttl=86400)
+
+    return generator()
 
 
 def get_leaf_party_master_list_from_any_node(filters):
@@ -303,31 +305,16 @@ def get_leaf_party_master_list_from_any_node(filters):
 
 @frappe.whitelist()
 def get_party_master_parties(party_master, party_type=None, cached=True):
+    # Delegate to SmartCache
+    if cached:
+        parties = SmartCache.get_party_master_parties(party_master)
+    else:
+        # Bypass cache and fetch from DB
+        parties = get_party_master_parties_db(party_master, all_roles=True)
 
-    # Try to get from cache if party_master is a string
-    parties = frappe.cache.hget(
-        uph.make_key("Party Master.parties"),
-        party_master if isinstance(party_master, str) else None,
-    )
-
-    if cached and parties:
-        # Filter by party_type if specified
-        if party_type:
-            return [p for p in parties if p.get("party_type") == party_type]
-        return parties
-
-    # Fetch from DB if not in cache
-    parties = get_party_master_parties_db(party_master, all_roles=True)
     if not parties:
         return []
 
-    # Cache result if party_master is a string
-    if isinstance(party_master, str):
-        frappe.cache.hset(uph.make_key("Party Master.parties"), party_master, parties)
-        if not cached:
-            return
-
-    # Filter again if needed
     if party_type:
         return [p for p in parties if p.get("party_type") == party_type]
 
@@ -507,7 +494,7 @@ def get_party_master_parties_db(party_master, all_roles=True, roles=None):
 
     # Single party master or Fetch All
     if fetch_all:
-        pm_roles = [{"party_type_role": pt} for pt in uph.get_party_type_list()]
+        pm_roles = [{"party_type_role": pt} for pt in SmartCache.get_party_type_list()]
     else:
         pm_roles = get_roles_for_pm(party_master)
 
@@ -599,6 +586,8 @@ def get_linked_parties_list(party_master_filters=None, party_type=None):
 
     results = []
     for pm in party_master_filters:
+        # Use SmartCache (via get_party_master_parties wrapper or directly)
+        # Here we use wrapper since it filters by party_type too
         res = get_party_master_parties(pm, party_type=party_type)
         if res:
             results.extend(res)
@@ -613,10 +602,7 @@ def get_counts_of_unposted_or_cancelled_vouchers(
     Get counts of vouchers that are not posted or are cancelled.
     Returns a list of dicts with 'party_master' and other basic info.
     """
-    from uph.party.controllers.cache_utils import (
-        get_doctypes_functional_fields_mapping_as_dict,
-    )
-
+    # Reuse cache logic
     mapping = get_doctypes_functional_fields_mapping_as_dict()
     results = []
 

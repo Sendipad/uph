@@ -212,7 +212,12 @@ class PartyMaster(NestedSet):
     def before_save(self):
         if self.party_name:
             self.normalized_party_name = normalize_text(self.party_name)
-        frappe.cache.hdel(uph.make_key("Party Master.parties"), self.name)
+
+        # Invalidate/Refresh Cache
+        from uph.party.controllers.cache_utils import SmartCache
+
+        SmartCache.invalidate_party_master_parties(self.name)
+
         old = self.get_doc_before_save()
         if old and self.parent_party_master != old.parent_party_master:
             self.flags.update_party_number = True

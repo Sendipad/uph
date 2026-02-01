@@ -18,6 +18,7 @@ import uph
 from uph.party.controllers.cache_utils import (
     get_doctypes_functional_fields_mapping_as_dict,
     clear_all_caches,
+    SmartCache,
 )
 
 
@@ -127,6 +128,10 @@ def validate_party_master_on_document_types(doc, method=None):
         if is_child:
             new_party_master = party_master_map.get((party_type, party))
         else:
+            # Try to use SmartCache map if appropriate, but direct DB is safer for transaction context
+            # However map cache is designed for this.
+            # Only use if we trust cache on write. For validation we might want live data.
+            # But the 'new_party_master' is fetched from the Party document, which is likely not dirty in this transaction usually.
             new_party_master = frappe.db.get_value(party_type, party, "party_master")
 
         should_autoset = (
@@ -204,7 +209,7 @@ def validate_party_master_on_target_party_type(doc, method):
         or frappe.flags.in_migrate
         # or frappe.flags.in_import
         or frappe.flags.in_setup_wizard
-        or doc.doctype not in uph.get_party_type_list()
+        or doc.doctype not in SmartCache.get_party_type_list()
     ):
         return
     party_type_rule = get_party_type_validation_rule(party_type=doc.doctype)
@@ -256,16 +261,22 @@ def validate_party_master_on_target_party_type(doc, method):
             doc.party_master != old_party_master
             or is_default_for_party_master != old_is_default_for_party_master
         ):
+            # Invalidate caches
             if doc.party_master:
                 update_linked_party_to_party_master_count(doc.party_master)
-                frappe.cache.hdel(
-                    uph.make_key("Party Master.parties"), doc.party_master
+                SmartCache.update_party_to_pm_data(
+                    doc.doctype, doc.name, new_pm=doc.party_master
                 )
+                # This also updates the List_Parties hash implicitly in SmartCache logic if needed
+                # But let's be explicit if we want to force refresh or just let existing logic work
+                # SmartCache.update_party_master_parties(doc.party_master) # This fetches fresh list
+
             if old_party_master:
                 update_linked_party_to_party_master_count(old_party_master)
-                frappe.cache.hdel(
-                    uph.make_key("Party Master.parties"), old_party_master
+                SmartCache.update_party_to_pm_data(
+                    doc.doctype, doc.name, old_pm=old_party_master
                 )
+
         if doc.party_master != old_party_master:
             if frappe.flags.in_test:
                 return on_change_party_master_update_transactional_document_types(
@@ -279,11 +290,14 @@ def validate_party_master_on_target_party_type(doc, method):
                 queue="long",
                 enqueue_after_commit=True,
             )
-    # Require flag before deleting document to empty doc.party_master and pass previouse validation
+
+    # Require flag before deleting document to empty doc.party_master and pass previous validation
     if method == "on_trash" and doc.party_master:
         pm = frappe.get_doc("Party Master", doc.party_master)
         pm.add_comment("Comment", _("Party : {0} Has been deleted").format(doc.name))
-        frappe.cache.hdel(uph.make_key("Party Master.parties"), doc.party_master)
+        SmartCache.update_party_to_pm_data(
+            doc.doctype, doc.name, old_pm=doc.party_master
+        )
 
 
 def is_valide_party_master_to_party(party_master, role):

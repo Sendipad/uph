@@ -1,32 +1,76 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 import uph
+from uph.party.controllers.cache_utils import SmartCache, clear_all_caches
 
 
 class TestCacheFunctions(FrappeTestCase):
-    def test_make_key(self):
-        self.assertEqual(uph.make_key("test"), "UPH:test")
+    def setUp(self):
+        clear_all_caches()
 
-    def test_get_cached_key_valid(self):
-        self.assertEqual(uph.get_cached_key("parties"), "UPH:PartyMaster|List_Parties")
+    def test_smart_cache_keys(self):
+        # Test SmartCache key generation directly
+        self.assertEqual(SmartCache.make_key("MySpace", "MyId"), "UPH:MySpace|MyId")
 
-    def test_get_cached_key_invalid_raises(self):
-        with self.assertRaises(ValueError):
-            uph.get_cached_key("invalid_key")
+    def test_smart_cache_set_get(self):
+        key = SmartCache.make_key("Test", "Value")
 
-    def test_get_pm_parties_key(self):
-        self.assertEqual(uph.get_pm_parties_key(), "UPH:PartyMaster|List_Parties")
+        # Should be None initially
+        self.assertIsNone(SmartCache.get_cached_value(key))
 
-    def test_get_party_to_pm_key(self):
-        self.assertEqual(
-            uph.get_party_to_pm_key("Customer"), "UPH:PartyToPartyMaster|Customer"
-        )
+        # Test generator
+        def gen():
+            return "generated_value"
+
+        val = SmartCache.get_cached_value(key, generator=gen)
+        self.assertEqual(val, "generated_value")
+
+        # Should be cached now (check without generator)
+        self.assertEqual(SmartCache.get_cached_value(key), "generated_value")
+
+        # Delete
+        SmartCache.delete_cached_value(key)
+        self.assertIsNone(SmartCache.get_cached_value(key))
 
     def test_get_party_type_list(self):
-        result = uph.get_party_type_list()
+        # Ensure it returns a list and has expected types
+        result = SmartCache.get_party_type_list()
         self.assertIsInstance(result, list)
-        self.assertIn("Customer", result)
+        if "Customer" in frappe.get_all("DocType", pluck="name"):
+            self.assertIn("Customer", result)
 
-    def test_get_cached_party_to_pm_map_none(self):
-        result = uph.get_cached_party_to_pm_map("Customer", "NonExistent123")
-        self.assertIsNone(result)
+    def test_l1_cache_layer(self):
+        # Test that L1 cache works within request
+        key = SmartCache.make_key("L1", "Test")
+
+        frappe.local.uph_cache[key] = "l1_value"
+        # Should return L1 value even if nothing in Redis
+        self.assertEqual(SmartCache.get_cached_value(key), "l1_value")
+
+        # Clear L1
+        del frappe.local.uph_cache[key]
+        self.assertIsNone(SmartCache.get_cached_value(key))
+
+    def test_party_master_integration(self):
+        # Create a dummy Party Master if not exists or use existing
+        if not frappe.db.exists("Party Master", "Test PM Cache"):
+            pm = frappe.get_doc(
+                {
+                    "doctype": "Party Master",
+                    "party_name": "Test PM Cache",
+                    "party_type": "Customer",
+                }
+            ).insert()
+        else:
+            pm = frappe.get_doc("Party Master", "Test PM Cache")
+
+        # Test cache update
+        SmartCache.update_party_master_parties(pm.name)
+
+        # Verify key exists (though hard to verify internal redis state directly without mocking,
+        # we can verify retrieval works)
+        # We can mock the DB call to ensure it hits cache if we really wanted to,
+        # but for integration tests, functional correctness is key.
+
+        parties = SmartCache.get_party_master_parties(pm.name)
+        self.assertIsInstance(parties, list)

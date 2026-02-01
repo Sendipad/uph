@@ -12,11 +12,13 @@ from uph.party.controllers.queries import (
     query_similar_name_or_number,
     get_party_master_dashboard_info,
 )
+from uph.party.controllers.cache_utils import SmartCache, clear_all_caches
 from uph.tests.setup_mixin import AccountsTestMixin
 
 
 class TestQueries(FrappeTestCase, AccountsTestMixin):
     def setUp(self):
+        clear_all_caches()
         self.create_company()
         self.create_party_master()
 
@@ -266,7 +268,10 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
         si.submit()
 
         # Check dashboard info
-        frappe.cache.delete_value(uph.make_key("Party Master.parties"))
+        SmartCache.update_party_master_parties(pm.name)  # Force refresh/update
+        # Alternatively clear it:
+        # clear_all_caches()
+
         info = get_party_master_dashboard_info(pm.name)
         self.assertTrue(len(info) > 0)
 
