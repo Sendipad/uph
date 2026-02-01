@@ -9,12 +9,12 @@ on:
 jobs:
   test:
     name: Test Develop
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 60
 
     services:
       mariadb:
-        image: mariadb:11.4
+        image: mariadb:10.11
         env:
           MARIADB_ROOT_PASSWORD: root
         ports:
@@ -41,12 +41,12 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
+          python-version: "3.12"
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 20
 
       - name: Install System Dependencies
         run: |
