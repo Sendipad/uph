@@ -487,8 +487,15 @@ def get_party_master_parties_db(party_master, all_roles=True, roles=None):
                     filters=filters,
                     fields=fields,
                 )
+                if not found:
+                    print(
+                        f"DEBUG: No parties found for multiple PMs {party_master} in {role_doctype}"
+                    )
                 all_parties.extend(found)
-            except Exception:
+            except Exception as e:
+                print(
+                    f"DEBUG: Error fetching parties for {role_doctype} in multi-query: {e}"
+                )
                 pass
         return all_parties
 
@@ -531,9 +538,14 @@ def get_party_master_parties_db(party_master, all_roles=True, roles=None):
                 filters=filters,
                 fields=fields,
             )
+            if not found:
+                print(
+                    f"DEBUG: No parties found for PM(s) {party_master} in {role_doctype} with filters {filters}"
+                )
             for p in found:
                 parties.append(p)
-        except Exception:
+        except Exception as e:
+            print(f"DEBUG: Error fetching parties for {role_doctype}: {e}")
             pass
 
     return parties

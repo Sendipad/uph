@@ -1,10 +1,12 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 from uph.tests.setup_mixin import AccountsTestMixin
+from uph.party.controllers.cache_utils import clear_all_caches
 
 
 class TestReportCoverage(FrappeTestCase, AccountsTestMixin):
     def setUp(self):
+        clear_all_caches()
         self.create_company()
         self.create_item()
         self.create_party_master()

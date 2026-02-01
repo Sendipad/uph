@@ -42,38 +42,43 @@ def setup_erpnext_baseline():
     from erpnext.setup.setup_wizard.setup_wizard import setup_complete
 
     if frappe.db.exists("Company", "_Test Company"):
+        print("DEBUG: _Test Company already exists. Skipping baseline setup.")
         return
 
     from frappe.utils import today
-    from frappe import _dict
 
-    # We use _dict to allow attribute access like args.fy_start_date
-    args = _dict(
-        {
-            "company_name": "_Test Company",
-            "company_abbr": "_TC",
-            "country": "United States",
-            "currency": "USD",
-            "chart_of_accounts": "Standard",
-            "full_name": "Administrator",
-            "email": "admin@example.com",
-            "timezone": "UTC",
-            "fy_start_date": f"{today()[:4]}-01-01",
-            "fy_end_date": f"{today()[:4]}-12-31",
-        }
+    print(
+        f"DEBUG: Starting ERPNext baseline setup for _Test Company. Template: Standard, Country: Yemen"
     )
 
+    # These arguments match what ERPNext's setup wizard expects.
+    # We use Yemen/YER to match AccountsTestMixin defaults.
+    args = {
+        "company_name": "_Test Company",
+        "company_abbr": "_TC",
+        "country": "Yemen",
+        "currency": "YER",
+        "chart_of_accounts": "Standard",
+        "full_name": "Administrator",
+        "email": "admin@example.com",
+        "timezone": "UTC",
+        "fy_start_date": f"{today()[:4]}-01-01",
+        "fy_end_date": f"{today()[:4]}-12-31",
+    }
+
     try:
-        # Ignore mandatory for setup wizard if it's acting up in new environments
+        # Pass a frappe._dict to support attribute access inside setup_wizard
         frappe.flags.ignore_mandatory = True
-        setup_complete(args)
+        setup_complete(frappe._dict(args))
     except Exception as e:
-        # We don't want to crash everything if setup wizard is partially broken in dev
         print(f"DEBUG: setup_erpnext_baseline failed: {e}")
+        import traceback
+
+        traceback.print_exc()
     finally:
         frappe.flags.ignore_mandatory = False
 
-    # Ensure a Fiscal Year exists for the current year
+    # Ensure a Fiscal Year exists for the current year (double check)
     from frappe.utils import getdate
 
     current_date = getdate(today())
