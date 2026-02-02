@@ -109,8 +109,8 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
             "Party Master",
             pm_name,
             "party_name",
-            20,
             0,
+            20,
             filters={"party_type": "Customer"},
         )
         self.assertTrue(len(result) > 0)
@@ -300,8 +300,8 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
             "Party Master",
             "Pagination PM",
             "party_name",
-            5,
             0,
+            5,
             filters={"party_type": "Customer"},
         )
         self.assertEqual(len(result), 5)

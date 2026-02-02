@@ -18,14 +18,23 @@ from uph.party.controllers.cache_utils import (
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
 def party_master_link_query(
-    doctype, txt, searchfield, page_len, start, filters=None, reference_doctype=None
+    doctype, txt, searchfield, start, page_len, filters=None, reference_doctype=None
 ):
     party_type = filters.get("party_type") if filters else None
+    if filters and not reference_doctype:
+        reference_doctype = (
+            filters.get("reference_doctype")
+            or filters.get("doctype")
+            or filters.get("on_doctype")
+        )
+
     top_parties = []
     document_type = list(get_configured_doctypes())
 
     if reference_doctype and reference_doctype in document_type:
         top_parties = usage_counts_on_reference_doctype(reference_doctype)
+        # Reverse to make FIELD(..., top_parties) DESC work correctly (highest count first)
+        top_parties.reverse()
 
     meta = frappe.get_meta(doctype)
     search_fields = meta.get_search_fields() or []
@@ -48,7 +57,7 @@ def party_master_link_query(
         params += [party_type, party_type]
     params += [f"%{txt}%", f"%{txt}%", f"%{txt}%", f"%{txt}%"]
     if top_parties:
-        params += top_parties  # These are used in FIELD(pm.name, ...) or CASE
+        params += top_parties  # These are used in FIELD(pm.name, ...)
     params += [page_len or 20, start or 0]
 
     top_case = ""
