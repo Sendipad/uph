@@ -621,13 +621,26 @@ def get_party_details(
     # Fetch PM details
     pm = frappe.get_doc("Party Master", party_master)
 
-    # 3. Apply PM Details to party_details
+    # 3. Apply PM Details to party_details (Enrichment only if missing)
     # Contact Logic
-    if pm.party_primary_contact:
+    if not party_details.get("contact_person") and pm.party_primary_contact:
         party_details.contact_person = pm.party_primary_contact
         from erpnext.accounts.party import complete_contact_details
 
         complete_contact_details(party_details)
+
+    # Address Logic
+    address_field = (
+        "customer_address" if party_type == "Customer" else "supplier_address"
+    )
+    if not party_details.get(address_field) and pm.party_primary_address:
+        party_details[address_field] = pm.party_primary_address
+        if not party_details.get("address_display"):
+            from frappe.contacts.doctype.address.address import get_address_display
+
+            party_details["address_display"] = get_address_display(
+                pm.party_primary_address
+            )
 
     # Common Fields Mapping
     mapping = {
@@ -644,19 +657,21 @@ def get_party_details(
         mapping["party_type_group"] = "supplier_group"
 
     for pm_field, target_field in mapping.items():
-        val = pm.get(pm_field)
-        if val:
-            party_details[target_field] = val
+        if not party_details.get(target_field):
+            val = pm.get(pm_field)
+            if val:
+                party_details[target_field] = val
 
     # Hierarchical Account Lookup
-    transaction_currency = currency or party_details.get("currency")
-    if party_master and company and transaction_currency:
-        target_account = get_hierarchical_pm_account(
-            party_master, company, transaction_currency
-        )
-        if target_account:
-            account_fieldname = "debit_to" if party_type == "Customer" else "credit_to"
-            party_details[account_fieldname] = target_account
+    account_fieldname = "debit_to" if party_type == "Customer" else "credit_to"
+    if not party_details.get(account_fieldname):
+        transaction_currency = currency or party_details.get("currency")
+        if party_master and company and transaction_currency:
+            target_account = get_hierarchical_pm_account(
+                party_master, company, transaction_currency
+            )
+            if target_account:
+                party_details[account_fieldname] = target_account
 
     return party_details
 

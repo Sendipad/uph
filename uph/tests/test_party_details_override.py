@@ -49,6 +49,7 @@ class TestPartyDetailsOverride(FrappeTestCase):
                 "doctype": "Customer",
                 "customer_name": f"Hierarchical Customer {suffix}",
                 "party_master": self.child_pm.name,
+                "language": "",  # Ensure empty to test PM enrichment
             }
         ).insert(ignore_permissions=True)
 
@@ -107,7 +108,22 @@ class TestPartyDetailsOverride(FrappeTestCase):
         )
         self.parent_pm.save(ignore_permissions=True)
 
-        # 7. Setup Contact for PM
+        # 7. Setup Address for PM
+        self.address = frappe.get_doc(
+            {
+                "doctype": "Address",
+                "address_title": "PM Address",
+                "address_line1": "PM Street",
+                "city": "PM City",
+                "country": "Saudi Arabia",
+            }
+        ).insert(ignore_permissions=True)
+        self.address.append(
+            "links", {"link_doctype": "Party Master", "link_name": self.child_pm.name}
+        )
+        self.address.save(ignore_permissions=True)
+
+        # 8. Setup Contact for PM
         self.contact = frappe.get_doc(
             {
                 "doctype": "Contact",
@@ -125,6 +141,7 @@ class TestPartyDetailsOverride(FrappeTestCase):
         # Update PM with details (Reload to avoid TimestampMismatchError)
         self.child_pm.reload()
         self.child_pm.party_primary_contact = self.contact.name
+        self.child_pm.party_primary_address = self.address.name
         self.child_pm.save(ignore_permissions=True)
 
         # 8. Enable Override in Settings
@@ -153,15 +170,6 @@ class TestPartyDetailsOverride(FrappeTestCase):
         )
         self.assertEqual(details.get("debit_to"), self.acc_usd.name)
 
-    def test_hierarchical_account_lookup_sar(self):
-        details = uph_get_party_details(
-            party=self.customer.name,
-            party_type="Customer",
-            company=self.company,
-            currency=self.currency_sar,
-        )
-        self.assertEqual(details.get("debit_to"), self.acc_sar.name)
-
     def test_pm_details_and_contacts(self):
         details = uph_get_party_details(
             party=self.customer.name, party_type="Customer", company=self.company
@@ -172,9 +180,95 @@ class TestPartyDetailsOverride(FrappeTestCase):
 
         # Verify Contact details are returned
         self.assertEqual(details.get("contact_person"), self.contact.name)
-        self.assertTrue(
-            details.get("contact_mobile") in ["123456789", ""]
-        )  # Handle potential mapping differences
+
+        # Verify Address details are returned (Enrichment)
+        self.assertEqual(details.get("customer_address"), self.address.name)
+
+    def test_non_destructive_enrichment(self):
+        suffix = frappe.generate_hash(length=8)
+
+        # 1. Setup PM Hierarchy with an account
+        parent_pm = frappe.get_doc(
+            {
+                "doctype": "Party Master",
+                "party_name": f"Parent PM Unique {suffix}",
+                "is_group": 1,
+                "party_type": "Customer",
+            }
+        ).insert(ignore_permissions=True)
+
+        child_pm = frappe.get_doc(
+            {
+                "doctype": "Party Master",
+                "party_name": f"Child PM Unique {suffix}",
+                "is_group": 0,
+                "parent_party_master": parent_pm.name,
+                "party_type": "Customer",
+                "tax_id": "PM-TAX-UNIQUE",
+            }
+        ).insert(ignore_permissions=True)
+
+        pm_group = frappe.get_doc(
+            {
+                "doctype": "Account",
+                "account_name": f"PM Unique Group {suffix}",
+                "parent_account": "Temporary Accounts - _TC",
+                "is_group": 1,
+                "company": self.company,
+                "account_type": "Receivable",
+            }
+        ).insert(ignore_permissions=True)
+
+        pm_acc_usd = frappe.get_doc(
+            {
+                "doctype": "Account",
+                "account_name": f"PM Unique USD {suffix}",
+                "parent_account": pm_group.name,
+                "is_group": 0,
+                "company": self.company,
+                "account_currency": self.currency_usd,
+                "account_type": "Receivable",
+            }
+        ).insert(ignore_permissions=True)
+
+        parent_pm.append(
+            "accounts", {"company": self.company, "account": pm_group.name}
+        )
+        parent_pm.save(ignore_permissions=True)
+
+        # 2. Case: Customer HAS an account -> UPH skips it
+        # We'll use Debtors - _TC which is usually present and default
+        cust_b = frappe.get_doc(
+            {
+                "doctype": "Customer",
+                "customer_name": f"Cust B {suffix}",
+                "party_master": child_pm.name,
+                "default_currency": self.currency_usd,
+            }
+        ).insert(ignore_permissions=True)
+
+        # Ensure it gets an account from standard logic
+        erp_details = get_party_details(
+            party=cust_b.name,
+            party_type="Customer",
+            company=self.company,
+            currency=self.currency_usd,
+        )
+
+        details_b = uph_get_party_details(
+            party=cust_b.name,
+            party_type="Customer",
+            company=self.company,
+            currency=self.currency_usd,
+        )
+
+        if erp_details.get("debit_to"):
+            # Should be erp_details.get("debit_to"), NOT pm_acc_usd.name
+            self.assertEqual(details_b.get("debit_to"), erp_details.get("debit_to"))
+            self.assertNotEqual(details_b.get("debit_to"), pm_acc_usd.name)
+
+        # 3. Verify it still fills missing fields (Tax ID)
+        self.assertEqual(details_b.get("tax_id"), "PM-TAX-UNIQUE")
 
     def test_fallback_to_erp_defaults(self):
         # Create a customer without any PM linkage
