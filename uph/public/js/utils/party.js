@@ -839,9 +839,11 @@ uph.party = {
 			callback: function (r) {
 				if (!r.exc && r.message && r.message.duplicates) {
 					const duplicates = r.message.duplicates;
+					const settings = r.message.settings || {};
+
 					if (duplicates.length > 0) {
 						const msg = __(
-							"Warning: Found {0} existing document(s) with the same Party Master and posting date:",
+							"Found {0} existing document(s) with the same Party Master and posting date:",
 							[duplicates.length],
 						);
 						const list = duplicates
@@ -856,18 +858,31 @@ uph.party = {
                                 </a>
                                 <span  
                                    class="text-muted">
-                                (${d.party})    (${d.total})</span>
+                                (${d.party || ""})    (${d.total || ""})</span>
                             </li>
                         `,
 							)
 							.join("");
+
+						if (settings.action === "Stop" && !settings.has_bypass) {
+							frappe.msgprint({
+								title: __("Duplicate Forbidden"),
+								indicator: "red",
+								message: `${__(
+									"Submission is not allowed for duplicate vouchers.",
+								)}<br><ul>${list}</ul>`,
+								as_html: true,
+							});
+							frm.isCheckingDuplicate = false;
+							return;
+						}
 
 						if (triggered_before_submit) {
 							// Confirmation before submit
 							frappe.confirm({
 								title: __("Duplicate Warning"),
 								indicator: "red",
-								message: `${msg}<ul>${list}</ul>`,
+								message: `${msg}<ul>${list}</ul> Proceed anyway?`,
 								as_html: true,
 								primary_action_label: __("Proceed Anyway"),
 								primary_action: () => {
@@ -939,6 +954,7 @@ uph.party = {
 						}
 					}
 				}
+				frm.isCheckingDuplicate = false;
 			},
 		});
 	},

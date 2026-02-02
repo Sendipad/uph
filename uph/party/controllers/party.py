@@ -46,7 +46,6 @@ def get_document_type_mapping_with_party_master(document_type):
                 "party_fieldname",
                 "party_type_fieldname",
                 "party_type",
-                "party_type_fieldname",
             ],
             as_dict=1,
         )
@@ -487,6 +486,9 @@ def set_party_as_default_for_party_master(
 def check_duplicate_voucher_party_master(
     party_master, doctype, posting_date, current_name=None, doc=None
 ):
+    settings = frappe.get_cached_doc("Party Master Settings")
+    if not settings.check_party_master_duplicate_vouchers:
+        return {"duplicates": [], "settings": {}}
 
     pfn = get_mapped_fieldnames(doctype, "party_fieldname")
     filters = {
@@ -513,7 +515,13 @@ def check_duplicate_voucher_party_master(
             if d.get(pfn):
                 d["party"] = d.get(pfn, "")
 
-    return {"duplicates": duplicates}
+    return {
+        "duplicates": duplicates,
+        "settings": {
+            "action": settings.duplicate_voucher_action,
+            "has_bypass": allow_duplicate_submission(doctype, current_name),
+        },
+    }
 
 
 # Smart wrappers for hooks
@@ -544,6 +552,14 @@ def get_party_master_details_with_parties(party_master, party_type=None):
     return {"party_master": pm_doc, "parties": parties}
 
 
+@frappe.whitelist()
 def allow_duplicate_submission(doctype, docname):
-    # This is a hook to bypass duplicate checks if needed
+    settings = frappe.get_cached_doc("Party Master Settings")
+    if not settings.check_party_master_duplicate_vouchers:
+        return True
+
+    bypass_role = settings.role_to_bypass_duplicate_voucher
+    if bypass_role and bypass_role in frappe.get_roles():
+        return True
+
     return False
