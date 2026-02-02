@@ -618,6 +618,36 @@ def get_party_details(
     if not party_master:
         return party_details
 
+    # Fetch PM details
+    pm = frappe.get_doc("Party Master", party_master)
+
+    # 3. Apply PM Details to party_details
+    # Contact Logic
+    if pm.party_primary_contact:
+        party_details.contact_person = pm.party_primary_contact
+        from erpnext.accounts.party import complete_contact_details
+
+        complete_contact_details(party_details)
+
+    # Common Fields Mapping
+    mapping = {
+        "tax_id": "tax_id",
+        "language": "language",
+        "territory": "territory",
+        "default_currency": "currency",
+        "tax_category": "tax_category",
+    }
+
+    if party_type == "Customer":
+        mapping["party_type_group"] = "customer_group"
+    elif party_type == "Supplier":
+        mapping["party_type_group"] = "supplier_group"
+
+    for pm_field, target_field in mapping.items():
+        val = pm.get(pm_field)
+        if val:
+            party_details[target_field] = val
+
     # Hierarchical Account Lookup
     transaction_currency = currency or party_details.get("currency")
     if party_master and company and transaction_currency:
