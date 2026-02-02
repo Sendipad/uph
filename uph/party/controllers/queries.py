@@ -757,6 +757,7 @@ def get_party_master_dashboard_info(party_master_name):
         if not p_names:
             continue
 
+<<<<<<< HEAD
         # Batch query for unpaid count per party and company to avoid N+1 count() calls (QB for v16 compat)
         inv_doctype = "Sales Invoice" if p_type == "Customer" else "Purchase Invoice"
         party_field = p_type.lower()
