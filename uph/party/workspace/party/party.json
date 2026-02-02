@@ -5,7 +5,7 @@
             "label": "Party Stats"
         }
     ],
-    "content": "[{\"id\":\"GeJ9n__5yT\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Party Stats\",\"col\":12}},{\"id\":\"num_pm\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Party Masters\",\"col\":4}},{\"id\":\"num_lc\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Linked Customers\",\"col\":4}},{\"id\":\"num_ls\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Linked Suppliers\",\"col\":4}},{\"id\":\"PiIVe_vpuC\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"FbfhiOv15Y\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Your Shortcuts</b></span>\",\"col\":12}},{\"id\":\"v8FRSYwoId\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Master Tree\",\"col\":3}},{\"id\":\"sh_pas\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Account Statement\",\"col\":3}},{\"id\":\"sh_cpl\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Chronological Party Ledger\",\"col\":3}},{\"id\":\"kn19toGIeu\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Dashboard\",\"col\":3}},{\"id\":\"tqAUEihqIe\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"id\":\"sqbiF_EtCc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Supplier\",\"col\":3}},{\"id\":\"Vd2Oq_2xz0\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"3Y4wrxJdUy\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"b8GpTrrb6M\",\"type\":\"card\",\"data\":{\"card_name\":\"Party Masters\",\"col\":4}},{\"id\":\"qw05p5ygfo\",\"type\":\"card\",\"data\":{\"card_name\":\"Key Reports\",\"col\":4}},{\"id\":\"w60LMHrve_\",\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}}]",
+    "content": "[{\"id\":\"GeJ9n__5yT\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Party Stats\",\"col\":12}},{\"id\":\"num_pm\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Party Masters\",\"col\":4}},{\"id\":\"num_lc\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Linked Customers\",\"col\":4}},{\"id\":\"num_ls\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Linked Suppliers\",\"col\":4}},{\"id\":\"un_lc\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Unlinked Customers\",\"col\":6}},{\"id\":\"un_ls\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Unlinked Suppliers\",\"col\":6}},{\"id\":\"PiIVe_vpuC\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"FbfhiOv15Y\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Your Shortcuts</b></span>\",\"col\":12}},{\"id\":\"v8FRSYwoId\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Master Tree\",\"col\":3}},{\"id\":\"sh_pas\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Account Statement\",\"col\":3}},{\"id\":\"sh_cpl\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Chronological Party Ledger\",\"col\":3}},{\"id\":\"kn19toGIeu\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Dashboard\",\"col\":3}},{\"id\":\"un_c_sh\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Unlinked Customers\",\"col\":3}},{\"id\":\"un_s_sh\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Unlinked Suppliers\",\"col\":3}},{\"id\":\"Vd2Oq_2xz0\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"3Y4wrxJdUy\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"b8GpTrrb6M\",\"type\":\"card\",\"data\":{\"card_name\":\"Party Masters\",\"col\":4}},{\"id\":\"qw05p5ygfo\",\"type\":\"card\",\"data\":{\"card_name\":\"Key Reports\",\"col\":4}},{\"id\":\"w60LMHrve_\",\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}}]",
     "creation": "2025-04-23 14:56:48.972543",
     "custom_blocks": [],
     "docstatus": 0,
@@ -162,6 +162,14 @@
         {
             "label": "Linked Suppliers",
             "number_card_name": "Linked Suppliers"
+        },
+        {
+            "label": "Unlinked Customers",
+            "number_card_name": "Unlinked Customers"
+        },
+        {
+            "label": "Unlinked Suppliers",
+            "number_card_name": "Unlinked Suppliers"
         }
     ],
     "owner": "Administrator",
@@ -196,7 +204,7 @@
             "color": "Red",
             "doc_view": "List",
             "format": "{} Not Linked",
-            "label": "Customer",
+            "label": "Unlinked Customers",
             "link_to": "Customer",
             "stats_filter": "[[\"Customer\",\"party_master\",\"is\",\"not set\",false]]",
             "type": "DocType"
@@ -205,7 +213,7 @@
             "color": "Orange",
             "doc_view": "List",
             "format": "{} Not Linked",
-            "label": "Supplier",
+            "label": "Unlinked Suppliers",
             "link_to": "Supplier",
             "stats_filter": "[[\"Supplier\",\"party_master\",\"is\",\"not set\",false]]",
             "type": "DocType"
@@ -213,7 +221,7 @@
         {
             "color": "Grey",
             "label": "Party Dashboard",
-            "link_to": "",
+            "link_to": "Unified Party Hub Dashboard",
             "type": "Dashboard"
         }
     ],

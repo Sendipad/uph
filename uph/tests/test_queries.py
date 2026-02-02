@@ -283,6 +283,142 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
         self.assertEqual(comp_info["total_unpaid"], 100)
         self.assertEqual(comp_info["unpaid_count"], 1)
 
+    def test_party_master_link_query_pagination(self):
+        # Create multiple PMs to test pagination
+        for i in range(10):
+            frappe.get_doc(
+                {
+                    "doctype": "Party Master",
+                    "party_name": f"Pagination PM {i}",
+                    "is_group": 0,
+                    "party_type": "Customer",
+                }
+            ).insert(ignore_permissions=True)
+
+        # Test limit
+        result = party_master_link_query(
+            "Party Master",
+            "Pagination PM",
+            "party_name",
+            5,
+            0,
+            filters={"party_type": "Customer"},
+        )
+        self.assertEqual(len(result), 5)
+
+        # Test offset
+        result_offset = party_master_link_query(
+            "Party Master",
+            "Pagination PM",
+            "party_name",
+            5,
+            5,
+            filters={"party_type": "Customer"},
+        )
+        self.assertEqual(len(result_offset), 5)
+
+        # Ensure no overlap
+        names = [r[0] for r in result]
+        names_offset = [r[0] for r in result_offset]
+        for name in names:
+            self.assertNotIn(name, names_offset)
+
+    def test_get_party_master_parties_db_batch_optimization(self):
+        # Create 2 PMs with different roles
+        pm1 = frappe.get_doc(
+            {
+                "doctype": "Party Master",
+                "party_name": "Batch PM 1",
+                "is_group": 0,
+                "party_type": "Customer",
+            }
+        ).insert(ignore_permissions=True)
+        pm2 = frappe.get_doc(
+            {
+                "doctype": "Party Master",
+                "party_name": "Batch PM 2",
+                "is_group": 0,
+                "party_type": "Supplier",
+            }
+        ).insert(ignore_permissions=True)
+
+        create_customer("Batch Cust 1", party_master=pm1.name)
+        # Assuming we can create a supplier
+        if frappe.db.exists("DocType", "Supplier"):
+            sap = frappe.get_doc(
+                {
+                    "doctype": "Supplier",
+                    "supplier_name": "Batch Supp 2",
+                    "party_master": pm2.name,
+                }
+            ).insert(ignore_permissions=True)
+
+        result = get_party_master_parties_db([pm1.name, pm2.name])
+        # Should find both Customer and Supplier
+        types = [r.get("party_type") for r in result]
+        self.assertIn("Customer", types)
+        if frappe.db.exists("DocType", "Supplier"):
+            self.assertIn("Supplier", types)
+
+    def test_get_party_master_dashboard_info_group_aggregation(self):
+        # Create a group PM and two leaf PMs
+        group_pm = frappe.get_doc(
+            {
+                "doctype": "Party Master",
+                "party_name": "Group Dash PM",
+                "is_group": 1,
+                "party_type": "Customer",
+            }
+        ).insert(ignore_permissions=True)
+
+        leaf1 = frappe.get_doc(
+            {
+                "doctype": "Party Master",
+                "party_name": "Leaf Dash 1",
+                "parent_party_master": group_pm.name,
+                "is_group": 0,
+                "party_type": "Customer",
+            }
+        ).insert(ignore_permissions=True)
+
+        leaf2 = frappe.get_doc(
+            {
+                "doctype": "Party Master",
+                "party_name": "Leaf Dash 2",
+                "parent_party_master": group_pm.name,
+                "is_group": 0,
+                "party_type": "Customer",
+            }
+        ).insert(ignore_permissions=True)
+
+        c1 = create_customer("Dash Cust 1", party_master=leaf1.name)
+        c2 = create_customer("Dash Cust 2", party_master=leaf2.name)
+
+        # Create unpaid invoices for both
+        for c in [c1, c2]:
+            si = frappe.get_doc(
+                {
+                    "doctype": "Sales Invoice",
+                    "customer": c,
+                    "company": self.company,
+                    "currency": self.currency,
+                    "posting_date": frappe.utils.nowdate(),
+                    "due_date": frappe.utils.nowdate(),
+                    "items": [{"item_code": "_Test Item", "qty": 1, "rate": 50}],
+                }
+            ).insert(ignore_permissions=True)
+            si.submit()
+
+        # Dashboard info for group should aggregate both
+        # clear_all_caches()
+        info = get_party_master_dashboard_info(group_pm.name)
+        comp_info = next((i for i in info if i["company"] == self.company), None)
+        self.assertIsNotNone(comp_info)
+        # 50 + 50 = 100
+        self.assertEqual(comp_info["annual_sales"], 100)
+        self.assertEqual(comp_info["total_unpaid"], 100)
+        self.assertEqual(comp_info["unpaid_count"], 2)
+
 
 def create_customer(name, party_master=None):
     customer_id = frappe.db.exists("Customer", {"customer_name": name})
