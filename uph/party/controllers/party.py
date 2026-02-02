@@ -85,19 +85,30 @@ def validate_party_master_on_document_types(doc, method=None):
     is_child = document_type != doctype
     party_field = map_conf.get("party_fieldname")
     party_type_field = map_conf.get("party_type_fieldname")
+
     meta = frappe.get_meta(document_type)
+    if not meta.has_field(party_field):
+        return
+
     fetch_if_not_exist = not meta.get_field(party_field).reqd
     alert_msg = []
 
     # Pre-fetch logic for performance
     party_master_map = {}
 
+    # Collect all parties to fetch in one go (Main doc and children)
+    parties_to_fetch = set()
+    default_party_type = map_conf.get("party_type")
+
+    # 1. Main Doc
+    p_main = doc.get(party_field)
+    pt_main = default_party_type or doc.get(party_type_field)
+    if p_main and pt_main:
+        parties_to_fetch.add((pt_main, p_main))
+
+    # 2. Child Table
     if is_child:
         items = doc.get_all_children()
-        # Collect all parties to fetch in one go
-        parties_to_fetch = set()
-        default_party_type = map_conf.get("party_type")
-
         for d in items:
             if d.doctype != document_type:
                 continue
@@ -106,17 +117,17 @@ def validate_party_master_on_document_types(doc, method=None):
             if p and pt:
                 parties_to_fetch.add((pt, p))
 
-        # Bulk Fetch
-        for pt, p_list in _group_by_party_type(parties_to_fetch).items():
-            if not p_list:
-                continue
-            results = frappe.get_all(
-                pt, filters={"name": ["in", p_list]}, fields=["name", "party_master"]
-            )
-            for r in results:
-                party_master_map[(pt, r.name)] = r.party_master
+    # Bulk Fetch
+    for pt, p_list in _group_by_party_type(parties_to_fetch).items():
+        if not p_list:
+            continue
+        results = frappe.get_all(
+            pt, filters={"name": ["in", p_list]}, fields=["name", "party_master"]
+        )
+        for r in results:
+            party_master_map[(pt, r.name)] = r.party_master
 
-    def set_or_validate_party_master(d):
+    def set_or_validate_party_master(d, is_main=False):
         party = d.get(party_field)
         party_type = map_conf.get("party_type") or d.get(party_type_field)
         party_master = d.get("party_master")
@@ -124,15 +135,7 @@ def validate_party_master_on_document_types(doc, method=None):
         if not (party and party_type):
             return
 
-        # Use pre-fetched map if available, else fall back (e.g. for main doc)
-        if is_child:
-            new_party_master = party_master_map.get((party_type, party))
-        else:
-            # Try to use SmartCache map if appropriate, but direct DB is safer for transaction context
-            # However map cache is designed for this.
-            # Only use if we trust cache on write. For validation we might want live data.
-            # But the 'new_party_master' is fetched from the Party document, which is likely not dirty in this transaction usually.
-            new_party_master = frappe.db.get_value(party_type, party, "party_master")
+        new_party_master = party_master_map.get((party_type, party))
 
         should_autoset = (
             not party_master
@@ -166,7 +169,7 @@ def validate_party_master_on_document_types(doc, method=None):
             if d.doctype == document_type:
                 set_or_validate_party_master(d)
     else:
-        set_or_validate_party_master(doc)
+        set_or_validate_party_master(doc, is_main=True)
 
     for msg in alert_msg:
         frappe.msgprint(title=_("Party Master Auto-set"), msg=msg, alert=1)
@@ -365,12 +368,12 @@ def on_change_party_master_update_transactional_document_types(
         party.add_comment(
             "Comment", f"🎯 {content} Assigned to → {party_master or 'NULL'}"
         )
-        party.save()
 
         if party_master:
-            doc = frappe.get_doc("Party Master", party_master)
-            doc.add_comment("Comment", f"{party.name} Assigned and Updated: {content}")
-            doc.save()
+            doc_pm = frappe.get_doc("Party Master", party_master)
+            doc_pm.add_comment(
+                "Comment", f"{party.name} Assigned and Updated: {content}"
+            )
     if not counts_only:
         frappe.db.commit()
 
@@ -393,12 +396,14 @@ def _update_party_master_field_on_exists_transactional_document_types(
 
     # Define conditions
     conditions = doc[party_fieldname] == party
+
     if old_party_master:
         conditions &= doc.party_master == old_party_master
-    elif not old_party_master:
-        conditions &= (
-            doc.party_master.isnull() & Coalesce(doc.party_master, "") != party_master
-        )
+    else:
+        # Match documents where party_master is NULL or empty, and different from target
+        conditions &= Coalesce(doc.party_master, "") == ""
+        conditions &= Coalesce(doc.party_master, "") != (party_master or "")
+
     if party_type_fieldname:
         conditions &= doc[party_type_fieldname] == party_type
 
@@ -433,44 +438,6 @@ def get_functional_document_types(document_type=None):
     return doclist
 
 
-@frappe.whitelist()
-def test_update_exists():
-    party = frappe.get_doc("Supplier", "ابو فارع - USD")
-    party_master = party.get("party_master")
-    document_type = "Payment Entry"
-    old_party_master = None  # "212000001"
-    doclist = get_functional_document_types(document_type)
-
-    party_type = party.doctype
-    changes = []
-    for d in doclist:
-        if not d.party_fieldname:
-            continue
-        if d.is_dynamic_party_type and not d.party_type_fieldname:
-            continue
-        if d.party_type and d.party_type != party_type:
-            continue
-        doctype = d.document_type
-        party_fieldname = d.get("party_fieldname")
-        party_type_fieldname = d.get("party_type_fieldname", None)
-
-        count = _update_party_master_field_on_exists_transactional_document_types(
-            doctype=doctype,
-            party_fieldname=party_fieldname,
-            party=party.name,
-            party_master=party_master,
-            party_type=party_type,
-            party_type_fieldname=party_type_fieldname,
-            old_party_master=old_party_master,
-            counts_only=True,
-        )
-        if count:
-            changes.append(frappe._("{0} Count: {1}").format(frappe._(doctype), count))
-    if changes:
-        content = ", ".join(changes)
-        return content
-
-
 def update_linked_party_to_party_master_count(party_master):
     if isinstance(party_master, str):
         party_master = frappe.get_doc("Party Master", party_master)
@@ -482,11 +449,16 @@ def update_linked_party_to_party_master_count(party_master):
         for r in party_master.roles:
             roles.append(r.get("party_type_role"))
     total = 0
-    for r in roles:
+    # Batch count for all roles
+    for role_doctype in roles:
+        if not frappe.db.exists("DocType", role_doctype):
+            continue
         total += frappe.db.count(
-            r, filters={"party_master": party_master.name, "docstatus": ["!=", 2]}
+            role_doctype,
+            filters={"party_master": party_master.name, "docstatus": ["<", 2]},
         )
-    if total:
+
+    if party_master.total_linked_party != total:
         party_master.db_set("total_linked_party", total)
 
 

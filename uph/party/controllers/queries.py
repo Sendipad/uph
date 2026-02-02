@@ -48,8 +48,9 @@ def party_master_link_query(
         params += [party_type, party_type]
     params += [f"%{txt}%", f"%{txt}%", f"%{txt}%", f"%{txt}%"]
     if top_parties:
-        params += top_parties  # These are used in FIELD(pm.name, ...)
-    params += [15, 0]
+        params += top_parties  # These are used in FIELD(pm.name, ...) or CASE
+    params += [page_len or 20, start or 0]
+
     top_case = ""
     if top_parties:
         top_case = (
@@ -89,11 +90,12 @@ def party_master_link_query(
                 "tabParty Master" pm
             LEFT JOIN
                 "tabParty Master Role" pr ON pr.parent = pm.name
-            WHERE             {where_conditions}
+            WHERE
+                {where_conditions}
                 {"AND (pm.party_type = %s OR pr.party_type_role = %s)" if party_type else ""}
                 AND (
                     pm.party_name ILIKE %s OR
-                    pm.party_number ILIKE %s OR
+                    pm.name ILIKE %s OR
                     pm.mobile_no ILIKE %s OR
                     pm.party_details ILIKE %s
                 )
@@ -251,45 +253,51 @@ def usage_counts_on_reference_doctype(doctype, cached=True):
 
 def get_leaf_party_master_list_from_any_node(filters):
     if not filters or not filters.get("party_master"):
-        return None
-    group_party_master = frappe.db.get_all(
-        "Party Master", filters={"is_group": 1, "disabled": 0}, pluck="name"
+        return []
+
+    party_master_input = filters.get("party_master")
+    if isinstance(party_master_input, str):
+        party_master_input = [party_master_input]
+
+    group_party_master = set(
+        frappe.db.get_all(
+            "Party Master", filters={"is_group": 1, "disabled": 0}, pluck="name"
+        )
     )
-    party_master = []
+
+    leaf_parties = []
     parents = set()
 
-    if isinstance(filters.get("party_master"), str):
-        filters["party_master"] = [filters.get("party_master")]
-    for p in filters.get("party_master"):
+    for p in party_master_input:
         if p not in group_party_master:
-            party_master.append(p)
-            continue
-        parents.add(p)
+            leaf_parties.append(p)
+        else:
+            parents.add(p)
+
     if not parents:
-        return party_master
+        return leaf_parties
 
-    def collect_all_group_children(current_parents):
-        found_new = True
-        while found_new:
-            found_new = False
-            child_groups = frappe.db.get_all(
-                "Party Master",
-                filters={
-                    "parent_party_master": ["in", list(current_parents)],
-                    "is_group": 1,
-                },
-                fields=["name"],
-            )
-            for child in child_groups:
-                if child.name not in current_parents:
-                    current_parents.add(child.name)
-                    found_new = True
-        return current_parents
+    # Breadth-first collection of all descendant group names
+    all_group_names = set(parents)
+    found_new = True
+    while found_new:
+        found_new = False
+        child_groups = frappe.db.get_all(
+            "Party Master",
+            filters={
+                "parent_party_master": ["in", list(parents)],
+                "is_group": 1,
+            },
+            pluck="name",
+        )
+        for child in child_groups:
+            if child not in all_group_names:
+                all_group_names.add(child)
+                parents.add(child)
+                found_new = True
 
-    all_group_names = collect_all_group_children(parents)
-
-    # Now fetch all non-group (leaf) parties under any of the group names collected
-    party_master.extend(
+    # Finally fetch all leaf (non-group) parties under any of the collected groups
+    leaf_parties.extend(
         frappe.db.get_all(
             "Party Master",
             filters={
@@ -300,7 +308,7 @@ def get_leaf_party_master_list_from_any_node(filters):
         )
     )
 
-    return party_master
+    return list(set(leaf_parties))
 
 
 @frappe.whitelist()
@@ -443,24 +451,35 @@ def get_party_master_parties_db(party_master, all_roles=True, roles=None):
 
     if not fetch_all and isinstance(party_master, (list, tuple)):
         # Efficiently handle multiple party masters
-        pm_roles = []
-        seen_roles = set()
-        for pm in party_master:
-            for r in get_roles_for_pm(pm):
-                role_name = r.get("party_type_role")
-                if not all_roles and roles and role_name not in roles:
-                    continue
-                if role_name not in seen_roles:
-                    pm_roles.append(role_name)
-                    seen_roles.add(role_name)
+        pm_roles_to_fetch = set()
 
-        if not pm_roles:
+        # 1. Get primary roles for all PMs
+        primary_roles = frappe.db.get_all(
+            "Party Master",
+            filters={"name": ["in", party_master]},
+            fields=["name", "party_type"],
+        )
+        for pm in primary_roles:
+            if pm.party_type:
+                pm_roles_to_fetch.add(pm.party_type)
+
+        # 2. Get additional roles from child table for all PMs
+        secondary_roles = frappe.db.get_all(
+            "Party Master Role",
+            filters={"parent": ["in", party_master]},
+            fields=["parent", "party_type_role"],
+        )
+        for r in secondary_roles:
+            if r.party_type_role:
+                pm_roles_to_fetch.add(r.party_type_role)
+
+        if not pm_roles_to_fetch:
             return []
 
         all_parties = []
         from uph.party.utils import get_party_type_currency_field
 
-        for role_doctype in pm_roles:
+        for role_doctype in pm_roles_to_fetch:
             if not frappe.db.exists("DocType", role_doctype):
                 continue
 
@@ -471,11 +490,7 @@ def get_party_master_parties_db(party_master, all_roles=True, roles=None):
             ):
                 fields.append(f"{currency_field} as currency")
 
-            filters = {}
-            if not fetch_all:
-                filters["party_master"] = ["in", party_master]
-            else:
-                filters["party_master"] = ["is", "set"]
+            filters = {"party_master": ["in", party_master]}
 
             try:
                 found = frappe.get_all(
@@ -487,7 +502,11 @@ def get_party_master_parties_db(party_master, all_roles=True, roles=None):
                     p["party_type"] = role_doctype
                 all_parties.extend(found)
             except Exception:
-                pass
+                frappe.log_error(
+                    f"Error fetching parties for {role_doctype}",
+                    "uph.queries.get_party_master_parties_db",
+                )
+
         return all_parties
 
     # Single party master or Fetch All
@@ -509,7 +528,7 @@ def get_party_master_parties_db(party_master, all_roles=True, roles=None):
 
     for role in pm_roles:
         role_doctype = role.get("party_type_role")
-        if not frappe.db.exists("DocType", role_doctype):
+        if not role_doctype or not frappe.db.exists("DocType", role_doctype):
             continue
 
         currency_field = get_party_type_currency_field(role_doctype)
@@ -533,7 +552,10 @@ def get_party_master_parties_db(party_master, all_roles=True, roles=None):
                 p["party_type"] = role_doctype
                 parties.append(p)
         except Exception:
-            pass
+            frappe.log_error(
+                f"Error fetching parties for {role_doctype}",
+                "uph.queries.get_party_master_parties_db",
+            )
 
     return parties
 
@@ -716,7 +738,7 @@ def get_party_master_dashboard_info(party_master_name):
     if not parties:
         return []
 
-    # 3. Fetch dashboard info for each linked party
+    # 3. Fetch dashboard info for each linked party (Optimized batching)
     aggregated = defaultdict(
         lambda: {
             "annual_sales": 0,
@@ -726,38 +748,51 @@ def get_party_master_dashboard_info(party_master_name):
         }
     )
 
+    parties_by_type = defaultdict(list)
     for p in parties:
-        p_type = p.get("party_type")
-        p_name = p.get("party")
+        if p.get("party_type") and p.get("party"):
+            parties_by_type[p.get("party_type")].append(p.get("party"))
 
-        if not (p_type and p_name):
+    for p_type, p_names in parties_by_type.items():
+        if not p_names:
             continue
 
-        # ERPNext's get_dashboard_info returns a list of dicts (one per company)
-        info_list = get_erp_dashboard_info(p_type, p_name)
-
-        # Get unpaid invoice count
-        p_unpaid_count = frappe.db.count(
-            "Sales Invoice" if p_type == "Customer" else "Purchase Invoice",
+        # Batch query for unpaid count per party and company to avoid N+1 count() calls
+        inv_doctype = "Sales Invoice" if p_type == "Customer" else "Purchase Invoice"
+        party_field = p_type.lower()
+        unpaid_counts_res = frappe.db.get_all(
+            inv_doctype,
             filters={
-                p_type.lower(): p_name,
+                party_field: ["in", p_names],
                 "docstatus": 1,
                 "outstanding_amount": (">", 0),
             },
+            fields=[party_field, "company", "count(name) as count"],
+            group_by=f"{party_field}, company",
         )
+        unpaid_counts_lookup = defaultdict(int)
+        for d in unpaid_counts_res:
+            unpaid_counts_lookup[(d[party_field], d["company"])] = d["count"]
 
-        for info in info_list:
-            key = (info["company"], info["currency"])
-            stats = aggregated[key]
+        for p_name in p_names:
+            # ERPNext's get_dashboard_info returns a list of dicts (one per company)
+            info_list = get_erp_dashboard_info(p_type, p_name)
 
-            if p_type == "Customer":
-                stats["annual_sales"] += info.get("billing_this_year", 0)
-                stats["total_unpaid"] += info.get("total_unpaid", 0)
-            elif p_type == "Supplier":
-                stats["annual_purchases"] += info.get("billing_this_year", 0)
-                stats["total_unpaid"] -= info.get("total_unpaid", 0)
+            for info in info_list:
+                key = (info["company"], info["currency"])
+                stats = aggregated[key]
 
-            stats["unpaid_count"] += p_unpaid_count
+                if p_type == "Customer":
+                    stats["annual_sales"] += info.get("billing_this_year", 0)
+                    stats["total_unpaid"] += info.get("total_unpaid", 0)
+                elif p_type == "Supplier":
+                    stats["annual_purchases"] += info.get("billing_this_year", 0)
+                    stats["total_unpaid"] -= info.get("total_unpaid", 0)
+
+                # Correctly add unpaid count for this specific company
+                stats["unpaid_count"] += unpaid_counts_lookup.get(
+                    (p_name, info["company"]), 0
+                )
 
     # 4. Format for frontend
     result = []

@@ -1,0 +1,37 @@
+{
+    "cards": [
+        {
+            "card": "Total Party Masters"
+        },
+        {
+            "card": "Linked Customers"
+        },
+        {
+            "card": "Linked Suppliers"
+        },
+        {
+            "card": "Unlinked Customers"
+        },
+        {
+            "card": "Unlinked Suppliers"
+        }
+    ],
+    "charts": [
+        {
+            "chart": "Party Stats",
+            "width": "Full"
+        }
+    ],
+    "creation": "2025-12-06 20:40:00.000000",
+    "docstatus": 0,
+    "doctype": "Dashboard",
+    "idx": 0,
+    "is_default": 0,
+    "is_standard": 1,
+    "modified": "2025-12-06 20:40:00.000000",
+    "modified_by": "Administrator",
+    "module": "Party",
+    "name": "Unified Party Hub Dashboard",
+    "owner": "Administrator",
+    "shortcut_count": 0
+}
