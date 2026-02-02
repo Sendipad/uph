@@ -132,9 +132,9 @@ before_tests = "uph.tests.test_utils.before_tests"
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "uph.event.get_events"
-# }
+override_whitelisted_methods = {
+    "erpnext.accounts.party.get_party_details": "uph.party.controllers.party.get_party_details"
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,

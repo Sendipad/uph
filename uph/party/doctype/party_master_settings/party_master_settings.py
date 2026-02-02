@@ -19,25 +19,21 @@ class PartyMasterSettings(Document):
 
     if TYPE_CHECKING:
         from frappe.types import DF
-        from uph.party.doctype.party_master_settings_docfield.party_master_settings_docfield import (
-            PartyMasterSettingsDocField,
-        )
-        from uph.party.doctype.party_master_settings_doctype.party_master_settings_doctype import (
-            PartyMasterSettingsDocType,
-        )
-        from uph.party.doctype.party_master_settings_party_type.party_master_settings_party_type import (
-            PartyMasterSettingsPartyType,
-        )
+        from uph.party.doctype.party_master_settings_docfield.party_master_settings_docfield import PartyMasterSettingsDocField
+        from uph.party.doctype.party_master_settings_doctype.party_master_settings_doctype import PartyMasterSettingsDocType
+        from uph.party.doctype.party_master_settings_party_type.party_master_settings_party_type import PartyMasterSettingsPartyType
 
         auto_expand_levels: DF.Int
+        check_party_master_duplicate_vouchers: DF.Check
         document_types: DF.Table[PartyMasterSettingsDocType]
+        duplicate_voucher_action: DF.Literal["Warn", "Stop"]
         enable_party_analytic_accounting: DF.Check
         enforce_strict_currency: DF.Check
         hide_balance: DF.Check
         override_party_details_api: DF.Check
         party_master_fields: DF.Table[PartyMasterSettingsDocField]
         party_types: DF.Table[PartyMasterSettingsPartyType]
-
+        role_to_bypass_duplicate_voucher: DF.Link | None
     # end: auto-generated types
     def validate(self):
         self.validate_document_types()

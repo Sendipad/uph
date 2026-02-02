@@ -992,3 +992,14 @@ erpnext.queries.get_filtered_dimensions = function (doc, child_fields, dimension
 	// fallback to ERPNext default for other dimensions
 	return original_get_filtered_dimensions.apply(this, arguments);
 };
+
+// Wrap ERPNext's get_party_details to include party_master
+const original_get_party_details = erpnext.utils.get_party_details;
+
+erpnext.utils.get_party_details = function (frm, method, args, callback) {
+	if (!args) args = {};
+	if (frm.doc.party_master) {
+		args.party_master = frm.doc.party_master;
+	}
+	return original_get_party_details(frm, method, args, callback);
+};

@@ -8,6 +8,7 @@ Beside It Will reflect the Change of set Party Master on Party Type Doctype
 """
 
 import frappe
+from erpnext.accounts.party import get_party_details as erp_get_party_details
 
 from uph.party.utils import get_mapped_fieldnames
 from pypika.functions import Coalesce
@@ -563,3 +564,103 @@ def allow_duplicate_submission(doctype, docname):
         return True
 
     return False
+
+
+@frappe.whitelist()
+def get_party_details(
+    party=None,
+    account=None,
+    party_type="Customer",
+    company=None,
+    posting_date=None,
+    bill_date=None,
+    price_list=None,
+    currency=None,
+    doctype=None,
+    ignore_permissions=False,
+    fetch_payment_terms_template=True,
+    party_address=None,
+    company_address=None,
+    shipping_address=None,
+    dispatch_address=None,
+    pos_profile=None,
+    party_master=None,  # Added by UPH
+):
+    # 1. Call standard ERPNext logic
+    party_details = erp_get_party_details(
+        party=party,
+        account=account,
+        party_type=party_type,
+        company=company,
+        posting_date=posting_date,
+        bill_date=bill_date,
+        price_list=price_list,
+        currency=currency,
+        doctype=doctype,
+        ignore_permissions=ignore_permissions,
+        fetch_payment_terms_template=fetch_payment_terms_template,
+        party_address=party_address,
+        company_address=company_address,
+        shipping_address=shipping_address,
+        dispatch_address=dispatch_address,
+        pos_profile=pos_profile,
+    )
+
+    # 2. UPH Override Logic
+    settings = frappe.get_cached_doc("Party Master Settings")
+    if not settings.override_party_details_api:
+        return party_details
+
+    # If party_master is not provided, try to fetch it from the party
+    if not party_master and party:
+        party_master = frappe.db.get_value(party_type, party, "party_master")
+
+    if not party_master:
+        return party_details
+
+    # Hierarchical Account Lookup
+    transaction_currency = currency or party_details.get("currency")
+    if party_master and company and transaction_currency:
+        target_account = get_hierarchical_pm_account(
+            party_master, company, transaction_currency
+        )
+        if target_account:
+            account_fieldname = "debit_to" if party_type == "Customer" else "credit_to"
+            party_details[account_fieldname] = target_account
+
+    return party_details
+
+
+def get_hierarchical_pm_account(pm_name, company, currency):
+    """
+    Traverses the PM tree upwards to find a group account that contains
+    a leaf account with the matching currency.
+    """
+    while pm_name:
+        # Check if this PM node has a group account configured for the company
+        pm_group_account = frappe.db.get_value(
+            "Party Master Accounts",
+            {"parent": pm_name, "company": company, "parenttype": "Party Master"},
+            "account",
+        )
+
+        if pm_group_account:
+            # Find a leaf account under this group that matches the currency
+            target_account = frappe.db.get_value(
+                "Account",
+                {
+                    "parent_account": pm_group_account,
+                    "account_currency": currency,
+                    "is_group": 0,
+                    "company": company,
+                    "disabled": 0,
+                },
+                "name",
+            )
+            if target_account:
+                return target_account
+
+        # Move up to parent PM
+        pm_name = frappe.db.get_value("Party Master", pm_name, "parent_party_master")
+
+    return None
