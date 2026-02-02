@@ -757,19 +757,24 @@ def get_party_master_dashboard_info(party_master_name):
         if not p_names:
             continue
 
-        # Batch query for unpaid count per party and company to avoid N+1 count() calls
+        # Batch query for unpaid count per party and company to avoid N+1 count() calls (QB for v16 compat)
         inv_doctype = "Sales Invoice" if p_type == "Customer" else "Purchase Invoice"
         party_field = p_type.lower()
-        unpaid_counts_res = frappe.db.get_all(
-            inv_doctype,
-            filters={
-                party_field: ["in", p_names],
-                "docstatus": 1,
-                "outstanding_amount": (">", 0),
-            },
-            fields=[party_field, "company", "count(name) as count"],
-            group_by=f"{party_field}, company",
-        )
+
+        Doc = frappe.qb.DocType(inv_doctype)
+        unpaid_counts_res = (
+            frappe.qb.from_(Doc)
+            .select(
+                Doc[party_field],
+                Doc.company,
+                Count(Doc.name).as_("count"),
+            )
+            .where(Doc[party_field].isin(p_names))
+            .where(Doc.docstatus == 1)
+            .where(Doc.outstanding_amount > 0)
+            .groupby(Doc[party_field], Doc.company)
+        ).run(as_dict=True)
+
         unpaid_counts_lookup = defaultdict(int)
         for d in unpaid_counts_res:
             unpaid_counts_lookup[(d[party_field], d["company"])] = d["count"]
