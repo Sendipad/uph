@@ -11,7 +11,7 @@
   [![Test Develop (v16)](https://github.com/Sendipad/uph/actions/workflows/test_develop.yml/badge.svg)](https://github.com/Sendipad/uph/actions/workflows/test_develop.yml)
   <br>
   <img src="https://img.shields.io/badge/Frappe%20%2F%20ERPNext-v15+-red?style=for-the-badge" alt="Supports ERPNext v15+"/>
-  <img src="https://img.shields.io/badge/Version-v2.4.0-blue?style=for-the-badge" alt="Version 2.4.0"/>
+  <img src="https://img.shields.io/badge/Version-v2.5.0-blue?style=for-the-badge" alt="Version 2.5.0"/>
   <img src="https://img.shields.io/badge/Localization-Arabic%20(100%25)-green?style=for-the-badge" alt="Arabic 100%"/>
   <br><br>
 
@@ -39,18 +39,17 @@ Standard ERPNext treats **Customers**, **Suppliers**, and **Employees** as isola
 *   **Identity Fragmentation**: A single legal partner who is both a customer and a vendor ends up as two unconnected records.
 *   **Opacity in Financials**: No out-of-the-box way to see the "Net Position" (AR - AP) of a complex partner.
 *   **Broken Governance**: Managing head-offices with multiple branches or sub-dealers requires manual reconciliation.
-*   **Duplicate Overhead**: Managing the same address, contact, and tax info across multiple roles.
+*   **Multi-Currency Complexity**: Managing a single partner transacting in multiple currencies often requires creating duplicate "Parties" for each currency, leading to data mess and reporting nightmares.
 
 ---
 
 ## ✅ The Solution: Unified Party Hub (MDM)
 UPH introduces a **Master Data Management (MDM)** layer to ERPNext. It decouples the **Legal Entity** (The Who) from the **Business Role** (The How).
 
-### 🏢 One Identity, Multiple Roles
-The **Party Master** acts as the parent identity. You link a single Party Master to multiple ERPNext roles (Customer, Supplier, etc.), ensuring data consistency and cross-role visibility.
+### 🏢 One Identity, Infinite Currencies
+The **Party Master** acts as the parent identity. You can link a single Party Master to multiple ERPNext roles (Customer, Supplier, etc.) across different companies and currencies.
 
-### 🌳 Hierarchical Governance
-Organize your business ecosystem into a deep tree structure. Whether it's a conglomerate with 50 subsidiaries or a retailer with 500 branches, UPH provides a native tree-based management system.
+**Hierarchical Account Resolution**: UPH intelligently resolves the correct Ledger Account during transactions by traversing the Party Master tree. This means you can have a single "Group Account" in the Party Master that dynamically selects the correct leaf account based on the transaction currency, eliminating the need for manual account selection or duplicate party records.
 
 ---
 
@@ -59,24 +58,24 @@ Organize your business ecosystem into a deep tree structure. Whether it's a cong
 ### 💎 Smart MDM Engine
 *   **Unified Profile**: Centralized management of contact info, addresses, and custom attributes.
 *   **Automatic Synchronization**: Changes in the Party Master propagate instantly to all linked entities (Customer/Supplier).
-*   **Fuzzy Search & Linking**: Intelligent discovery logic to identify and link existing ERPNext records to new Master entities.
+*   **Duplicate Governance**: Enforces unique business identities across the organization, preventing redundant data entry.
 
-### 📊 Financial Intelligence
-*   **Consolidated Dashboards**: Real-time aggregation of Sales, Purchases, and Outstanding Balances across all linked roles.
-*   **Recursive Tree Balances**: Instant calculation of total exposure for any node in the hierarchy.
-*   **Multi-Currency Native**: Handles complex cross-currency transactions within a single partner view.
+### 📊 Financial & Multi-Currency Intelligence
+*   **Comprehensive Dashboards**: Real-time aggregation of Sales, Purchases, and Outstanding Balances with built-in data quality metrics (e.g., Missing Tax IDs).
+*   **Currency Exposure Tracking**: Visualize your financial commitment across different currencies in a single donut chart.
+*   **Recursive Tree Balances**: Instant calculation of total exposure for any node in the hierarchy, supporting multi-currency totals.
 
 ### ⚙️ Deep Integration
 *   **Transaction Middleware**: Revolutionary hooks that automatically fetch and validate the Party Master on Sales Invoices, Payments, and Journal Entries.
-*   **Customizable Mapping**: A flexible settings engine allows you to define exactly which fields sync between the Hub and standard DocTypes.
+*   **Automatic Enrichment**: Missing contact, address, or tax information in transactions is automatically pulled from the Golden Record in the Party Master.
 
 ---
 
 ## 🚀 Business Impact
-*   **360° Financial View**: Net position reporting across Payables and Receivables.
-*   **Clean Data Ecosystem**: Zero duplicates; 100% data integrity.
-*   **Enterprise Scaling**: Native support for complex hierarchical distribution and procurement networks.
-*   **Zero Core Hacks**: Implemented using standard Frappe hooks—safe for upgrades.
+*   **Seamless Multi-Currency**: Transact with the same partner in USD, EUR, and YER without ever changing the Party link.
+*   **360° Financial View**: Net position reporting across Payables and Receivables, regardless of the role or currency.
+*   **Enterprise Scaling**: Native support for complex hierarchical distribution and procurement networks with rigorous governance.
+*   **Zero Core Hacks**: Implemented using standard Frappe hooks—safe for upgrades and cloud-ready.
 
 ---
 
@@ -91,9 +90,9 @@ bench migrate
 ---
 
 ## 🎯 Target Use Cases
-*   **Group Companies**: Managing subsidiaries and parent entities.
-*   **B2B2C Networks**: Manufacturers managing distributors and retailers.
-*   **SME MDM**: Small businesses needing a clean, unified view of their business partners.
+*   **International Trade**: Managing partners across borders with multiple currencies.
+*   **Group Companies**: Managing subsidiaries and parent entities with complex ledger requirements.
+*   **SME MDM**: Small businesses needing a clean, unified, and governed view of their business partners.
 
 ---
 

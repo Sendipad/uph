@@ -1,21 +1,66 @@
 {
- "cards": [],
- "charts": [
-  {
-   "chart": "Party Stats",
-   "width": "Half"
-  }
- ],
- "creation": "2026-02-01 23:48:21.518809",
- "dashboard_name": "Party",
- "docstatus": 0,
- "doctype": "Dashboard",
- "idx": 0,
- "is_default": 0,
- "is_standard": 1,
- "modified": "2026-02-01 23:50:57.832944",
- "modified_by": "ruzaqi@gmail.com",
- "module": "Party",
- "name": "Party",
- "owner": "ruzaqi@gmail.com"
+    "cards": [
+        {
+            "card": "Total Party Masters"
+        },
+        {
+            "card": "Linked Customers"
+        },
+        {
+            "card": "Linked Suppliers"
+        },
+        {
+            "card": "Total Receivables"
+        },
+        {
+            "card": "Total Payables"
+        },
+        {
+            "card": "Monthly Sales"
+        },
+        {
+            "card": "Parties Missing Tax ID"
+        },
+        {
+            "card": "Active Currencies"
+        }
+    ],
+    "charts": [
+        {
+            "chart": "Party Identity Governance",
+            "width": "Full"
+        },
+        {
+            "chart": "Currency Exposure",
+            "width": "Full"
+        },
+        {
+            "chart": "Top Debtors",
+            "width": "Half"
+        },
+        {
+            "chart": "Top Creditors",
+            "width": "Half"
+        },
+        {
+            "chart": "Party Status Distribution",
+            "width": "Half"
+        },
+        {
+            "chart": "Legal Entity Distribution",
+            "width": "Half"
+        }
+    ],
+    "creation": "2026-02-01 23:48:21.518809",
+    "dashboard_name": "Party",
+    "docstatus": 0,
+    "doctype": "Dashboard",
+    "idx": 0,
+    "is_default": 1,
+    "is_standard": 1,
+    "modified": "2026-02-03 16:45:00.000000",
+    "modified_by": "Administrator",
+    "module": "Party",
+    "name": "Party",
+    "owner": "Administrator"
 }
