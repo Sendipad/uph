@@ -1,5 +1,3 @@
-# 🚀 Unified Party Hub (UPH) for ERPNext
-
 <div align="center">
   <a href="https://github.com/Sendipad/uph">
     <img src="https://github.com/user-attachments/assets/424defe6-b5cc-4f77-aa94-7d74c67ff7cc" alt="UPH Logo" height="100px" width="100px"/>
@@ -11,15 +9,15 @@
   [![Test Develop (v16)](https://github.com/Sendipad/uph/actions/workflows/test_develop.yml/badge.svg)](https://github.com/Sendipad/uph/actions/workflows/test_develop.yml)
   <br>
   <img src="https://img.shields.io/badge/Frappe%20%2F%20ERPNext-v15+-red?style=for-the-badge" alt="Supports ERPNext v15+"/>
-  <img src="https://img.shields.io/badge/Version-v2.5.0-blue?style=for-the-badge" alt="Version 2.5.0"/>
+  <img src="https://img.shields.io/badge/Version-v2.4.0-blue?style=for-the-badge" alt="Version 2.4.0"/>
   <img src="https://img.shields.io/badge/Localization-Arabic%20(100%25)-green?style=for-the-badge" alt="Arabic 100%"/>
   <br><br>
 
-  <a href="#-the-problem">The Problem</a> •
-  <a href="#-the-solution">The Solution</a> •
-  <a href="#-key-features">Key Features</a> •
-  <a href="#-business-impact">Impact</a> •
-  <a href="#-installation">Installation</a>
+  <a href="#problem-statement">The Problem</a> •
+  <a href="#solution-overview">The Solution</a> •
+  <a href="#key-features">Key Features</a> •
+  <a href="#api--integrations">API</a> •
+  <a href="#compatibility">Installation</a>
 </div>
 
 ---
@@ -34,73 +32,91 @@
 
 ---
 
-## 🛑 The Problem: Fragmented Business Entities
-Standard ERPNext treats **Customers**, **Suppliers**, and **Employees** as isolated data silos. For a business, this creates technical debt:
-*   **Identity Fragmentation**: A single legal partner who is both a customer and a vendor ends up as two unconnected records.
-*   **Opacity in Financials**: No out-of-the-box way to see the "Net Position" (AR - AP) of a complex partner.
-*   **Broken Governance**: Managing head-offices with multiple branches or sub-dealers requires manual reconciliation.
-*   **Multi-Currency Complexity**: Managing a single partner transacting in multiple currencies often requires creating duplicate "Parties" for each currency, leading to data mess and reporting nightmares.
+# Unified Party Hub (UPH)
+
+**Unified Party Hub (UPH)** is an enterprise-grade Master Data Management (MDM) extension for ERPNext. It centralizes siloed business roles (Customers, Suppliers, Employees) into a unified, tree-based hierarchy, providing consolidated financial visibility and rigorous data governance across complex business ecosystems.
+
+## Problem Statement
+
+Standard ERPNext implementations often face challenges when managing complex business entities:
+
+*   **Fragmented Identity**: A single legal entity acting as both a Customer and a Supplier exists as two disconnected documents.
+*   **Multi-Currency Logic**: Transacting with the same party in multiple currencies often requires creating duplicate party records (e.g., "Customer USD", "Customer EUR") to map to specific Receivable/Payable accounts.
+*   **Siloed Reporting**: Financial reports (General Ledger, Aging) are segmented by the specific Party record, making it difficult to get a 360-degree view of the legal entity's total exposure.
+*   **Data Redundancy**: Address and Contact data must be duplicated across multiple party roles.
+
+## Solution Overview
+
+UPH introduces the **Party Master**, a central governance layer that sits above standard ERPNext Party types. By treating the "Party" as a single legal entity and "Roles" (Customer, Supplier) as attributes, UPH delivers:
+
+*   **True Multi-Currency Support**: Transact in any currency with a single Party entity using hierarchical account mapping.
+*   **Unified Analytic Accounting**: Similar to **Oracle TCA Sites**, this feature allows a single party to have multiple dimensions (sites/branches), each with its own independent financial reporting. It tags every transaction (`Party Analytic Accounting` dimension), enabling you to generate a P&L or Balance Sheet for a specific branch or site of a customer/supplier without cluttering the chart of accounts.
+*   **360-Degree Visibility**: A consolidated dashboard showing total sales, purchases, and outstanding balances across the entire hierarchy.
+
+## Core Concepts
+
+### 1. Party Master
+The **Party Master** is the single source of truth for a legal entity. It supports a tree-based structure to model complex hierarchies (e.g., Holding Company -> Regional Office -> Local Branch).
+
+### 2. Party Roles
+Existing ERPNext records (Customers, Suppliers, Employees) are linked to a Party Master as **Roles**. A single Party Master can have multiple roles (e.g., being both a Customer and a Supplier).
+
+### 3. Party Analytic Accounting
+A separate, immutable accounting dimension (`Party Analytic Accounting`) is automatically tagged on every financial transaction. This allows for party-level financial reporting independent of the specific "Customer" or "Supplier" document used in the voucher.
+
+## Key Features
+
+### 🛡️ Party Identity Governance
+A dedicated dashboard provides real-time insights into data quality and completeness:
+*   **Governance Score**: Tracks the percentage of parties with valid Tax IDs and proper linkage.
+*   **Linkage Stats**: Visualizes the ratio of Linked vs. Unlinked parties.
+*   **Duplicate Detection**: Smart algorithms check for existing parties using text normalization to prevent duplicate entry of names or tax IDs.
+
+### 💱 Hierarchical Multi-Currency Support
+UPH solves the remote multi-currency problem through intelligent GL account resolution:
+*   Define a **Group Account** at the Party Master level.
+*   The system automatically traverses the hierarchy to find the specific **Leaf Account** matching the transaction currency.
+*   **Result**: Maintain a single "Customer" record but transact in USD, EUR, and GBP with correct GL mapping.
+
+### ⚡ High-Performance Architecture
+*   **SmartCache**: A robust caching layer (Redis) ensures instant retrieval of party details and configuration, even with millions of records.
+*   **Batched Processing**: Dashboard statistics and validation rules use optimized SQL queries to prevent N+1 performance issues.
+
+### 🧠 Intelligent Search & Onboarding
+*   **Smart Link Fields**: Dropdowns for Party Master are usage-ranked. The parties you transact with most frequently appear at the top.
+*   **Assisted Onboarding**: Bulk tools and "Create Party As" dialogs streamline the creation of new parties, automatically inheriting address and contact data from the master.
+
+## API & Integrations
+
+UPH exposes key methods for external integrations and data validation:
+
+### Party Management
+*   **`uph.party.controllers.party.get_party_details`**: Overrides standard ERPNext logic to inject Party Master data (Addresses, Contacts) into transactions.
+*   **`uph.party.controllers.queries.party_master_link_query`**: Optimized link query with usage-based ranking for fast selection.
+
+### Data Quality & MDM
+*   **`uph.party.controllers.mdm.normalize_text(text)`**: A utility to normalize text for fuzzy matching (removes diacritics, unifies characters) - useful for custom dedup logic.
+*   **`uph.party.controllers.mdm.validate_document_quality(doc)`**: Runs configured "Data Quality Rules" against a document to detect duplicates using fuzzy logic (RapidFuzz).
+*   **`uph.party.controllers.party.check_duplicate_voucher_party_master`**: Validates if a voucher is being created for a Party Master that already has a similar transaction.
+
+## Architecture
+
+UPH is built as a non-intrusive extension to ERPNext:
+
+*   **Hooks & Events**: Intercepts `validate`, `on_update`, and `on_trash` events to ensure data integrity without modifying core code.
+*   **API Overrides**: Extends `erpnext.accounts.party.get_party_details` to inject Party Master data (Addresses, Contacts, Accounts) into transactions dynamically.
+*   **Scalability**: Designed for high-volume environments, utilizing `frappe.qb` (Query Builder) for efficient database operations.
+
+## Compatibility
+
+*   **Framework**: Frappe Framework v15+
+*   **ERP**: ERPNext v15+
+*   **Database**: MariaDB / PostgreSQL
+
+## Use Cases
+
+1.  **Conglomerates**: Manage inter-company transactions where a subsidiary is both a vendor and a client.
+2.  **Multi-National Trade**: Handle single customers paying in multiple currencies without cluttering the Customer master.
+3.  **Governance Compliance**: Enforce strict Tax ID validation and prevent duplicate customer creation across different sales teams.
 
 ---
-
-## ✅ The Solution: Unified Party Hub (MDM)
-UPH introduces a **Master Data Management (MDM)** layer to ERPNext. It decouples the **Legal Entity** (The Who) from the **Business Role** (The How).
-
-### 🏢 One Identity, Infinite Currencies
-The **Party Master** acts as the parent identity. You can link a single Party Master to multiple ERPNext roles (Customer, Supplier, etc.) across different companies and currencies.
-
-**Hierarchical Account Resolution**: UPH intelligently resolves the correct Ledger Account during transactions by traversing the Party Master tree. This means you can have a single "Group Account" in the Party Master that dynamically selects the correct leaf account based on the transaction currency, eliminating the need for manual account selection or duplicate party records.
-
----
-
-## ✨ Key Features
-
-### 💎 Smart MDM Engine
-*   **Unified Profile**: Centralized management of contact info, addresses, and custom attributes.
-*   **Automatic Synchronization**: Changes in the Party Master propagate instantly to all linked entities (Customer/Supplier).
-*   **Duplicate Governance**: Enforces unique business identities across the organization, preventing redundant data entry.
-
-### 📊 Financial & Multi-Currency Intelligence
-*   **Comprehensive Dashboards**: Real-time aggregation of Sales, Purchases, and Outstanding Balances with built-in data quality metrics (e.g., Missing Tax IDs).
-*   **Currency Exposure Tracking**: Visualize your financial commitment across different currencies in a single donut chart.
-*   **Recursive Tree Balances**: Instant calculation of total exposure for any node in the hierarchy, supporting multi-currency totals.
-
-### ⚙️ Deep Integration
-*   **Transaction Middleware**: Revolutionary hooks that automatically fetch and validate the Party Master on Sales Invoices, Payments, and Journal Entries.
-*   **Automatic Enrichment**: Missing contact, address, or tax information in transactions is automatically pulled from the Golden Record in the Party Master.
-
----
-
-## 🚀 Business Impact
-*   **Seamless Multi-Currency**: Transact with the same partner in USD, EUR, and YER without ever changing the Party link.
-*   **360° Financial View**: Net position reporting across Payables and Receivables, regardless of the role or currency.
-*   **Enterprise Scaling**: Native support for complex hierarchical distribution and procurement networks with rigorous governance.
-*   **Zero Core Hacks**: Implemented using standard Frappe hooks—safe for upgrades and cloud-ready.
-
----
-
-## 💻 Installation
-
-```bash
-bench get-app uph https://github.com/Sendipad/uph
-bench install-app uph
-bench migrate
-```
-
----
-
-## 🎯 Target Use Cases
-*   **International Trade**: Managing partners across borders with multiple currencies.
-*   **Group Companies**: Managing subsidiaries and parent entities with complex ledger requirements.
-*   **SME MDM**: Small businesses needing a clean, unified, and governed view of their business partners.
-
----
-
-## 📜 License
-Licensed under **GNU General Public License v3.0**.  
-Created with ❤️ by the UPH Community.
-
----
-<p align="center">
-  <a href="https://github.com/Sendipad/uph/wiki">📚 Explore the Full Documentation</a>
-</p>
