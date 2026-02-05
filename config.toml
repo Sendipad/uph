@@ -74,16 +74,76 @@ defaultContentLanguageInSubdir = true
     weight = 1
 
   [[menu.main]]
-    name = "Example"
-    pageRef = "/docs/example/"
+    name = "Introduction"
+    pageRef = "/docs/introduction/"
     parent = "Docs"
-    weight = 10
+    weight = 1
 
   [[menu.main]]
-    name = "UseCases"
-    pageRef = "/docs/shortcodes/buttons/"
+    name = "Key Features"
+    pageRef = "/docs/features/"
     parent = "Docs"
-    weight = 20
+    weight = 2
+
+  [[menu.main]]
+    name = "Data Quality Dashboard"
+    pageRef = "/docs/features/data-quality-dashboard/"
+    parent = "Key Features"
+    weight = 1
+
+  [[menu.main]]
+    name = "Configuration"
+    pageRef = "/docs/features/configuration/"
+    parent = "Key Features"
+    weight = 2
+
+  [[menu.main]]
+    name = "Hierarchical Numbering"
+    pageRef = "/docs/features/hierarchical-numbering/"
+    parent = "Key Features"
+    weight = 3
+
+  [[menu.main]]
+    name = "Relationship Management"
+    pageRef = "/docs/features/relationship-management/"
+    parent = "Key Features"
+    weight = 4
+
+  [[menu.main]]
+    name = "Advanced"
+    pageRef = "/docs/Advanced/"
+    parent = "Docs"
+    weight = 3
+
+  [[menu.main]]
+    name = "Architecture Deep-Dive"
+    pageRef = "/docs/Advanced/Architecture_Deep-Dive/"
+    parent = "Advanced"
+    weight = 1
+
+  [[menu.main]]
+    name = "Background Sync"
+    pageRef = "/docs/Advanced/background_sync_party_master_field_following_change_on_party/"
+    parent = "Advanced"
+    weight = 2
+
+  [[menu.main]]
+    name = "Why We Built UPH"
+    pageRef = "/docs/Advanced/why_we_built_uph/"
+    parent = "Advanced"
+    weight = 3
+
+  [[menu.main]]
+    name = "API Reference"
+    pageRef = "/docs/Advanced/api-reference/"
+    parent = "Advanced"
+    weight = 4
+
+  [[menu.main]]
+    name = "Use Cases"
+    pageRef = "/docs/usecases/"
+    parent = "Docs"
+    weight = 4
 
   # ---- Blog Section (Sidebar Link) ----
   [[menu.main]]
@@ -91,15 +151,9 @@ defaultContentLanguageInSubdir = true
     pageRef = "/posts/"
     weight = 50
 
-  # ---- Showcases Section ----
-  [[menu.main]]
-    name = "Showcases"
-    pageRef = "/showcases/"
-    weight = 60
-
   # ---- GitHub Quick Link ----
   [[menu.main]]
-    name = "GitHub (Top Link)"
+    name = "GitHub"
     url = "https://github.com/Sendipad/uph/"
     weight = 100
 
