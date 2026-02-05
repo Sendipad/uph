@@ -1,0 +1,154 @@
+{{- /*
+AI Assistant Buttons Shortcode
+Creates buttons linking to various AI assistants with the current page URL as context.
+
+Usage: {{< ai-assistant >}}
+Or: {{< ai-assistant showTitle="true" >}}
+
+Parameters:
+  showTitle (bool): Whether to show the section title (default: true)
+  vertical (bool): Whether to stack buttons vertically (default: false)
+*/ -}}
+
+{{- $pageUrl := .Permalink -}}
+{{- $showTitle := default true (.Get "showTitle") -}}
+{{- $vertical := default false (.Get "vertical") -}}
+{{- $pageTitle := .Title -}}
+
+<style>
+  /* AI Assistant Buttons Styles */
+  .ai-assistant-container {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+  }
+  
+  .ai-assistant-container.vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .ai-assistant-container:not(.vertical) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .ai-assistant-title {
+    width: 100%;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1rem;
+  }
+  
+  .ai-assistant-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    color: white;
+  }
+  
+  .ai-assistant-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    color: white;
+  }
+  
+  .ai-assistant-btn i {
+    font-size: 1.1rem;
+  }
+  
+  /* ChatGPT - Green */
+  .ai-btn-chatgpt {
+    background: linear-gradient(135deg, #10a37f 0%, #1a7f64 100%);
+  }
+  
+  .ai-btn-chatgpt:hover {
+    background: linear-gradient(135deg, #1a7f64 0%, #10a37f 100%);
+  }
+  
+  /* Claude - Purple */
+  .ai-btn-claude {
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+  }
+  
+  .ai-btn-claude:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  }
+  
+  /* Gemini - Blue */
+  .ai-btn-gemini {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  }
+  
+  .ai-btn-gemini:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  }
+  
+  /* Dark mode support */
+  @media (prefers-color-scheme: dark) {
+    .ai-assistant-container {
+      background: #1e293b;
+      border-color: #334155;
+    }
+    
+    .ai-assistant-title {
+      color: #f1f5f9;
+    }
+  }
+</style>
+
+<div class="ai-assistant-container{{ if $vertical }} vertical{{ end }}">
+  {{- if $showTitle -}}
+  <div class="ai-assistant-title">
+    <i class="fas fa-robot"></i> Ask an AI Assistant about this page
+  </div>
+  {{- end -}}
+  
+  {{- /* ChatGPT Button */ -}}
+  <a href="https://chatgpt.com/?q={{ urlencode (printf "Tell me about %s: %s" $pageTitle $pageUrl) }}" 
+     class="ai-assistant-btn ai-btn-chatgpt" 
+     target="_blank" 
+     rel="noopener noreferrer"
+     title="Ask ChatGPT about this page">
+    <i class="fab fa-js"></i>
+    <span>Ask ChatGPT</span>
+  </a>
+  
+  {{- /* Claude Button */ -}}
+  <a href="https://claude.com/claude/{{ urlencode $pageTitle }}?url={{ urlencode $pageUrl }}" 
+     class="ai-assistant-btn ai-btn-claude" 
+     target="_blank" 
+     rel="noopener noreferrer"
+     title="Ask Claude about this page">
+    <i class="fas fa-brain"></i>
+    <span>Ask Claude</span>
+  </a>
+  
+  {{- /* Gemini Button */ -}}
+  <a href="https://gemini.google.com/app/{{ urlencode $pageUrl }}" 
+     class="ai-assistant-btn ai-btn-gemini" 
+     target="_blank" 
+     rel="noopener noreferrer"
+     title="Ask Gemini about this page">
+    <i class="fas fa-sparkles"></i>
+    <span>Ask Gemini</span>
+  </a>
+</div>
+
+{{- /* Note: The AI assistant URLs may change. These are the general patterns for sharing content. */ -}}

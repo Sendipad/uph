@@ -53,7 +53,7 @@ defaultContentLanguageInSubdir = true
   BookSection = "docs"  
   BookFlat = true            # Allows manual menu items to appear
   BookDateFormat = "January 2, 2006"
-  customCSS = ["custom.css"]
+  customCSS = ["custom.css", "css/landing.css"]
 
   # GitHub integration
   BookEdit = true
