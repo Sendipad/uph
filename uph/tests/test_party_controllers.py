@@ -150,11 +150,15 @@ class TestPartyControllers(FrappeTestCase, AccountsTestMixin):
             "Party Master", {"party_name": "_Test New PM"}
         )
         if not new_pm_name:
+            # Use the same parent as the existing test party master to ensure validity
+            existing_pm = frappe.get_doc("Party Master", self.party_master)
+            parent_group = existing_pm.parent_party_master
+
             new_pm = frappe.get_doc(
                 {
                     "doctype": "Party Master",
                     "party_name": "_Test New PM",
-                    "parent_party_master": "Root Group",
+                    "parent_party_master": parent_group,
                     "is_group": 0,
                     "party_type": "Customer",
                     "type": "Individual",
