@@ -1,6 +1,7 @@
 {{- /*
 AI Assistant Buttons Partial
 Creates buttons linking to various AI assistants with the current page URL as context.
+Uses the same pattern as Frappe documentation.
 */ -}}
 
 {{- $pageUrl := .Permalink -}}
@@ -20,7 +21,7 @@ Creates buttons linking to various AI assistants with the current page URL as co
     align-items: center;
     justify-content: center;
   }
-  
+
   .ai-assistant-title {
     width: 100%;
     text-align: center;
@@ -29,7 +30,7 @@ Creates buttons linking to various AI assistants with the current page URL as co
     color: #1e293b;
     margin-bottom: 1rem;
   }
-  
+
   .ai-assistant-btn {
     display: inline-flex;
     align-items: center;
@@ -44,51 +45,51 @@ Creates buttons linking to various AI assistants with the current page URL as co
     transition: all 0.2s ease;
     color: white;
   }
-  
+
   .ai-assistant-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     color: white;
   }
-  
+
   .ai-assistant-btn i {
     font-size: 1.1rem;
   }
-  
+
   /* ChatGPT - Green */
   .ai-btn-chatgpt {
     background: linear-gradient(135deg, #10a37f 0%, #1a7f64 100%);
   }
-  
+
   .ai-btn-chatgpt:hover {
     background: linear-gradient(135deg, #1a7f64 0%, #10a37f 100%);
   }
-  
+
   /* Claude - Purple */
   .ai-btn-claude {
     background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
   }
-  
+
   .ai-btn-claude:hover {
     background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
   }
-  
+
   /* Gemini - Blue */
   .ai-btn-gemini {
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   }
-  
+
   .ai-btn-gemini:hover {
     background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
   }
-  
+
   /* Dark mode support */
   @media (prefers-color-scheme: dark) {
     .ai-assistant-container {
       background: #1e293b;
       border-color: #334155;
     }
-    
+
     .ai-assistant-title {
       color: #f1f5f9;
     }
@@ -99,34 +100,37 @@ Creates buttons linking to various AI assistants with the current page URL as co
   <div class="ai-assistant-title">
     <i class="fas fa-robot"></i> Ask an AI Assistant about this page
   </div>
-  
-  {{- /* ChatGPT Button */ -}}
-  {{- $chatgptQuery := querify "q" (printf "Tell me about %s: %s" $pageTitle $pageUrl) -}}
-  <a href="https://chatgpt.com/?{{ $chatgptQuery }}" 
-     class="ai-assistant-btn ai-btn-chatgpt" 
-     target="_blank" 
+
+  {{- /* ChatGPT Button - Frappe pattern */ -}}
+  {{- $chatgptMessage := printf "I'm currently browsing this web page: %s\n\nPlease answer any questions I have based on the content of this page." $pageUrl -}}
+  {{- $chatgptUrl := printf "https://chatgpt.com/?q=%s" (urlize $chatgptMessage) -}}
+  <a href="{{ $chatgptUrl }}"
+     class="ai-assistant-btn ai-btn-chatgpt"
+     target="_blank"
      rel="noopener noreferrer"
      title="Ask ChatGPT about this page">
     <i class="fab fa-js"></i>
     <span>Ask ChatGPT</span>
   </a>
-  
+
   {{- /* Claude Button */ -}}
-  {{- $claudeQuery := querify "url" $pageUrl "q" $pageTitle -}}
-  <a href="https://claude.com/claude?{{ $claudeQuery }}" 
-     class="ai-assistant-btn ai-btn-claude" 
-     target="_blank" 
+  {{- $claudeMessage := printf "I'm currently browsing this web page: %s\n\nPlease answer any questions I have based on the content of this page." $pageUrl -}}
+  {{- $claudeUrl := printf "https://claude.com/claude?url=%s&q=%s" (urlize $pageUrl) (urlize $claudeMessage) -}}
+  <a href="{{ $claudeUrl }}"
+     class="ai-assistant-btn ai-btn-claude"
+     target="_blank"
      rel="noopener noreferrer"
      title="Ask Claude about this page">
     <i class="fas fa-brain"></i>
     <span>Ask Claude</span>
   </a>
-  
+
   {{- /* Gemini Button */ -}}
-  {{- $geminiQuery := querify "q" $pageUrl -}}
-  <a href="https://gemini.google.com/?{{ $geminiQuery }}" 
-     class="ai-assistant-btn ai-btn-gemini" 
-     target="_blank" 
+  {{- $geminiMessage := printf "I'm currently browsing this web page: %s\n\nPlease answer any questions I have based on the content of this page." $pageUrl -}}
+  {{- $geminiUrl := printf "https://gemini.google.com/?q=%s" (urlize $geminiMessage) -}}
+  <a href="{{ $geminiUrl }}"
+     class="ai-assistant-btn ai-btn-gemini"
+     target="_blank"
      rel="noopener noreferrer"
      title="Ask Gemini about this page">
     <i class="fas fa-sparkles"></i>
