@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Unified Party Hub VERSION\n"
 "Report-Msgid-Bugs-To: ruzaqi@gmail.com\n"
-"POT-Creation-Date: 2026-02-02 19:52+0307\n"
-"PO-Revision-Date: 2026-02-02 19:52+0307\n"
+"POT-Creation-Date: 2026-02-05 21:18+0307\n"
+"PO-Revision-Date: 2026-02-05 21:18+0307\n"
 "Last-Translator: ruzaqi@gmail.com\n"
 "Language-Team: ruzaqi@gmail.com\n"
 "MIME-Version: 1.0\n"
@@ -32,18 +32,18 @@ msgid ""
 " Account Must be of Group where it has child accounts for each Currency"
 msgstr ""
 
-#: uph/party/controllers/mdm.py:273
+#: uph/party/controllers/mdm.py:226
 msgid "<b>Data Quality Alert:</b> Potential duplicates found for rule '{0}'"
 msgstr ""
 
 #. Header text in the Party Workspace
 #: uph/party/workspace/party/party.json
-msgid "<span class=\"h4\"><b>Reports &amp; Masters</b></span>"
+msgid "<span class=\"h4\"><b>اختصاراتك</b></span>"
 msgstr ""
 
 #. Header text in the Party Workspace
 #: uph/party/workspace/party/party.json
-msgid "<span class=\"h4\"><b>Your Shortcuts</b></span>"
+msgid "<span class=\"h4\"><b>التقارير والبيانات الرئيسية</b></span>"
 msgstr ""
 
 #: uph/public/js/utils/party_master_manager.js:52
@@ -53,6 +53,14 @@ msgstr ""
 
 #: uph/public/js/utils/party_master_manager.js:72
 msgid "A Unique Party Number Must Be set or leave it"
+msgstr ""
+
+#: uph/party/doctype/party_relationship/party_relationship.py:40
+msgid "A party cannot have a relationship with itself."
+msgstr ""
+
+#: uph/party/doctype/party_relationship/party_relationship.py:70
+msgid "A {0} relationship already exists between {1} and {2}."
 msgstr ""
 
 #. Label of a Link field in DocType 'Party Master Accounts'
@@ -96,7 +104,10 @@ msgid "Accounting Dimension"
 msgstr ""
 
 #. Name of a role
+#: uph/party/doctype/duplicate_exclusion/duplicate_exclusion.json
 #: uph/party/doctype/party_master/party_master.json
+#: uph/party/doctype/party_relationship/party_relationship.json
+#: uph/party/doctype/party_relationship_type/party_relationship_type.json
 msgid "Accounts Manager"
 msgstr ""
 
@@ -123,8 +134,10 @@ msgstr ""
 #. Option for the 'Status' (Select) field in DocType 'Party Analytic
 #. Accounting'
 #. Option for the 'Status' (Select) field in DocType 'Party Master'
+#. Option for the 'Status' (Select) field in DocType 'Party Relationship'
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
 #: uph/party/doctype/party_master/party_master.json
+#: uph/party/doctype/party_relationship/party_relationship.json
 msgid "Active"
 msgstr ""
 
@@ -181,6 +194,9 @@ msgstr ""
 msgid "Against Voucher Type"
 msgstr ""
 
+#. Name of a role
+#: uph/party/doctype/party_relationship/party_relationship.json
+#: uph/party/doctype/party_relationship_type/party_relationship_type.json
 #: uph/party/report/party_account_balances/party_account_balances.js:116
 #: uph/party/report/party_account_statement/party_account_statement.js:193
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.js:161
@@ -239,6 +255,16 @@ msgstr ""
 msgid "Applicable On Companies"
 msgstr ""
 
+#. Description of the 'Ownership Percentage' (Percent) field in DocType 'Party
+#. Relationship'
+#: uph/party/doctype/party_relationship/party_relationship.json
+msgid "Applicable for ownership/investment relationships"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:313
+msgid "Apply"
+msgstr ""
+
 #. Option for the 'Status' (Select) field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
 msgid "Approved"
@@ -250,8 +276,16 @@ msgstr ""
 msgid "Archived"
 msgstr ""
 
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:265
+msgid "Are you sure you want to merge {0} into {1}? This action cannot be undone."
+msgstr ""
+
 #: uph/public/js/utils/utils.js:146
 msgid "Are you sure you want to unlink this Party Master?"
+msgstr ""
+
+#: uph/party/doctype/party_relationship/party_relationship.py:126
+msgid "Auto-created reverse relationship from {0}"
 msgstr ""
 
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:234
@@ -293,7 +327,7 @@ msgstr ""
 msgid "Business Unit"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_dashboard.py:33
+#: uph/party/doctype/party_master/party_master_dashboard.py:28
 msgid "Buying"
 msgstr ""
 
@@ -306,12 +340,16 @@ msgstr ""
 msgid "Cannot create Party Master field in {0}"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:304
+#: uph/party/doctype/party_master/party_master.py:378
 msgid "Cannot delete Party Master that is linked to other Parties"
 msgstr ""
 
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.py:74
 msgid "Cannot delete because this Party Analytic Accounting is used in {0} GL Entry records."
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:121
+msgid "Cannot merge a party with itself"
 msgstr ""
 
 #: uph/regional/arabic.py:50
@@ -330,6 +368,12 @@ msgstr ""
 #. Label of a Check field in DocType 'Party Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "Check Party Master Duplicate Vouchers"
+msgstr ""
+
+#. Description of the 'Is Hierarchical' (Check) field in DocType 'Party
+#. Relationship Type'
+#: uph/party/doctype/party_relationship_type/party_relationship_type.json
+msgid "Check if this relationship implies an ownership or control hierarchy"
 msgstr ""
 
 #: uph/public/js/utils/party.js:242
@@ -392,6 +436,7 @@ msgstr ""
 #. Label of a Link field in DocType 'Party Analytic Accounting Allowed Company'
 #. Option for the 'Type' (Select) field in DocType 'Party Master'
 #. Label of a Link field in DocType 'Party Master Accounts'
+#: uph/party/dashboard_chart_source/party_identity_governance/party_identity_governance.js:8
 #: uph/party/doctype/party_analytic_accounting_allowed_company/party_analytic_accounting_allowed_company.json
 #: uph/party/doctype/party_master/party_master.json
 #: uph/party/doctype/party_master/party_master_tree.js:259
@@ -545,6 +590,7 @@ msgstr ""
 
 #. Option for the 'Party Type' (Select) field in DocType 'Party Master Parties'
 #. Label of a Link in the Party Workspace
+#. Label of a shortcut in the Party Workspace
 #: uph/party/doctype/party_master_parties/party_master_parties.json
 #: uph/party/workspace/party/party.json
 msgid "Customer"
@@ -557,6 +603,16 @@ msgstr ""
 #. Label of a Tab Break field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
 msgid "Dashboard"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:297
+msgid "Dashboard Settings"
+msgstr ""
+
+#. Label of a shortcut in the Party Workspace
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:4
+#: uph/party/workspace/party/party.json
+msgid "Data Quality Dashboard"
 msgstr ""
 
 #. Label of a Date field in DocType 'Party Master'
@@ -587,7 +643,7 @@ msgstr ""
 msgid "Default Currency"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:205
+#: uph/party/doctype/party_master/party_master.py:237
 msgid "Default Party Type is Mandatory"
 msgstr ""
 
@@ -630,10 +686,17 @@ msgstr ""
 msgid "Delinquent"
 msgstr ""
 
+#. Label of a Small Text field in DocType 'Party Relationship Type'
+#: uph/party/doctype/party_relationship_type/party_relationship_type.json
+msgid "Description"
+msgstr ""
+
 #. Label of a Section Break field in DocType 'Party Analytic Accounting'
 #. Label of a Tab Break field in DocType 'Party Master'
+#. Label of a Section Break field in DocType 'Party Relationship'
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
 #: uph/party/doctype/party_master/party_master.json
+#: uph/party/doctype/party_relationship/party_relationship.json
 msgid "Details"
 msgstr ""
 
@@ -641,6 +704,28 @@ msgstr ""
 #. Option for the 'Status' (Select) field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
 msgid "Disabled"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:236
+msgid "Dismiss"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:236
+msgid "Dismiss Duplicate"
+msgstr ""
+
+#. Label of a Link field in DocType 'Duplicate Exclusion'
+#: uph/party/doctype/duplicate_exclusion/duplicate_exclusion.json
+msgid "Dismissed By"
+msgstr ""
+
+#. Label of a Date field in DocType 'Duplicate Exclusion'
+#: uph/party/doctype/duplicate_exclusion/duplicate_exclusion.json
+msgid "Dismissed On"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:47
+msgid "Dismissed Pairs"
 msgstr ""
 
 #. Label of a Data field in DocType 'Party Analytic Accounting'
@@ -713,7 +798,7 @@ msgstr ""
 msgid "Draft"
 msgstr ""
 
-#: uph/party/controllers/mdm.py:280
+#: uph/party/controllers/mdm.py:233
 msgid "Duplicate Blocked"
 msgstr ""
 
@@ -725,12 +810,28 @@ msgstr ""
 msgid "Duplicate Documents Found"
 msgstr ""
 
+#. Name of a DocType
+#. Label of a Link in the Party Workspace
+#. Label of a shortcut in the Party Workspace
+#: uph/party/doctype/duplicate_exclusion/duplicate_exclusion.json
+#: uph/party/workspace/party/party.json
+msgid "Duplicate Exclusion"
+msgstr ""
+
+#: uph/party/doctype/duplicate_exclusion/duplicate_exclusion.py:54
+msgid "Duplicate Exclusion Exists"
+msgstr ""
+
 #: uph/party/controllers/party.py:253
 msgid "Duplicate Exists"
 msgstr ""
 
 #: uph/public/js/utils/party.js:869
 msgid "Duplicate Forbidden"
+msgstr ""
+
+#: uph/party/doctype/party_relationship/party_relationship.py:75
+msgid "Duplicate Relationship"
 msgstr ""
 
 #. Label of a Select field in DocType 'Party Master Settings'
@@ -744,9 +845,13 @@ msgstr ""
 msgid "Duplicate Voucher Configuration"
 msgstr ""
 
-#: uph/party/controllers/mdm.py:282 uph/public/js/utils/party.js:883
+#: uph/party/controllers/mdm.py:235 uph/public/js/utils/party.js:883
 #: uph/public/js/utils/party.js:948
 msgid "Duplicate Warning"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:243
+msgid "Duplicate pair has been dismissed"
 msgstr ""
 
 #. Option for the 'Document Categories' (Select) field in DocType 'Party Master
@@ -823,11 +928,15 @@ msgstr ""
 
 #. Label of a Check field in DocType 'Party Analytic Accounting'
 #. Label of a Check field in DocType 'Party Master Settings DocType'
+#. Label of a Check field in DocType 'Party Relationship Type'
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
 #: uph/party/doctype/party_master_settings_doctype/party_master_settings_doctype.json
+#: uph/party/doctype/party_relationship_type/party_relationship_type.json
 msgid "Enabled"
 msgstr ""
 
+#. Label of a Date field in DocType 'Party Relationship'
+#: uph/party/doctype/party_relationship/party_relationship.json
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.js:57
 #: uph/party/report/party_account_balances/party_account_balances.js:31
 #: uph/party/report/party_account_statement/party_account_statement.js:64
@@ -835,6 +944,10 @@ msgstr ""
 #: uph/party/report/party_ledger/party_ledger.js:49
 #: uph/party/report/party_master_ledger/party_master_ledger.js:49
 msgid "End Date"
+msgstr ""
+
+#: uph/party/doctype/party_relationship/party_relationship.py:49
+msgid "End Date cannot be before Start Date."
 msgstr ""
 
 #. Label of a Check field in DocType 'Party Master'
@@ -897,10 +1010,6 @@ msgstr ""
 
 #: uph/party/doctype/party_master/party_master_tree.js:116
 msgid "Financial Statements"
-msgstr ""
-
-#: uph/party/doctype/party_master/party_master.py:1100
-msgid "Following fields are mandatory to create address:"
 msgstr ""
 
 #: uph/party/report/party_account_balances/party_account_balances.js:143
@@ -1023,7 +1132,7 @@ msgstr ""
 msgid "Hide Warnings Message"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_dashboard.py:44
+#: uph/party/doctype/party_master/party_master_dashboard.py:36
 msgid "Human Resources"
 msgstr ""
 
@@ -1046,12 +1155,18 @@ msgstr ""
 
 #. Option for the 'Status' (Select) field in DocType 'Party Analytic
 #. Accounting'
+#. Option for the 'Status' (Select) field in DocType 'Party Relationship'
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
+#: uph/party/doctype/party_relationship/party_relationship.json
 msgid "Inactive"
 msgstr ""
 
 #: uph/party/report/party_master_health_report/party_master_health_report.js:19
 msgid "Include Disabled Parties"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:47
+msgid "Incomplete Records"
 msgstr ""
 
 #. Option for the 'Type' (Select) field in DocType 'Party Master'
@@ -1065,7 +1180,31 @@ msgstr ""
 msgid "Industry"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:1045
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:225
+msgid "Insufficient permissions to dismiss duplicates"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:118
+msgid "Insufficient permissions to merge parties"
+msgstr ""
+
+#: uph/party/doctype/party_relationship/party_relationship.py:50
+msgid "Invalid Date Range"
+msgstr ""
+
+#: uph/party/doctype/duplicate_exclusion/duplicate_exclusion.py:28
+msgid "Invalid Exclusion"
+msgstr ""
+
+#: uph/party/doctype/party_relationship/party_relationship.py:84
+msgid "Invalid Percentage"
+msgstr ""
+
+#: uph/party/doctype/party_relationship/party_relationship.py:41
+msgid "Invalid Relationship"
+msgstr ""
+
+#: uph/party/doctype/party_master/party_master.py:969
 msgid "Invalid data format for selection. Expected list of lists."
 msgstr ""
 
@@ -1088,6 +1227,11 @@ msgstr ""
 msgid "Is Group"
 msgstr ""
 
+#. Label of a Check field in DocType 'Party Relationship Type'
+#: uph/party/doctype/party_relationship_type/party_relationship_type.json
+msgid "Is Hierarchical"
+msgstr ""
+
 #. Label of a Check field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
 msgid "Is Internal Party"
@@ -1105,6 +1249,10 @@ msgstr ""
 
 #: uph/party/report/party_account_statement/party_account_statement.js:292
 msgid "Journal Entry"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:246
+msgid "Keep (Primary Party)"
 msgstr ""
 
 #. Label of a Card Break in the Party Workspace
@@ -1144,6 +1292,10 @@ msgstr ""
 msgid "Link to Party Master"
 msgstr ""
 
+#: uph/party/dashboard_chart_source/party_identity_governance/party_identity_governance.py:66
+msgid "Linked"
+msgstr ""
+
 #. Label of a number card in the Party Workspace
 #: uph/party/workspace/party/party.json
 msgid "Linked Customers"
@@ -1167,11 +1319,19 @@ msgstr ""
 msgid "Linking Existing {0} ({1})"
 msgstr ""
 
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:47
+msgid "Loading..."
+msgstr ""
+
 #. Label of a Check field in DocType 'Party Master Settings DocType'
 #. Label of a Check field in DocType 'Party Master Settings Party Type'
 #: uph/party/doctype/party_master_settings_doctype/party_master_settings_doctype.json
 #: uph/party/doctype/party_master_settings_party_type/party_master_settings_party_type.json
 msgid "Mandatory"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:236
+msgid "Manually dismissed"
 msgstr ""
 
 #. Label of a Link field in DocType 'Party Master'
@@ -1183,8 +1343,25 @@ msgstr ""
 msgid "Match Exist Party Master on Voucher To Party"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:1103
-msgid "Missing Values Required"
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:125
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:259
+msgid "Merge"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:241
+msgid "Merge Parties"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:172
+msgid "Merged into {0}"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:284
+msgid "Merging parties..."
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:302
+msgid "Minimum Similarity Score"
 msgstr ""
 
 #: uph/party/doctype/party_master_settings/party_master_settings.py:388
@@ -1207,23 +1384,23 @@ msgstr ""
 msgid "More Details"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:170
+#: uph/party/doctype/party_master/party_master.py:186
 msgid "Must Mention Reason to put This Party {0} as Disputed"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:445
+#: uph/party/doctype/party_master/party_master.py:525
 msgid "Must Select at Least One Party"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:337
+#: uph/party/doctype/party_master/party_master.py:423
 msgid "Must Select at least one Party"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:975
+#: uph/party/doctype/party_master/party_master.py:916
 msgid "Must Set Party Master"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:466
+#: uph/party/doctype/party_master/party_master.py:550
 msgid "Must Set at least One Secondary Role"
 msgstr ""
 
@@ -1255,6 +1432,10 @@ msgstr ""
 msgid "New"
 msgstr ""
 
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:200
+msgid "Next"
+msgstr ""
+
 #: uph/party/doctype/party_master/party_master.js:381
 msgid "No Outstanding Balance"
 msgstr ""
@@ -1267,6 +1448,10 @@ msgstr ""
 msgid "No Selection"
 msgstr ""
 
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:120
+msgid "No potential duplicates found"
+msgstr ""
+
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.js:59
 msgid "No related parties found."
 msgstr ""
@@ -1274,6 +1459,20 @@ msgstr ""
 #. Label of a Data field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
 msgid "Normalized Party Name"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:125
+msgid "Not a Duplicate"
+msgstr ""
+
+#. Label of a Small Text field in DocType 'Party Relationship'
+#: uph/party/doctype/party_relationship/party_relationship.json
+msgid "Notes"
+msgstr ""
+
+#. Label of a Link field in DocType 'Party Relationship'
+#: uph/party/doctype/party_relationship/party_relationship.json
+msgid "Object Party"
 msgstr ""
 
 #. Label of a Link field in DocType 'Party Master'
@@ -1299,6 +1498,10 @@ msgstr ""
 msgid ""
 "Only leaf nodes Party Master are allowed to be linked in transactional Party\n"
 "\n"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:304
+msgid "Only show duplicates with similarity score above this threshold (0-100)"
 msgstr ""
 
 #: uph/party/report/party_ledger/party_ledger.py:391
@@ -1331,9 +1534,22 @@ msgstr ""
 msgid "Override Party Details API "
 msgstr ""
 
+#. Label of a Percent field in DocType 'Party Relationship'
+#: uph/party/doctype/party_relationship/party_relationship.json
+msgid "Ownership Percentage"
+msgstr ""
+
+#: uph/party/doctype/party_relationship/party_relationship.py:83
+msgid "Ownership percentage must be between 0 and 100."
+msgstr ""
+
 #. Label of a Tab Break field in DocType 'Party Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "PAA"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:196
+msgid "Page {0} of {1}"
 msgstr ""
 
 #. Label of a Link field in DocType 'Party Master Settings DocType'
@@ -1404,13 +1620,26 @@ msgstr ""
 msgid "Party"
 msgstr ""
 
+#. Label of a Link field in DocType 'Duplicate Exclusion'
+#: uph/party/doctype/duplicate_exclusion/duplicate_exclusion.json
+msgid "Party 1"
+msgstr ""
+
+#: uph/party/doctype/duplicate_exclusion/duplicate_exclusion.py:27
+msgid "Party 1 and Party 2 must be different."
+msgstr ""
+
+#. Label of a Link field in DocType 'Duplicate Exclusion'
+#: uph/party/doctype/duplicate_exclusion/duplicate_exclusion.json
+msgid "Party 2"
+msgstr ""
+
 #: uph/party/controllers/party.py:305
 msgid "Party : {0} Has been deleted"
 msgstr ""
 
 #. Name of a report
 #. Label of a Link in the Party Workspace
-#: uph/party/doctype/party_master/party_master_dashboard.py:58
 #: uph/party/report/party_account_balances/party_account_balances.json
 #: uph/party/workspace/party/party.json
 msgid "Party Account Balances"
@@ -1624,10 +1853,6 @@ msgstr ""
 msgid "Party Master {0} Could be not Exists or is group or has not Role of {1} or not enabled"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:611
-msgid "Party Master {0} does not exist"
-msgstr ""
-
 #: uph/party/controllers/party.py:254
 msgid "Party Master {0} has a Party {1} with {2}"
 msgstr ""
@@ -1649,17 +1874,13 @@ msgstr ""
 msgid "Party Name"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:177
+#: uph/party/doctype/party_master/party_master.py:196
 msgid "Party Name {0} already exists"
 msgstr ""
 
 #. Label of a Data field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
 msgid "Party Number"
-msgstr ""
-
-#: uph/party/doctype/party_master/party_master.py:157
-msgid "Party Number is Mandatory for Root Group Node"
 msgstr ""
 
 #. Label of a Table field in DocType 'Party Master'
@@ -1679,6 +1900,22 @@ msgstr ""
 
 #: uph/party/report/party_ledger/party_ledger.py:163
 msgid "Party Profile {0} Not Activate Currency {1}"
+msgstr ""
+
+#. Name of a DocType
+#. Label of a Link in the Party Workspace
+#. Label of a shortcut in the Party Workspace
+#: uph/party/doctype/party_relationship/party_relationship.json
+#: uph/party/workspace/party/party.json
+msgid "Party Relationship"
+msgstr ""
+
+#. Name of a DocType
+#. Label of a Link in the Party Workspace
+#. Label of a shortcut in the Party Workspace
+#: uph/party/doctype/party_relationship_type/party_relationship_type.json
+#: uph/party/workspace/party/party.json
+msgid "Party Relationship Type"
 msgstr ""
 
 #. Label of a chart in the Party Workspace
@@ -1743,7 +1980,7 @@ msgstr ""
 msgid "Party Type Rules"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:189
+#: uph/party/doctype/party_master/party_master.py:209
 msgid "Party Type {0} can not be duplicate"
 msgstr ""
 
@@ -1752,7 +1989,7 @@ msgstr ""
 msgid "Party Types"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:931
+#: uph/party/doctype/party_master/party_master.py:903
 msgid "Party with this name already exists"
 msgstr ""
 
@@ -1791,6 +2028,14 @@ msgstr ""
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:613
 #: uph/party/report/party_ledger/party_ledger.py:442
 msgid "Posting Date"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:47
+msgid "Potential Duplicates"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:193
+msgid "Previous"
 msgstr ""
 
 #. Label of a Text field in DocType 'Party Master'
@@ -1848,6 +2093,19 @@ msgstr ""
 msgid "Purchasing DocType"
 msgstr ""
 
+#: uph/party/dashboard_chart_source/party_identity_governance/party_identity_governance.py:69
+msgid "Quality Score (%)"
+msgstr ""
+
+#. Label of a Small Text field in DocType 'Duplicate Exclusion'
+#: uph/party/doctype/duplicate_exclusion/duplicate_exclusion.json
+msgid "Reason"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:217
+msgid "Reason (optional)"
+msgstr ""
+
 #: uph/party/doctype/party_master/party_master.js:90
 msgid "Reassign Linked Parties"
 msgstr ""
@@ -1866,7 +2124,27 @@ msgid "Receive"
 msgstr ""
 
 #: uph/party/doctype/party_master/party_master_tree.js:247
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:35
 msgid "Refresh"
+msgstr ""
+
+#. Label of a Section Break field in DocType 'Party Relationship'
+#: uph/party/doctype/party_relationship/party_relationship.json
+msgid "Relationship"
+msgstr ""
+
+#. Label of a Link field in DocType 'Party Relationship'
+#: uph/party/doctype/party_relationship/party_relationship.json
+msgid "Relationship Type"
+msgstr ""
+
+#. Label of a Data field in DocType 'Party Relationship Type'
+#: uph/party/doctype/party_relationship_type/party_relationship_type.json
+msgid "Relationship Type Name"
+msgstr ""
+
+#: uph/party/doctype/party_master/party_master_dashboard.py:43
+msgid "Relationships"
 msgstr ""
 
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:275
@@ -1877,7 +2155,7 @@ msgstr ""
 msgid "Remarks"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_dashboard.py:55
+#: uph/party/doctype/party_master/party_master_dashboard.py:54
 msgid "Reports"
 msgstr ""
 
@@ -1908,8 +2186,17 @@ msgstr ""
 msgid "Restrict"
 msgstr ""
 
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:309
+msgid "Results Per Page"
+msgstr ""
+
 #: uph/party/report/party_account_balances/party_account_balances.js:191
 msgid "Revaluation Journals"
+msgstr ""
+
+#. Label of a Link field in DocType 'Party Relationship Type'
+#: uph/party/doctype/party_relationship_type/party_relationship_type.json
+msgid "Reverse Relationship Type"
 msgstr ""
 
 #. Label of a Int field in DocType 'Party Master'
@@ -2005,7 +2292,7 @@ msgstr ""
 msgid "Selected Voucher Not Include"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_dashboard.py:21
+#: uph/party/doctype/party_master/party_master_dashboard.py:20
 msgid "Selling"
 msgstr ""
 
@@ -2044,13 +2331,14 @@ msgstr ""
 msgid "Set Party"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:273
+#: uph/party/doctype/party_master/party_master.py:339
 msgid "Setting Primary role of same Party Type is Not Allowed"
 msgstr ""
 
 #. Label of a Tab Break field in DocType 'Party Master'
 #. Label of a Card Break in the Party Workspace
 #: uph/party/doctype/party_master/party_master.json
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:41
 #: uph/party/workspace/party/party.json
 msgid "Settings"
 msgstr ""
@@ -2093,6 +2381,10 @@ msgstr ""
 msgid "Show System Generated Credit / Debit Notes"
 msgstr ""
 
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:125
+msgid "Similarity"
+msgstr ""
+
 #. Option for the 'Type' (Select) field in DocType 'Party Analytic Accounting'
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
 msgid "Site"
@@ -2107,6 +2399,8 @@ msgstr ""
 msgid "Something went wrong. Please check console."
 msgstr ""
 
+#. Label of a Date field in DocType 'Party Relationship'
+#: uph/party/doctype/party_relationship/party_relationship.json
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.js:49
 #: uph/party/report/party_account_statement/party_account_statement.js:56
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.js:28
@@ -2126,8 +2420,10 @@ msgstr ""
 
 #. Label of a Select field in DocType 'Party Analytic Accounting'
 #. Label of a Select field in DocType 'Party Master'
+#. Label of a Select field in DocType 'Party Relationship'
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
 #: uph/party/doctype/party_master/party_master.json
+#: uph/party/doctype/party_relationship/party_relationship.json
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:215
 #: uph/party/report/party_account_balances/party_account_balances.py:207
 msgid "Status"
@@ -2146,6 +2442,11 @@ msgstr ""
 msgid "Stop"
 msgstr ""
 
+#. Label of a Link field in DocType 'Party Relationship'
+#: uph/party/doctype/party_relationship/party_relationship.json
+msgid "Subject Party"
+msgstr ""
+
 #: uph/public/js/utils/party.js:871
 msgid "Submission is not allowed for duplicate vouchers."
 msgstr ""
@@ -2160,6 +2461,7 @@ msgstr ""
 
 #. Option for the 'Party Type' (Select) field in DocType 'Party Master Parties'
 #. Label of a Link in the Party Workspace
+#. Label of a shortcut in the Party Workspace
 #: uph/party/doctype/party_master_parties/party_master_parties.json
 #: uph/party/workspace/party/party.json
 msgid "Supplier"
@@ -2191,9 +2493,12 @@ msgid "Syncing details..."
 msgstr ""
 
 #. Name of a role
+#: uph/party/doctype/duplicate_exclusion/duplicate_exclusion.json
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
 #: uph/party/doctype/party_master/party_master.json
 #: uph/party/doctype/party_master_settings/party_master_settings.json
+#: uph/party/doctype/party_relationship/party_relationship.json
+#: uph/party/doctype/party_relationship_type/party_relationship_type.json
 msgid "System Manager"
 msgstr ""
 
@@ -2222,7 +2527,9 @@ msgid "Tax Withholding Category"
 msgstr ""
 
 #. Option for the 'Status' (Select) field in DocType 'Party Master'
+#. Option for the 'Status' (Select) field in DocType 'Party Relationship'
 #: uph/party/doctype/party_master/party_master.json
+#: uph/party/doctype/party_relationship/party_relationship.json
 msgid "Terminated"
 msgstr ""
 
@@ -2249,6 +2556,16 @@ msgstr ""
 msgid "The Parent Doctype at row {0} has no Child Table pointing to {1}"
 msgstr ""
 
+#. Description of the 'Reverse Relationship Type' (Link) field in DocType
+#. 'Party Relationship Type'
+#: uph/party/doctype/party_relationship_type/party_relationship_type.json
+msgid "The inverse relationship (e.g., if this is 'Parent Company', the reverse might be 'Subsidiary')"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:254
+msgid "The secondary party will be merged into the primary party and deleted. All linked documents will be updated."
+msgstr ""
+
 #: uph/public/js/utils/party.js:932
 msgid "There Are Some Duplicate:"
 msgstr ""
@@ -2259,12 +2576,16 @@ msgstr ""
 msgid "This Could be Currency Fieldname "
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:616
-msgid "This doctype is not properly configured as a tree (missing lft/rgt fields)"
-msgstr ""
-
 #: uph/party/report/party_master_health_report/party_master_health_report.py:35
 msgid "This is Old Report Build query Again to get fresh Stats"
+msgstr ""
+
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:229
+msgid "This pair has already been excluded"
+msgstr ""
+
+#: uph/party/doctype/duplicate_exclusion/duplicate_exclusion.py:51
+msgid "This party pair has already been excluded from duplicate detection."
 msgstr ""
 
 #. Description of a DocType
@@ -2309,6 +2630,10 @@ msgstr ""
 msgid "Total Linked Party"
 msgstr ""
 
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:47
+msgid "Total Parties"
+msgstr ""
+
 #. Label of a number card in the Party Workspace
 #: uph/party/workspace/party/party.json
 msgid "Total Party Masters"
@@ -2339,16 +2664,8 @@ msgstr ""
 msgid "Unlink Party Master"
 msgstr ""
 
-#. Label of a number card in the Party Workspace
-#. Label of a shortcut in the Party Workspace
-#: uph/party/workspace/party/party.json
-msgid "Unlinked Customers"
-msgstr ""
-
-#. Label of a number card in the Party Workspace
-#. Label of a shortcut in the Party Workspace
-#: uph/party/workspace/party/party.json
-msgid "Unlinked Suppliers"
+#: uph/party/dashboard_chart_source/party_identity_governance/party_identity_governance.py:67
+msgid "Unlinked"
 msgstr ""
 
 #: uph/public/js/utils/party.js:927
@@ -2436,8 +2753,12 @@ msgstr ""
 msgid "Write-Off"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:226
+#: uph/party/doctype/party_master/party_master.py:278
 msgid "You are not allowed to Change Party Number"
+msgstr ""
+
+#: uph/party/doctype/party_master/party_master.py:1084
+msgid "You don't have permission to {0} {1} {2}"
 msgstr ""
 
 #: uph/public/js/utils/party.js:778
@@ -2489,7 +2810,7 @@ msgstr ""
 msgid "{0} Created Successfully"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:325
+#: uph/party/doctype/party_master/party_master.py:405
 msgid "{0} Named {1}'s details have been updated"
 msgstr ""
 
@@ -2498,7 +2819,11 @@ msgstr ""
 msgid "{0} and {1} are mandatory"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master.py:346
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:180
+msgid "{0} has been merged into {1}"
+msgstr ""
+
+#: uph/party/doctype/party_master/party_master.py:432
 msgid "{0} has linked {1} {2}"
 msgstr ""
 
