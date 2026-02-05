@@ -150,10 +150,16 @@ class TestPartyControllers(FrappeTestCase, AccountsTestMixin):
             "Party Master", {"party_name": "_Test New PM"}
         )
         if not new_pm_name:
-            new_pm = frappe.new_doc("Party Master")
-            new_pm.party_name = "_Test New PM"
-            new_pm.type = "Individual"
-            new_pm.party_type = "Customer"
+            new_pm = frappe.get_doc(
+                {
+                    "doctype": "Party Master",
+                    "party_name": "_Test New PM",
+                    "parent_party_master": "Root Group",
+                    "is_group": 0,
+                    "party_type": "Customer",
+                    "type": "Individual",
+                }
+            )
             new_pm.insert()
             new_pm_name = new_pm.name
 
