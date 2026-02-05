@@ -101,7 +101,8 @@ Creates buttons linking to various AI assistants with the current page URL as co
   </div>
   
   {{- /* ChatGPT Button */ -}}
-  <a href="https://chatgpt.com/?q={{ urlencode (printf "Tell me about %s: %s" $pageTitle $pageUrl) }}" 
+  {{- $chatgptQuery := querify "q" (printf "Tell me about %s: %s" $pageTitle $pageUrl) -}}
+  <a href="https://chatgpt.com/?{{ $chatgptQuery }}" 
      class="ai-assistant-btn ai-btn-chatgpt" 
      target="_blank" 
      rel="noopener noreferrer"
@@ -111,7 +112,8 @@ Creates buttons linking to various AI assistants with the current page URL as co
   </a>
   
   {{- /* Claude Button */ -}}
-  <a href="https://claude.com/claude/{{ urlencode $pageTitle }}?url={{ urlencode $pageUrl }}" 
+  {{- $claudeQuery := querify "url" $pageUrl "q" $pageTitle -}}
+  <a href="https://claude.com/claude?{{ $claudeQuery }}" 
      class="ai-assistant-btn ai-btn-claude" 
      target="_blank" 
      rel="noopener noreferrer"
@@ -121,7 +123,8 @@ Creates buttons linking to various AI assistants with the current page URL as co
   </a>
   
   {{- /* Gemini Button */ -}}
-  <a href="https://gemini.google.com/app/{{ urlencode $pageUrl }}" 
+  {{- $geminiQuery := querify "q" $pageUrl -}}
+  <a href="https://gemini.google.com/?{{ $geminiQuery }}" 
      class="ai-assistant-btn ai-btn-gemini" 
      target="_blank" 
      rel="noopener noreferrer"
