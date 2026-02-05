@@ -59,6 +59,7 @@ class TestCacheFunctions(FrappeTestCase):
                     "doctype": "Party Master",
                     "party_name": "Test PM Cache",
                     "party_type": "Customer",
+                    "is_group": 1,
                 }
             ).insert()
         else:

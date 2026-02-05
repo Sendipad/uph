@@ -1,0 +1,107 @@
+{
+    "actions": [],
+    "allow_rename": 1,
+    "autoname": "field:relationship_type_name",
+    "creation": "2026-02-05 17:40:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "relationship_type_name",
+        "reverse_relationship_type",
+        "column_break_1",
+        "is_hierarchical",
+        "is_enabled",
+        "section_break_2",
+        "description"
+    ],
+    "fields": [
+        {
+            "fieldname": "relationship_type_name",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Relationship Type Name",
+            "reqd": 1,
+            "unique": 1
+        },
+        {
+            "description": "The inverse relationship (e.g., if this is 'Parent Company', the reverse might be 'Subsidiary')",
+            "fieldname": "reverse_relationship_type",
+            "fieldtype": "Link",
+            "label": "Reverse Relationship Type",
+            "options": "Party Relationship Type"
+        },
+        {
+            "fieldname": "column_break_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "default": "0",
+            "description": "Check if this relationship implies an ownership or control hierarchy",
+            "fieldname": "is_hierarchical",
+            "fieldtype": "Check",
+            "label": "Is Hierarchical"
+        },
+        {
+            "default": "1",
+            "fieldname": "is_enabled",
+            "fieldtype": "Check",
+            "in_list_view": 1,
+            "label": "Enabled"
+        },
+        {
+            "fieldname": "section_break_2",
+            "fieldtype": "Section Break"
+        },
+        {
+            "fieldname": "description",
+            "fieldtype": "Small Text",
+            "label": "Description"
+        }
+    ],
+    "links": [],
+    "modified": "2026-02-05 17:40:00.000000",
+    "modified_by": "Administrator",
+    "module": "Party",
+    "name": "Party Relationship Type",
+    "naming_rule": "By fieldname",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "Accounts Manager",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "All"
+        }
+    ],
+    "quick_entry": 1,
+    "sort_field": "creation",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 1
+}

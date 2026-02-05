@@ -5,17 +5,32 @@ from erpnext.stock.doctype.item.test_item import create_item
 
 
 class AccountsTestMixin:
-    def create_party_master(
-        self, party_name="_Test Party Master", parent_party_master="1000"
-    ):
+    def create_party_master(self, party_name="_Test Party Master"):
+        # 1. Ensure Root Group exists
+        root_name = frappe.db.exists(
+            "Party Master",
+            {"is_group": 1, "parent_party_master": ["is", "not set"]},
+        )
+        if not root_name:
+            root = frappe.get_doc(
+                {
+                    "doctype": "Party Master",
+                    "party_name": "Root Group",
+                    "is_group": 1,
+                    "party_type": "Customer",
+                }
+            ).insert(ignore_permissions=True)
+            root_name = root.name
+
+        # 2. Create Leaf under Root
         name = frappe.db.exists("Party Master", {"party_name": party_name})
         if not name:
             pm = frappe.new_doc("Party Master")
             pm.party_name = party_name
-            pm.parent_party_master = parent_party_master
+            pm.parent_party_master = root_name
             pm.party_type = "Customer"
             pm.type = "Individual"
-            pm.save()
+            pm.insert(ignore_permissions=True)
             self.party_master = pm.name
         else:
             self.party_master = name

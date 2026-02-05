@@ -6,55 +6,10 @@ A module that controls Data Quality and deduplication. It holds many useful util
 
 import frappe
 import re
-import unicodedata
 from functools import lru_cache
 from frappe import _
 
-try:
-    from rapidfuzz import fuzz
-except ImportError:
-    from difflib import SequenceMatcher
-    fuzz = None
-
-# Translation table for Arabic, Persian, and Latin accented characters
-TRANSLATION_TABLE = str.maketrans({
-    # Arabic normalization
-    "أ": "ا", "إ": "ا", "آ": "ا", "ى": "ي", "ة": "ه", "ؤ": "و", "ئ": "ي", "ـ": "",
-    # Persian character mapping
-    "ك": "ک", "ي": "ی",
-    # Digits from Indian to Arabic
-    "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4", 
-    "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9",
-    # Latin accents (lowercase)
-    "é": "e", "è": "e", "ê": "e", "ë": "e",
-    "á": "a", "à": "a", "â": "a", "ä": "a",
-    "í": "i", "ì": "i", "î": "i", "ï": "i",
-    "ó": "o", "ò": "o", "ô": "o", "ö": "o",
-    "ú": "u", "ù": "u", "û": "u", "ü": "u",
-    "ç": "c", "ñ": "n",
-    # Latin accents (uppercase)
-    "É": "E", "È": "E", "Ê": "E", "Ë": "E",
-    "Á": "A", "À": "A", "Â": "A", "Ä": "A",
-    "Í": "I", "Ì": "I", "Î": "I", "Ï": "I",
-    "Ó": "O", "Ò": "O", "Ô": "O", "Ö": "O",
-    "Ú": "U", "Ù": "U", "Û": "U", "Ü": "U",
-    "Ç": "C", "Ñ": "N",
-})
-
-# Arabic diacritic removal regex
-DIACRITIC_REGEX = re.compile(r"[\u064B-\u065F]")
-
-
-@frappe.whitelist()
-@lru_cache(maxsize=1024)
-def normalize_text(text: str) -> str:
-    """Normalize text for fuzzy matching (removes diacritics, normalizes characters)."""
-    if not text:
-        return ""
-    text = unicodedata.normalize("NFKD", text)
-    text = DIACRITIC_REGEX.sub("", text)
-    text = text.translate(TRANSLATION_TABLE)
-    return text.strip()
+from uph.party.controllers.normalization import NormalizationUtils
 
 
 def validate_document_quality(doc, method):
@@ -233,19 +188,17 @@ def _score_candidates(doc, rule, candidates):
                     score = condition.weight
             
             elif condition.check_type == "Fuzzy Match":
-                val1 = normalize_text(str(doc_val))
-                val2 = normalize_text(str(cand_val))
+                # Use consolidated normalization
+                val1 = NormalizationUtils.normalize(str(doc_val))
+                val2 = NormalizationUtils.normalize(str(cand_val))
                 
-                if fuzz:
-                    similarity = fuzz.ratio(val1, val2) / 100.0
-                else:
-                    similarity = SequenceMatcher(None, val1, val2).ratio()
+                similarity = NormalizationUtils.get_similarity_score(val1, val2)
                 
                 # Use configured threshold or default to 80%
-                threshold = (condition.minimum_similarity or 80) / 100.0
+                threshold = (condition.minimum_similarity or 80)
                 
                 if similarity > threshold:
-                    score = condition.weight * similarity
+                    score = condition.weight * (similarity / 100.0)
 
             total_score += score
 

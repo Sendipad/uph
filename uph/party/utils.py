@@ -17,6 +17,7 @@ from frappe.utils import unique
 from frappe.custom.doctype.custom_field.custom_field import create_custom_field
 
 from uph.regional.arabic import money_in_words
+from uph.party.controllers.normalization import NormalizationUtils
 
 
 def get_common_party_with_party_master_fields():
@@ -444,204 +445,20 @@ def get_party_master_list(doctype, txt, searchfield, start, page_len, filters):
 
 
 # ============================================================================
-# NORMALIZATION UTILS (Moved from mdm.normalization)
+# NORMALIZATION UTILS (Consolidated - use NormalizationUtils class)
 # ============================================================================
 
-import re
-import unicodedata
-from functools import lru_cache
-
-# Constants for normalization
-DIACRITIC_REGEX = re.compile(r"[\u0610-\u061A\u064B-\u065F\u06D6-\u06ED]")
-WHITESPACE_REGEX = re.compile(r"\s+")
-
-TRANSLATION_TABLE = str.maketrans(
-    {
-        # Arabic normalization
-        "أ": "ا",
-        "إ": "ا",
-        "آ": "ا",
-        "ى": "ي",
-        "ة": "ه",
-        "ؤ": "و",
-        "ئ": "ي",
-        "ـ": "",
-        # Persian character mapping
-        "ك": "ک",
-        "ي": "ی",
-        # Digits from Indian to Arabic
-        **{chr(0x660 + i): str(i) for i in range(10)},
-        # Latin accents (lowercase)
-        "é": "e",
-        "è": "e",
-        "ê": "e",
-        "ë": "e",
-        "á": "a",
-        "à": "a",
-        "â": "a",
-        "ä": "a",
-        "í": "i",
-        "ì": "i",
-        "î": "i",
-        "ï": "i",
-        "ó": "o",
-        "ò": "o",
-        "ô": "o",
-        "ö": "o",
-        "ú": "u",
-        "ù": "u",
-        "û": "u",
-        "ü": "u",
-        "ç": "c",
-        "ñ": "n",
-        # Latin accents (uppercase)
-        "É": "E",
-        "È": "E",
-        "Ê": "E",
-        "Ë": "E",
-        "Á": "A",
-        "À": "A",
-        "Â": "A",
-        "Ä": "A",
-        "Í": "I",
-        "Ì": "I",
-        "Î": "I",
-        "Ï": "I",
-        "Ó": "O",
-        "Ò": "O",
-        "Ô": "O",
-        "Ö": "O",
-        "Ú": "U",
-        "Ù": "U",
-        "Û": "U",
-        "Ü": "U",
-        "Ç": "C",
-        "Ñ": "N",
-    }
-)
-
-
-@frappe.whitelist()
 def normalize_text(text: str) -> str:
-    """Wrapper for _normalize_text_cached to be used in API calls."""
-    return _normalize_text_cached(text)
-
-
-def normalize_for_blocking(text: str) -> str:
-    """
-    Normalize text for blocking key generation.
-    Removes all spaces and punctuation for use as blocking keys.
-    """
-    if not text:
-        return ""
-    normalized = normalize_text(text)
-    return re.sub(r"[^a-z0-9]", "", normalized)
-
-
-@lru_cache(maxsize=1024)
-def _normalize_text_cached(text: str) -> str:
     """
     Normalize text for fuzzy matching.
-    Applies: trim, unicode normalization (NFKD), remove diacritics, casefold,
-    character translation, and whitespace normalization.
+    Wrapper around NormalizationUtils.normalize() for backward compatibility.
     """
-    if not text:
-        return ""
-
-    # 1. Trim whitespace
-    text = text.strip()
-
-    # 2. Unicode Normalize (NFKD decomposes characters)
-    text = unicodedata.normalize("NFKD", text)
-
-    # 3. Remove Diacritics (All combining marks + Arabic diacritics)
-    # We use category 'Mn' (Mark, Nonspacing) to catch all combining marks
-    text = "".join(c for c in text if not unicodedata.category(c).startswith("M"))
-
-    # Also apply Arabic specific regex if needed (though Mn might cover it, let's be safe)
-    text = DIACRITIC_REGEX.sub("", text)
-
-    # 4. Casefold (lower case + aggressive normalization)
-    text = text.casefold()
-
-    # 5. Character Translation (unify chars)
-    text = text.translate(TRANSLATION_TABLE)
-
-    # 6. Normalize Whitespace (collapse multiple spaces)
-    text = WHITESPACE_REGEX.sub(" ", text).strip()
-
-    return text
+    return NormalizationUtils.normalize(text)
 
 
-@frappe.whitelist()
-def get_field_options(doctype):
-    if not doctype:
-        return []
-    meta = frappe.get_meta(doctype)
-    fields = []
-    for df in meta.fields:
-        if df.fieldtype not in frappe.model.no_value_fields:
-            fields.append(
-                {"label": df.label, "value": df.fieldname, "fieldtype": df.fieldtype}
-            )
-    return fields
-
-
-@frappe.whitelist()
-def get_common_fields_in_doctypes(doctypes):
-    import json
-
-    if isinstance(doctypes, str):
-        doctypes = json.loads(doctypes)
-
-    if not doctypes:
-        return []
-
-    common_fields = {}
-    first_doctype = doctypes[0]
-    meta = frappe.get_meta(first_doctype)
-
-    # Initialize with first doctype fields
-    for df in meta.fields:
-        if df.fieldtype not in frappe.model.no_value_fields:
-            common_fields[df.fieldname] = {
-                "label": df.label,
-                "value": df.fieldname,
-                "fieldtype": df.fieldtype,
-            }
-
-    # Intersect with others
-    for dt in doctypes[1:]:
-        meta = frappe.get_meta(dt)
-        current_fieldnames = {df.fieldname for df in meta.fields}
-        common_fields = {
-            k: v for k, v in common_fields.items() if k in current_fieldnames
-        }
-
-    return list(common_fields.values())
-
-
-@frappe.whitelist()
-def get_field_path(doctype, basefieldname=None):
-    # This seems to be used for child tables or nested fields
-    # Based on JS usage: const child = cached.child_tables?.[basefieldname];
-    # It might return structure of child table fields.
-    meta = frappe.get_meta(doctype)
-    if basefieldname:
-        df = meta.get_field(basefieldname)
-        if df and df.fieldtype == "Table":
-            child_meta = frappe.get_meta(df.options)
-            fields = []
-            for cdf in child_meta.fields:
-                if cdf.fieldtype not in frappe.model.no_value_fields:
-                    fields.append(
-                        {
-                            "label": cdf.label,
-                            "value": cdf.fieldname,
-                            "fieldtype": cdf.fieldtype,
-                        }
-                    )
-            return {"fields": fields}
-
-    # default return doc fields
-    return {"fields": get_field_options(doctype)}
+def normalize_party_name(name: str) -> str:
+    """
+    Normalize party name specifically.
+    Wrapper around NormalizationUtils.normalize_party_name() for backward compatibility.
+    """
+    return NormalizationUtils.normalize_party_name(name)

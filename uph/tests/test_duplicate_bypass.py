@@ -27,14 +27,8 @@ class TestDuplicateBypass(FrappeTestCase, AccountsTestMixin):
         self.settings.save()
 
         # Create a Party Master
-        self.pm = frappe.get_doc(
-            {
-                "doctype": "Party Master",
-                "party_name": "Bypass Test PM",
-                "party_type": "Customer",
-                "default_customer": self.customer,
-            }
-        ).insert()
+        self.create_party_master(party_name="Bypass Test PM")
+        self.pm = frappe.get_doc("Party Master", self.party_master)
 
         # Link Customer to PM and set currency to avoid exchange rate errors
         frappe.db.set_value(

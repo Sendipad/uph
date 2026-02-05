@@ -1,12 +1,12 @@
 from frappe import _
+
+
 def get_data():
-    # doc=frappe.get_doc("Party Master","name")
-    # Parties=[x.get("party") for x in doc.linked_party]
+    """Dashboard configuration for Party Master DocType."""
     return {
         "fieldname": "party_master",
         "transactions": [
             {
-                "label": "Transactional Document",
                 "label": _("Accounting"),
                 "items": [
                     "Sales Invoice",
@@ -17,27 +17,19 @@ def get_data():
                 ],
             },
             {
-                "label": "Pre-Transactional",
                 "label": _("Selling"),
                 "items": [
                     "Customer",
                     "Sales Order",
-                    "Purchase Order",
                     "Delivery Note",
-                    "Purchase Receipt",
-                    # "Quotation", # Uncomment if needed
                 ],
             },
             {
-                "label": "Base",
                 "label": _("Buying"),
                 "items": [
-                    "Party Analytic Accounting",
-                    "Customer",
                     "Supplier",
                     "Purchase Order",
                     "Purchase Receipt",
-                    # "Request for Quotation", # Uncomment if needed
                 ],
             },
             {
@@ -45,17 +37,24 @@ def get_data():
                 "items": [
                     "Employee",
                     "Expense Claim",
-                    # "Salary Slip", # Uncomment if needed
+                ],
+            },
+            {
+                "label": _("Relationships"),
+                "items": [
+                    {
+                        "doctype": "Party Relationship",
+                        "fieldname": "subject_party",
+                    },
                 ],
             },
         ],
         "reports": [
             {
-                "label": "Reports",
                 "label": _("Reports"),
                 "items": [
                     "Party Account Statement",
-                    _("Party Account Balances"),
+                    "Party Account Balances",
                     "Chronological Party Ledger",
                     "General Ledger",
                 ],

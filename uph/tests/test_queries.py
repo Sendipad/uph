@@ -95,11 +95,15 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
     def test_party_master_link_query(self):
         # Create a party master
         pm_name = "_Test PM Link Query"
+        parent = frappe.db.get_value(
+            "Party Master", self.party_master, "parent_party_master"
+        )
         frappe.get_doc(
             {
                 "doctype": "Party Master",
                 "party_name": pm_name,
                 "is_group": 0,
+                "parent_party_master": parent,
                 "party_type": "Customer",
             }
         ).insert(ignore_permissions=True)
@@ -121,11 +125,15 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
 
     def test_get_party_master_parties_db_multi(self):
         # Test with a list of party masters
+        parent = frappe.db.get_value(
+            "Party Master", self.party_master, "parent_party_master"
+        )
         pm1 = frappe.get_doc(
             {
                 "doctype": "Party Master",
                 "party_name": "PM 1",
                 "is_group": 0,
+                "parent_party_master": parent,
                 "party_type": "Customer",
             }
         ).insert(ignore_permissions=True)
@@ -134,6 +142,7 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
                 "doctype": "Party Master",
                 "party_name": "PM 2",
                 "is_group": 0,
+                "parent_party_master": parent,
                 "party_type": "Customer",
             }
         ).insert(ignore_permissions=True)
@@ -198,12 +207,16 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
         # Create a party master
         pm_name = "Duplicate Check PM"
         pm_number = "PM-DUP-001"
+        parent = frappe.db.get_value(
+            "Party Master", self.party_master, "parent_party_master"
+        )
         pm = frappe.get_doc(
             {
                 "doctype": "Party Master",
                 "party_name": pm_name,
                 "party_number": pm_number,
                 "is_group": 0,
+                "parent_party_master": parent,
                 "party_type": "Customer",
             }
         ).insert(ignore_permissions=True)
@@ -226,11 +239,15 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
 
     def test_get_party_master_dashboard_info(self):
         # Create a Party Master
+        parent = frappe.db.get_value(
+            "Party Master", self.party_master, "parent_party_master"
+        )
         pm = frappe.get_doc(
             {
                 "doctype": "Party Master",
                 "party_name": "Dashboard Test PM",
                 "is_group": 0,
+                "parent_party_master": parent,
                 "party_type": "Customer",
             }
         ).insert(ignore_permissions=True)
@@ -285,12 +302,16 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
 
     def test_party_master_link_query_pagination(self):
         # Create multiple PMs to test pagination
+        parent = frappe.db.get_value(
+            "Party Master", self.party_master, "parent_party_master"
+        )
         for i in range(10):
             frappe.get_doc(
                 {
                     "doctype": "Party Master",
                     "party_name": f"Pagination PM {i}",
                     "is_group": 0,
+                    "parent_party_master": parent,
                     "party_type": "Customer",
                 }
             ).insert(ignore_permissions=True)
@@ -325,11 +346,15 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
 
     def test_get_party_master_parties_db_batch_optimization(self):
         # Create 2 PMs with different roles
+        parent = frappe.db.get_value(
+            "Party Master", self.party_master, "parent_party_master"
+        )
         pm1 = frappe.get_doc(
             {
                 "doctype": "Party Master",
                 "party_name": "Batch PM 1",
                 "is_group": 0,
+                "parent_party_master": parent,
                 "party_type": "Customer",
             }
         ).insert(ignore_permissions=True)
@@ -338,6 +363,7 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
                 "doctype": "Party Master",
                 "party_name": "Batch PM 2",
                 "is_group": 0,
+                "parent_party_master": parent,
                 "party_type": "Supplier",
             }
         ).insert(ignore_permissions=True)

@@ -5,7 +5,7 @@
             "label": "Party Stats"
         }
     ],
-    "content": "[{\"id\":\"GeJ9n__5yT\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Party Stats\",\"col\":12}},{\"id\":\"num_pm\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Party Masters\",\"col\":4}},{\"id\":\"num_lc\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Linked Customers\",\"col\":4}},{\"id\":\"num_ls\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Linked Suppliers\",\"col\":4}},{\"id\":\"PiIVe_vpuC\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"FbfhiOv15Y\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>\u0627\u062e\u062a\u0635\u0627\u0631\u0627\u062a\u0643</b></span>\",\"col\":12}},{\"id\":\"v8FRSYwoId\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Master Tree\",\"col\":3}},{\"id\":\"sh_pas\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Account Statement\",\"col\":3}},{\"id\":\"sh_cpl\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Chronological Party Ledger\",\"col\":3}},{\"id\":\"kn19toGIeu\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0644\u0648\u062d\u0629 \u062a\u062d\u0643\u0645 \u0627\u0644\u0637\u0631\u0641\",\"col\":3}},{\"id\":\"tqAUEihqIe\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"id\":\"sqbiF_EtCc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Supplier\",\"col\":3}},{\"id\":\"Vd2Oq_2xz0\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"3Y4wrxJdUy\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>\u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631 \u0648\u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629</b></span>\",\"col\":12}},{\"id\":\"b8GpTrrb6M\",\"type\":\"card\",\"data\":{\"card_name\":\"Party Masters\",\"col\":4}},{\"id\":\"qw05p5ygfo\",\"type\":\"card\",\"data\":{\"card_name\":\"Key Reports\",\"col\":4}},{\"id\":\"w60LMHrve_\",\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}}]",
+    "content": "[{\"id\": \"GeJ9n__5yT\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Party Stats\", \"col\": 12}}, {\"id\": \"num_pm\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Total Party Masters\", \"col\": 4}}, {\"id\": \"num_lc\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Linked Customers\", \"col\": 4}}, {\"id\": \"num_ls\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Linked Suppliers\", \"col\": 4}}, {\"id\": \"PiIVe_vpuC\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"FbfhiOv15Y\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>\\u0627\\u062e\\u062a\\u0635\\u0627\\u0631\\u0627\\u062a\\u0643</b></span>\", \"col\": 12}}, {\"id\": \"v8FRSYwoId\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Party Master Tree\", \"col\": 3}}, {\"id\": \"sh_pas\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Party Account Statement\", \"col\": 3}}, {\"id\": \"sh_cpl\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Chronological Party Ledger\", \"col\": 3}}, {\"id\": \"kn19toGIeu\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"\\u0644\\u0648\\u062d\\u0629 \\u062a\\u062d\\u0643\\u0645 \\u0627\\u0644\\u0637\\u0631\\u0641\", \"col\": 3}}, {\"id\": \"tqAUEihqIe\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Customer\", \"col\": 3}}, {\"id\": \"sqbiF_EtCc\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Supplier\", \"col\": 3}}, {\"id\": \"ufnKhvjm9E\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Data Quality Dashboard\", \"col\": 3}}, {\"id\": \"xh1y35hNBk\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Duplicate Exclusion\", \"col\": 3}}, {\"id\": \"ttBh2wr4CE\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Party Relationship\", \"col\": 3}}, {\"id\": \"sh_prt\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Party Relationship Type\", \"col\": 3}}, {\"id\": \"Vd2Oq_2xz0\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"3Y4wrxJdUy\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>\\u0627\\u0644\\u062a\\u0642\\u0627\\u0631\\u064a\\u0631 \\u0648\\u0627\\u0644\\u0628\\u064a\\u0627\\u0646\\u0627\\u062a \\u0627\\u0644\\u0631\\u0626\\u064a\\u0633\\u064a\\u0629</b></span>\", \"col\": 12}}, {\"id\": \"b8GpTrrb6M\", \"type\": \"card\", \"data\": {\"card_name\": \"Party Masters\", \"col\": 4}}, {\"id\": \"qw05p5ygfo\", \"type\": \"card\", \"data\": {\"card_name\": \"Key Reports\", \"col\": 4}}, {\"id\": \"w60LMHrve_\", \"type\": \"card\", \"data\": {\"card_name\": \"Settings\", \"col\": 4}}]",
     "creation": "2025-04-23 14:56:48.972543",
     "custom_blocks": [],
     "docstatus": 0,
@@ -22,10 +22,28 @@
             "hidden": 0,
             "is_query_report": 0,
             "label": "Party Masters",
-            "link_count": 4,
+            "link_count": 6,
             "link_type": "DocType",
             "onboard": 0,
             "type": "Card Break"
+        },
+        {
+            "hidden": 0,
+            "is_query_report": 0,
+            "label": "Party Relationship",
+            "link_to": "Party Relationship",
+            "link_type": "DocType",
+            "onboard": 0,
+            "type": "Link"
+        },
+        {
+            "hidden": 0,
+            "is_query_report": 0,
+            "label": "Party Relationship Type",
+            "link_to": "Party Relationship Type",
+            "link_type": "DocType",
+            "onboard": 0,
+            "type": "Link"
         },
         {
             "hidden": 0,
@@ -130,10 +148,19 @@
             "hidden": 0,
             "is_query_report": 0,
             "label": "Settings",
-            "link_count": 1,
+            "link_count": 2,
             "link_type": "DocType",
             "onboard": 0,
             "type": "Card Break"
+        },
+        {
+            "hidden": 0,
+            "is_query_report": 0,
+            "label": "Duplicate Exclusion",
+            "link_to": "Duplicate Exclusion",
+            "link_type": "DocType",
+            "onboard": 0,
+            "type": "Link"
         },
         {
             "hidden": 0,
@@ -217,6 +244,30 @@
             "label": "Supplier",
             "link_to": "Supplier",
             "stats_filter": "[[\"Supplier\",\"party_master\",\"is\",\"not set\",false]]",
+            "type": "DocType"
+        },
+        {
+            "color": "Purple",
+            "label": "Data Quality Dashboard",
+            "link_to": "data-quality-dashboard",
+            "type": "Page"
+        },
+        {
+            "color": "Grey",
+            "label": "Duplicate Exclusion",
+            "link_to": "Duplicate Exclusion",
+            "type": "DocType"
+        },
+        {
+            "color": "Blue",
+            "label": "Party Relationship",
+            "link_to": "Party Relationship",
+            "type": "DocType"
+        },
+        {
+            "color": "Green",
+            "label": "Party Relationship Type",
+            "link_to": "Party Relationship Type",
             "type": "DocType"
         }
     ],

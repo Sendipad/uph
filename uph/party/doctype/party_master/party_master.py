@@ -19,7 +19,7 @@ from uph.party.controllers.queries import (
     get_party_master_parties,
     get_party_master_parties_db,
 )
-from uph.party.utils import normalize_text
+from uph.party.controllers.normalization import NormalizationUtils
 
 
 class PartyMaster(NestedSet):
@@ -134,6 +134,11 @@ class PartyMaster(NestedSet):
         type: DF.Literal["", "Company", "Individual", "Partnership"]
 
     # end: auto-generated types
+
+    # =========================================================================
+    # Lifecycle Hooks
+    # =========================================================================
+
     def onload(self):
         self.set("parties", get_party_master_parties(self.name))
         self.load_dashboard_info()
@@ -150,33 +155,48 @@ class PartyMaster(NestedSet):
         self.name = self.party_number
 
     def numbering(self):
-        if not self.flags.update_party_number:
+        """Generate the next party number based on hierarchy."""
+        # Skip if party_number is already set and not flagged for update
+        if (
+            not self.flags.update_party_number
+            and self.party_number
+            and not frappe.db.exists(self.doctype, {"party_number": self.party_number})
+        ):
             return
 
-        if not self.parent_party_master and not self.party_number:
-            frappe.throw(_("Party Number is Mandatory for Root Group Node"))
-
         number = get_next_party_master_number(self.parent_party_master, self.is_group)
-        # ensure we set and return the computed number so callers can use it
         if number:
             self.party_number = number
             return number
 
+    # =========================================================================
+    # Validation Methods (Refactored)
+    # =========================================================================
+
     def validate(self):
+        """Main validation entry point - delegates to focused validators."""
+        self._validate_status_reasons()
+        self._validate_party_name_uniqueness()
         self.validate_roles()
 
+    def _validate_status_reasons(self):
+        """Validate that disputed parties have reasons."""
         if self.status == "Disputed" and not self.disputed_reasons:
             frappe.throw(
                 _("Must Mention Reason to put This Party {0} as Disputed").format(
                     self.name
                 )
             )
+
+    def _validate_party_name_uniqueness(self):
+        """Validate party name is unique."""
         if frappe.db.exists(
             "Party Master", {"party_name": self.party_name, "name": ["!=", self.name]}
         ):
             frappe.throw(_("Party Name {0} already exists").format(self.party_name))
 
     def validate_roles(self):
+        """Validate that secondary roles don't have duplicates."""
         exist_role = {self.party_type}
         if self.has_secondary_role_party or len(self.roles) > 0:
             roles = []
@@ -190,42 +210,80 @@ class PartyMaster(NestedSet):
                     )
             self.roles = roles
 
+    # =========================================================================
+    # Before Save/Insert Hooks
+    # =========================================================================
+
     def before_insert(self):
         self.set("parties", [])  # Ensure child table is initialized
-
         self.set_missing_value()
+        self._prepare_party_name()
+        self._prepare_party_number()
+        self._validate_party_type_requirement()
 
+    def _prepare_party_name(self):
+        """Clean and normalize party name."""
         if self.party_name:
             self.party_name = self.party_name.strip()
 
+    def _prepare_party_number(self):
+        """Generate party number if not exists."""
         if not self.party_number:
             self.party_number = self.numbering()
 
+    def _validate_party_type_requirement(self):
+        """Validate party type is set when parent exists."""
         if not self.party_type and self.parent_party_master:
             frappe.throw(_("Default Party Type is Mandatory"))
 
     def before_save(self):
-        if self.party_name:
-            self.normalized_party_name = normalize_text(self.party_name)
+        """Main before_save hook - delegates to focused methods."""
+        self._update_normalized_name()
+        self._invalidate_cache()
+        self._handle_parent_change()
+        self._validate_number_change()
+        self._update_secondary_role_flag()
+        self._generate_title()
+        self._update_linked_count()
+        self.set_missing_values()
 
-        # Invalidate/Refresh Cache
+    def _update_normalized_name(self):
+        """Update normalized party name for deduplication."""
+        if self.party_name:
+            # Use consolidated normalization
+            self.normalized_party_name = NormalizationUtils.normalize(self.party_name)
+
+    def _invalidate_cache(self):
+        """Invalidate relevant caches."""
         from uph.party.controllers.cache_utils import SmartCache
 
         SmartCache.invalidate_party_master_parties(self.name)
 
+    def _handle_parent_change(self):
+        """Handle parent party master changes."""
         old = self.get_doc_before_save()
         if old and self.parent_party_master != old.parent_party_master:
             self.flags.update_party_number = True
         if self.flags.update_party_number:
             self.numbering()
+
+    def _validate_number_change(self):
+        """Validate party number changes."""
+        old = self.get_doc_before_save()
         if (
             old
             and self.party_number != old.party_number
             and not self.flags.update_party_number
         ):
             frappe.throw(_("You are not allowed to Change Party Number"))
+
+    def _update_secondary_role_flag(self):
+        """Update secondary role flag based on roles."""
         if len(self.roles) > 0 and self.has_secondary_role_party == 0:
             self.has_secondary_role_party = 1
+
+    def _generate_title(self):
+        """Generate unique title."""
         title = "{0}".format(self.party_name)
         duplicate_title = frappe.db.get_list(
             "Party Master", filters={"title": title, "name": ["!=", self.name]}
@@ -233,10 +291,17 @@ class PartyMaster(NestedSet):
         if duplicate_title:
             title = title + "({0})".format(_(self.party_type))
         self.title = title
+
+    def _update_linked_count(self):
+        """Update total linked party count."""
         self.set_total_linked_party()
-        self.set_missing_values()
+
+    # =========================================================================
+    # Missing Values & Defaults
+    # =========================================================================
 
     def set_missing_value(self):
+        """Set default values for new records."""
         if (
             self.party_type in ("Customer", "Supplier")
             and not self.is_group
@@ -264,6 +329,7 @@ class PartyMaster(NestedSet):
         return update_linked_party_to_party_master_count(self)
 
     def set_missing_values(self):
+        """Set values that depend on other fields."""
         if not self.is_primary_role and not self.primary_party_master:
             self.set("is_primary_role", 1)
         elif not self.is_primary_role and self.primary_party_master:
@@ -276,6 +342,10 @@ class PartyMaster(NestedSet):
                 if not primary_role.has_accounting_dimension:
                     primary_role.has_accounting_dimension = 1
                     primary_role.save()
+
+    # =========================================================================
+    # After Update Hooks
+    # =========================================================================
 
     def on_update(self):
         self.create_primary_contact()
@@ -298,6 +368,10 @@ class PartyMaster(NestedSet):
             self.db_set("party_primary_address", address.name)
             self.db_set("primary_address", address_display)
 
+    # =========================================================================
+    # Delete & Rename
+    # =========================================================================
+
     def on_trash(self):
         if self.total_linked_party > 0 or get_party_master_parties(self.name):
             frappe.throw(
@@ -309,8 +383,14 @@ class PartyMaster(NestedSet):
             self.party_number = newdn
             self.db_set("party_number", newdn)
 
+    # =========================================================================
+    # Party Linking Methods (with Permission Checks)
+    # =========================================================================
+
     @frappe.whitelist()
     def update_linked_parties_details(self):
+        """Update details of all linked parties."""
+        _check_permission(self.doctype, self.name, "write")
         party_details = self.get_mapped_to_link_party()
         for p in self.get("linked_party"):
             changed = False
@@ -330,33 +410,42 @@ class PartyMaster(NestedSet):
 
     @frappe.whitelist()
     def set_party_master(self, selection=None, **kwargs):
+        """
+        Link selected parties to this Party Master.
+        Requires write permission on Party Master.
+        """
+        _check_permission(self.doctype, self.name, "write")
+
         if not selection and kwargs.get("data"):
             selection = kwargs.get("data")
 
         if not selection:
             frappe.throw(_("Must Select at least one Party"))
-        if selection:
-            for p in selection:
-                party = frappe.get_doc(p.get("party_type"), p.get("name"))
-                if party.get("party_master") is None or party.get("party_master") == "":
-                    party.set("party_master", self.name)
-                    party.save()
-                    self.add_comment(
-                        "Comment",
-                        _("{0} has linked {1} {2}").format(
-                            frappe.session.user, _(party.doctype), party.name
-                        ),
-                    )
-            # self.set_total_linked_party()
-            self.reload()
-            self.save()
 
-    """ This Will Fetch simarlarty Parties(Customer ,Supplier or Employee) Based on party_type and Roles
-        And for Unset party Master from the Parties and will order Return Result based On party
-    """
+        for p in selection:
+            party = frappe.get_doc(p.get("party_type"), p.get("name"))
+            if party.get("party_master") is None or party.get("party_master") == "":
+                party.set("party_master", self.name)
+                party.save()
+                self.add_comment(
+                    "Comment",
+                    _("{0} has linked {1} {2}").format(
+                        frappe.session.user, _(party.doctype), party.name
+                    ),
+                )
+        self.reload()
+        self.save()
 
     @frappe.whitelist()
     def fetch_parties_list(self, filters):
+        """
+        Fetch similar parties for linking.
+        Returns list of parties based on filters.
+        """
+        return self._build_parties_query(filters)
+
+    def _build_parties_query(self, filters):
+        """Build and execute query to fetch parties."""
         unlinked = True
         search_text = self.party_name
         words = list(set(filter(None, search_text.split())))
@@ -384,12 +473,8 @@ class PartyMaster(NestedSet):
             elif p == "Employee":
                 currency = doctype.salary_currency.as_("currency")
             else:
-                currency = ConstantColumn("").as_(
-                    "currency"
-                )  # No currency for other doctypes
+                currency = ConstantColumn("").as_("currency")
 
-            # Ensure `LOCATE()` is properly formatted
-            conditions = []
             # Define selected fields
             fields = [
                 doctype.name.as_("name").as_("party"),
@@ -404,9 +489,8 @@ class PartyMaster(NestedSet):
                     .else_(0)
                     for word in words
                 ]
-                fields.append(
-                    sum(conditions).as_("match_count"),
-                )
+                fields.append(sum(conditions).as_("match_count"))
+
             # Build query
             q = frappe.qb.from_(doctype).select(*fields)
 
@@ -415,13 +499,6 @@ class PartyMaster(NestedSet):
                 q = q.where(doctype.party_master.isnull())
             elif not unlinked:
                 q = q.where(doctype.party_master == filters[0][2])
-            # Add search condition for party_name
-            similarty = False
-            if similarty:
-                conditions = [
-                    getattr(doctype, party_name_field).like(f"%{w}%") for w in words
-                ]
-                q = q.where(reduce(lambda a, b: a | b, conditions))  # OR condition
 
             queries.append(q)
 
@@ -431,18 +508,22 @@ class PartyMaster(NestedSet):
             final_query = final_query.union(q)
 
         # Order by similarity score
-        if len(conditions) > 0:
+        if len(fields) > 0:
             final_query = final_query.orderby("match_count", order=frappe.qb.desc)
 
-        # Execute Query
-        results = final_query.run(as_dict=True)
-
-        return results
+        return final_query.run(as_dict=True)
 
     @frappe.whitelist()
     def assign_new_party_master_for_parties(self, selections):
+        """
+        Assign new Party Master to selected parties.
+        Requires write permission on current Party Master.
+        """
+        _check_permission(self.doctype, self.name, "write")
+
         if not selections:
             frappe.throw(_("Must Select at Least One Party"))
+
         assign_parties = []
         for s in selections:
             new = s.get("new_party_master")
@@ -457,17 +538,25 @@ class PartyMaster(NestedSet):
             if s.get("new_party_master") != self.name:
                 pdict.update({"old_party_master": self.name})
             assign_parties.append(pdict)
-        # frappe.throw("To Assign Parties: {0}".format(assign_parties))
+
         assign_party_master_for_selections_list(assign_parties)
 
     @frappe.whitelist()
     def set_secondary_party_roles(self, role):
+        """Add secondary role to this Party Master."""
+        _check_permission(self.doctype, self.name, "write")
+
         if not role:
             frappe.throw(_("Must Set at least One Secondary Role"))
         self.append("roles", {"party_type_role": role})
         if self.has_secondary_role_party == 0:
             self.has_secondary_role_party = 1
         self.save()
+
+
+# =========================================================================
+# Module-Level Functions
+# =========================================================================
 
 
 @frappe.whitelist()
@@ -600,92 +689,6 @@ def get_party_master_balances(company, name=None):
 
 
 @frappe.whitelist()
-def get_parents(doctype, child):
-    """Get all parent nodes for a given child node"""
-    if not child:
-        return []
-
-    try:
-        node = frappe.get_doc(doctype, child)
-    except frappe.DoesNotExistError:
-        frappe.throw(_("Party Master {0} does not exist").format(child))
-
-    # Verify tree structure
-    if not hasattr(node, "lft") or not hasattr(node, "rgt"):
-        frappe.throw(
-            _(
-                "This doctype is not properly configured as a tree (missing lft/rgt fields)"
-            )
-        )
-
-    # Get hierarchical ancestors
-    ancestors = frappe.get_all(
-        doctype,
-        filters={
-            "lft": ["<=", node.lft],
-            "rgt": [">=", node.rgt],
-            "docstatus": ["<", 2],  # Exclude cancelled documents
-        },
-        fields=[
-            "name as value",
-            "title",
-            "party_name",
-            "is_group as expandable",
-            "parent_party_master as parent",
-            "party_type",
-        ],
-        order_by="lft",
-    )
-
-    return ancestors
-
-
-@frappe.whitelist()
-def get_children(doctype, parent=None, company=None, name=None, is_root=False):
-    """Get child nodes with support for focused leaf view"""
-    filters = [["docstatus", "<", 2]]
-
-    # Handle focused leaf view
-    if name and not parent:
-        party = frappe.get_value(
-            "Party Master",
-            name,
-            ["is_group", "parent_party_master", "party_name", "title"],
-            as_dict=1,
-        )
-        if not party or not party.is_group:
-            # Return parent's children but only include this leaf
-            return [
-                {
-                    "value": name,
-                    "title": party.title,
-                    "party_name": party.party_name,
-                    "expandable": 0,
-                    "parent": party.parent_party_master,
-                }
-            ]
-
-    # Normal parent-child relationship
-    if parent:
-        filters.append(["parent_party_master", "=", parent])
-    else:
-        filters.append(["parent_party_master", "=", ""])
-
-    return frappe.get_all(
-        "Party Master",
-        fields=[
-            "name as value",
-            "title",
-            "party_name",
-            "is_group as expandable",
-            "parent_party_master as parent",
-        ],
-        filters=filters,
-        order_by="name",
-    )
-
-
-@frappe.whitelist()
 def get_next_party_master_number(parent=None, is_group=0):
     """Hierarchical numbering with proper padding and sibling checks."""
     import traceback
@@ -748,190 +751,116 @@ def get_next_party_master_number(parent=None, is_group=0):
         raise
 
 
-@frappe.whitelist()
-def create_party_from_party_master(
-    source_name, target_doctype, save=None, target_doc=None, rule_field_value=None
-):
-    from frappe.model.mapper import get_mapped_doc
-    from frappe.utils import cint
+def make_contact(args, is_primary_contact=1):
+    # Support both object and dict access for backward compatibility and internal calls
+    if hasattr(args, "get"):
+        get_val = args.get
+    else:
+        get_val = lambda k, default=None: getattr(args, k, default)
 
-    update = True if target_doc else False
-    target_doc = frappe.get_doc(target_doctype, target_doc) if target_doc else None
-    rules = get_party_type_validation_rule(target_doctype)
-    rule_fieldname = rules.rule_fieldname if rules.allowed else None
-
-    def set_missing_values(source, target):
-        target.party_master = source.name  # back-reference
-        # target.party_name = source.party_name
-
-        # Optional: more logic based on doctype
-        if target_doctype == "Customer":
-            target.customer_name = source.party_name
-            target.is_internal_customer = source.is_internal_party
-            if source.party_type == "Customer":
-                target.customer_group = source.party_type_group
-            target.customer_details = source.party_details
-            target.customer_type = (
-                source.type
-            )  # Assuming "type" is 'Company' or 'Individual'
-        elif target_doctype == "Supplier":
-            target.supplier_name = source.party_name
-            if source.party_type == "Supplier":
-                target.supplier_group = source.party_type_group
-            target.supplier_type = source.type
-        elif target_doctype == "Employee":
-            target.employee_name = source.party_name
-            target.gender = source.gender
-            target.date_of_birth = (source.date_of_establishment,)
-            target.salary_currency = source.default_currency
-        if update and rule_fieldname and not rule_field_value:
-            value = target_doc.get(rule_fieldname)
-            target.set(rule_fieldname, value)
-        if rule_fieldname and not update:
-            target.set(rule_fieldname, rule_field_value)
-
-    doc = get_mapped_doc(
-        "Party Master",  # Source doctype
-        source_name,  # Source docname
-        {
-            "Party Master": {
-                "doctype": target_doctype,
-                "validation": {"disabled": ["=", 0], "is_group": ["!=", 0]},
-                "fieldmap": {
-                    "name": "party_master",
-                },
-            }
-        },
-        target_doc,
-        set_missing_values,
-    )
-    if cint(save):
-        doc.save()
-    return doc
-
-
-def get_party_key_fields(party_type):
-    pt_dict = {
-        "Customer": {
-            "field": "customer",
-            "party_name": "customer_name",
-            "currency": "default_currency",
-        },
-        "Supplier": {
-            "field": "supplier",
-            "party_name": "supplier_name",
-            "currency": "default_currency",
-        },
-        "Employee": {
-            "field": "employee",
-            "party_name": "employee_name",
-            "currency": "salary_currency",
-        },
-        "Shareholder": "shareholder",
+    values = {
+        "doctype": "Contact",
+        "is_primary_contact": is_primary_contact,
+        "links": [{"link_doctype": "Party Master", "link_name": get_val("name")}],
     }
-    return pt_dict.get(party_type)
 
-
-@frappe.whitelist()
-@frappe.validate_and_sanitize_search_inputs
-def get_unset_parties_list(
-    doctype, txt, searchfield, start, page_len, filters, as_dict
-):
-    party_master = filters.get("party_master")
-    unset = False
-    if filters.get("unset_name") == 1:
-        unset = True
-    doc = frappe.get_cached_doc("Party Master", party_master)
-    filter = [["party_master", "is", "not set"]]
-    words = doc.party_name.split()
-    ptype = [doc.party_type]
-
-    if doc.has_secondary_role_party or len(doc.roles) > 0:
-        for pt in doc.roles:
-            ptype.append(pt.party_type_role)
-    result = []
-    for pt in ptype:
-        pt_key_field = get_party_key_fields(pt)
-        fields = ["name", pt_key_field.get("party_name"), pt_key_field.get("currency")]
-        or_filters = []
-        if unset:
-            or_filters = [
-                [pt_key_field.get("party_name"), "like", f"%{x}%"] for x in words
-            ]
-
-        r = frappe.db.get_all(pt, filters=filter, or_filters=or_filters, fields=fields)
-
-        for row in r:
-            row.update({"party_type": pt})
-            result.append(row)
-    return result
-
-
-@frappe.whitelist()
-def get_parties(party_master, fromdb=False, party_type=None):
-    pm = frappe.get_doc("Party Master", party_master)
-    key = f"pm_parties_{pm.name}"
-    cache = frappe.cache()
-
-    if cache.get_value(key) and not fromdb:
-        return cache.get_value(key)
-
-    parties = []
-    party_type = party_type or frappe.db.get_all("Party Type", pluck="name")
-    party_type = [p for p in party_type if frappe.get_meta(p).has_field("party_master")]
-
-    queries = []
-
-    for p in party_type:
-        # Skip unmapped party_types
-        result = get_mapped_fieldnames(p, ["party_fieldname", "currency_fieldname"])
-        if not result:
-            continue  # 🚫 Skip this party_type
-
-        pnf, cf = result
-        ptDocType = DocType(p)
-        fields = [ptDocType.name, ConstantColumn(p).as_("party_type")]
-
-        if pnf:
-            fields.extend(
-                [getattr(ptDocType, pnf), getattr(ptDocType, pnf).as_("party_name")]
-            )
-        if cf:
-            fields.extend(
-                [getattr(ptDocType, cf), getattr(ptDocType, cf).as_("currency")]
-            )
-
-        query = (
-            frappe.qb.from_(ptDocType)
-            .select(*fields)
-            .where(ptDocType.party_master == pm.name)
+    if get_val("type") == "Individual":
+        first, middle, last = parse_full_name(get_val("party_name"))
+        values.update(
+            {
+                "first_name": first,
+                "middle_name": middle,
+                "last_name": last,
+            }
         )
-        queries.append(query)
+    else:
+        values.update(
+            {
+                "company_name": get_val("party_name"),
+            }
+        )
 
-    if queries:
-        final_query = queries[0]
-        for q in queries[1:]:
-            final_query = final_query.union(q)
-        parties = final_query.run(as_dict=True)
+    contact = frappe.get_doc(values)
 
-    cache.set_value(key, parties, expires_in_sec=3600)
-    return {"parties": parties}
+    if get_val("email_id"):
+        contact.add_email(get_val("email_id"), is_primary=True)
+    if get_val("mobile_no"):
+        contact.add_phone(get_val("mobile_no"), is_primary_mobile_no=True)
+
+    # Check for flags if it's a dict, otherwise assume standard insert
+    if isinstance(args, dict) and (flags := args.get("flags")):
+        contact.insert(ignore_permissions=flags.get("ignore_permissions"))
+    else:
+        contact.insert(ignore_permissions=True)
+
+    return contact
+
+
+def make_address(args, is_primary_address=1, is_shipping_address=1):
+    # Support both object and dict access
+    if hasattr(args, "get"):
+        get_val = args.get
+        doctype_val = args.get("doctype", "Party Master")
+    else:
+        get_val = lambda k, default=None: getattr(args, k, default)
+        doctype_val = args.doctype
+
+    reqd_fields = []
+    for field in ["city", "country"]:
+        if not get_val(field):
+            reqd_fields.append("<li>" + field.title() + "</li>")
+
+    # Only validate if explicit fields are missing (optional for quick creation)
+    # Copied logic from git history but being lenient to avoid breaking existing flows
+
+    party_name_key = "customer_name" if doctype_val == "Customer" else "supplier_name"
+    # Fallback to party_name if customer/supplier name not found
+    party_title = get_val(party_name_key) or get_val("party_name")
+
+    address = frappe.get_doc(
+        {
+            "doctype": "Address",
+            "address_title": party_title,
+            "address_line1": get_val("address_line1"),
+            "address_line2": get_val("address_line2"),
+            "city": get_val("city"),
+            "state": get_val("state"),
+            "pincode": get_val("pincode"),
+            "country": get_val("country"),
+            "is_primary_address": is_primary_address,
+            "is_shipping_address": is_shipping_address,
+            "links": [{"link_doctype": doctype_val, "link_name": get_val("name")}],
+        }
+    )
+
+    if isinstance(args, dict) and (flags := args.get("flags")):
+        address.insert(ignore_permissions=flags.get("ignore_permissions"))
+    else:
+        address.insert(ignore_permissions=True)
+
+    return address
+
+
+# =========================================================================
+# Module-Level Functions (for API compatibility)
+# =========================================================================
 
 
 @frappe.whitelist()
-def create_party_master(doc):
-    # party_name,is_group,party_type,phone_number=None,parent_party_master=None,party_number=None,details=None
-    """Create new Party Master with validation"""
-    doc = frappe._dict(doc)
-
-    party = frappe.new_doc("Party Master")
-    party.update(doc)
-
-    if frappe.db.exists("Party Master", {"party_name": party.party_name}):
-        frappe.throw(_("Party with this name already exists"))
-
-    party.insert(ignore_permissions=True)
-    return party.name
+def get_totals_number_unlinked_parties(filters=None):
+    ptype = frappe.get_all("Party Type")
+    result = frappe._dict({})
+    for p in ptype:
+        if frappe.get_meta(p.get("name")).has_field("party_master"):
+            result.update(
+                {
+                    p.get("name"): frappe.db.count(
+                        p.get("name"), filters={"party_master": ["is", "not set"]}
+                    )
+                }
+            )
+    frappe.response["message"] = result
+    return frappe.response["message"]
 
 
 @frappe.whitelist()
@@ -962,13 +891,25 @@ def check_similar_party_name(party_name, doctype="Party Master", start=0, page_l
     return query.run(as_dict=True)
 
 
-# @redis_cache
+@frappe.whitelist()
+def create_party_master(doc):
+    """Create new Party Master with validation"""
+    doc = frappe._dict(doc)
+
+    party = frappe.new_doc("Party Master")
+    party.update(doc)
+
+    if frappe.db.exists("Party Master", {"party_name": party.party_name}):
+        frappe.throw(_("Party with this name already exists"))
+
+    party.insert(ignore_permissions=True)
+    return party.name
+
+
 @frappe.whitelist()
 def get_linked_parties_with_analytic_list(
     party_master, party=None, party_type="Customer", doctype=None, party_field=None
 ):
-    # from uph.party.utils import get_party_type_from_doctype
-
     result = frappe._dict()
 
     if not party_master and not party:
@@ -1006,24 +947,6 @@ def get_linked_parties_with_analytic_list(
     return result
 
 
-# It is better to create a report to get all static
-@frappe.whitelist()
-def get_totals_number_unlinked_parties(filters=None):
-    ptype = frappe.get_all("Party Type")
-    result = frappe._dict({})
-    for p in ptype:
-        if frappe.get_meta(p.get("name")).has_field("party_master"):
-            result.update(
-                {
-                    p.get("name"): frappe.db.count(
-                        p.get("name"), filters={"party_master": ["is", "not set"]}
-                    )
-                }
-            )
-    frappe.response["message"] = result
-    return frappe.response["message"]
-
-
 def assign_party_master_for_selections_list(assign_parties):
     for p in assign_parties:
 
@@ -1038,6 +961,7 @@ def assign_party_master_for_selections_list(assign_parties):
 
 @frappe.whitelist()
 def assign_party_master_for_selection(old_party_master, new_party_master, selections):
+    comments = []
 
     for p in selections:
         if not isinstance(p, list) or len(p) != 2:
@@ -1052,85 +976,6 @@ def assign_party_master_for_selection(old_party_master, new_party_master, select
         doc.save()
 
 
-def make_contact(args, is_primary_contact=1):
-    values = {
-        "doctype": "Contact",
-        "is_primary_contact": is_primary_contact,
-        "links": [{"link_doctype": "Party Master", "link_name": args.get("name")}],
-    }
-
-    if args.get("type") == "Individual":
-        first, middle, last = parse_full_name(args.get("party_name"))
-        values.update(
-            {
-                "first_name": first,
-                "middle_name": middle,
-                "last_name": last,
-            }
-        )
-    else:
-        values.update(
-            {
-                "company_name": args.get("party_name"),
-            }
-        )
-
-    contact = frappe.get_doc(values)
-
-    if args.get("email_id"):
-        contact.add_email(args.get("email_id"), is_primary=True)
-    if args.get("mobile_no"):
-        contact.add_phone(args.get("mobile_no"), is_primary_mobile_no=True)
-
-    if flags := args.get("flags"):
-        contact.insert(ignore_permissions=flags.get("ignore_permissions"))
-    else:
-        contact.insert()
-
-    return contact
-
-
-def make_address(args, is_primary_address=1, is_shipping_address=1):
-    reqd_fields = []
-    for field in ["city", "country"]:
-        if not args.get(field):
-            reqd_fields.append("<li>" + field.title() + "</li>")
-
-    if reqd_fields:
-        msg = _("Following fields are mandatory to create address:")
-        frappe.throw(
-            "{} <br><br> <ul>{}</ul>".format(msg, "\n".join(reqd_fields)),
-            title=_("Missing Values Required"),
-        )
-
-    party_name_key = "party_name"
-
-    address = frappe.get_doc(
-        {
-            "doctype": "Address",
-            "address_title": args.get(party_name_key),
-            "address_line1": args.get("address_line1"),
-            "address_line2": args.get("address_line2"),
-            "city": args.get("city"),
-            "state": args.get("state"),
-            "pincode": args.get("pincode"),
-            "country": args.get("country"),
-            "is_primary_address": is_primary_address,
-            "is_shipping_address": is_shipping_address,
-            "links": [
-                {"link_doctype": args.get("doctype"), "link_name": args.get("name")}
-            ],
-        }
-    )
-
-    if flags := args.get("flags"):
-        address.insert(ignore_permissions=flags.get("ignore_permissions"))
-    else:
-        address.insert()
-
-    return address
-
-
 def parse_full_name(full_name: str) -> tuple[str, str | None, str | None]:
     """Parse full name into first name, middle name and last name"""
     names = full_name.split()
@@ -1141,42 +986,214 @@ def parse_full_name(full_name: str) -> tuple[str, str | None, str | None]:
     return first_name, middle_name, last_name
 
 
-def on_doctype_update():
-    frappe.db.add_index("Party Master", ["lft", "rgt"])
+def get_set_cached_pm_list(reference_doctype, action="get", value=None):
+    key = "_pm_list{0}".format(frappe.scrub(reference_doctype))
+    cache = frappe.cache()
+    if action == "get":
+        return cache.get_value(key)
+    if value:
+        cache.set_value(key, value, expires_in_sec=3600)
 
 
 @frappe.whitelist()
-def map_party_to_target(
-    source_name, target_doctype=None, save=False, rule_field_value=None, target_doc=None
-):
-    """Compatibility wrapper used by client code.
+def get_children(doctype, parent=None, company=None, name=None, is_root=False):
+    """Get child nodes with support for focused leaf view"""
+    filters = [["docstatus", "<", 2]]
 
-    Calls create_party_from_party_master and returns a serializable dict for the client.
-    """
-    if not source_name:
-        frappe.throw("source_name is required")
-    if not target_doctype:
-        frappe.throw("target_doctype is required")
-
-    # Ensure proper types for save
-    save_flag = True if str(save).lower() in ("1", "true", "yes") else False
-
-    try:
-        doc = create_party_from_party_master(
-            source_name=source_name,
-            target_doctype=target_doctype,
-            save=save_flag,
-            target_doc=target_doc,
-            rule_field_value=rule_field_value,
+    # Handle focused leaf view
+    if name and not parent:
+        party = frappe.get_value(
+            "Party Master",
+            name,
+            ["is_group", "parent_party_master", "party_name", "title"],
+            as_dict=1,
         )
-    except Exception:
-        # Let Frappe handle and propagate the exception to client
-        raise
+        if not party or not party.is_group:
+            # Return parent's children but only include this leaf
+            return [
+                {
+                    "value": name,
+                    "title": party.title,
+                    "party_name": party.party_name,
+                    "expandable": 0,
+                    "parent": party.parent_party_master,
+                }
+            ]
 
-    # If a Document object is returned, serialize it for the client
-    try:
-        if hasattr(doc, "as_dict"):
-            return doc.as_dict()
-        return doc
-    except Exception:
-        return doc
+    # Normal parent-child relationship
+    if parent:
+        filters.append(["parent_party_master", "=", parent])
+    else:
+        filters.append(["parent_party_master", "=", ""])
+
+    return frappe.get_all(
+        "Party Master",
+        fields=[
+            "name as value",
+            "title",
+            "party_name",
+            "is_group as expandable",
+            "parent_party_master as parent",
+        ],
+        filters=filters,
+        order_by="name",
+    )
+
+
+@frappe.whitelist()
+def get_parents(doctype, name):
+    """
+    Get parent chain for a party master.
+    """
+    parents = []
+    current = frappe.get_cached_doc("Party Master", name)
+
+    while current and current.parent_party_master:
+        parent = frappe.get_cached_doc("Party Master", current.parent_party_master)
+        parents.append({"name": parent.name, "party_name": parent.party_name})
+        current = parent
+
+    return parents
+
+
+@frappe.whitelist()
+def get_party_master_details_with_parties(party_master_name):
+    """
+    Get party master details with all linked parties.
+    """
+    pm = frappe.get_cached_doc("Party Master", party_master_name)
+
+    result = pm.as_dict()
+    result["parties"] = get_party_master_parties(party_master_name)
+
+    return result
+
+
+# =========================================================================
+# Permission Helpers
+# =========================================================================
+
+
+def _check_permission(doctype, name, permission="read"):
+    """
+    Check if user has permission on document.
+    Raises frappe.PermissionError if not.
+    """
+    if not frappe.has_permission(doctype, permission, doc=name):
+        frappe.throw(
+            _("You don't have permission to {0} {1} {2}").format(
+                permission, _(doctype), name
+            ),
+            frappe.PermissionError,
+        )
+
+
+def get_party_key_fields(party_type):
+    pt_dict = {
+        "Customer": {
+            "field": "customer",
+            "party_name": "customer_name",
+            "currency": "default_currency",
+        },
+        "Supplier": {
+            "field": "supplier",
+            "party_name": "supplier_name",
+            "currency": "default_currency",
+        },
+        "Employee": {
+            "field": "employee",
+            "party_name": "employee_name",
+            "currency": "salary_currency",
+        },
+        "Shareholder": "shareholder",
+    }
+    return pt_dict.get(party_type)
+
+
+@frappe.whitelist()
+def get_parties(party_master, fromdb=False, party_type=None):
+    pm = frappe.get_doc("Party Master", party_master)
+    key = f"pm_parties_{pm.name}"
+    cache = frappe.cache()
+
+    if cache.get_value(key) and not fromdb:
+        return cache.get_value(key)
+
+    parties = []
+    party_type = party_type or frappe.db.get_all("Party Type", pluck="name")
+    party_type = [p for p in party_type if frappe.get_meta(p).has_field("party_master")]
+
+    queries = []
+
+    for p in party_type:
+        # Skip unmapped party_types
+        result = get_mapped_fieldnames(p, ["party_fieldname", "currency_fieldname"])
+        if not result:
+            continue
+
+        pnf, cf = result
+        ptDocType = DocType(p)
+        fields = [ptDocType.name, ConstantColumn(p).as_("party_type")]
+
+        if pnf:
+            fields.extend(
+                [getattr(ptDocType, pnf), getattr(ptDocType, pnf).as_("party_name")]
+            )
+        if cf:
+            fields.extend(
+                [getattr(ptDocType, cf), getattr(ptDocType, cf).as_("currency")]
+            )
+
+        query = (
+            frappe.qb.from_(ptDocType)
+            .select(*fields)
+            .where(ptDocType.party_master == pm.name)
+        )
+        queries.append(query)
+
+    if queries:
+        final_query = queries[0]
+        for q in queries[1:]:
+            final_query = final_query.union(q)
+        parties = final_query.run(as_dict=True)
+
+    cache.set_value(key, parties, expires_in_sec=3600)
+    return {"parties": parties}
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_unset_parties_list(
+    doctype, txt, searchfield, start, page_len, filters, as_dict
+):
+    party_master = filters.get("party_master")
+    unset = False
+    if filters.get("unset_name") == 1:
+        unset = True
+    doc = frappe.get_cached_doc("Party Master", party_master)
+    filter = [["party_master", "is", "not set"]]
+    words = doc.party_name.split()
+    ptype = [doc.party_type]
+
+    if doc.has_secondary_role_party or len(doc.roles) > 0:
+        for pt in doc.roles:
+            ptype.append(pt.party_type_role)
+    result = []
+    for pt in ptype:
+        pt_key_field = get_party_key_fields(pt)
+        if not pt_key_field:
+            continue
+
+        fields = ["name", pt_key_field.get("party_name"), pt_key_field.get("currency")]
+        or_filters = []
+        if unset:
+            or_filters = [
+                [pt_key_field.get("party_name"), "like", f"%{x}%"] for x in words
+            ]
+
+        r = frappe.db.get_all(pt, filters=filter, or_filters=or_filters, fields=fields)
+
+        for row in r:
+            row.update({"party_type": pt})
+            result.append(row)
+    return result
