@@ -373,6 +373,10 @@ class PartyMaster(NestedSet):
     # =========================================================================
 
     def on_trash(self):
+        # Skip linked party check during merge operations
+        if self.flags.get("in_merge"):
+            return
+
         if self.total_linked_party > 0 or get_party_master_parties(self.name):
             frappe.throw(
                 _("Cannot delete Party Master that is linked to other Parties")
@@ -392,7 +396,7 @@ class PartyMaster(NestedSet):
         """Update details of all linked parties."""
         _check_permission(self.doctype, self.name, "write")
         party_details = self.get_mapped_to_link_party()
-        for p in self.get("linked_party"):
+        for p in self.get("parties"):
             changed = False
             party_doc = frappe.get_doc(p.party_type, p.party)
             for k, v in party_details.items():
@@ -1197,3 +1201,83 @@ def get_unset_parties_list(
             row.update({"party_type": pt})
             result.append(row)
     return result
+
+
+@frappe.whitelist()
+def create_party_from_party_master(
+    source_name, target_doctype, rule_field_value=None, save=False
+):
+    import json
+    from uph.party.utils import get_party_type_currency_field, get_party_type_name_field
+
+    if save and isinstance(save, str):
+        save = json.loads(save)
+
+    pm = frappe.get_doc("Party Master", source_name)
+
+    doc = frappe.new_doc(target_doctype)
+    doc.party_master = pm.name
+
+    # Map Name
+    # Map Name
+    name_field = get_party_type_name_field(target_doctype)
+    if name_field:
+        doc.set(name_field, pm.party_name)
+
+    if rule_field_value:
+        doc.set("name", f"{pm.name}-{rule_field_value}")
+
+    # Map Currency / Rule Value
+    # If rule_field_value is provided, it typically comes from the dialog (often currency)
+    # But it could be a dynamic rule field. The JS logic handles the "which field" part by passing it as rule_field_value.
+    # However, for currency specifically, we know the field name.
+    # For dynamic rules, we might need to rely on the fact that the JS logic in 'create_party_for_party_master_dialog_from_doc'
+    # sets 'rule_field_value' to the selected currency or rule link.
+    # If it is currency, we set it to the currency field.
+
+    currency_field = get_party_type_currency_field(target_doctype)
+    if rule_field_value and currency_field:
+        # Simple heuristic: if it looks like a currency or if we assume the dialog passed currency
+        # The JS passes "rule_field_value: values.default_currency || values.rule_field_value"
+        # If it was a dynamic rule field, we might need more context, but typically it is currency.
+        # Let's check if the target has a specific field for this rule.
+        # For now, we assume it maps to the currency field if one exists and rule_field_value is passed.
+        # Or if the rule matches a specific fieldname.
+        # But here we only receive the value.
+        # Standard implementation assumes it is likely the currency.
+        doc.set(currency_field, rule_field_value)
+
+    # Map Group
+    if target_doctype == "Customer" and pm.party_type_group:
+        doc.customer_group = pm.party_type_group
+    elif target_doctype == "Supplier" and pm.party_type_group:
+        doc.supplier_group = pm.party_type_group
+
+    # Fallback for currency if not passed but exists in PM
+    if pm.default_currency and not doc.get(currency_field):
+        if doc.meta.has_field(currency_field):
+            doc.set(currency_field, pm.default_currency)
+
+    # Basic fields
+    common_map = {
+        "mobile_no": "mobile_no",
+        "email_id": "email_id",
+        "tax_id": "tax_id",
+        "territory": "territory",
+    }
+    for pm_field, target_field in common_map.items():
+        if pm.get(pm_field) and doc.meta.has_field(target_field):
+            doc.set(target_field, pm.get(pm_field))
+    doc.flags.name_set = True
+    if save:
+        doc.insert()
+        return doc
+
+    return doc
+
+
+@frappe.whitelist()
+def map_party_to_target(source_name, target_doctype, rule_field_value=None, save=False):
+    return create_party_from_party_master(
+        source_name, target_doctype, rule_field_value, save
+    )

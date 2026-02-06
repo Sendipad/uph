@@ -238,7 +238,7 @@ uph.party = {
 					fieldname: "save",
 					fieldtype: "Check",
 					label: __("Save"),
-					default: 0,
+					default: 1,
 					description: __("Check this if you want to save the party without routing to Edit"),
 					onchange() {
 						const save = dialog.get_value("save");

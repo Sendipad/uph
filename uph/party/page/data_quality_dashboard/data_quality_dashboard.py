@@ -99,88 +99,32 @@ def merge_parties(
     primary_party: str, secondary_party: str, fields_to_keep: dict = None
 ):
     """
-    Merge secondary party into primary party.
+    Merge secondary Party Master into primary Party Master.
+
+    Delegates to PartyMergeService which handles:
+    - Case A: Full party merge when rule_fieldname values match
+    - Case B: Re-linking when rule_fieldname values differ
+    - Address/Contact transfer via Dynamic Links
+    - Transaction document updates
+    - Rollback on failure
 
     Args:
-        primary_party: The party to keep (receives data)
-        secondary_party: The party to merge and delete
+        primary_party: The Party Master to keep (receives data)
+        secondary_party: The Party Master to merge and delete
         fields_to_keep: Dict of fields to copy from secondary to primary
 
     Returns:
-        Success message
+        dict with success status and merge details
     """
     import json
+
+    from uph.party.controllers.party_merge_service import PartyMergeService
 
     if isinstance(fields_to_keep, str):
         fields_to_keep = json.loads(fields_to_keep) if fields_to_keep else {}
 
-    if not frappe.has_permission("Party Master", "write"):
-        frappe.throw(_("Insufficient permissions to merge parties"))
-
-    if primary_party == secondary_party:
-        frappe.throw(_("Cannot merge a party with itself"))
-
-    primary_doc = frappe.get_doc("Party Master", primary_party)
-    secondary_doc = frappe.get_doc("Party Master", secondary_party)
-
-    # Transfer linked parties from secondary to primary
-    for party_row in secondary_doc.linked_party:
-        if not frappe.db.exists(
-            "Party Master Parties", {"parent": primary_party, "party": party_row.party}
-        ):
-            primary_doc.append(
-                "linked_party",
-                {"party": party_row.party, "party_type": party_row.party_type},
-            )
-
-    # Transfer accounts from secondary to primary
-    for acc_row in secondary_doc.accounts:
-        if not frappe.db.exists(
-            "Party Master Accounts",
-            {"parent": primary_party, "company": acc_row.company},
-        ):
-            primary_doc.append(
-                "accounts",
-                {
-                    "company": acc_row.company,
-                    "account": acc_row.account,
-                    "default_currency": acc_row.default_currency,
-                },
-            )
-
-    # Copy specified fields from secondary to primary
-    if fields_to_keep:
-        for field, value in fields_to_keep.items():
-            if value and not primary_doc.get(field):
-                primary_doc.set(field, value)
-
-    primary_doc.save(ignore_permissions=True)
-
-    # Update references to secondary party in transactions
-    _update_party_master_references(secondary_party, primary_party)
-
-    # Delete secondary party (or mark as merged)
-    secondary_doc.flags.ignore_permissions = True
-    secondary_doc.delete()
-
-    # Create exclusion to prevent future detection
-    frappe.get_doc(
-        {
-            "doctype": "Duplicate Exclusion",
-            "party_1": primary_party,
-            "party_2": secondary_party,  # Will be normalized
-            "dismissed_reason": _("Merged into {0}").format(primary_party),
-        }
-    ).insert(ignore_permissions=True)
-
-    frappe.db.commit()
-
-    return {
-        "success": True,
-        "message": _("{0} has been merged into {1}").format(
-            secondary_party, primary_party
-        ),
-    }
+    service = PartyMergeService()
+    return service.merge(primary_party, secondary_party, fields_to_keep)
 
 
 def _update_party_master_references(old_party: str, new_party: str):
@@ -192,6 +136,9 @@ def _update_party_master_references(old_party: str, new_party: str):
 
     for dt_info in doctypes:
         dt = dt_info[0] if isinstance(dt_info, (list, tuple)) else dt_info
+
+        if frappe.get_meta(dt).issingle or frappe.get_meta(dt).is_virtual:
+            continue
 
         if not frappe.db.has_column(dt, "party_master"):
             continue
