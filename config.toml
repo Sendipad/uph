@@ -110,6 +110,18 @@ defaultContentLanguageInSubdir = true
     weight = 4
 
   [[menu.main]]
+    name = "Core DocTypes"
+    pageRef = "/docs/features/core-doctypes/"
+    parent = "Key Features"
+    weight = 5
+
+  [[menu.main]]
+    name = "Reports"
+    pageRef = "/docs/features/reports/"
+    parent = "Key Features"
+    weight = 6
+
+  [[menu.main]]
     name = "Advanced"
     pageRef = "/docs/Advanced/"
     parent = "Docs"
