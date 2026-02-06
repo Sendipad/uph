@@ -1,7 +1,6 @@
 {{- /*
 AI Assistant Buttons Shortcode
 Creates buttons linking to various AI assistants with the current page URL as context.
-Uses the same pattern as Frappe documentation.
 
 Usage: {{< ai-assistant >}}
 Or: {{< ai-assistant showTitle="true" >}}
@@ -9,10 +8,14 @@ Or: {{< ai-assistant showTitle="true" >}}
 Parameters:
   showTitle (bool): Whether to show the section title (default: true)
   vertical (bool): Whether to stack buttons vertically (default: false)
+  floating (bool): Whether to show floating action button (default: true)
 */ -}}
 
 {{- $showTitle := default true (.Get "showTitle") -}}
 {{- $vertical := default false (.Get "vertical") -}}
+{{- $floating := default true (.Get "floating") -}}
+{{- $pageTitle := .Title -}}
+{{- $siteTitle := .Site.Title -}}
 
 <style>
   /* AI Assistant Buttons Styles */
@@ -115,20 +118,18 @@ Parameters:
 <div class="ai-assistant-container{{ if $vertical }} vertical{{ end }}">
   {{- if $showTitle -}}
   <div class="ai-assistant-title">
-    <i class="fas fa-robot"></i> Ask an AI Assistant about this page
+    Ask an AI Assistant about this page
   </div>
   {{- end -}}
 
-  {{- /* Note: These buttons work without JavaScript - users can copy/paste or the context is inferred from the page URL */ -}}
-  
-  {{- /* ChatGPT Button - Frappe pattern */ -}}
+  {{- /* ChatGPT Button */ -}}
   <a href="https://chatgpt.com/"
      class="ai-assistant-btn ai-btn-chatgpt"
      target="_blank"
      rel="noopener noreferrer"
      title="Ask ChatGPT about this page">
     <i class="fab fa-js"></i>
-    <span>Open in ChatGPT</span>
+    <span>ChatGPT</span>
   </a>
 
   {{- /* Claude Button */ -}}
@@ -138,16 +139,29 @@ Parameters:
      rel="noopener noreferrer"
      title="Ask Claude about this page">
     <i class="fas fa-brain"></i>
-    <span>Open in Claude</span>
+    <span>Claude</span>
   </a>
 
   {{- /* Gemini Button */ -}}
-  <a href="https://gemini.google.com/"
+  <button onclick="askGemini()"
      class="ai-assistant-btn ai-btn-gemini"
-     target="_blank"
-     rel="noopener noreferrer"
      title="Ask Gemini about this page">
     <i class="fas fa-sparkles"></i>
-    <span>Open in Gemini</span>
-  </a>
+    <span>Gemini</span>
+  </button>
 </div>
+
+<script>
+function askGemini() {
+  var pageTitle = document.title || '{{ $pageTitle }}';
+  var pageUrl = window.location.href;
+  var prompt = 'I am reading the ' + pageTitle + ' documentation page at: ' + pageUrl + '\n\nPlease summarize this page and explain how to use it with examples.';
+  
+  navigator.clipboard.writeText(prompt).then(function() {
+    window.open('https://gemini.google.com/app', '_blank');
+    alert('Prompt copied! Paste it into Gemini.');
+  }).catch(function(err) {
+    window.open('https://gemini.google.com/app', '_blank');
+  });
+}
+</script>

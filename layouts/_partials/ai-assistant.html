@@ -1,7 +1,7 @@
 {{- /*
 AI Assistant Buttons Partial
 Creates buttons linking to various AI assistants with the current page URL as context.
-Uses the same pattern as Frappe documentation.
+Includes both inline buttons and floating action button (FAB).
 */ -}}
 
 {{- $pageUrl := .Permalink -}}
@@ -95,14 +95,78 @@ Uses the same pattern as Frappe documentation.
       color: #f1f5f9;
     }
   }
+
+  /* Floating Action Button (FAB) */
+  .ai-fab {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    text-decoration: none;
+  }
+
+  .ai-fab:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+  }
+
+  /* FAB Tooltip */
+  .ai-fab::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    right: 50%;
+    transform: translateX(50%);
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #1e293b;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+  }
+
+  .ai-fab:hover::after {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Hide FAB on small screens */
+  @media (max-width: 768px) {
+    .ai-fab {
+      bottom: 1rem;
+      right: 1rem;
+      width: 48px;
+      height: 48px;
+      font-size: 1.25rem;
+    }
+  }
 </style>
 
+<!-- Inline AI Assistant Section -->
 <div class="ai-assistant-container">
   <div class="ai-assistant-title">
-    <i class="fas fa-robot"></i> Ask an AI Assistant about this page
+    Ask an AI Assistant about this page
   </div>
 
-  {{- /* ChatGPT Button - Frappe pattern */ -}}
+  {{- /* ChatGPT Button */ -}}
   {{- $chatgptMessage := printf "I'm reading the %s documentation page titled \"%s\": %s\n\nPlease summarize this page and explain how to use it with examples." $siteTitle $pageTitle $pageUrl -}}
   {{- $chatgptUrl := printf "https://chatgpt.com/?q=%s" (urlize $chatgptMessage) -}}
   <a href="{{ $chatgptUrl }}"
@@ -111,30 +175,78 @@ Uses the same pattern as Frappe documentation.
      rel="noopener noreferrer"
      title="Ask ChatGPT about this page">
     <i class="fab fa-js"></i>
-    <span>Open in ChatGPT</span>
+    <span>ChatGPT</span>
   </a>
 
   {{- /* Claude Button */ -}}
-  {{- $claudeMessage := printf "I'm reading the %s documentation page titled \"%s\": %s\n\nPlease summarize this page and explain how to use it with examples." $siteTitle $pageTitle $pageUrl -}}
-  {{- $claudeUrl := printf "https://claude.com/claude?url=%s&q=%s" (urlize $pageUrl) (urlize $claudeMessage) -}}
+  {{- $claudeUrl := printf "https://claude.com/" -}}
   <a href="{{ $claudeUrl }}"
      class="ai-assistant-btn ai-btn-claude"
      target="_blank"
      rel="noopener noreferrer"
      title="Ask Claude about this page">
     <i class="fas fa-brain"></i>
-    <span>Open in Claude</span>
+    <span>Claude</span>
   </a>
 
-  {{- /* Gemini Button */ -}}
-  {{- $geminiMessage := printf "I'm reading the %s documentation page titled \"%s\": %s\n\nPlease summarize this page and explain how to use it with examples." $siteTitle $pageTitle $pageUrl -}}
-  {{- $geminiUrl := printf "https://gemini.google.com/?q=%s" (urlize $geminiMessage) -}}
-  <a href="{{ $geminiUrl }}"
+  {{- /* Gemini Button with JavaScript */ -}}
+  <button onclick="askGemini()"
      class="ai-assistant-btn ai-btn-gemini"
-     target="_blank"
-     rel="noopener noreferrer"
      title="Ask Gemini about this page">
     <i class="fas fa-sparkles"></i>
-    <span>Open in Gemini</span>
-  </a>
+    <span>Gemini</span>
+  </button>
 </div>
+
+<!-- Floating Action Button (FAB) -->
+<a href="#" onclick="askGemini(); return false;" class="ai-fab" data-tooltip="Ask AI about this page">
+  ✨
+</a>
+
+<!-- JavaScript for Gemini -->
+<script>
+function askGemini() {
+  // Get current page info
+  var pageTitle = document.title || '{{ $pageTitle }}';
+  var pageUrl = window.location.href;
+  
+  // Create prompt
+  var prompt = 'I am reading the ' + pageTitle + ' documentation page at: ' + pageUrl + '\n\nPlease summarize this page and explain how to use it with examples.';
+  
+  // Copy prompt to clipboard
+  navigator.clipboard.writeText(prompt).then(function() {
+    // Open Gemini in new tab
+    window.open('https://gemini.google.com/app', '_blank');
+    
+    // Show brief notification
+    if (typeof frappe !== 'undefined') {
+      frappe.show_alert({
+        indicator: 'green',
+        message: 'Prompt copied! Paste it into Gemini.'
+      }, 3);
+    } else {
+      // Fallback notification
+      alert('Prompt copied! Paste it into Gemini.');
+    }
+  }).catch(function(err) {
+    console.error('Failed to copy: ', err);
+    window.open('https://gemini.google.com/app', '_blank');
+  });
+}
+</script>
+
+<!-- Alternative: Direct Gemini link with UTM parameters -->
+<script>
+(function() {
+  var geminiLinks = document.querySelectorAll('.ai-btn-gemini, .ai-fab');
+  geminiLinks.forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      if (link.tagName === 'A' && !link.getAttribute('href').startsWith('#')) {
+        return; // Let normal link work
+      }
+      e.preventDefault();
+      askGemini();
+    });
+  });
+})();
+</script>
