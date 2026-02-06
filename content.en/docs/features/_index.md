@@ -139,3 +139,5 @@ Detailed documentation for all UPH reports:
 - [Relationship Management](relationship-management.md)
 - [Core DocTypes](core-doctypes.md)
 - [Reports](reports.md)
+
+{{< ai-assistant >}}
