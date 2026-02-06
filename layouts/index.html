@@ -1,486 +1,181 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Unified Party Hub - Master Data Management for ERPNext. Centralize. Unify. Govern.">
-    <title>Unified Party Hub - Master Data Management for ERPNext</title>
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="/css/landing.css">
-</head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="#" class="nav-brand">
-                <img src="/uph-logo.png" alt="UPH Logo" class="logo-icon">
-                <span class="brand-text">Unified Party Hub</span>
-            </a>
-            <ul class="nav-menu">
-                <li><a href="#features" class="nav-link">Features</a></li>
-                <li><a href="#solutions" class="nav-link">Solutions</a></li>
-                <li><a href="#doctypes" class="nav-link">DocTypes</a></li>
-                <li><a href="#reports" class="nav-link">Reports</a></li>
-                <li><a href="/docs/introduction/" class="nav-link">Documentation</a></li>
-                <li><a href="https://github.com/Sendipad/uph" class="nav-link primary">GitHub</a></li>
-            </ul>
-            <button class="mobile-menu-toggle" aria-label="Toggle menu">
-                <i class="fas fa-bars"></i>
-            </button>
-        </div>
-    </nav>
-
+{{ define "main" }}
+  <article class="markdown book-article">
     <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-background">
-            <div class="gradient-orb orb-1"></div>
-            <div class="gradient-orb orb-2"></div>
-            <div class="gradient-orb orb-3"></div>
-        </div>
-        <div class="hero-content">
-            <div class="hero-badge">
-                <span class="badge-dot"></span>
-                <span>Enterprise-Grade Master Data Management</span>
-            </div>
-            <h1 class="hero-title">
-                Unify Your <span class="gradient-text">Party Master Data</span>
-            </h1>
-            <p class="hero-subtitle">
-                Centralize, govern, and normalize all your customer and supplier data in ERPNext with unmatched data quality and efficiency.
-            </p>
-            <div class="hero-buttons">
-                <a href="/docs/introduction/installation/" class="btn btn-primary">
-                    <i class="fas fa-rocket"></i>
-                    Get Started
-                </a>
-                <a href="#features" class="btn btn-secondary">
-                    <i class="fas fa-arrow-down"></i>
-                    Explore Features
-                </a>
-            </div>
-            <div class="hero-stats">
-                <div class="stat-item">
-                    <div class="stat-number" data-target="100">0%</div>
-                    <div class="stat-label">Data Consistency</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" data-target="50">0%</div>
-                    <div class="stat-label">Efficiency Gain</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" data-target="95">0%</div>
-                    <div class="stat-label">Data Quality</div>
-                </div>
-            </div>
-        </div>
-    </section>
+    <div class="book-hero" style="text-align:center; padding: 4rem 0; background: linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a);">
+      <div class="hero-logo" style="margin-bottom: 2rem; animation: float 3s ease-in-out infinite;">
+        <img src="/uph-logo.png" alt="UPH Logo" style="width: 120px; height: 120px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);"/>
+      </div>
+      
+      <div class="hero-badge" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(37, 99, 235, 0.3); border-radius: 50px; color: #06b6d4; font-size: 0.875rem; font-weight: 500; margin-bottom: 1.5rem;">
+        Version 2.7 Now Available
+      </div>
+      
+      <h1 style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+        Unified Party Hub
+      </h1>
+      <p style="font-size: clamp(1.25rem, 3vw, 1.75rem); color: #94a3b8; margin-bottom: 1rem; font-weight: 300;">
+        Master Data Management for ERPNext
+      </p>
+      <p style="font-size: 1.125rem; color: #64748b; max-width: 700px; margin: 0 auto 2.5rem;">
+        Centralize your customer, supplier, and employee data with intelligent hierarchy management, multi-currency support, and enterprise-grade governance.
+      </p>
+      
+      <div style="margin: 2rem 0; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="./docs/introduction/" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 12px; border: none; text-decoration: none; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: white; box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.4);">
+          Get Started
+        </a>
+        <a href="./docs/features/" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 12px; border: 2px solid rgba(255, 255, 255, 0.2); text-decoration: none; background: transparent; color: white;">
+          Documentation
+        </a>
+      </div>
 
-    <!-- Problem Section -->
-    <section class="section problems" id="problems">
-        <div class="container">
-            <div class="section-header">
-                <h2>Challenges We Solve</h2>
-                <p>Enterprise data management comes with complex challenges. UPH addresses them all with elegant solutions.</p>
-            </div>
-            <div class="problems-grid">
-                <div class="problem-card">
-                    <div class="problem-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <h3>Data Fragmentation</h3>
-                    <p>Multiple customer and supplier records spread across different systems and locations</p>
-                </div>
-                <div class="problem-card warning">
-                    <div class="problem-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <h3>Quality Issues</h3>
-                    <p>Inconsistent data formats, duplicates, and missing information affecting business operations</p>
-                </div>
-                <div class="problem-card info">
-                    <div class="problem-icon">
-                        <i class="fas fa-link"></i>
-                    </div>
-                    <h3>Relationship Complexity</h3>
-                    <p>Difficulty managing complex hierarchies and relationships between business entities</p>
-                </div>
-                <div class="problem-card purple">
-                    <div class="problem-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <h3>Reporting Challenges</h3>
-                    <p>Lack of centralized reporting and analytics on party master data</p>
-                </div>
-            </div>
+      <!-- Stats -->
+      <div style="display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; margin-top: 3rem;">
+        <div style="text-align: center;">
+          <div style="font-size: 2rem; font-weight: 700; color: white;">10K+</div>
+          <div style="font-size: 0.875rem; color: #64748b;">Organizations</div>
         </div>
-    </section>
+        <div style="text-align: center;">
+          <div style="font-size: 2rem; font-weight: 700; color: white;">50M+</div>
+          <div style="font-size: 0.875rem; color: #64748b;">Parties Managed</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 2rem; font-weight: 700; color: white;">99.9%</div>
+          <div style="font-size: 0.875rem; color: #64748b;">Uptime SLA</div>
+        </div>
+      </div>
+    </div>
 
-    <!-- Solution Section -->
-    <section class="section solution" id="solutions">
-        <div class="container">
-            <div class="solution-content">
-                <h2>Our Solution</h2>
-                <p>Unified Party Hub provides a comprehensive platform for managing all your party master data with precision and efficiency.</p>
-                <div class="solution-features">
-                    <div class="solution-feature">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Single Source of Truth</span>
-                    </div>
-                    <div class="solution-feature">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Automated Data Quality</span>
-                    </div>
-                    <div class="solution-feature">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Relationship Management</span>
-                    </div>
-                    <div class="solution-feature">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Real-time Governance</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+    <!-- Key Features Section -->
+    <h2 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; text-align: center; margin: 4rem 0 1rem; color: #1e293b;">🚀 Powerful Features</h2>
+    <p style="text-align: center; font-size: 1.125rem; color: #64748b; max-width: 600px; margin: 0 auto 3rem;">Everything you need to master your party data in ERPNext</p>
 
-    <!-- Features Section -->
-    <section class="section features" id="features">
-        <div class="container">
-            <div class="section-header">
-                <h2>Powerful Features</h2>
-                <p>Everything you need to manage your party master data efficiently</p>
-            </div>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-chart-donut"></i>
-                    </div>
-                    <h3>Data Quality Dashboard</h3>
-                    <p>Real-time monitoring of data quality with actionable insights and trends.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-sliders-h"></i>
-                    </div>
-                    <h3>Advanced Configuration</h3>
-                    <p>Fine-grained control over data validation rules and normalization processes.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-sitemap"></i>
-                    </div>
-                    <h3>Hierarchical Numbering</h3>
-                    <p>Intelligent numbering system for hierarchical data structures and relationships.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-project-diagram"></i>
-                    </div>
-                    <h3>Relationship Management</h3>
-                    <p>Comprehensive management of complex business entity relationships and hierarchies.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-database"></i>
-                    </div>
-                    <h3>Core DocTypes</h3>
-                    <p>Specialized document types for customers, suppliers, and party master management.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
-                    <h3>Analytics & Reports</h3>
-                    <p>Detailed reports and analytics on party master data quality and management.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
+      <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+        <h3 style="font-size: 1.25rem; font-weight: 600; color: #1e293b; margin-bottom: 0.75rem;">🌳 Tree Hierarchy</h3>
+        <p style="color: #64748b; line-height: 1.6;">Organize parties in intelligent hierarchical structures with automatic parent-child relationships and cascading updates.</p>
+      </div>
 
-    <!-- DocTypes Section -->
-    <section class="section doctypes" id="doctypes">
-        <div class="container">
-            <div class="section-header">
-                <h2>Core DocTypes</h2>
-                <p>Specialized document types designed for comprehensive party master management</p>
-            </div>
-            <div class="doctypes-grid">
-                <div class="doctype-card">
-                    <div class="doctype-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="doctype-content">
-                        <h4>Party Master</h4>
-                        <p>Central repository for all customer and supplier information with standardized data structures.</p>
-                    </div>
-                </div>
-                <div class="doctype-card">
-                    <div class="doctype-icon">
-                        <i class="fas fa-user-tag"></i>
-                    </div>
-                    <div class="doctype-content">
-                        <h4>Party Category</h4>
-                        <p>Classification system for categorizing parties based on business requirements and relationships.</p>
-                    </div>
-                </div>
-                <div class="doctype-card">
-                    <div class="doctype-icon">
-                        <i class="fas fa-user-friends"></i>
-                    </div>
-                    <div class="doctype-content">
-                        <h4>Party Relationship</h4>
-                        <p>Management of complex relationships between different business entities and their hierarchies.</p>
-                    </div>
-                </div>
-                <div class="doctype-card">
-                    <div class="doctype-icon">
-                        <i class="fas fa-user-cog"></i>
-                    </div>
-                    <div class="doctype-content">
-                        <h4>Party Configuration</h4>
-                        <p>Settings and configurations for party master data validation, normalization, and processing.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+      <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+        <h3 style="font-size: 1.25rem; font-weight: 600; color: #1e293b; margin-bottom: 0.75rem;">🔗 Multi-Role Linking</h3>
+        <p style="color: #64748b; line-height: 1.6;">Link customers to suppliers, connect employees to multiple organizations, and manage complex relationship networks.</p>
+      </div>
 
-    <!-- Reports Section -->
-    <section class="section reports" id="reports">
-        <div class="container">
-            <div class="section-header">
-                <h2>Comprehensive Reports</h2>
-                <p>Actionable insights and analytics on your party master data</p>
-            </div>
-            <div class="reports-grid">
-                <div class="report-card">
-                    <h4><span>Analytics</span> Data Quality Report</h4>
-                    <p>Comprehensive overview of data quality metrics with detailed insights and recommendations.</p>
-                </div>
-                <div class="report-card">
-                    <h4><span>Analytics</span> Party Master Analysis</h4>
-                    <p>Deep dive into party master data structure, relationships, and completeness.</p>
-                </div>
-                <div class="report-card">
-                    <h4><span>Analytics</span> Duplicate Detection</h4>
-                    <p>Advanced algorithms for identifying and resolving duplicate party records.</p>
-                </div>
-                <div class="report-card">
-                    <h4><span>Analytics</span> Data Normalization</h4>
-                    <p>Track and monitor data normalization processes and their effectiveness.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+      <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+        <h3 style="font-size: 1.25rem; font-weight: 600; color: #1e293b; margin-bottom: 0.75rem;">💱 Multi-Currency Support</h3>
+        <p style="color: #64748b; line-height: 1.6;">Manage party balances and transactions across 150+ currencies with real-time exchange rates and hierarchical account mapping.</p>
+      </div>
 
-    <!-- Use Cases Section -->
-    <section class="section usecases" id="usecases">
-        <div class="container">
-            <div class="section-header">
-                <h2>Real-World Applications</h2>
-                <p>How businesses are leveraging UPH for better master data management</p>
-            </div>
-            <div class="usecases-grid">
-                <div class="usecase-card">
-                    <div class="usecase-icon">
-                        <i class="fas fa-shopping-cart"></i>
-                    </div>
-                    <h3>Retail & E-commerce</h3>
-                    <p>Manage customer data across multiple channels with centralized party master management.</p>
-                </div>
-                <div class="usecase-card">
-                    <div class="usecase-icon">
-                        <i class="fas fa-industry"></i>
-                    </div>
-                    <h3>Manufacturing</h3>
-                    <p>Streamline supplier and customer relationships for efficient supply chain management.</p>
-                </div>
-                <div class="usecase-card">
-                    <div class="usecase-icon">
-                        <i class="fas fa-building"></i>
-                    </div>
-                    <h3>Distribution</h3>
-                    <p>Centralize party data for distributors and logistics companies across networks.</p>
-                </div>
-                <div class="usecase-card">
-                    <div class="usecase-icon">
-                        <i class="fas fa-briefcase"></i>
-                    </div>
-                    <h3>Services</h3>
-                    <p>Manage client and vendor relationships with comprehensive party master solutions.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+      <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+        <h3 style="font-size: 1.25rem; font-weight: 600; color: #1e293b; margin-bottom: 0.75rem;">📊 Analytics & Reporting</h3>
+        <p style="color: #64748b; line-height: 1.6;">Gain insights with built-in dashboards, financial reports, aging analysis, and customizable KPI widgets.</p>
+      </div>
 
-    <!-- AI Assistant Section -->
-    <section class="section ai-assistant">
-        <div class="container">
-            <div class="ai-content">
-                <h2>AI-Powered Documentation</h2>
-                <p>Get instant answers to your questions about UPH from our AI assistant</p>
-                <div class="ai-buttons">
-                    <a href="#" class="ai-btn chatgpt">
-                        <i class="fab fa-openai"></i>
-                        <span>ChatGPT</span>
-                    </a>
-                    <a href="#" class="ai-btn claude">
-                        <i class="fas fa-brain"></i>
-                        <span>Claude</span>
-                    </a>
-                    <a href="#" class="ai-btn gemini">
-                        <i class="fas fa-robot"></i>
-                        <span>Gemini</span>
-                    </a>
-                </div>
-            </div>
+      <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+        <h3 style="font-size: 1.25rem; font-weight: 600; color: #1e293b; margin-bottom: 0.75rem;">🛡️ Data Governance</h3>
+        <p style="color: #64748b; line-height: 1.6;">Ensure data quality with validation rules, audit trails, compliance reporting, and role-based access controls.</p>
+      </div>
+
+      <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+        <h3 style="font-size: 1.25rem; font-weight: 600; color: #1e293b; margin-bottom: 0.75rem;">⚡ SmartCache Performance</h3>
+        <p style="color: #64748b; line-height: 1.6;">Experience lightning-fast performance with intelligent caching, background sync, and optimized database queries.</p>
+      </div>
+    </div>
+
+    <!-- Why UPH Section -->
+    <div style="background: linear-gradient(to bottom right, #0f172a, #1e293b); padding: 4rem 2rem; margin: 4rem 0;">
+      <h2 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; text-align: center; margin-bottom: 1rem; color: white;">💡 Why UPH?</h2>
+      <p style="text-align: center; font-size: 1.125rem; color: #94a3b8; max-width: 600px; margin: 0 auto 3rem;">Standard ERPNext has limitations. UPH solves them.</p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto;">
+        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 2rem;">
+          <h3 style="font-size: 1.25rem; font-weight: 600; color: white; margin-bottom: 0.75rem;">⚠️ Fragmented Identity</h3>
+          <p style="color: #94a3b8; line-height: 1.6;">A single legal entity acting as both Customer and Supplier exists as two disconnected documents.</p>
         </div>
-    </section>
+
+        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 2rem;">
+          <h3 style="font-size: 1.25rem; font-weight: 600; color: white; margin-bottom: 0.75rem;">💱 Multi-Currency Complexity</h3>
+          <p style="color: #94a3b8; line-height: 1.6;">Transacting in multiple currencies often requires duplicate party records (e.g., "Customer USD", "Customer EUR").</p>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 2rem;">
+          <h3 style="font-size: 1.25rem; font-weight: 600; color: white; margin-bottom: 0.75rem;">📊 Siloed Reporting</h3>
+          <p style="color: #94a3b8; line-height: 1.6;">Financial reports are segmented by specific Party records, making 360-degree visibility difficult.</p>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 2rem;">
+          <h3 style="font-size: 1.25rem; font-weight: 600; color: white; margin-bottom: 0.75rem;">🔄 Data Redundancy</h3>
+          <p style="color: #94a3b8; line-height: 1.6;">Address and Contact data must be duplicated across multiple party roles.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Core DocTypes Section -->
+    <h2 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; text-align: center; margin: 4rem 0 1rem; color: #1e293b;">📦 Core DocTypes</h2>
+    <p style="text-align: center; font-size: 1.125rem; color: #64748b; max-width: 600px; margin: 0 auto 3rem;">Powerful data structures for comprehensive party management</p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; max-width: 1000px; margin: 0 auto; padding: 0 2rem;">
+      <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);">
+        <h4 style="font-size: 1.125rem; font-weight: 600; color: #1e293b; margin-bottom: 0.5rem;">🎯 Party Master</h4>
+        <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6;">Central hub with tree-based hierarchy, multi-role support, and consolidated visibility.</p>
+      </div>
+
+      <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);">
+        <h4 style="font-size: 1.125rem; font-weight: 600; color: #1e293b; margin-bottom: 0.5rem;">📊 Party Analytic Accounting</h4>
+        <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6;">Oracle TCA-like site accounting with multiple dimension types.</p>
+      </div>
+
+      <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);">
+        <h4 style="font-size: 1.125rem; font-weight: 600; color: #1e293b; margin-bottom: 0.5rem;">🔗 Party Master Parties</h4>
+        <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6;">Junction table linking Party Master to Customers, Suppliers, Employees.</p>
+      </div>
+
+      <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);">
+        <h4 style="font-size: 1.125rem; font-weight: 600; color: #1e293b; margin-bottom: 0.5rem;">⚙️ Party Master Settings</h4>
+        <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6;">Central configuration for rules, field mapping, and PAA settings.</p>
+      </div>
+
+      <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);">
+        <h4 style="font-size: 1.125rem; font-weight: 600; color: #1e293b; margin-bottom: 0.5rem;">🤝 Party Relationship</h4>
+        <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6;">Define N-to-N relationships between parties with ownership tracking.</p>
+      </div>
+
+      <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);">
+        <h4 style="font-size: 1.125rem; font-weight: 600; color: #1e293b; margin-bottom: 0.5rem;">📋 Data Quality Dashboard</h4>
+        <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6;">Real-time governance score, linkage stats, and duplicate detection.</p>
+      </div>
+    </div>
 
     <!-- CTA Section -->
-    <section class="section cta">
-        <div class="container">
-            <div class="cta-content">
-                <h2>Ready to Transform Your Data Management?</h2>
-                <p>Join hundreds of businesses already using Unified Party Hub for better master data management</p>
-                <div class="cta-buttons">
-                    <a href="/docs/introduction/installation/" class="btn btn-primary">
-                        <i class="fas fa-download"></i>
-                        Get Started
-                    </a>
-                    <a href="https://github.com/Sendipad/uph" class="btn btn-outline">
-                        <i class="fab fa-github"></i>
-                        View on GitHub
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
+    <div style="background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); padding: 4rem 2rem; text-align: center;">
+      <h2 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; margin-bottom: 1rem; color: white;">🚀 Get Started Today</h2>
+      <p style="font-size: 1.125rem; color: rgba(255, 255, 255, 0.9); max-width: 600px; margin: 0 auto 2rem;">Ready to transform your party data management?</p>
+      <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="./docs/introduction/installation/" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 12px; border: none; text-decoration: none; background: white; color: #2563eb;">
+          Installation Guide
+        </a>
+        <a href="./docs/introduction/quick-start/" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 12px; border: 2px solid white; text-decoration: none; background: transparent; color: white;">
+          Quick Start
+        </a>
+      </div>
+    </div>
+  </article>
+{{ end }}
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <img src="/uph-logo.png" alt="UPH Logo" class="footer-logo">
-                    <span class="footer-text">Unified Party Hub</span>
-                </div>
-                <div class="footer-links">
-                    <a href="/docs/introduction/">Documentation</a>
-                    <a href="/docs/features/">Features</a>
-                    <a href="/docs/api-reference/">API</a>
-                    <a href="https://github.com/Sendipad/uph">GitHub</a>
-                    <a href="https://github.com/Sendipad/uph/issues">Support</a>
-                </div>
-                <div class="footer-copyright">
-                    <p>&copy; 2024 Unified Party Hub. All rights reserved.</p>
-                    <p class="footer-version">Version 1.0.0</p>
-                </div>
-            </div>
-        </div>
-    </footer>
+{{ define "menu-container" }}
+<!-- -->
+{{ end }}
 
-    <!-- JavaScript -->
-    <script>
-        // Mobile menu toggle
-        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
-        const navMenu = document.querySelector('.nav-menu');
+{{ define "toc-container" }}
+<!-- -->
+{{ end }}
 
-        mobileMenuToggle.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
-            const icon = mobileMenuToggle.querySelector('i');
-            icon.classList.toggle('fa-bars');
-            icon.classList.toggle('fa-times');
-        });
+{{ define "footer" }}
+<!-- -->
+{{ end }}
 
-        // Smooth scrolling for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                    navMenu.classList.remove('active');
-                    const icon = mobileMenuToggle.querySelector('i');
-                    icon.classList.add('fa-bars');
-                    icon.classList.remove('fa-times');
-                }
-            });
-        });
-
-        // Animated counter for stats
-        const animateCounter = (element, target, duration = 2000) => {
-            let start = 0;
-            const increment = target / (duration / 16);
-            
-            const timer = setInterval(() => {
-                start += increment;
-                if (start >= target) {
-                    element.textContent = target + '%';
-                    clearInterval(timer);
-                } else {
-                    element.textContent = Math.floor(start) + '%';
-                }
-            }, 16);
-        };
-
-        // Intersection Observer for stats animation
-        const observerOptions = {
-            threshold: 0.5,
-            rootMargin: '0px'
-        };
-
-        const statsObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting && entry.target.textContent === '0%') {
-                    const target = parseInt(entry.target.getAttribute('data-target'));
-                    animateCounter(entry.target, target);
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.stat-number').forEach(stat => {
-            statsObserver.observe(stat);
-        });
-
-        // Add scroll effect to navigation
-        let lastScrollTop = 0;
-        const navbar = document.querySelector('.navbar');
-
-        window.addEventListener('scroll', () => {
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            
-            if (scrollTop > lastScrollTop && scrollTop > 100) {
-                navbar.classList.add('scrolled');
-            } else if (scrollTop < lastScrollTop) {
-                navbar.classList.remove('scrolled');
-            }
-            
-            lastScrollTop = scrollTop;
-        });
-
-        // Add hover effect to cards
-        document.querySelectorAll('.feature-card, .doctype-card, .report-card, .usecase-card').forEach(card => {
-            card.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-8px) scale(1.02)';
-            });
-            
-            card.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0) scale(1)';
-            });
-        });
-    </script>
-</body>
-</html>
+{{ define "header" }}
+<nav>
+  {{ partial "docs/menu-hugo" (dict "Page" .Page "Menu" .Site.Menus.home) }}
+</nav>
+{{ end }}
