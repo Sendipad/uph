@@ -213,9 +213,10 @@ function update_buttons(frm) {
 
 function fetch_existing_parties(frm, filters) {
 	const dialog = new frappe.ui.form.MultiSelectDialog({
-		doctype: frm.doc.doctype,
+		doctype: filters.party_type,
 		target: frm,
-		setters: { party_type: filters.party_type },
+		setters: {},
+		columns: ["name", "party_name", "currency"],
 		add_filters_group: 1,
 		get_query() {
 			return {

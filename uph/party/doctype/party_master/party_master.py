@@ -512,7 +512,7 @@ class PartyMaster(NestedSet):
             final_query = final_query.union(q)
 
         # Order by similarity score
-        if len(fields) > 0:
+        if len(fields) > 0 and unlinked:
             final_query = final_query.orderby("match_count", order=frappe.qb.desc)
 
         return final_query.run(as_dict=True)
@@ -1177,28 +1177,46 @@ def get_unset_parties_list(
     doc = frappe.get_cached_doc("Party Master", party_master)
     filter = [["party_master", "is", "not set"]]
     words = doc.party_name.split()
-    ptype = [doc.party_type]
 
-    if doc.has_secondary_role_party or len(doc.roles) > 0:
-        for pt in doc.roles:
-            ptype.append(pt.party_type_role)
+    if filters.get("party_type"):
+        ptype = [filters.get("party_type")]
+    else:
+        ptype = [doc.party_type]
+
+        if doc.has_secondary_role_party or len(doc.roles) > 0:
+            for pt in doc.roles:
+                ptype.append(pt.party_type_role)
     result = []
     for pt in ptype:
         pt_key_field = get_party_key_fields(pt)
         if not pt_key_field:
             continue
 
-        fields = ["name", pt_key_field.get("party_name"), pt_key_field.get("currency")]
+    result = []
+    for pt in ptype:
+        pt_key_field = get_party_key_fields(pt)
+        if not pt_key_field:
+            continue
+
+        name_field = pt_key_field.get("party_name")
+        curr_field = pt_key_field.get("currency")
+
+        fields = ["name", name_field, curr_field]
+
         or_filters = []
         if unset:
-            or_filters = [
-                [pt_key_field.get("party_name"), "like", f"%{x}%"] for x in words
-            ]
+            or_filters = [[name_field, "like", f"%{x}%"] for x in words]
 
         r = frappe.db.get_all(pt, filters=filter, or_filters=or_filters, fields=fields)
 
         for row in r:
-            row.update({"party_type": pt})
+            row.update(
+                {
+                    "party_type": pt,
+                    "party_name": row.get(name_field),
+                    "currency": row.get(curr_field),
+                }
+            )
             result.append(row)
     return result
 
