@@ -13,7 +13,7 @@ layout: landing
 [{{< badge style="info" title="الإصدار" value="1.0" >}}](https://github.com/sendipad/uph/releases)
 [{{< badge style="default" title="الترخيص" value="MIT" >}}](https://github.com/sendipad/uph/blob/main/LICENSE)
 
-{{< button href="/docs/introduction" >}}ابدأ الآن{{</button>}}
+{{< button href="/docs/introduction" >}}ابدأ الآن{{< /button >}}
 
 </div>
 

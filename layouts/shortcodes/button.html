@@ -1,0 +1,18 @@
+{{- $href := .Get "href" -}}
+{{- $isRemote := (urls.Parse $href).IsAbs -}}
+{{- $class := "book-btn" -}}
+{{- $target := "" -}}
+{{- $rel := "" -}}
+
+{{- if $isRemote -}}
+  {{- $target = "_blank" -}}
+  {{- $rel = "noopener" -}}
+{{- end -}}
+
+<a href="{{ $href }}" {{ with $target }}target="{{ . }}"{{ end }} {{ with $rel }}rel="{{ . }}"{{ end }} class="{{ $class }}">
+  {{- with .Get "text" -}}
+    {{ . }}
+  {{- else -}}
+    {{ .Inner }}
+  {{- end -}}
+</a>
