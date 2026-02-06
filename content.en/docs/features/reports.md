@@ -286,5 +286,3 @@ All reports support:
 - [Core DocTypes](./core-doctypes.md)
 - [Data Quality Dashboard](./data-quality-dashboard.md)
 - [Configuration](./configuration.md)
-
-{{< ai-assistant >}}

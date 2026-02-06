@@ -280,5 +280,3 @@ UPH injects Party Master into the following transaction types:
 - [Configuration](../features/configuration.md)
 - [Hierarchical Numbering](../features/hierarchical-numbering.md)
 - [Relationship Management](../features/relationship-management.md)
-
-{{< ai-assistant >}}

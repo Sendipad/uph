@@ -197,5 +197,3 @@ bench clear-cache
 - **GitHub Issues**: [Report bugs and request features](https://github.com/Sendipad/uph/issues)
 - **Documentation**: [https://sendipad.github.io/uph/](https://sendipad.github.io/uph/)
 - **ERPNext Community**: [https://discuss.erpnext.com](https://discuss.erpnext.com)
-
-{{< ai-assistant >}}

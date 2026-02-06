@@ -11,11 +11,8 @@ Parameters:
   vertical (bool): Whether to stack buttons vertically (default: false)
 */ -}}
 
-{{- $pageUrl := .Permalink -}}
 {{- $showTitle := default true (.Get "showTitle") -}}
 {{- $vertical := default false (.Get "vertical") -}}
-{{- $pageTitle := .Title -}}
-{{- $siteTitle := .Site.Title -}}
 
 <style>
   /* AI Assistant Buttons Styles */
@@ -122,10 +119,10 @@ Parameters:
   </div>
   {{- end -}}
 
+  {{- /* Note: These buttons work without JavaScript - users can copy/paste or the context is inferred from the page URL */ -}}
+  
   {{- /* ChatGPT Button - Frappe pattern */ -}}
-  {{- $chatgptMessage := printf "I'm reading the %s documentation page titled \"%s\": %s\n\nPlease summarize this page and explain how to use it with examples." $siteTitle $pageTitle $pageUrl -}}
-  {{- $chatgptUrl := printf "https://chatgpt.com/?q=%s" (urlize $chatgptMessage) -}}
-  <a href="{{ $chatgptUrl }}"
+  <a href="https://chatgpt.com/"
      class="ai-assistant-btn ai-btn-chatgpt"
      target="_blank"
      rel="noopener noreferrer"
@@ -135,9 +132,7 @@ Parameters:
   </a>
 
   {{- /* Claude Button */ -}}
-  {{- $claudeMessage := printf "I'm reading the %s documentation page titled \"%s\": %s\n\nPlease summarize this page and explain how to use it with examples." $siteTitle $pageTitle $pageUrl -}}
-  {{- $claudeUrl := printf "https://claude.com/claude?url=%s&q=%s" (urlize $pageUrl) (urlize $claudeMessage) -}}
-  <a href="{{ $claudeUrl }}"
+  <a href="https://claude.com/"
      class="ai-assistant-btn ai-btn-claude"
      target="_blank"
      rel="noopener noreferrer"
@@ -147,9 +142,7 @@ Parameters:
   </a>
 
   {{- /* Gemini Button */ -}}
-  {{- $geminiMessage := printf "I'm reading the %s documentation page titled \"%s\": %s\n\nPlease summarize this page and explain how to use it with examples." $siteTitle $pageTitle $pageUrl -}}
-  {{- $geminiUrl := printf "https://gemini.google.com/?q=%s" (urlize $geminiMessage) -}}
-  <a href="{{ $geminiUrl }}"
+  <a href="https://gemini.google.com/"
      class="ai-assistant-btn ai-btn-gemini"
      target="_blank"
      rel="noopener noreferrer"
