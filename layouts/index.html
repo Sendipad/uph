@@ -1,233 +1,969 @@
-{{ define "main" }}
 <!DOCTYPE html>
-<html lang="{{ .Site.Language.Lang }}" dir="{{ default "ltr" .Site.Language.LanguageDirection }}">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Unified Party Hub - Master Data Management for ERPNext. Centralize. Unify. Govern.">
-  <title>{{ .Site.Title }} - Master Data Management for ERPNext</title>
+  <title>Unified Party Hub - Master Data Management for ERPNext</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   
-  <!-- Font Awesome for Icons -->
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
-  <!-- Custom Landing CSS -->
+  <!-- Custom CSS -->
   <link rel="stylesheet" href="/css/landing.css">
   
   <style>
-    /* Additional inline styles for Hugo compatibility */
-    .hidden { display: none !important; }
+    /* Landing Page Specific Styles */
+    :root {
+      --uph-primary: #6366f1;
+      --uph-primary-dark: #4f46e5;
+      --uph-secondary: #8b5cf6;
+      --uph-accent: #06b6d4;
+      --uph-success: #10b981;
+      --uph-warning: #f59e0b;
+      --uph-danger: #ef4444;
+      
+      --uph-bg-dark: #0f172a;
+      --uph-bg-card: rgba(30, 41, 59, 0.8);
+      --uph-text-primary: #f8fafc;
+      --uph-text-secondary: #94a3b8;
+      
+      --uph-gradient-1: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+      --uph-gradient-2: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%);
+      --uph-gradient-3: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--uph-bg-dark);
+      color: var(--uph-text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    
+    /* Navigation */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: white;
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+    
+    .navbar-brand img {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+    }
+    
+    .navbar-nav {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+    
+    .navbar-nav a {
+      color: var(--uph-text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+    
+    .navbar-nav a:hover {
+      color: white;
+    }
+    
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6rem 2rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(ellipse at 20% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    
+    .hero-content {
+      max-width: 1200px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 50px;
+      color: var(--uph-accent);
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    .hero h1 {
+      font-size: clamp(3rem, 8vw, 5rem);
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .hero-tagline {
+      font-size: clamp(1.25rem, 3vw, 1.75rem);
+      color: var(--uph-text-secondary);
+      margin-bottom: 1rem;
+      font-weight: 300;
+    }
+    
+    .hero-description {
+      font-size: 1.125rem;
+      color: #64748b;
+      max-width: 700px;
+      margin: 0 auto 2.5rem;
+    }
+    
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 3rem;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+      background: var(--uph-gradient-1);
+      color: white;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.5);
+    }
+    
+    .btn-outline {
+      background: transparent;
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.4);
+      transform: translateY(-3px);
+    }
+    
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 4rem;
+      flex-wrap: wrap;
+    }
+    
+    .stat-item {
+      text-align: center;
+    }
+    
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: var(--uph-gradient-1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .stat-label {
+      font-size: 0.875rem;
+      color: var(--uph-text-secondary);
+      margin-top: 0.25rem;
+    }
+    
+    /* Section Styles */
+    .section {
+      padding: 6rem 2rem;
+    }
+    
+    .section-header {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto 4rem;
+    }
+    
+    .section-header h2 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      margin-bottom: 1rem;
+    }
+    
+    .section-header p {
+      font-size: 1.125rem;
+      color: var(--uph-text-secondary);
+    }
+    
+    /* Features Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .feature-card {
+      background: var(--uph-bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 2rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--uph-gradient-1);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(99, 102, 241, 0.3);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+    
+    .feature-icon {
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--uph-gradient-1);
+      border-radius: 16px;
+      margin-bottom: 1.5rem;
+      font-size: 1.75rem;
+    }
+    
+    .feature-card h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+    
+    .feature-card p {
+      font-size: 0.95rem;
+      color: var(--uph-text-secondary);
+      line-height: 1.7;
+    }
+    
+    /* Problem Cards */
+    .problems-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .problem-card {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+    
+    .problem-card.warning {
+      background: rgba(245, 158, 11, 0.1);
+      border-color: rgba(245, 158, 11, 0.2);
+    }
+    
+    .problem-card.info {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: rgba(59, 130, 246, 0.2);
+    }
+    
+    .problem-card.purple {
+      background: rgba(139, 92, 246, 0.1);
+      border-color: rgba(139, 92, 246, 0.2);
+    }
+    
+    .problem-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    
+    .problem-card h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    
+    .problem-card p {
+      font-size: 0.95rem;
+      color: var(--uph-text-secondary);
+    }
+    
+    /* Solution Section */
+    .solution-box {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 24px;
+      padding: 3rem;
+      text-align: center;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    
+    .solution-features {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+    
+    .solution-feature {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--uph-success);
+      font-weight: 500;
+    }
+    
+    /* DocTypes Grid */
+    .doctypes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .doctype-card {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    
+    .doctype-icon {
+      font-size: 1.5rem;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--uph-gradient-1);
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+    
+    .doctype-card h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    
+    .doctype-card p {
+      font-size: 0.875rem;
+      color: var(--uph-text-secondary);
+    }
+    
+    /* Reports Grid */
+    .reports-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .report-card {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+    
+    .report-card h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .report-card h4 span {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      background: rgba(99, 102, 241, 0.2);
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    
+    .report-card p {
+      font-size: 0.875rem;
+      color: var(--uph-text-secondary);
+    }
+    
+    /* Use Cases */
+    .usecases-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .usecase-card {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 20px;
+      padding: 2rem;
+    }
+    
+    .usecase-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .usecase-card h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+    
+    .usecase-card p {
+      font-size: 0.95rem;
+      color: var(--uph-text-secondary);
+      line-height: 1.7;
+    }
+    
+    /* CTA Section */
+    .cta-section {
+      background: var(--uph-gradient-1);
+      text-align: center;
+      padding: 6rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .cta-content {
+      position: relative;
+      z-index: 1;
+    }
+    
+    .cta-section h2 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      margin-bottom: 1rem;
+    }
+    
+    .cta-section p {
+      font-size: 1.125rem;
+      opacity: 0.9;
+      margin-bottom: 2rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .cta-section .btn {
+      background: white;
+      color: var(--uph-primary);
+    }
+    
+    /* Footer */
+    .footer {
+      background: #0a0f1a;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+    
+    .footer-links {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    
+    .footer-links a {
+      color: var(--uph-text-secondary);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    
+    .footer-links a:hover {
+      color: white;
+    }
+    
+    .footer-copyright {
+      font-size: 0.875rem;
+      color: #475569;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .navbar {
+        padding: 1rem;
+      }
+      
+      .navbar-nav {
+        display: none;
+      }
+      
+      .hero {
+        padding: 5rem 1rem 3rem;
+      }
+      
+      .hero-stats {
+        gap: 2rem;
+      }
+      
+      .stat-number {
+        font-size: 2rem;
+      }
+      
+      .section {
+        padding: 4rem 1rem;
+      }
+      
+      .solution-box {
+        padding: 2rem 1.5rem;
+      }
+      
+      .solution-features {
+        gap: 1rem;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="landing-page">
-    
-    <!-- Hero Section -->
-    <section class="hero">
-      <div class="hero-content">
-        <!-- Logo -->
-        <div class="hero-logo">
-          <img src="/uph-logo.png" alt="UPH Logo" loading="lazy">
-        </div>
-        
-        <!-- Badge -->
-        <div class="hero-badge">
-          Version 2.0 Now Available
-        </div>
-        
-        <!-- Headline -->
-        <h1>Unified Party Hub</h1>
-        <p class="hero-tagline">Master Data Management for ERPNext</p>
-        <p class="hero-description">
-          Centralize your customer, supplier, and employee data with intelligent hierarchy management, 
-          multi-currency support, and enterprise-grade governance.
-        </p>
-        
-        <!-- CTA Buttons -->
-        <div class="hero-buttons">
-          <a href="/docs/introduction/" class="btn btn-primary">
-            <i class="fas fa-rocket"></i>
-            Get Started
-          </a>
-          <a href="/docs/features/" class="btn btn-secondary">
-            <i class="fas fa-book"></i>
-            View Documentation
-          </a>
-        </div>
-        
-        <!-- Stats -->
-        <div class="hero-stats">
-          <div class="stat-item">
-            <div class="stat-number">10K+</div>
-            <div class="stat-label">Organizations</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">50M+</div>
-            <div class="stat-label">Parties Managed</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">99.9%</div>
-            <div class="stat-label">Uptime SLA</div>
-          </div>
-        </div>
-      </div>
-    </section>
-    
-    <!-- Features Section -->
-    <section class="features" id="features">
-      <div class="section-header">
-        <h2>Powerful Features</h2>
-        <p>Everything you need to master your party data in ERPNext</p>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">
+      <img src="/uph-logo.png" alt="UPH Logo">
+      <span>Unified Party Hub</span>
+    </a>
+    <ul class="navbar-nav">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#why-uph">Why UPH</a></li>
+      <li><a href="#doctypes">DocTypes</a></li>
+      <li><a href="#reports">Reports</a></li>
+      <li><a href="#usecases">Use Cases</a></li>
+      <li><a href="/docs/introduction/">Docs</a></li>
+    </ul>
+  </nav>
+  
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">
+        ✨ Version 2.7 Now Available
       </div>
       
-      <div class="features-grid">
-        <!-- Feature 1: Tree Hierarchy -->
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-              <path d="M2 17l10 5 10-5"/>
-              <path d="M2 12l10 5 10-5"/>
-            </svg>
-          </div>
-          <h3>Tree Hierarchy</h3>
-          <p>Organize parties in intelligent hierarchical structures with automatic parent-child relationships and cascading updates.</p>
-        </div>
-        
-        <!-- Feature 2: Multi-Role Linking -->
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-            </svg>
-          </div>
-          <h3>Multi-Role Linking</h3>
-          <p>Link customers to suppliers, connect employees to multiple organizations, and manage complex relationship networks.</p>
-        </div>
-        
-        <!-- Feature 3: Multi-Currency Support -->
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M2 12h20"/>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
-          </div>
-          <h3>Multi-Currency Support</h3>
-          <p>Manage party balances and transactions across 150+ currencies with real-time exchange rates and historical tracking.</p>
-        </div>
-        
-        <!-- Feature 4: Analytics & Reporting -->
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 20V10"/>
-              <path d="M12 20V4"/>
-              <path d="M6 20v-6"/>
-            </svg>
-          </div>
-          <h3>Analytics & Reporting</h3>
-          <p>Gain insights with built-in dashboards, financial reports, aging analysis, and customizable KPI widgets.</p>
-        </div>
-        
-        <!-- Feature 5: Data Governance -->
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              <path d="M9 12l2 2 4-4"/>
-            </svg>
-          </div>
-          <h3>Data Governance</h3>
-          <p>Ensure data quality with validation rules, audit trails, compliance reporting, and role-based access controls.</p>
-        </div>
-        
-        <!-- Feature 6: SmartCache Performance -->
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-            </svg>
-          </div>
-          <h3>SmartCache Performance</h3>
-          <p>Experience lightning-fast performance with intelligent caching, background sync, and optimized database queries.</p>
-        </div>
-        
-        <!-- Feature 7: Duplicate Detection -->
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="M21 21l-4.35-4.35"/>
-              <path d="M11 8a3 3 0 0 0 0 6"/>
-            </svg>
-          </div>
-          <h3>Duplicate Detection</h3>
-          <p>Identify and merge duplicate parties using fuzzy matching algorithms, customizable rules, and batch processing.</p>
-        </div>
-        
-        <!-- Feature 8: Multi-Language Support -->
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M2 12h20"/>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-              <path d="M2 12h20" stroke-dasharray="2 2"/>
-            </svg>
-          </div>
-          <h3>Multi-Language Support</h3>
-          <p>Full RTL support for Arabic and 20+ languages with translated interfaces, localized formats, and Unicode compliance.</p>
-        </div>
-      </div>
-    </section>
-    
-    <!-- AI Assistant Section -->
-    <section class="ai-section">
-      <h2>🤖 Need Help?</h2>
-      <p>Ask an AI assistant about this documentation</p>
+      <h1>Unified Party Hub</h1>
+      <p class="hero-tagline">Master Data Management for ERPNext</p>
+      <p class="hero-description">
+        Centralize your customer, supplier, and employee data with intelligent hierarchy management, 
+        multi-currency support, and enterprise-grade governance.
+      </p>
       
-      {{ partial "ai-assistant" . }}
-    </section>
-    
-    <!-- CTA Section -->
-    <section class="cta-section">
-      <div class="cta-content">
-        <h2>Ready to Transform Your Party Data?</h2>
-        <p>Join thousands of organizations using UPH to centralize and govern their master data.</p>
-        <a href="/docs/introduction/installation/" class="cta-btn">
-          <i class="fas fa-download"></i>
-          Install Now
+      <div class="hero-buttons">
+        <a href="/docs/introduction/" class="btn btn-primary">
+          <i class="fas fa-rocket"></i>
+          Get Started
+        </a>
+        <a href="/docs/features/" class="btn btn-outline">
+          <i class="fas fa-book"></i>
+          Documentation
         </a>
       </div>
-    </section>
-    
-    <!-- Footer -->
-    <footer class="landing-footer">
-      <div class="footer-content">
-        <div class="footer-links">
-          <a href="/docs/introduction/"><i class="fas fa-book"></i> Documentation</a>
-          <a href="https://github.com/Sendipad/uph"><i class="fab fa-github"></i> GitHub</a>
-          <a href="https://github.com/Sendipad/uph/issues"><i class="fas fa-bug"></i> Report Issue</a>
-          <a href="https://discuss.erpnext.com"><i class="fas fa-comments"></i> Community</a>
+      
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-number">10K+</div>
+          <div class="stat-label">Organizations</div>
         </div>
-        <p class="footer-copyright">
-          &copy; {{ now.Format "2006" }} Unified Party Hub. Built for ERPNext.
-        </p>
+        <div class="stat-item">
+          <div class="stat-number">50M+</div>
+          <div class="stat-label">Parties Managed</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">99.9%</div>
+          <div class="stat-label">Uptime SLA</div>
+        </div>
       </div>
-    </footer>
-    
-  </div>
+    </div>
+  </section>
   
-  <!-- Smooth scroll script -->
+  <!-- Features Section -->
+  <section class="section" id="features">
+    <div class="section-header">
+      <h2>🚀 Powerful Features</h2>
+      <p>Everything you need to master your party data in ERPNext</p>
+    </div>
+    
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🌳</div>
+        <h3>Tree Hierarchy</h3>
+        <p>Organize parties in intelligent hierarchical structures with automatic parent-child relationships and cascading updates.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <h3>Multi-Role Linking</h3>
+        <p>Link customers to suppliers, connect employees to multiple organizations, and manage complex relationship networks.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">💱</div>
+        <h3>Multi-Currency Support</h3>
+        <p>Manage party balances and transactions across 150+ currencies with real-time exchange rates and hierarchical account mapping.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Analytics & Reporting</h3>
+        <p>Gain insights with built-in dashboards, financial reports, aging analysis, and customizable KPI widgets.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3>Data Governance</h3>
+        <p>Ensure data quality with validation rules, audit trails, compliance reporting, and role-based access controls.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>SmartCache Performance</h3>
+        <p>Experience lightning-fast performance with intelligent caching, background sync, and optimized database queries.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3>Duplicate Detection</h3>
+        <p>Identify and merge duplicate parties using fuzzy matching algorithms, customizable rules, and batch processing.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">🌍</div>
+        <h3>Multi-Language Support</h3>
+        <p>Full RTL support for Arabic and 20+ languages with translated interfaces, localized formats, and Unicode compliance.</p>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Why UPH Section -->
+  <section class="section" id="why-uph">
+    <div class="section-header">
+      <h2>💡 Why UPH?</h2>
+      <p>Standard ERPNext has limitations. UPH solves them.</p>
+    </div>
+    
+    <div class="problems-grid">
+      <div class="problem-card">
+        <div class="problem-icon">⚠️</div>
+        <h3>Fragmented Identity</h3>
+        <p>A single legal entity acting as both Customer and Supplier exists as two disconnected documents.</p>
+      </div>
+      
+      <div class="problem-card warning">
+        <div class="problem-icon">💱</div>
+        <h3>Multi-Currency Complexity</h3>
+        <p>Transacting in multiple currencies often requires duplicate party records.</p>
+      </div>
+      
+      <div class="problem-card info">
+        <div class="problem-icon">📊</div>
+        <h3>Siloed Reporting</h3>
+        <p>Financial reports are segmented by specific Party records, no 360-degree visibility.</p>
+      </div>
+      
+      <div class="problem-card purple">
+        <div class="problem-icon">🔄</div>
+        <h3>Data Redundancy</h3>
+        <p>Address and Contact data must be duplicated across multiple party roles.</p>
+      </div>
+    </div>
+    
+    <div class="solution-box" style="margin-top: 3rem;">
+      <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">UPH Solves These Problems</h3>
+      <p style="color: var(--uph-text-secondary);">By treating the "Party" as a single legal entity and "Roles" as attributes, UPH delivers:</p>
+      
+      <div class="solution-features">
+        <div class="solution-feature">
+          <i class="fas fa-check-circle"></i>
+          <span>True Multi-Currency Support</span>
+        </div>
+        <div class="solution-feature">
+          <i class="fas fa-check-circle"></i>
+          <span>Unified Analytic Accounting</span>
+        </div>
+        <div class="solution-feature">
+          <i class="fas fa-check-circle"></i>
+          <span>360-Degree Visibility</span>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- DocTypes Section -->
+  <section class="section" id="doctypes">
+    <div class="section-header">
+      <h2>📦 Core DocTypes</h2>
+      <p>Powerful data structures for comprehensive party management</p>
+    </div>
+    
+    <div class="doctypes-grid">
+      <div class="doctype-card">
+        <div class="doctype-icon">🎯</div>
+        <div>
+          <h4>Party Master</h4>
+          <p>Central hub with tree-based hierarchy, multi-role support, and consolidated visibility.</p>
+        </div>
+      </div>
+      
+      <div class="doctype-card">
+        <div class="doctype-icon">📊</div>
+        <div>
+          <h4>Party Analytic Accounting</h4>
+          <p>Oracle TCA-like site accounting with multiple dimension types.</p>
+        </div>
+      </div>
+      
+      <div class="doctype-card">
+        <div class="doctype-icon">🔗</div>
+        <div>
+          <h4>Party Master Parties</h4>
+          <p>Junction table linking Party Master to Customers, Suppliers, Employees.</p>
+        </div>
+      </div>
+      
+      <div class="doctype-card">
+        <div class="doctype-icon">⚙️</div>
+        <div>
+          <h4>Party Master Settings</h4>
+          <p>Central configuration for rules, field mapping, and PAA settings.</p>
+        </div>
+      </div>
+      
+      <div class="doctype-card">
+        <div class="doctype-icon">🤝</div>
+        <div>
+          <h4>Party Relationship</h4>
+          <p>Define N-to-N relationships between parties with ownership tracking.</p>
+        </div>
+      </div>
+      
+      <div class="doctype-card">
+        <div class="doctype-icon">📋</div>
+        <div>
+          <h4>Data Quality Dashboard</h4>
+          <p>Real-time governance score, linkage stats, and duplicate detection.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Reports Section -->
+  <section class="section" id="reports">
+    <div class="section-header">
+      <h2>📈 Reports</h2>
+      <p>Comprehensive reporting for financial and operational insights</p>
+    </div>
+    
+    <div class="reports-grid">
+      <div class="report-card">
+        <h4>📊 Party Master Ledger <span>Consolidated</span></h4>
+        <p>Consolidated ledger view across all linked parties with filters by Party Master, party type, company, and date range.</p>
+      </div>
+      
+      <div class="report-card">
+        <h4>💰 Party Account Balances <span>Aging</span></h4>
+        <p>Account balance reporting per party with receivable/payable balances, currency-wise breakdown, and aging analysis.</p>
+      </div>
+      
+      <div class="report-card">
+        <h4>📋 Party Accounting Ledger <span>Detailed</span></h4>
+        <p>Detailed accounting transactions filtered by Party Master and accounting dimension with voucher-wise details.</p>
+      </div>
+      
+      <div class="report-card">
+        <h4>🏥 Party Master Health Report <span>Governance</span></h4>
+        <p>Data quality and governance reporting including linkage status, missing tax IDs, and data completeness metrics.</p>
+      </div>
+      
+      <div class="report-card">
+        <h4>📅 Chronological Party Ledger <span>Time-based</span></h4>
+        <p>Time-based party transaction history with chronological listing and date-wise summaries.</p>
+      </div>
+      
+      <div class="report-card">
+        <h4>📄 Party Account Statement <span>Statement</span></h4>
+        <p>Customer/statement-style reporting in statement format ready for balance confirmation.</p>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Use Cases Section -->
+  <section class="section" id="usecases">
+    <div class="section-header">
+      <h2>🎯 Use Cases</h2>
+      <p>Real-world scenarios where UPH adds value</p>
+    </div>
+    
+    <div class="usecases-grid">
+      <div class="usecase-card">
+        <div class="usecase-icon">🏢</div>
+        <h3>Conglomerates</h3>
+        <p>Manage inter-company transactions where a subsidiary is both a vendor and a client. Consolidate reporting across entities while maintaining individual entity visibility.</p>
+      </div>
+      
+      <div class="usecase-card">
+        <div class="usecase-icon">🌍</div>
+        <h3>Multi-National Trade</h3>
+        <p>Handle single customers paying in multiple currencies without cluttering the Customer master. Automatic GL account resolution per currency.</p>
+      </div>
+      
+      <div class="usecase-card">
+        <div class="usecase-icon">✅</div>
+        <h3>Governance Compliance</h3>
+        <p>Enforce strict Tax ID validation and prevent duplicate customer creation across different sales teams. Real-time governance scoring.</p>
+      </div>
+      
+      <div class="usecase-card">
+        <div class="usecase-icon">🏭</div>
+        <h3>Branch Accounting</h3>
+        <p>Track financial performance by branch/site without creating separate Customer/Supplier records. Oracle TCA-like site accounting.</p>
+      </div>
+    </div>
+  </section>
+  
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <div class="cta-content">
+      <h2>Ready to Transform Your Party Data?</h2>
+      <p>Join thousands of organizations using UPH to centralize and govern their master data.</p>
+      <a href="/docs/introduction/installation/" class="btn">
+        <i class="fas fa-download"></i>
+        Install Now
+      </a>
+    </div>
+  </section>
+  
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="/docs/introduction/"><i class="fas fa-book"></i> Documentation</a>
+      <a href="https://github.com/Sendipad/uph"><i class="fab fa-github"></i> GitHub</a>
+      <a href="https://github.com/Sendipad/uph/issues"><i class="fas fa-bug"></i> Report Issue</a>
+      <a href="https://discuss.erpnext.com"><i class="fas fa-comments"></i> Community</a>
+    </div>
+    <p class="footer-copyright">
+      © 2024 Unified Party Hub. Built for ERPNext.
+    </p>
+  </footer>
+  
+  <!-- Smooth Scroll Script -->
   <script>
-    // Smooth scroll for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function (e) {
         e.preventDefault();
@@ -240,26 +976,6 @@
         }
       });
     });
-    
-    // Intersection Observer for scroll animations
-    const observerOptions = {
-      root: null,
-      rootMargin: '0px',
-      threshold: 0.1
-    };
-    
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.style.animationPlayState = 'running';
-        }
-      });
-    }, observerOptions);
-    
-    document.querySelectorAll('.feature-card').forEach(card => {
-      observer.observe(card);
-    });
   </script>
 </body>
 </html>
-{{ end }}
