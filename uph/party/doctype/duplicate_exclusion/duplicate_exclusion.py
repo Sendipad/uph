@@ -7,6 +7,20 @@ from frappe.model.document import Document
 
 
 class DuplicateExclusion(Document):
+    # begin: auto-generated types
+    # This code is auto-generated. Do not modify anything in this block.
+
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        from frappe.types import DF
+
+        dismissed_by: DF.Link | None
+        dismissed_on: DF.Date | None
+        dismissed_reason: DF.SmallText | None
+        party_1: DF.Link
+        party_2: DF.Link
+    # end: auto-generated types
     """
     Duplicate Exclusion - Tracks party pairs that have been reviewed
     and marked as non-duplicates.

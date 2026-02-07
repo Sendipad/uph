@@ -12,6 +12,7 @@
  "engine": "InnoDB",
  "field_order": [
   "dashboard_tab",
+  "relationships_html",
   "parties",
   "details_tab",
   "section_break_4hqz",
@@ -615,6 +616,13 @@
    "label": "Dashboard"
   },
   {
+   "fieldname": "relationships_html",
+   "fieldtype": "HTML",
+   "ignore_user_permissions": 1,
+   "label": "Relationships",
+   "read_only": 1
+  },
+  {
    "depends_on": "eval:!doc.is_group&&doc.type",
    "fieldname": "section_break_legal_identity",
    "fieldtype": "Section Break",
@@ -686,7 +694,7 @@
  "is_calendar_and_gantt": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2025-11-24 17:26:57.732210",
+ "modified": "2026-02-07 17:28:36.280163",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party Master",

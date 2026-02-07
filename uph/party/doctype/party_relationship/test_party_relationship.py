@@ -70,6 +70,21 @@ class TestPartyRelationship(FrappeTestCase):
     @classmethod
     def _create_test_party_masters(cls):
         """Create test party masters."""
+        # Ensure a root group exists
+        if not frappe.db.exists("Party Master", {"party_name": "Root Group"}):
+            frappe.get_doc(
+                {
+                    "doctype": "Party Master",
+                    "party_name": "Root Group",
+                    "is_group": 1,
+                    "party_type": "Customer",
+                }
+            ).insert(ignore_permissions=True)
+
+        root_group = frappe.db.get_value(
+            "Party Master", {"party_name": "Root Group"}, "name"
+        )
+
         for name in ["_Test Company A", "_Test Company B", "_Test Company C"]:
             if not frappe.db.exists("Party Master", {"party_name": name}):
                 try:
@@ -78,6 +93,7 @@ class TestPartyRelationship(FrappeTestCase):
                             "doctype": "Party Master",
                             "party_name": name,
                             "party_type": "Customer",
+                            "parent_party_master": root_group,
                         }
                     ).insert(ignore_permissions=True)
                 except frappe.ValidationError:
@@ -86,7 +102,19 @@ class TestPartyRelationship(FrappeTestCase):
 
     def tearDown(self):
         """Clean up test relationships after each test."""
-        frappe.db.delete("Party Relationship", {"subject_party": ["like", "_Test%"]})
+        # Find all test parties
+        test_parties = frappe.get_all(
+            "Party Master", filters={"party_name": ["like", "_Test%"]}, pluck="name"
+        )
+        if test_parties:
+            frappe.db.delete(
+                "Party Relationship",
+                {"subject_party": ["in", test_parties]},
+            )
+            frappe.db.delete(
+                "Party Relationship",
+                {"object_party": ["in", test_parties]},
+            )
         frappe.db.commit()
 
     def test_create_relationship(self):
@@ -192,4 +220,127 @@ class TestPartyRelationship(FrappeTestCase):
         self.assertGreaterEqual(len(outgoing), 1)
 
         # Cleanup
-        rel.delete()
+        frappe.db.delete("Party Relationship", {"subject_party": parties[0]})
+        frappe.db.delete("Party Relationship", {"subject_party": parties[1]})
+
+    def test_circular_dependency(self):
+        """Test circular dependency prevention."""
+        # Ensure Relationship Type has prevent_circular = 1
+        if not frappe.db.exists("Party Relationship Type", "Hierarchy Check"):
+            frappe.get_doc(
+                {
+                    "doctype": "Party Relationship Type",
+                    "relationship_type_name": "Hierarchy Check",
+                    "prevent_circular": 1,
+                    "is_enabled": 1,
+                }
+            ).insert(ignore_permissions=True)
+
+        p1 = self._create_party("P1")
+        p2 = self._create_party("P2")
+        p3 = self._create_party("P3")
+
+        # Cleanup potential existing relationships from previous runs
+        frappe.db.delete("Party Relationship", {"subject_party": ["in", [p1, p2, p3]]})
+        frappe.db.delete("Party Relationship", {"object_party": ["in", [p1, p2, p3]]})
+        frappe.db.commit()
+
+        # P1 -> P2
+        frappe.get_doc(
+            {
+                "doctype": "Party Relationship",
+                "subject_party": p1,
+                "relationship_type": "Hierarchy Check",
+                "object_party": p2,
+            }
+        ).insert()
+
+        # P2 -> P3
+        frappe.get_doc(
+            {
+                "doctype": "Party Relationship",
+                "subject_party": p2,
+                "relationship_type": "Hierarchy Check",
+                "object_party": p3,
+            }
+        ).insert()
+
+        # Try P3 -> P1 (Circular)
+        rel = frappe.get_doc(
+            {
+                "doctype": "Party Relationship",
+                "subject_party": p3,
+                "relationship_type": "Hierarchy Check",
+                "object_party": p1,
+            }
+        )
+        self.assertRaises(frappe.ValidationError, rel.insert)
+
+    def test_symmetric_relationship(self):
+        """Test symmetric relationship creation."""
+        if not frappe.db.exists("Party Relationship Type", "Peer"):
+            frappe.get_doc(
+                {
+                    "doctype": "Party Relationship Type",
+                    "relationship_type_name": "Peer",
+                    "is_symmetric": 1,
+                    "is_enabled": 1,
+                }
+            ).insert(ignore_permissions=True)
+
+        p1 = self._create_party("S1")
+        p2 = self._create_party("S2")
+
+        # Create P1 -> P2
+        rel = frappe.get_doc(
+            {
+                "doctype": "Party Relationship",
+                "subject_party": p1,
+                "relationship_type": "Peer",
+                "object_party": p2,
+                "is_guarantor": 1,
+            }
+        ).insert()
+
+        # Check if P2 -> P1 exists
+        reverse = frappe.db.get_value(
+            "Party Relationship",
+            {"subject_party": p2, "relationship_type": "Peer", "object_party": p1},
+            ["name", "is_guarantor"],
+            as_dict=1,
+        )
+
+        self.assertTrue(reverse)
+        self.assertEqual(reverse.is_guarantor, 1)
+
+    def _create_party(self, name):
+        # Ensure a root group exists
+        if not frappe.db.exists("Party Master", {"party_name": "Root Group"}):
+            frappe.get_doc(
+                {
+                    "doctype": "Party Master",
+                    "party_name": "Root Group",
+                    "is_group": 1,
+                    "party_type": "Customer",
+                }
+            ).insert(ignore_permissions=True)
+
+        root_group = frappe.db.get_value(
+            "Party Master", {"party_name": "Root Group"}, "name"
+        )
+
+        pname = f"_Test_Party_{name}"
+        if not frappe.db.exists("Party Master", {"party_name": pname}):
+            return (
+                frappe.get_doc(
+                    {
+                        "doctype": "Party Master",
+                        "party_name": pname,
+                        "party_type": "Customer",
+                        "parent_party_master": root_group,
+                    }
+                )
+                .insert(ignore_permissions=True)
+                .name
+            )
+        return frappe.get_value("Party Master", {"party_name": pname}, "name")

@@ -7,6 +7,29 @@ from frappe.model.document import Document
 
 
 class PartyRelationship(Document):
+    # begin: auto-generated types
+    # This code is auto-generated. Do not modify anything in this block.
+
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        from frappe.types import DF
+
+        authority_ref: DF.Data | None
+        consolidate_financials: DF.Check
+        credit_allocation: DF.Currency
+        end_date: DF.Date | None
+        is_guarantor: DF.Check
+        is_primary: DF.Check
+        notes: DF.SmallText | None
+        object_party: DF.Link
+        ownership_percentage: DF.Percent
+        relationship_type: DF.Link
+        start_date: DF.Date | None
+        status: DF.Literal["Active", "Inactive", "Terminated"]
+        subject_party: DF.Link
+        termination_reason: DF.Data | None
+    # end: auto-generated types
     """
     Party Relationship - Manages N-to-N relationships between Party Masters.
 
@@ -26,6 +49,7 @@ class PartyRelationship(Document):
         self._validate_date_range()
         self._validate_unique_relationship()
         self._validate_ownership_percentage()
+        self._validate_circular_dependency()
 
     def after_insert(self):
         self._create_reverse_relationship()
@@ -84,10 +108,55 @@ class PartyRelationship(Document):
                     title=_("Invalid Percentage"),
                 )
 
+    def _validate_circular_dependency(self):
+        """
+        Check for circular dependencies if the relationship type requires it.
+        Uses BFS to traverse the relationship graph.
+        """
+        rel_type = frappe.get_cached_doc(
+            "Party Relationship Type", self.relationship_type
+        )
+        if not rel_type.prevent_circular:
+            return
+
+        # We are proposing A -> B. Check if B leads back to A.
+        seen = set()
+        queue = [self.object_party]
+
+        while queue:
+            current = queue.pop(0)
+            if current == self.subject_party:
+                frappe.throw(
+                    _(
+                        "Circular dependency detected: {0} is already related to {1} via {2}."
+                    ).format(
+                        frappe.bold(self.subject_party),
+                        frappe.bold(self.object_party),
+                        frappe.bold(self.relationship_type),
+                    ),
+                    title=_("Circular Relationship"),
+                )
+
+            if current in seen:
+                continue
+            seen.add(current)
+
+            # Find all parties that 'current' relates to with the same type
+            # i.e. current -> next
+            next_parties = frappe.get_all(
+                "Party Relationship",
+                filters={
+                    "subject_party": current,
+                    "relationship_type": self.relationship_type,
+                    "status": "Active",
+                },
+                pluck="object_party",
+            )
+            queue.extend(next_parties)
+
     def _create_reverse_relationship(self):
         """
-        Auto-create reverse relationship if the relationship type has one defined.
-        For example: If A is 'Parent Company' of B, create B is 'Subsidiary' of A.
+        Auto-create reverse relationship if one is defined or if symmetric.
         """
         if frappe.flags.in_reverse_relationship_creation:
             return
@@ -95,7 +164,14 @@ class PartyRelationship(Document):
         rel_type = frappe.get_cached_doc(
             "Party Relationship Type", self.relationship_type
         )
-        if not rel_type.reverse_relationship_type:
+
+        target_type = None
+        if rel_type.is_symmetric:
+            target_type = self.relationship_type
+        elif rel_type.reverse_relationship_type:
+            target_type = rel_type.reverse_relationship_type
+
+        if not target_type:
             return
 
         # Check if reverse already exists
@@ -103,7 +179,7 @@ class PartyRelationship(Document):
             "Party Relationship",
             {
                 "subject_party": self.object_party,
-                "relationship_type": rel_type.reverse_relationship_type,
+                "relationship_type": target_type,
                 "object_party": self.subject_party,
                 "status": ["!=", "Terminated"],
             },
@@ -113,22 +189,26 @@ class PartyRelationship(Document):
 
         try:
             frappe.flags.in_reverse_relationship_creation = True
-            reverse_rel = frappe.get_doc(
+            new_doc = frappe.new_doc("Party Relationship")
+            new_doc.update(
                 {
-                    "doctype": "Party Relationship",
                     "subject_party": self.object_party,
-                    "relationship_type": rel_type.reverse_relationship_type,
+                    "relationship_type": target_type,
                     "object_party": self.subject_party,
                     "status": self.status,
                     "start_date": self.start_date,
                     "end_date": self.end_date,
                     "ownership_percentage": self.ownership_percentage,
-                    "notes": _("Auto-created reverse relationship from {0}").format(
+                    "notes": _("Auto-created reciprocal relationship from {0}").format(
                         self.name
+                    ),
+                    "is_guarantor": self.is_guarantor if rel_type.is_symmetric else 0,
+                    "consolidate_financials": (
+                        self.consolidate_financials if rel_type.is_symmetric else 0
                     ),
                 }
             )
-            reverse_rel.insert(ignore_permissions=True)
+            new_doc.insert(ignore_permissions=True)
         finally:
             frappe.flags.in_reverse_relationship_creation = False
 
@@ -140,14 +220,21 @@ class PartyRelationship(Document):
         rel_type = frappe.get_cached_doc(
             "Party Relationship Type", self.relationship_type
         )
-        if not rel_type.reverse_relationship_type:
+
+        target_type = None
+        if rel_type.is_symmetric:
+            target_type = self.relationship_type
+        elif rel_type.reverse_relationship_type:
+            target_type = rel_type.reverse_relationship_type
+
+        if not target_type:
             return
 
         reverse_name = frappe.db.get_value(
             "Party Relationship",
             {
                 "subject_party": self.object_party,
-                "relationship_type": rel_type.reverse_relationship_type,
+                "relationship_type": target_type,
                 "object_party": self.subject_party,
             },
         )

@@ -1,146 +1,220 @@
 {
-    "actions": [],
-    "autoname": "format:{subject_party}-{relationship_type}-{object_party}",
-    "creation": "2026-02-05 17:40:00.000000",
-    "doctype": "DocType",
-    "engine": "InnoDB",
-    "field_order": [
-        "section_parties",
-        "subject_party",
-        "relationship_type",
-        "object_party",
-        "column_break_1",
-        "status",
-        "start_date",
-        "end_date",
-        "section_details",
-        "ownership_percentage",
-        "column_break_2",
-        "notes"
-    ],
-    "fields": [
-        {
-            "fieldname": "section_parties",
-            "fieldtype": "Section Break",
-            "label": "Relationship"
-        },
-        {
-            "fieldname": "subject_party",
-            "fieldtype": "Link",
-            "in_list_view": 1,
-            "in_standard_filter": 1,
-            "label": "Subject Party",
-            "options": "Party Master",
-            "reqd": 1
-        },
-        {
-            "fieldname": "relationship_type",
-            "fieldtype": "Link",
-            "in_list_view": 1,
-            "in_standard_filter": 1,
-            "label": "Relationship Type",
-            "options": "Party Relationship Type",
-            "reqd": 1
-        },
-        {
-            "fieldname": "object_party",
-            "fieldtype": "Link",
-            "in_list_view": 1,
-            "in_standard_filter": 1,
-            "label": "Object Party",
-            "options": "Party Master",
-            "reqd": 1
-        },
-        {
-            "fieldname": "column_break_1",
-            "fieldtype": "Column Break"
-        },
-        {
-            "default": "Active",
-            "fieldname": "status",
-            "fieldtype": "Select",
-            "in_list_view": 1,
-            "in_standard_filter": 1,
-            "label": "Status",
-            "options": "Active\nInactive\nTerminated"
-        },
-        {
-            "fieldname": "start_date",
-            "fieldtype": "Date",
-            "label": "Start Date"
-        },
-        {
-            "fieldname": "end_date",
-            "fieldtype": "Date",
-            "label": "End Date"
-        },
-        {
-            "fieldname": "section_details",
-            "fieldtype": "Section Break",
-            "label": "Details"
-        },
-        {
-            "description": "Applicable for ownership/investment relationships",
-            "fieldname": "ownership_percentage",
-            "fieldtype": "Percent",
-            "label": "Ownership Percentage"
-        },
-        {
-            "fieldname": "column_break_2",
-            "fieldtype": "Column Break"
-        },
-        {
-            "fieldname": "notes",
-            "fieldtype": "Small Text",
-            "label": "Notes"
-        }
-    ],
-    "index_web_pages_for_search": 1,
-    "links": [],
-    "modified": "2026-02-05 17:40:00.000000",
-    "modified_by": "Administrator",
-    "module": "Party",
-    "name": "Party Relationship",
-    "naming_rule": "Expression",
-    "owner": "Administrator",
-    "permissions": [
-        {
-            "create": 1,
-            "delete": 1,
-            "email": 1,
-            "export": 1,
-            "print": 1,
-            "read": 1,
-            "report": 1,
-            "role": "System Manager",
-            "share": 1,
-            "write": 1
-        },
-        {
-            "create": 1,
-            "delete": 1,
-            "email": 1,
-            "export": 1,
-            "print": 1,
-            "read": 1,
-            "report": 1,
-            "role": "Accounts Manager",
-            "share": 1,
-            "write": 1
-        },
-        {
-            "create": 1,
-            "email": 1,
-            "export": 1,
-            "print": 1,
-            "read": 1,
-            "report": 1,
-            "role": "All",
-            "write": 1
-        }
-    ],
-    "sort_field": "creation",
-    "sort_order": "DESC",
-    "states": [],
-    "track_changes": 1
+ "actions": [],
+ "autoname": "format:{subject_party}-{relationship_type}-{object_party}",
+ "creation": "2026-02-05 17:40:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_parties",
+  "subject_party",
+  "relationship_type",
+  "object_party",
+  "column_break_1",
+  "status",
+  "start_date",
+  "end_date",
+  "section_details",
+  "ownership_percentage",
+  "column_break_2",
+  "notes",
+  "section_hierarchy",
+  "is_primary",
+  "column_break_hierarchy",
+  "section_financial",
+  "consolidate_financials",
+  "is_guarantor",
+  "column_break_financial",
+  "credit_allocation",
+  "section_governance",
+  "authority_ref",
+  "termination_reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_parties",
+   "fieldtype": "Section Break",
+   "label": "Relationship"
+  },
+  {
+   "fieldname": "subject_party",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Subject Party",
+   "options": "Party Master",
+   "reqd": 1
+  },
+  {
+   "fieldname": "relationship_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Relationship Type",
+   "options": "Party Relationship Type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "object_party",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Object Party",
+   "options": "Party Master",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Active\nInactive\nTerminated"
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "label": "Start Date"
+  },
+  {
+   "fieldname": "end_date",
+   "fieldtype": "Date",
+   "label": "End Date"
+  },
+  {
+   "fieldname": "section_details",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "description": "Applicable for ownership/investment relationships",
+   "fieldname": "ownership_percentage",
+   "fieldtype": "Percent",
+   "label": "Ownership Percentage"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "section_hierarchy",
+   "fieldtype": "Section Break",
+   "label": "Hierarchy Controls"
+  },
+  {
+   "default": "0",
+   "description": "Mark this as the primary parent for consolidated reporting.",
+   "fieldname": "is_primary",
+   "fieldtype": "Check",
+   "label": "Primary Relationship"
+  },
+  {
+   "fieldname": "column_break_hierarchy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_financial",
+   "fieldtype": "Section Break",
+   "label": "Financial & Risk"
+  },
+  {
+   "default": "0",
+   "description": "Include in consolidated financial statements.",
+   "fieldname": "consolidate_financials",
+   "fieldtype": "Check",
+   "label": "Consolidate Financials"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_guarantor",
+   "fieldtype": "Check",
+   "label": "Is Guarantor"
+  },
+  {
+   "fieldname": "column_break_financial",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Allocated credit limit or exposure cap.",
+   "fieldname": "credit_allocation",
+   "fieldtype": "Currency",
+   "label": "Credit Allocation",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "section_governance",
+   "fieldtype": "Section Break",
+   "label": "Governance"
+  },
+  {
+   "depends_on": "eval:doc.status=='Terminated'",
+   "fieldname": "termination_reason",
+   "fieldtype": "Data",
+   "label": "Termination Reason"
+  },
+  {
+   "description": "Reference to contract or resolution.",
+   "fieldname": "authority_ref",
+   "fieldtype": "Data",
+   "label": "Authority Document Ref"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-07 17:27:08.273065",
+ "modified_by": "Administrator",
+ "module": "Party",
+ "name": "Party Relationship",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "All",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
 }

@@ -106,6 +106,7 @@ frappe.ui.form.on("Party Master", {
 		}));
 
 		frm.toggle_display("roles", frm.doc.has_secondary_role_party === 1);
+		render_relationships(frm);
 	},
 
 });
@@ -408,4 +409,82 @@ function set_party_master_dashboard_indicators(frm) {
 			});
 		}
 	}
+}
+
+function render_relationships(frm) {
+    if (frm.is_new()) return;
+
+    frappe.call({
+        method: "uph.party.doctype.party_relationship.party_relationship.get_party_relationships",
+        args: {
+            party_master: frm.doc.name
+        },
+        callback: function(r) {
+            if (!r.message || r.message.length === 0) {
+                frm.fields_dict.relationships_html.$wrapper.html(
+                    '<div class="text-muted">' + __("No relationships found") + '</div>'
+                );
+                return;
+            }
+
+            let relationships = r.message;
+            let html = `
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th>${__("Relationship")}</th>
+                            <th>${__("Related Party")}</th>
+                            <th>${__("Status")}</th>
+                            <th>${__("Ownership %")}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            relationships.forEach(rel => {
+                let related_party = rel.subject_party === frm.doc.name ? rel.object_party : rel.subject_party;
+                let direction = rel.subject_party === frm.doc.name ? __("Is") : __("Has"); 
+                // e.g. Subject(Me) IS Parent of Object. OR Subject(Parent) HAS Subsidiary(Me).
+                // Actually, the relationship type name handles this better usually.
+                // But let's just show raw type and related party.
+                
+                let rel_label = rel.relationship_type;
+                if (rel.subject_party === frm.doc.name) {
+                     rel_label = `${rel_label} ->`;
+                } else {
+                     rel_label = `<- ${rel_label}`;
+                }
+
+                html += `
+                    <tr>
+                        <td>
+                            <a href="/app/party-relationship/${rel.name}" data-doctype="Party Relationship" data-name="${rel.name}">
+                                ${rel_label}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="/app/party-master/${related_party}" data-doctype="Party Master" data-name="${related_party}">
+                                ${related_party}
+                            </a>
+                        </td>
+                        <td>${rel.status}</td>
+                        <td>${rel.ownership_percentage ? rel.ownership_percentage + '%' : '-'}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            
+            // Add a button to create new relationship
+            html += `
+                <div class="mt-2">
+                    <button class="btn btn-sm btn-default" onclick="frappe.new_doc('Party Relationship', {subject_party: '${frm.doc.name}'})">
+                        ${__("Add Relationship")}
+                    </button>
+                </div>
+            `;
+
+            frm.fields_dict.relationships_html.$wrapper.html(html);
+        }
+    });
 }
