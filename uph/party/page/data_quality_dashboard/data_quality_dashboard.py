@@ -5,7 +5,8 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime
 
-from uph.party.controllers.normalization import NormalizationUtils
+from rapidfuzz import fuzz, process
+
 from uph.party.doctype.duplicate_exclusion.duplicate_exclusion import is_excluded_pair
 
 
@@ -13,6 +14,9 @@ from uph.party.doctype.duplicate_exclusion.duplicate_exclusion import is_exclude
 def get_potential_duplicates(limit: int = 50, offset: int = 0, min_score: float = 70.0):
     """
     Get potential duplicate Party Masters based on similarity scoring.
+
+    Uses optimized batch processing with rapidfuzz for performance.
+    Leverages pre-computed normalized_party_name from Party Master.
 
     Args:
         limit: Maximum number of pairs to return
@@ -22,64 +26,121 @@ def get_potential_duplicates(limit: int = 50, offset: int = 0, min_score: float 
     Returns:
         List of potential duplicate pairs with similarity scores
     """
-    # Get all party masters with party_name
+    limit = int(limit)
+    offset = int(offset)
+    min_score = float(min_score)
+
+    # Get all party masters with pre-computed normalized_party_name
     parties = frappe.get_all(
         "Party Master",
-        filters={"is_group": 0},  # Only leaf nodes
-        fields=["name", "party_name", "party_type", "party_number"],
+        filters={"is_group": 0},
+        fields=[
+            "name",
+            "party_name",
+            "party_type",
+            "party_number",
+            "normalized_party_name",
+        ],
         order_by="party_name",
     )
 
-    if not parties:
+    if not parties or len(parties) < 2:
         return {"duplicates": [], "total": 0}
 
-    # Build normalized name cache
-    name_cache = {}
-    for p in parties:
-        name_cache[p.name] = {
-            "original": p,
-            "normalized": NormalizationUtils.normalize(p.party_name or ""),
-        }
+    # Build lookup dictionaries for fast access
+    party_by_name = {p.name: p for p in parties}
 
-    # Find potential duplicates
+    # Get normalized names (use pre-computed or compute on-the-fly)
+    normalized_names = {}
+    for p in parties:
+        norm_name = p.normalized_party_name or ""
+        if not norm_name and p.party_name:
+            # Fallback: compute normalization if not stored
+            from uph.party.controllers.normalization import NormalizationUtils
+
+            norm_name = NormalizationUtils.normalize_party_name(p.party_name)
+        normalized_names[p.name] = norm_name
+
+    # Filter out parties without normalized names
+    valid_parties = [
+        (p.name, normalized_names[p.name])
+        for p in parties
+        if normalized_names.get(p.name)
+    ]
+
+    if len(valid_parties) < 2:
+        return {"duplicates": [], "total": 0}
+
+    # Pre-load all excluded pairs into a set for O(1) lookup
+    excluded_pairs = _get_excluded_pairs_set()
+
+    # Use blocking strategy: group by first 2 characters for dramatic speedup
+    # Only compare parties within the same block or similar blocks
     duplicates = []
     seen_pairs = set()
 
-    party_list = list(name_cache.keys())
+    # Build blocks based on first 2 chars of normalized name
+    blocks = {}
+    for party_name, norm_name in valid_parties:
+        if len(norm_name) >= 2:
+            block_key = norm_name[:2]
+        else:
+            block_key = norm_name or "_"
+        blocks.setdefault(block_key, []).append((party_name, norm_name))
 
-    for i, p1_name in enumerate(party_list):
-        p1_data = name_cache[p1_name]
-        if not p1_data["normalized"]:
+    # Process each block - compare within blocks
+    for block_key, block_parties in blocks.items():
+        if len(block_parties) < 2:
             continue
 
-        for p2_name in party_list[i + 1 :]:
-            p2_data = name_cache[p2_name]
-            if not p2_data["normalized"]:
+        # Extract names for rapidfuzz batch processing
+        names_list = [norm for _, norm in block_parties]
+        party_names_list = [pname for pname, _ in block_parties]
+
+        # Use rapidfuzz.process.cdist for efficient pairwise comparison
+        # This is O(n*m) but highly optimized in C
+        for i, (p1_name, p1_norm) in enumerate(block_parties):
+            # Compare with remaining parties in the block
+            remaining = [(pname, norm) for pname, norm in block_parties[i + 1 :]]
+            if not remaining:
                 continue
 
-            # Skip if already checked or excluded
-            pair_key = tuple(sorted([p1_name, p2_name]))
-            if pair_key in seen_pairs:
-                continue
-            seen_pairs.add(pair_key)
+            remaining_names = [norm for _, norm in remaining]
+            remaining_party_names = [pname for pname, _ in remaining]
 
-            # Check if excluded
-            if is_excluded_pair(p1_name, p2_name):
-                continue
-
-            # Calculate similarity
-            score = NormalizationUtils.get_similarity_score(
-                p1_data["normalized"], p2_data["normalized"]
+            # Batch extract matches above threshold
+            matches = process.extract(
+                p1_norm,
+                remaining_names,
+                scorer=fuzz.ratio,
+                score_cutoff=min_score,
+                limit=None,  # Return all matches above threshold
             )
 
-            if score >= min_score:
+            for match_norm, score, match_idx in matches:
+                p2_name = remaining_party_names[match_idx]
+
+                # Create canonical pair key for deduplication
+                pair_key = tuple(sorted([p1_name, p2_name]))
+
+                if pair_key in seen_pairs:
+                    continue
+                seen_pairs.add(pair_key)
+
+                # Check exclusion using set lookup O(1)
+                if pair_key in excluded_pairs:
+                    continue
+
+                p1 = party_by_name[p1_name]
+                p2 = party_by_name[p2_name]
+
                 duplicates.append(
                     {
-                        "party_1": p1_data["original"],
-                        "party_2": p2_data["original"],
+                        "party_1": p1,
+                        "party_2": p2,
                         "similarity_score": round(score, 1),
-                        "normalized_name_1": p1_data["normalized"],
-                        "normalized_name_2": p2_data["normalized"],
+                        "normalized_name_1": p1_norm,
+                        "normalized_name_2": normalized_names[p2_name],
                     }
                 )
 
@@ -92,6 +153,16 @@ def get_potential_duplicates(limit: int = 50, offset: int = 0, min_score: float 
     paginated = duplicates[offset : offset + limit]
 
     return {"duplicates": paginated, "total": total, "limit": limit, "offset": offset}
+
+
+def _get_excluded_pairs_set():
+    """Load all excluded pairs into a set for O(1) lookup."""
+    exclusions = frappe.get_all("Duplicate Exclusion", fields=["party_1", "party_2"])
+    excluded_set = set()
+    for exc in exclusions:
+        pair_key = tuple(sorted([exc.party_1, exc.party_2]))
+        excluded_set.add(pair_key)
+    return excluded_set
 
 
 @frappe.whitelist()

@@ -24,7 +24,8 @@ def execute(filters=None):
         frappe.throw(_("Party Master and Company are Mandatory"))
     filters = frappe._dict(filters)
     if not filters.party_master:
-        frappe.throw(_("Party Master is Mandatory"))
+        filters.party_master = None
+
     parties = get_party_master_parties_db(filters.party_master)
     if not parties:
         return (

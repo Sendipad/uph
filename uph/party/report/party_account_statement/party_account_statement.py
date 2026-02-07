@@ -22,7 +22,11 @@ from uph.party.controllers.queries import get_counts_of_unposted_or_cancelled_vo
 def execute(filters=None):
     filters = frappe._dict(filters or {})
     validate_set_filters(filters)
-    party_master = get_leaf_party_master_list_from_any_node(filters)
+
+    party_master = None
+    if filters.get("party_master"):
+        party_master = get_leaf_party_master_list_from_any_node(filters)
+
     columns = get_columns(filters)
     data = get_data(filters, party_master)
     chart = get_timeline_chart_by_currency(data, from_date=filters.get("from_date"))

@@ -39,13 +39,22 @@ def get_data(
         labels.append(_(pt))
 
         # Calculate Linked vs Unlinked
+        # Check if tax_id field exists
+        has_tax_id = frappe.get_meta(pt).has_field("tax_id")
+        tax_id_query = (
+            "COUNT(CASE WHEN tax_id IS NOT NULL AND tax_id != '' THEN 1 END)"
+            if has_tax_id
+            else "0"
+        )
+
+        # Calculate Linked vs Unlinked
         stats = frappe.db.sql(
             f"""
             SELECT 
                 COUNT(*) as total,
                 COUNT(CASE WHEN party_master IS NOT NULL THEN 1 END) as linked,
                 COUNT(CASE WHEN party_master IS NULL THEN 1 END) as unlinked,
-                COUNT(CASE WHEN tax_id IS NOT NULL AND tax_id != '' THEN 1 END) as with_tax_id
+                {tax_id_query} as with_tax_id
             FROM `tab{pt}`
             WHERE docstatus < 2
             """,
