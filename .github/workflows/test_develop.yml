@@ -48,10 +48,6 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install Python Build Dependencies
-        run: |
-          python -m pip install --upgrade pip setuptools wheel
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
