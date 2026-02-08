@@ -997,8 +997,7 @@ erpnext.queries.get_filtered_dimensions = function (doc, child_fields, dimension
 const original_get_party_details = erpnext.utils.get_party_details;
 
 erpnext.utils.get_party_details = function (frm, method, args, callback) {
-	if (!args) args = {};
-	if (frm.doc.party_master) {
+	if (args && frm.doc.party_master) {
 		args.party_master = frm.doc.party_master;
 	}
 	return original_get_party_details(frm, method, args, callback);

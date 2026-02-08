@@ -564,6 +564,7 @@ class PartyMaster(NestedSet):
 
 @frappe.whitelist()
 def get_party_master_balances(company, name=None):
+    _ensure_party_balance_permission(company)
     from collections import defaultdict
     from frappe.query_builder import DocType, functions as fn
 
@@ -692,6 +693,23 @@ def get_party_master_balances(company, name=None):
     frappe.cache.set_value(cache_key, result, expires_in_sec=300)
 
     return result
+
+
+def _ensure_party_balance_permission(company=None):
+    if not frappe.has_permission("Party Master", "read"):
+        frappe.throw(_("Not permitted to read Party Master"), frappe.PermissionError)
+    if not frappe.has_permission("GL Entry", "read"):
+        frappe.throw(_("Not permitted to read GL Entry"), frappe.PermissionError)
+    if company and not frappe.has_permission("Company", "read", doc=company):
+        frappe.throw(
+            _("Not permitted to read Company {0}").format(company),
+            frappe.PermissionError,
+        )
+    if not frappe.get_single_value("Accounts Settings", "show_party_balance"):
+        frappe.throw(
+            _("Party balance visibility is disabled in Accounts Settings"),
+            frappe.PermissionError,
+        )
 
 
 @frappe.whitelist()
@@ -900,6 +918,8 @@ def check_similar_party_name(party_name, doctype="Party Master", start=0, page_l
 @frappe.whitelist()
 def create_party_master(doc):
     """Create new Party Master with validation"""
+    if not frappe.has_permission("Party Master", "create"):
+        frappe.throw(_("Not permitted to create Party Master"), frappe.PermissionError)
     doc = frappe._dict(doc)
 
     party = frappe.new_doc("Party Master")
@@ -908,7 +928,7 @@ def create_party_master(doc):
     if frappe.db.exists("Party Master", {"party_name": party.party_name}):
         frappe.throw(_("Party with this name already exists"))
 
-    party.insert(ignore_permissions=True)
+    party.insert()
     return party.name
 
 

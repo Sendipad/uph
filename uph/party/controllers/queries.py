@@ -597,6 +597,11 @@ def get_unlinked_party(filters, limit=None):
 
     results = []
     for pt in party_type:
+        if not frappe.has_permission(pt, "read"):
+            frappe.throw(
+                _("Not permitted to read {0}").format(pt),
+                frappe.PermissionError,
+            )
         data = frappe.get_all(
             pt, filters={"party_master": ["is", "not set"]}, limit=limit or 20
         )

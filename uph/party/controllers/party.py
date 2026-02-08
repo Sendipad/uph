@@ -404,6 +404,10 @@ def _update_party_master_field_on_exists_transactional_document_types(
         conditions &= Coalesce(doc.party_master, "") == ""
         conditions &= Coalesce(doc.party_master, "") != (party_master or "")
 
+    # Avoid touching cancelled documents for audit integrity
+    if frappe.db.has_column(doctype, "docstatus"):
+        conditions &= doc.docstatus < 2
+
     if party_type_fieldname:
         conditions &= doc[party_type_fieldname] == party_type
 

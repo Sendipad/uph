@@ -7,11 +7,10 @@ from frappe.utils import now_datetime
 
 from rapidfuzz import fuzz, process
 
-from uph.party.doctype.duplicate_exclusion.duplicate_exclusion import is_excluded_pair
-
-
 @frappe.whitelist()
-def get_potential_duplicates(limit: int = 50, offset: int = 0, min_score: float = 70.0):
+def get_potential_duplicates(
+    limit: int = 50, offset: int = 0, min_score: float = 70.0
+):
     """
     Get potential duplicate Party Masters based on similarity scoring.
 
@@ -26,14 +25,140 @@ def get_potential_duplicates(limit: int = 50, offset: int = 0, min_score: float 
     Returns:
         List of potential duplicate pairs with similarity scores
     """
+    if not frappe.has_permission("Party Master", "read"):
+        frappe.throw(_("Not permitted to read Party Master"), frappe.PermissionError)
+
     limit = int(limit)
     offset = int(offset)
     min_score = float(min_score)
+    target_size = max(0, offset + limit)
 
-    # Get all party masters with pre-computed normalized_party_name
+    # Pre-load all excluded pairs into a set for O(1) lookup
+    excluded_pairs = _get_excluded_pairs_set()
+    seen_pairs = set()
+
+    # Use blocking strategy: group by first 2 characters for speed
+    block_len = 2
+    chunk_size = 250  # process.cdist chunk size to cap memory
+
+    # Handle missing normalized names in a small side batch
+    missing_by_prefix = _get_missing_normalized_parties(block_len)
+
+    prefixes = _get_normalized_prefixes(block_len)
+    if not prefixes and not missing_by_prefix:
+        return {"duplicates": [], "total": 0, "limit": limit, "offset": offset}
+
+    # Keep only top-N by score to reduce memory pressure
+    import heapq
+    import itertools
+
+    top_matches = []
+    total_matches = 0
+    counter = itertools.count()
+
+    def consider_match(data, score):
+        nonlocal total_matches
+        total_matches += 1
+        if target_size <= 0:
+            return
+        item = (score, next(counter), data)
+        if len(top_matches) < target_size:
+            heapq.heappush(top_matches, item)
+        elif score > top_matches[0][0]:
+            heapq.heapreplace(top_matches, item)
+
+    for prefix in prefixes:
+        block_parties = _get_parties_by_prefix(prefix, block_len)
+        if prefix in missing_by_prefix:
+            block_parties.extend(missing_by_prefix.pop(prefix))
+
+        _process_duplicate_block(
+            block_parties,
+            min_score,
+            chunk_size,
+            excluded_pairs,
+            seen_pairs,
+            consider_match,
+        )
+
+    # Process any remaining missing prefixes not present in stored prefixes
+    for leftover in missing_by_prefix.values():
+        _process_duplicate_block(
+            leftover,
+            min_score,
+            chunk_size,
+            excluded_pairs,
+            seen_pairs,
+            consider_match,
+        )
+
+    # Sort by score descending and paginate
+    top_matches.sort(key=lambda x: x[0], reverse=True)
+    duplicates = [d for _, __, d in top_matches]
+    paginated = duplicates[offset : offset + limit]
+
+    return {
+        "duplicates": paginated,
+        "total": total_matches,
+        "limit": limit,
+        "offset": offset,
+    }
+
+
+def _get_normalized_prefixes(block_len: int) -> list[str]:
+    """Get distinct normalized name prefixes directly from the DB."""
+    rows = frappe.db.sql(
+        """
+        SELECT DISTINCT SUBSTRING(normalized_party_name, 1, %s) AS prefix
+        FROM `tabParty Master`
+        WHERE is_group = 0
+          AND normalized_party_name IS NOT NULL
+          AND normalized_party_name != ''
+        ORDER BY prefix
+        """,
+        (block_len,),
+        as_dict=True,
+    )
+    return [r.prefix for r in rows if r.prefix]
+
+
+def _get_missing_normalized_parties(block_len: int) -> dict:
+    """Compute normalized names for parties missing precomputed value."""
+    from uph.party.controllers.normalization import NormalizationUtils
+
+    missing = frappe.get_all(
+        "Party Master",
+        filters={"is_group": 0, "normalized_party_name": ["is", "not set"]},
+        fields=["name", "party_name", "party_type", "party_number"],
+        order_by="party_name",
+    )
+
+    grouped = {}
+    for p in missing or []:
+        norm_name = NormalizationUtils.normalize_party_name(p.party_name or "")
+        if not norm_name:
+            continue
+        prefix = norm_name[:block_len] if len(norm_name) >= block_len else norm_name
+        grouped.setdefault(prefix or "_", []).append(
+            {
+                "name": p.name,
+                "party_name": p.party_name,
+                "party_type": p.party_type,
+                "party_number": p.party_number,
+                "normalized_name": norm_name,
+            }
+        )
+    return grouped
+
+
+def _get_parties_by_prefix(prefix: str, block_len: int) -> list[dict]:
+    """Fetch parties by normalized name prefix and prepare block entries."""
     parties = frappe.get_all(
         "Party Master",
-        filters={"is_group": 0},
+        filters={
+            "is_group": 0,
+            "normalized_party_name": ["like", f"{prefix}%"],
+        },
         fields=[
             "name",
             "party_name",
@@ -41,118 +166,90 @@ def get_potential_duplicates(limit: int = 50, offset: int = 0, min_score: float 
             "party_number",
             "normalized_party_name",
         ],
-        order_by="party_name",
+        order_by="normalized_party_name",
     )
 
-    if not parties or len(parties) < 2:
-        return {"duplicates": [], "total": 0}
+    result = []
+    for p in parties or []:
+        result.append(
+            {
+                "name": p.name,
+                "party_name": p.party_name,
+                "party_type": p.party_type,
+                "party_number": p.party_number,
+                "normalized_name": p.normalized_party_name or "",
+            }
+        )
+    return result
 
-    # Build lookup dictionaries for fast access
-    party_by_name = {p.name: p for p in parties}
 
-    # Get normalized names (use pre-computed or compute on-the-fly)
-    normalized_names = {}
-    for p in parties:
-        norm_name = p.normalized_party_name or ""
-        if not norm_name and p.party_name:
-            # Fallback: compute normalization if not stored
-            from uph.party.controllers.normalization import NormalizationUtils
+def _process_duplicate_block(
+    block_parties: list[dict],
+    min_score: float,
+    chunk_size: int,
+    excluded_pairs: set,
+    seen_pairs: set,
+    consider_match,
+):
+    if not block_parties or len(block_parties) < 2:
+        return
 
-            norm_name = NormalizationUtils.normalize_party_name(p.party_name)
-        normalized_names[p.name] = norm_name
+    names = [p.get("normalized_name") or "" for p in block_parties]
+    if not any(names):
+        return
 
-    # Filter out parties without normalized names
-    valid_parties = [
-        (p.name, normalized_names[p.name])
-        for p in parties
-        if normalized_names.get(p.name)
-    ]
-
-    if len(valid_parties) < 2:
-        return {"duplicates": [], "total": 0}
-
-    # Pre-load all excluded pairs into a set for O(1) lookup
-    excluded_pairs = _get_excluded_pairs_set()
-
-    # Use blocking strategy: group by first 2 characters for dramatic speedup
-    # Only compare parties within the same block or similar blocks
-    duplicates = []
-    seen_pairs = set()
-
-    # Build blocks based on first 2 chars of normalized name
-    blocks = {}
-    for party_name, norm_name in valid_parties:
-        if len(norm_name) >= 2:
-            block_key = norm_name[:2]
-        else:
-            block_key = norm_name or "_"
-        blocks.setdefault(block_key, []).append((party_name, norm_name))
-
-    # Process each block - compare within blocks
-    for block_key, block_parties in blocks.items():
-        if len(block_parties) < 2:
+    for i in range(len(block_parties) - 1):
+        p1 = block_parties[i]
+        p1_norm = names[i]
+        if not p1_norm:
             continue
 
-        # Extract names for rapidfuzz batch processing
-        names_list = [norm for _, norm in block_parties]
-        party_names_list = [pname for pname, _ in block_parties]
-
-        # Use rapidfuzz.process.cdist for efficient pairwise comparison
-        # This is O(n*m) but highly optimized in C
-        for i, (p1_name, p1_norm) in enumerate(block_parties):
-            # Compare with remaining parties in the block
-            remaining = [(pname, norm) for pname, norm in block_parties[i + 1 :]]
-            if not remaining:
-                continue
-
-            remaining_names = [norm for _, norm in remaining]
-            remaining_party_names = [pname for pname, _ in remaining]
-
-            # Batch extract matches above threshold
-            matches = process.extract(
-                p1_norm,
-                remaining_names,
+        start = i + 1
+        while start < len(block_parties):
+            chunk_names = names[start : start + chunk_size]
+            scores = process.cdist(
+                [p1_norm],
+                chunk_names,
                 scorer=fuzz.ratio,
                 score_cutoff=min_score,
-                limit=None,  # Return all matches above threshold
             )
+            if scores is None:
+                start += chunk_size
+                continue
+            if hasattr(scores, "size") and scores.size == 0:
+                start += chunk_size
+                continue
 
-            for match_norm, score, match_idx in matches:
-                p2_name = remaining_party_names[match_idx]
-
-                # Create canonical pair key for deduplication
-                pair_key = tuple(sorted([p1_name, p2_name]))
-
-                if pair_key in seen_pairs:
+            row = scores[0]
+            for j, score in enumerate(row):
+                if score < min_score:
+                    continue
+                p2 = block_parties[start + j]
+                pair_key = tuple(sorted([p1["name"], p2["name"]]))
+                if pair_key in seen_pairs or pair_key in excluded_pairs:
                     continue
                 seen_pairs.add(pair_key)
-
-                # Check exclusion using set lookup O(1)
-                if pair_key in excluded_pairs:
-                    continue
-
-                p1 = party_by_name[p1_name]
-                p2 = party_by_name[p2_name]
-
-                duplicates.append(
+                consider_match(
                     {
-                        "party_1": p1,
-                        "party_2": p2,
-                        "similarity_score": round(score, 1),
+                        "party_1": {
+                            "name": p1["name"],
+                            "party_name": p1.get("party_name"),
+                            "party_type": p1.get("party_type"),
+                            "party_number": p1.get("party_number"),
+                        },
+                        "party_2": {
+                            "name": p2["name"],
+                            "party_name": p2.get("party_name"),
+                            "party_type": p2.get("party_type"),
+                            "party_number": p2.get("party_number"),
+                        },
+                        "similarity_score": round(float(score), 1),
                         "normalized_name_1": p1_norm,
-                        "normalized_name_2": normalized_names[p2_name],
-                    }
+                        "normalized_name_2": p2.get("normalized_name") or "",
+                    },
+                    float(score),
                 )
-
-    # Sort by score descending
-    duplicates.sort(key=lambda x: x["similarity_score"], reverse=True)
-
-    total = len(duplicates)
-
-    # Apply pagination
-    paginated = duplicates[offset : offset + limit]
-
-    return {"duplicates": paginated, "total": total, "limit": limit, "offset": offset}
+            start += chunk_size
 
 
 def _get_excluded_pairs_set():
@@ -167,7 +264,10 @@ def _get_excluded_pairs_set():
 
 @frappe.whitelist()
 def merge_parties(
-    primary_party: str, secondary_party: str, fields_to_keep: dict = None
+    primary_party: str,
+    secondary_party: str,
+    fields_to_keep: dict = None,
+    ignore_validation: bool = False,
 ):
     """
     Merge secondary Party Master into primary Party Master.
@@ -195,7 +295,12 @@ def merge_parties(
         fields_to_keep = json.loads(fields_to_keep) if fields_to_keep else {}
 
     service = PartyMergeService()
-    return service.merge(primary_party, secondary_party, fields_to_keep)
+    return service.merge(
+        primary_party,
+        secondary_party,
+        fields_to_keep,
+        ignore_validation=ignore_validation,
+    )
 
 
 def _update_party_master_references(old_party: str, new_party: str):

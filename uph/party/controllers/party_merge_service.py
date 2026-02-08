@@ -38,9 +38,14 @@ class PartyMergeService:
     def __init__(self):
         self.merge_log = []
         self.errors = []
+        self.ignore_validation = False
 
     def merge(
-        self, primary_pm: str, secondary_pm: str, fields_to_keep: dict = None
+        self,
+        primary_pm: str,
+        secondary_pm: str,
+        fields_to_keep: dict = None,
+        ignore_validation: bool = False,
     ) -> dict:
         """
         Merge secondary Party Master into primary Party Master.
@@ -72,6 +77,7 @@ class PartyMergeService:
             )
 
         try:
+            self.ignore_validation = bool(ignore_validation)
             # Start savepoint for atomic rollback
             frappe.db.savepoint("party_merge_start")
 
@@ -249,6 +255,7 @@ class PartyMergeService:
                 primary_party,
                 merge=True,
                 force=True,  # Skip naming validation
+                validate=not self.ignore_validation,
             )
             self._log(
                 f"Successfully merged {party_type} '{secondary_party}' into '{primary_party}'"
@@ -265,27 +272,13 @@ class PartyMergeService:
         Manual party merge when frappe.rename_doc fails.
         Updates all references and deletes secondary party.
         """
-        # Get all DocTypes that reference this party type
-        meta = frappe.get_meta(party_type)
+        from frappe.model.rename_doc import get_link_fields, rename_dynamic_links
+        from frappe.model.rename_doc import update_link_field_values
 
-        # Update all Link fields pointing to secondary party
-        for doctype in frappe.get_all(
-            "DocType", filters={"issingle": 0, "is_virtual": 0}
-        ):
-            dt_meta = frappe.get_meta(doctype.name)
-            for df in dt_meta.get_link_fields():
-                if df.options == party_type:
-                    try:
-                        frappe.db.sql(
-                            f"""
-                            UPDATE `tab{doctype.name}`
-                            SET `{df.fieldname}` = %s
-                            WHERE `{df.fieldname}` = %s
-                        """,
-                            (primary_party, secondary_party),
-                        )
-                    except Exception:
-                        pass  # Table might not exist or column missing
+        # Update all link fields using Frappe's rename utilities
+        link_fields = get_link_fields(party_type)
+        update_link_field_values(link_fields, secondary_party, primary_party, party_type)
+        rename_dynamic_links(party_type, secondary_party, primary_party)
 
         # Delete secondary party
         frappe.delete_doc(
@@ -306,7 +299,7 @@ class PartyMergeService:
         # Update party_master field
         party_doc = frappe.get_doc(party_type, party_name)
         party_doc.party_master = new_pm
-        party_doc.flags.ignore_validate = True  # Skip validation since we're in merge
+        party_doc.flags.ignore_validate = bool(self.ignore_validation)
         party_doc.save(ignore_permissions=True)
 
         self._log(
@@ -432,10 +425,19 @@ class PartyMergeService:
         Update all transaction documents to point to new Party Master.
         """
         doctypes = get_pm_doctypes() or []
-
+        target_doctypes = set()
         for dt_info in doctypes:
-            dt = dt_info[0] if isinstance(dt_info, (list, tuple)) else dt_info
+            if isinstance(dt_info, (list, tuple)):
+                parent_dt = dt_info[0] if len(dt_info) > 0 else None
+                doc_dt = dt_info[1] if len(dt_info) > 1 else None
+                if parent_dt:
+                    target_doctypes.add(parent_dt)
+                if doc_dt:
+                    target_doctypes.add(doc_dt)
+            else:
+                target_doctypes.add(dt_info)
 
+        for dt in target_doctypes:
             try:
                 meta = frappe.get_meta(dt)
                 if meta.issingle or meta.is_virtual:
@@ -444,22 +446,14 @@ class PartyMergeService:
                 if not frappe.db.has_column(dt, "party_master"):
                     continue
 
-                count = frappe.db.sql(
-                    """
-                    UPDATE `tab{doctype}`
-                    SET party_master = %s
-                    WHERE party_master = %s
-                """.format(
-                        doctype=dt
-                    ),
-                    (new_pm, old_pm),
+                frappe.db.set_value(
+                    dt,
+                    {"party_master": old_pm},
+                    "party_master",
+                    new_pm,
+                    update_modified=False,
                 )
-
-                affected = frappe.db.sql(f"SELECT ROW_COUNT() as cnt")[0][0]
-
-                if affected:
-                    self._log(f"Updated {affected} {dt} records")
-
+                self._log(f"Updated {dt} records")
             except Exception as e:
                 self._log(f"Warning: Could not update {dt}: {e}")
 
@@ -494,7 +488,10 @@ class PartyMergeService:
 # Convenience function for API calls
 @frappe.whitelist()
 def merge_party_masters(
-    primary_party: str, secondary_party: str, fields_to_keep: dict = None
+    primary_party: str,
+    secondary_party: str,
+    fields_to_keep: dict = None,
+    ignore_validation: bool = False,
 ) -> dict:
     """
     API endpoint for merging Party Masters.
@@ -513,4 +510,9 @@ def merge_party_masters(
         fields_to_keep = json.loads(fields_to_keep) if fields_to_keep else {}
 
     service = PartyMergeService()
-    return service.merge(primary_party, secondary_party, fields_to_keep)
+    return service.merge(
+        primary_party,
+        secondary_party,
+        fields_to_keep,
+        ignore_validation=ignore_validation,
+    )
