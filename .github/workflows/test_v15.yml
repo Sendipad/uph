@@ -72,10 +72,6 @@ jobs:
         working-directory: frappe-bench
         run: |
           ./env/bin/python -m pip install --upgrade pip "setuptools<82" wheel
-          ./env/bin/python - <<'PY'
-          import pkg_resources  # noqa: F401
-          print("pkg_resources available in bench venv")
-          PY
 
       - name: Configure Bench
         working-directory: frappe-bench
@@ -96,7 +92,6 @@ jobs:
       - name: Create Site
         working-directory: frappe-bench
         run: |
-          ./env/bin/python -m pip install --upgrade "setuptools<82"
           bench new-site test_site --db-root-password root --admin-password admin --no-mariadb-socket
           bench --site test_site set-config allow_tests true
 
