@@ -157,12 +157,12 @@ class DataQualityDashboard {
 
             // Bind button events
             card.find('.btn-dismiss').on('click', (e) => {
-                const $btn = $(e.target);
+                const $btn = $(e.currentTarget);
                 this.dismiss_duplicate($btn.data('party1'), $btn.data('party2'));
             });
 
             card.find('.btn-merge').on('click', (e) => {
-                const $btn = $(e.target);
+                const $btn = $(e.currentTarget);
                 this.show_merge_dialog($btn.data('party1'), $btn.data('party2'));
             });
 
@@ -237,6 +237,14 @@ class DataQualityDashboard {
     }
 
     show_merge_dialog(party1, party2) {
+        if (!party1 || !party2) {
+            frappe.msgprint(__('Unable to resolve the selected parties. Please refresh and try again.'));
+            return;
+        }
+        if (party1 === party2) {
+            frappe.msgprint(__('Cannot merge a party with itself.'));
+            return;
+        }
         const d = new frappe.ui.Dialog({
             title: __('Merge Parties'),
             fields: [
@@ -246,7 +254,19 @@ class DataQualityDashboard {
                     label: __('Keep (Primary Party)'),
                     options: [party1, party2].join('\n'),
                     default: party1,
-                    reqd: 1
+                    reqd: 1,
+                    onchange: () => {
+                        const primary = d.get_value('primary_party');
+                        const secondary = primary === party1 ? party2 : party1;
+                        d.set_value('secondary_party', secondary);
+                    }
+                },
+                {
+                    fieldname: 'secondary_party',
+                    fieldtype: 'Data',
+                    label: __('Merge (Secondary Party)'),
+                    read_only: 1,
+                    default: party2
                 },
                 {
                     fieldname: 'info',
@@ -259,7 +279,7 @@ class DataQualityDashboard {
             primary_action_label: __('Merge'),
             primary_action: (values) => {
                 const primary = values.primary_party;
-                const secondary = primary === party1 ? party2 : party1;
+                const secondary = values.secondary_party || (primary === party1 ? party2 : party1);
 
                 frappe.confirm(
                     __('Are you sure you want to merge {0} into {1}? This action cannot be undone.', [secondary, primary]),

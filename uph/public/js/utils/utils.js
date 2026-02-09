@@ -249,10 +249,13 @@ $(document).on("app_ready", function () {
 				frappe.ui.form.on(child, {
 					party_master: function (frm, cdt, cdn) {
 						let row = locals[cdt][cdn];
+						const child_fieldname = uph.party.get_child_table_fieldname(frm, child);
 
 						if (!row.party_master) {
 							frappe.model.set_value(cdt, cdn, fieldname, "");
-							frm.refresh_field(frm.pm_on_child_fieldname);
+							if (child_fieldname) {
+								frm.refresh_field(child_fieldname);
+							}
 							return;
 						}
 
@@ -264,13 +267,21 @@ $(document).on("app_ready", function () {
 								// Set returned values from dialog
 
 								if (values) {
-									let grid = frm.fields_dict[frm.pm_on_child_fieldname].grid;
+									const update_steps = [];
+									const has_party_type = frappe.meta.has_field(cdt, "party_type");
 
-									if (grid.get_field("party_type")) {
-										frappe.model.set_value(cdt, cdn, "party_type", values.party_type);
+									if (has_party_type && values.party_type) {
+										update_steps.push(() =>
+											frappe.model.set_value(cdt, cdn, "party_type", values.party_type),
+										);
 									}
-									frappe.model.set_value(cdt, cdn, fieldname, values.party || values.name);
-									frm.refresh_field(frm.pm_on_child_fieldname);
+									update_steps.push(() =>
+										frappe.model.set_value(cdt, cdn, fieldname, values.party || values.name),
+									);
+									if (child_fieldname) {
+										update_steps.push(() => frm.refresh_field(child_fieldname));
+									}
+									frappe.run_serially(update_steps);
 								}
 							},
 						);
