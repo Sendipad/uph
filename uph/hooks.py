@@ -128,6 +128,10 @@ export_python_type_annotations = True
 # -------
 
 before_tests = "uph.tests.test_utils.before_tests"
+qunit_tests = [
+    "public/js/tests/test_utils.js",
+    "public/js/tests/test_party_utils.js",
+]
 
 # Overriding Methods
 # ------------------------------

@@ -99,3 +99,14 @@ jobs:
         working-directory: frappe-bench
         run: |
           bench --site test_site run-tests --app uph
+
+      - name: Install Playwright Browsers
+        working-directory: frappe-bench
+        run: |
+          ./env/bin/python -m pip install playwright
+          ./env/bin/python -m playwright install --with-deps chromium
+
+      - name: Run QUnit Tests
+        working-directory: frappe-bench
+        run: |
+          bench --site test_site run-ui-tests --app uph --headless
