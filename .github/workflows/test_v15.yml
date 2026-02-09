@@ -64,6 +64,10 @@ jobs:
       - name: Initialize Bench
         run: bench init --skip-redis-config-generation --frappe-branch version-15 frappe-bench
 
+      - name: Patch setuptools
+        working-directory: frappe-bench
+        run: ./env/bin/pip install setuptools
+
       - name: Configure Bench
         working-directory: frappe-bench
         run: |
