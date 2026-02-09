@@ -45,7 +45,7 @@ jobs:
 
       - name: Install Python Build Dependencies
         run: |
-          python -m pip install --upgrade pip "setuptools==69.5.1" wheel
+          python -m pip install --upgrade pip "setuptools<70" wheel
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -68,15 +68,10 @@ jobs:
       - name: Initialize Bench
         run: bench init --skip-redis-config-generation --frappe-branch version-15 frappe-bench
 
-      - name: Ensure Bench Virtualenv Build Tools
+      - name: Patch Bench Virtualenv
         working-directory: frappe-bench
         run: |
-          ./env/bin/python -m pip install --upgrade pip "setuptools==69.5.1" wheel
-
-      - name: Debug Pkg Resources
-        working-directory: frappe-bench
-        run: |
-          ./env/bin/python -c "import pkg_resources; print('pkg_resources is available')"
+          ./env/bin/python -m pip install --upgrade pip "setuptools<70" wheel
 
       - name: Configure Bench
         working-directory: frappe-bench
@@ -94,10 +89,15 @@ jobs:
         working-directory: frappe-bench
         run: bench get-app uph $GITHUB_WORKSPACE
 
+      - name: Final Patch (Prevent Overwrites)
+        working-directory: frappe-bench
+        run: |
+          ./env/bin/python -m pip install "setuptools<70"
+
       - name: Create Site
         working-directory: frappe-bench
         run: |
-          bench new-site test_site --db-root-password root --admin-password admin --mariadb-user-host-login-scope='%'
+          bench new-site test_site --db-root-password root --admin-password admin --no-mariadb-socket
           bench --site test_site set-config allow_tests true
 
       - name: Setup ERPNext
