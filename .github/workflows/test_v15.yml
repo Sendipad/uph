@@ -45,7 +45,7 @@ jobs:
 
       - name: Install Python Build Dependencies
         run: |
-          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install --upgrade pip "setuptools==69.5.1" wheel
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -71,7 +71,12 @@ jobs:
       - name: Ensure Bench Virtualenv Build Tools
         working-directory: frappe-bench
         run: |
-          ./env/bin/python -m pip install --upgrade pip "setuptools<82" wheel
+          ./env/bin/python -m pip install --upgrade pip "setuptools==69.5.1" wheel
+
+      - name: Debug Pkg Resources
+        working-directory: frappe-bench
+        run: |
+          ./env/bin/python -c "import pkg_resources; print('pkg_resources version:', pkg_resources.__version__)"
 
       - name: Configure Bench
         working-directory: frappe-bench
