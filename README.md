@@ -38,6 +38,8 @@
 
 **Unified Party Hub (UPH)** is an enterprise-grade Master Data Management (MDM) extension for ERPNext. It centralizes siloed business roles (Customers, Suppliers, Employees) into a unified, tree-based hierarchy, providing consolidated financial visibility and rigorous data governance across complex business ecosystems.
 
+> **Target users:** ERPNext implementers who need a single, governed entity for parties that can act as customer, supplier, employee, etc.
+
 ## Overview
 
 Standard ERPNext implementations often face challenges when managing complex business entities:
@@ -48,6 +50,26 @@ Standard ERPNext implementations often face challenges when managing complex bus
 - **Data Redundancy**: Address and Contact data must be duplicated across multiple party roles.
 
 UPH solves these problems by introducing the **Party Master** - a central governance layer that sits above standard ERPNext Party types.
+
+---
+
+## Quick Start
+
+> **Prerequisites:** Frappe/ERPNext v15+ and a working bench site.
+
+```bash
+# Install app
+bench get-app https://github.com/Sendipad/uph
+bench --site {your-site} install-app uph
+
+# Migrate to apply fixtures and setup
+bench --site {your-site} migrate
+```
+
+After install, open **Party Master Settings** and review:
+- Party type rules
+- Doctype mappings for transactional documents
+- Duplicate voucher prevention rules
 
 ---
 
@@ -99,6 +121,24 @@ Define N-to-N relationships between parties:
 Rules for excluding duplicates:
 - **Exclusion Criteria**: Define rules to ignore certain duplicates
 - **Document Types**: Apply rules to specific doctypes
+
+---
+
+## Key Workflows
+
+### 1) Create a Party Master
+1. Create a new **Party Master**.
+2. Set **Party Type**, legal identity fields, and (optionally) hierarchy parent.
+3. Link existing parties (Customer/Supplier/Employee) or create new ones.
+
+### 2) Link Existing Parties
+Use **Party Master > Parties** to link existing parties to a single entity. The system enforces:
+- Role rules (primary/secondary).
+- Duplicate constraints from **Party Master Settings**.
+
+### 3) Transactional Validation
+- Transactional documents mapped in **Party Master Settings** will validate or auto‑set `party_master`.
+- Party Analytic Accounting (PAA) validation will enforce Party Master consistency.
 
 ### Supporting DocTypes
 - [`Party Master Accounts`](uph/party/doctype/party_master_accounts/party_master_accounts.json): Account mappings per party
@@ -156,6 +196,18 @@ Data quality and governance reporting:
 - Missing tax IDs
 - Unlinked parties
 - Data completeness metrics
+
+---
+
+## Configuration Notes
+
+### Party Master Settings (Core)
+- **DocType Mapping:** Determines which transactional documents require `party_master`.
+- **Party Type Rules:** Defines required/unique fields per party type.
+- **Duplicate Voucher Check:** Prevents duplicate vouchers for the same Party Master.
+
+### Party Analytic Accounting (Optional)
+- If enabled, PAA enforces accounting dimension consistency for linked parties.
 
 ---
 
