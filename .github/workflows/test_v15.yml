@@ -76,7 +76,7 @@ jobs:
       - name: Debug Pkg Resources
         working-directory: frappe-bench
         run: |
-          ./env/bin/python -c "import pkg_resources; print('pkg_resources version:', pkg_resources.__version__)"
+          ./env/bin/python -c "import pkg_resources; print('pkg_resources is available')"
 
       - name: Configure Bench
         working-directory: frappe-bench
