@@ -26,11 +26,16 @@ uph.party = {
 		frappe.call({
 			method: "uph.party.controllers.queries.get_party_master_parties",
 			args: filters,
-			callback: function (r) {
+			callback: (r) => {
 				if (r.message) {
 					let parties = r.message;
 					if (parties.length === 0) {
-						frappe.msgprint(__("Party Master has no Parties Linked"));
+						frappe.confirm(
+							__("Create Party for Party Master {0}?", [party_master]),
+							() => {
+								this.create_party_for_party_master_from_node(party_master);
+							}
+						);
 						return;
 					}
 					if (parties.length == 1) {
@@ -534,7 +539,12 @@ uph.party = {
 		const parties = pm_details.parties || [];
 
 		if (parties.length === 0) {
-			frappe.msgprint(__("Party Master has no Parties Linked"));
+			frappe.confirm(
+				__("Create Party for Party Master {0}?", [frm.doc.party_master]),
+				() => {
+					this.create_party_for_party_master_from_node(frm.doc.party_master);
+				}
+			);
 			return;
 		}
 		if (frm.in_show_party_selections) return;
@@ -718,12 +728,17 @@ uph.party = {
 		frappe.call({
 			method: "uph.party.controllers.queries.get_party_master_parties",
 			args: filters,
-			callback: function (r) {
+			callback: (r) => {
 				if (r.message) {
 					let parties = r.message;
 
 					if (parties.length === 0) {
-						frappe.msgprint(__("Party Master has no Parties Linked"));
+						frappe.confirm(
+							__("Create Party for Party Master {0}?", [party_master]),
+							() => {
+								this.create_party_for_party_master_from_node(party_master);
+							}
+						);
 						return;
 					}
 					if (parties.length == 1 || (frm.is_single_party_type && parties[0].is_default == 1)) {
@@ -816,6 +831,107 @@ uph.party = {
 		frm.sCheckingDuplicate = false;
 		this.party_master_query(frm);
 		this.party_analytic_accounting_query(frm);
+		this.add_party_creation_shortcut(frm);
+		this.add_party_master_history_shortcut(frm);
+	},
+
+	add_party_creation_shortcut: function (frm) {
+		frappe.ui.keys.add_shortcut({
+			shortcut: "ctrl+alt+p",
+			page: frm.page,
+			description: __("Create Party for Party Master"),
+			condition: () => {
+				const has_pm = !!frm.doc.party_master;
+				const fieldnames = this.get_fieldnames(frm);
+				const has_no_party = fieldnames.party_fieldname && !frm.doc[fieldnames.party_fieldname];
+
+				// Optional: Check if focused on party_master field if we want to be specific
+				// but let's relax it for testing
+				const focused = document.activeElement;
+				const pm_input = frm.fields_dict.party_master?.$input?.[0];
+				const is_focused_on_pm = focused === pm_input;
+
+				return has_pm && has_no_party && is_focused_on_pm;
+			},
+			action: () => {
+				this.create_party_for_party_master_from_node(frm.doc.party_master);
+			},
+			ignore_inputs: true,
+		});
+	},
+
+	add_party_master_history_shortcut: function (frm) {
+		frappe.ui.keys.add_shortcut({
+			shortcut: "ctrl+alt+h",
+			page: frm.page,
+			description: __("Show Party Master History Stats"),
+			condition: () => !!frm.doc.party_master,
+			action: () => {
+				this.show_party_master_history_dialog(frm);
+			},
+			ignore_inputs: true,
+		});
+	},
+
+	show_party_master_history_dialog: function (frm) {
+		const party_master = frm.doc.party_master;
+		frappe.call({
+			method: "uph.party.controllers.queries.get_party_master_history_stats",
+			args: { party_master: party_master },
+			callback: (r) => {
+				if (r.message && r.message.length > 0) {
+					const stats = r.message;
+					let html = `
+						<table class="table table-bordered table-condensed" style="margin-top: 10px;">
+							<thead>
+								<tr>
+									<th>${__("Party")}</th>
+									<th class="text-center">${__("Sales Inv")}</th>
+									<th class="text-center">${__("Purchase Inv")}</th>
+									<th class="text-center">${__("Payment Entry")}</th>
+									<th class="text-center">${__("Journal Entry")}</th>
+								</tr>
+							</thead>
+							<tbody>
+					`;
+
+					stats.forEach((s) => {
+						const si = `${s.sales_invoice_count}<br><small class="text-muted">${s.sales_invoice_last_date || "-"}</small>`;
+						const pi = `${s.purchase_invoice_count}<br><small class="text-muted">${s.purchase_invoice_last_date || "-"}</small>`;
+						const pe = `${s.payment_entry_count}<br><small class="text-muted">${s.payment_entry_last_date || "-"}</small>`;
+						const je = `${s.journal_entry_count}<br><small class="text-muted">${s.journal_entry_last_date || "-"}</small>`;
+
+						html += `
+							<tr>
+								<td><b>${s.party}</b><br><small class="text-muted">${s.party_type}</small></td>
+								<td class="text-center">${si}</td>
+								<td class="text-center">${pi}</td>
+								<td class="text-center">${pe}</td>
+								<td class="text-center">${je}</td>
+							</tr>
+						`;
+					});
+
+					html += `</tbody></table>`;
+
+					const d = new frappe.ui.Dialog({
+						title: __("History Stats for {0}", [party_master]),
+						fields: [
+							{
+								fieldtype: "HTML",
+								fieldname: "history_html",
+								options: html
+							}
+						],
+						primary_action_label: __("Close"),
+						primary_action: () => d.hide()
+					});
+					d.show();
+				} else {
+					frappe.msgprint(__("No linked parties found for this Party Master."));
+				}
+			}
+		});
 	},
 	check_duplicate_voucher_for_party_master: function (frm, triggered_before_submit = false) {
 		if (frm.isCheckingDuplicate) return;
@@ -849,7 +965,7 @@ uph.party = {
 						const list = duplicates
 							.map(
 								(d) => `
-                            <li style="margin-bottom: 10px;">
+						< li style = "margin-bottom: 10px;" >
                                 <a href="/app/${frappe.router.slug(
 									frm.doctype,
 								)}/${encodeURIComponent(d.name)}" 
@@ -859,8 +975,8 @@ uph.party = {
                                 <span  
                                    class="text-muted">
                                 (${d.party || ""})    (${d.total || ""})</span>
-                            </li>
-                        `,
+                            </li >
+						`,
 							)
 							.join("");
 
@@ -870,7 +986,8 @@ uph.party = {
 								indicator: "red",
 								message: `${__(
 									"Submission is not allowed for duplicate vouchers.",
-								)}<br><ul>${list}</ul>`,
+								)
+									} <br><ul>${list}</ul>`,
 								as_html: true,
 							});
 							frm.isCheckingDuplicate = false;

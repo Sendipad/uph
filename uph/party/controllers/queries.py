@@ -828,3 +828,69 @@ def get_party_master_dashboard_info(party_master_name):
         )
 
     return result
+
+@frappe.whitelist()
+def get_party_master_history_stats(party_master):
+    if not party_master:
+        return []
+    
+    # 1. Get linked parties
+    parties = get_party_master_parties(party_master)
+    if not parties:
+        return []
+
+    results = []
+    for p in parties:
+        p_name = p.get("party")
+        p_type = p.get("party_type")
+        
+        entry = {
+            "party": p_name,
+            "party_type": p_type,
+            "sales_invoice_count": 0,
+            "sales_invoice_last_date": None,
+            "purchase_invoice_count": 0,
+            "purchase_invoice_last_date": None,
+            "payment_entry_count": 0,
+            "payment_entry_last_date": None,
+            "journal_entry_count": 0,
+            "journal_entry_last_date": None
+        }
+
+        # Sales Invoice
+        if p_type == "Customer":
+            si_stats = frappe.db.get_value("Sales Invoice", {"customer": p_name, "docstatus": ["<", 2]}, 
+                ["count(name) as count", "max(posting_date) as last_date"], as_dict=1)
+            if si_stats:
+                entry["sales_invoice_count"] = si_stats.get("count") or 0
+                entry["sales_invoice_last_date"] = si_stats.get("last_date")
+        
+        # Purchase Invoice
+        if p_type == "Supplier":
+            pi_stats = frappe.db.get_value("Purchase Invoice", {"supplier": p_name, "docstatus": ["<", 2]}, 
+                ["count(name) as count", "max(posting_date) as last_date"], as_dict=1)
+            if pi_stats:
+                entry["purchase_invoice_count"] = pi_stats.get("count") or 0
+                entry["purchase_invoice_last_date"] = pi_stats.get("last_date")
+            
+        # Payment Entry
+        pe_stats = frappe.db.get_value("Payment Entry", {"party_type": p_type, "party": p_name, "docstatus": ["<", 2]}, 
+            ["count(name) as count", "max(posting_date) as last_date"], as_dict=1)
+        if pe_stats:
+            entry["payment_entry_count"] = pe_stats.get("count") or 0
+            entry["payment_entry_last_date"] = pe_stats.get("last_date")
+        
+        # Journal Entry (via Journal Entry Account)
+        je_stats = frappe.db.sql("""
+            SELECT count(tjea.parent) as count, max(tje.posting_date) as last_date
+            FROM `tabJournal Entry Account` tjea
+            JOIN `tabJournal Entry` tje ON tje.name = tjea.parent
+            WHERE tjea.party_type = %s AND tjea.party = %s AND tje.docstatus < 2
+        """, (p_type, p_name), as_dict=1)
+        if je_stats:
+            entry["journal_entry_count"] = je_stats[0].get("count") or 0
+            entry["journal_entry_last_date"] = je_stats[0].get("last_date")
+            
+        results.append(entry)
+    
+    return results

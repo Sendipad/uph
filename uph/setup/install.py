@@ -76,14 +76,37 @@ def post_install():
 
 def create_party_master_tree():
     """Create root node for Party Master if not exists"""
-    if not frappe.db.exists(
-        "Party Master", {"is_group": 1, "parent_party_master": None}
-    ):
-        doc = frappe.new_doc("Party Master")
-        doc.party_name = "All Party Masters"
-        doc.is_group = 1
-        doc.party_number = "1000"
-        doc.insert(ignore_permissions=True)
+    root_filter = {"is_group": 1, "parent_party_master": ["in", ["", None]]}
+    if frappe.db.exists("Party Master", root_filter):
+        return
+
+    existing = frappe.db.get_value(
+        "Party Master",
+        "1000",
+        ["name", "is_group", "parent_party_master"],
+        as_dict=True,
+    )
+    if existing:
+        try:
+            doc = frappe.get_doc("Party Master", "1000")
+            doc.flags.ignore_validate = True
+            doc.is_group = 1
+            doc.parent_party_master = None
+            if not doc.party_name:
+                doc.party_name = "All Party Masters"
+            doc.save(ignore_permissions=True)
+        except Exception:
+            frappe.log_error(
+                title="UPH: Failed to normalize Party Master root",
+                message="Party Master '1000' exists but could not be normalized to root.",
+            )
+        return
+
+    doc = frappe.new_doc("Party Master")
+    doc.party_name = "All Party Masters"
+    doc.is_group = 1
+    doc.party_number = "1000"
+    doc.insert(ignore_permissions=True)
 
 
 def create_party_analytic_accounting_dimension():
