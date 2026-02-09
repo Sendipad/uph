@@ -42,7 +42,10 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-          cache: 'pip'
+
+      - name: Install Python Build Dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -60,19 +63,15 @@ jobs:
           mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL collation_server = 'utf8mb4_unicode_ci'"
 
       - name: Install Frappe Bench
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install "setuptools<70" wheel
-          pip install frappe-bench
+        run: pip install frappe-bench
 
       - name: Initialize Bench
         run: bench init --skip-redis-config-generation --frappe-branch version-15 frappe-bench
 
-      - name: Patch setuptools
+      - name: Ensure Bench Virtualenv Build Tools
         working-directory: frappe-bench
         run: |
-          ./env/bin/python -m pip install --upgrade pip
-          ./env/bin/python -m pip install "setuptools<70" wheel
+          ./env/bin/python -m pip install --upgrade pip "setuptools<82" wheel
 
       - name: Configure Bench
         working-directory: frappe-bench
