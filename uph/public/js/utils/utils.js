@@ -229,7 +229,9 @@ $(document).on("app_ready", function () {
 						if (!frm.fields_dict["posting_date"] || !frm.doc?.posting_date) return;
 						uph.party.check_duplicate_voucher_for_party_master(frm);
 					},
-					refresh: function (frm) { },
+					refresh: function (frm) {
+						uph.party.refresh(frm);
+					},
 				});
 			})(doctype, fieldname);
 		} else if (doctype !== child && fieldname) {

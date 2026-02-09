@@ -835,6 +835,10 @@ uph.party = {
 		this.add_party_master_history_shortcut(frm);
 	},
 
+	refresh: function (frm) {
+		this.add_party_master_history_shortcut(frm);
+	},
+
 	add_party_creation_shortcut: function (frm) {
 		frappe.ui.keys.add_shortcut({
 			shortcut: "ctrl+alt+p",
@@ -861,14 +865,41 @@ uph.party = {
 	},
 
 	add_party_master_history_shortcut: function (frm) {
+		const shortcut_action = () => {
+			console.log("[UPH] Executing History Shortcut Action");
+			this.show_party_master_history_dialog(frm);
+		};
+
+		const condition = () => {
+			const has_pm = !!frm.doc.party_master;
+			console.log("[UPH] History shortcut condition checked, result:", has_pm);
+			return has_pm;
+		}
+
+		// Main Shortcut (User Requested)
 		frappe.ui.keys.add_shortcut({
 			shortcut: "ctrl+alt+h",
-			page: frm.page,
 			description: __("Show Party Master History Stats"),
-			condition: () => !!frm.doc.party_master,
-			action: () => {
-				this.show_party_master_history_dialog(frm);
-			},
+			condition: condition,
+			action: shortcut_action,
+			ignore_inputs: true,
+		});
+
+		// Reliable Fallback
+		frappe.ui.keys.add_shortcut({
+			shortcut: "ctrl+shift+h",
+			description: __("Show Party Master History Stats"),
+			condition: condition,
+			action: shortcut_action,
+			ignore_inputs: true,
+		});
+
+		// System Fallback
+		frappe.ui.keys.add_shortcut({
+			shortcut: "shift+alt+h",
+			description: __("Show Party Master History Stats"),
+			condition: condition,
+			action: shortcut_action,
 			ignore_inputs: true,
 		});
 	},
