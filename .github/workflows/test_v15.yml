@@ -85,6 +85,7 @@ jobs:
           bench get-app erpnext --branch version-15
           bench get-app uph $GITHUB_WORKSPACE
           ./env/bin/python -m pip install "setuptools<70"
+          ./env/bin/python -m pip install -e apps/uph
 
       - name: Create Site & Setup ERPNext
         working-directory: frappe-bench
@@ -109,4 +110,4 @@ jobs:
       - name: Run QUnit Tests
         working-directory: frappe-bench
         run: |
-          bench --site test_site run-ui-tests --app uph --headless
+          bench --site test_site run-ui-tests --app=uph --headless
