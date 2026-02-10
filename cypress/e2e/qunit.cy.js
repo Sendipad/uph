@@ -28,7 +28,7 @@ describe("UPH QUnit Tests", () => {
 
 			cy.get("iframe", { timeout: 60000 })
 				.first()
-				its("0.contentDocument.body")
+				.its("0.contentDocument.body")
 				.should("not.be.empty")
 				.then((iframeBody) => {
 					assertQUnitPassed(iframeBody);
