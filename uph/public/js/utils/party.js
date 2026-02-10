@@ -320,17 +320,31 @@ uph.party = {
 
 	// Child table handler for party_master change
 	handle_party_master_change_in_child: function (frm, row) {
-		if (!row.party_master) return;
-		const fieldname = frm.pm_on_child_fieldname;
+		if (!row.party_master || frm.uph_setting_party_master) return;
+		const fieldname = frm.pm_on_child_fieldname || (row.doctype === 'Journal Entry Account' ? 'party' : null);
 		if (!fieldname) return;
+
 		this.show_party_selection_dialog_callback(frm, row.party_master, false, (values) => {
 			if (values) {
-				const grid = frm.fields_dict[fieldname].grid;
-				if (grid.get_field("party_type")) {
-					frappe.model.set_value(row.doctype, row.name, "party_type", values.party_type);
+				frm.uph_setting_party_master = true;
+				try {
+					const grid = frm.fields_dict[frm.pm_on_child_fieldname || 'accounts'].grid;
+					if (grid.get_field("party_type")) {
+						frappe.model.set_value(row.doctype, row.name, "party_type", values.party_type);
+					}
+					frappe.model.set_value(row.doctype, row.name, fieldname, values.party || values.name);
+
+					// Force ERPNext to fetch account if applicable
+					if (row.doctype === 'Journal Entry Account' && frm.script_manager) {
+						frm.script_manager.trigger('party', row.doctype, row.name);
+					}
+
+					frm.refresh_field(frm.pm_on_child_fieldname || 'accounts');
+				} finally {
+					setTimeout(() => {
+						frm.uph_setting_party_master = false;
+					}, 500);
 				}
-				frappe.model.set_value(row.doctype, row.name, "party", values.party || values.name);
-				frm.refresh_field(fieldname);
 			}
 		});
 	},
