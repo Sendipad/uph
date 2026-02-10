@@ -1,6 +1,4 @@
-const { defineConfig } = require("cypress");
-
-module.exports = defineConfig({
+module.exports = {
 	video: false,
 	screenshotOnRunFailure: false,
 	e2e: {
@@ -10,4 +8,4 @@ module.exports = defineConfig({
 		defaultCommandTimeout: 30000,
 		pageLoadTimeout: 120000,
 	},
-});
+};
