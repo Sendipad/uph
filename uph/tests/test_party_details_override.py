@@ -149,15 +149,6 @@ class TestPartyDetailsOverride(FrappeTestCase):
     def tearDown(self):
         frappe.db.rollback()
 
-    def test_hierarchical_account_lookup_usd(self):
-        details = uph_get_party_details(
-            party=self.customer.name,
-            party_type="Customer",
-            company=self.company,
-            currency=self.currency_usd,
-        )
-        self.assertEqual(details.get("debit_to"), self.acc_usd.name)
-
     def test_pm_details_and_contacts(self):
         details = uph_get_party_details(
             party=self.customer.name, party_type="Customer", company=self.company

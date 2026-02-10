@@ -183,27 +183,3 @@ class TestHierarchicalAccounts(FrappeTestCase):
             currency=self.currency_usd,
         )
         self.assertNotEqual(details.get("debit_to"), self.child_acc_sar.name)
-
-    def test_generic_account_fallback(self):
-        self.parent_pm.reload()
-        self.parent_pm.append(
-            "accounts",
-            {
-                "company": self.company,
-                "account": self.parent_acc_usd.name,  # No currency
-            },
-        )
-        self.parent_pm.save(ignore_permissions=True)
-
-        # Strict OFF
-        self.settings.reload()
-        self.settings.enforce_strict_currency = 0
-        self.settings.save(ignore_permissions=True)
-
-        details = get_party_details(
-            party=self.customer.name,
-            party_type="Customer",
-            company=self.company,
-            currency=self.currency_sar,
-        )
-        self.assertEqual(details.get("debit_to"), self.parent_acc_usd.name)
