@@ -9,16 +9,12 @@ class TestHierarchicalAccounts(FrappeTestCase):
         self.currency_usd = "USD"
         self.currency_sar = "SAR"
 
-        # Cleanup existing test data
-        frappe.db.delete("Party Master", {"party_name": ["like", "Test Acc %"]})
-
-        # Reload Settings to avoid TimestampMismatch
+        # Reload Settings to avoid cached state
         self.settings = frappe.get_doc("Party Master Settings")
         self.settings.override_party_details_api = 1
         self.settings.enforce_strict_currency = 0
         self.settings.save(ignore_permissions=True)
         frappe.clear_cache(doctype="Party Master Settings")
-        frappe.db.commit()
 
         # Setup Hierarchy
         self.root_pm = frappe.get_doc(

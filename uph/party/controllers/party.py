@@ -691,9 +691,6 @@ def get_hierarchical_pm_account(pm_name, company, currency, enforce_strict=False
     2. If not strict, looks for generic match (empty currency) in PM Accounts.
     3. Handles both leaf accounts and group accounts (expanding by currency).
     """
-    print(
-        f"DEBUG UPH: Looking for account for PM {pm_name}, Company {company}, Currency {currency}, Strict {enforce_strict}"
-    )
     while pm_name:
         # 1. Try exact currency match
         acc_data = frappe.db.get_value(
@@ -702,45 +699,43 @@ def get_hierarchical_pm_account(pm_name, company, currency, enforce_strict=False
             ["account"],
             as_dict=1,
         )
-        print(f"DEBUG UPH: PM {pm_name} exact match result: {acc_data}")
 
         if not acc_data and not enforce_strict:
-            # 2. Try generic match (fallback)
-            acc_data = frappe.db.get_value(
+            # 2. Try generic match (fallback) - Robust Python-based filtering
+            all_pm_accounts = frappe.db.get_values(
                 "Party Master Accounts",
-                {"parent": pm_name, "company": company, "currency": ["in", [None, ""]]},
-                ["account"],
+                {"parent": pm_name, "company": company},
+                ["account", "currency"],
                 as_dict=1,
             )
-            print(f"DEBUG UPH: PM {pm_name} generic match result: {acc_data}")
+            for row in all_pm_accounts:
+                if not row.get("currency"):
+                    acc_data = row
+                    break
 
         if acc_data and acc_data.get("account"):
             target_account = acc_data["account"]
             acc_meta = frappe.db.get_value(
                 "Account", target_account, ["is_group", "account_currency"], as_dict=1
             )
-            print(f"DEBUG UPH: Found Account {target_account} metadata: {acc_meta}")
 
             if acc_meta:
                 if acc_meta.get("is_group"):
-                    # Expansion logic for group accounts
-                    leaf_filters = {
-                        "parent_account": target_account,
-                        "account_currency": currency,
-                        "is_group": 0,
-                        "company": company,
-                        "disabled": 0,
-                    }
-                    leaf_match = frappe.db.get_value(
+                    # Expansion logic for group accounts - Robust get_all
+                    leaf_matches = frappe.get_all(
                         "Account",
-                        leaf_filters,
-                        "name",
+                        filters={
+                            "parent_account": target_account,
+                            "account_currency": currency,
+                            "is_group": 0,
+                            "company": company,
+                            "disabled": 0,
+                        },
+                        pluck="name",
+                        limit=1,
                     )
-                    print(
-                        f"DEBUG UPH: Group expansion under {target_account} with {leaf_filters} result: {leaf_match}"
-                    )
-                    if leaf_match:
-                        return leaf_match
+                    if leaf_matches:
+                        return leaf_matches[0]
                 else:
                     # It's a leaf account
                     # If strict, verify account currency matches transaction currency
@@ -748,13 +743,10 @@ def get_hierarchical_pm_account(pm_name, company, currency, enforce_strict=False
                         not enforce_strict
                         or acc_meta.get("account_currency") == currency
                     )
-                    print(f"DEBUG UPH: Leaf account {target_account} match: {is_match}")
                     if is_match:
                         return target_account
 
         # Move up to parent PM
         pm_name = frappe.db.get_value("Party Master", pm_name, "parent_party_master")
-        print(f"DEBUG UPH: Moving up to parent PM: {pm_name}")
 
-    print(f"DEBUG UPH: No account found for {pm_name}")
     return None

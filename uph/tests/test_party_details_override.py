@@ -10,17 +10,7 @@ class TestPartyDetailsOverride(FrappeTestCase):
         self.currency_usd = "USD"
         self.currency_sar = "SAR"
 
-        # 1. Ensure Currencies exist
-        if not frappe.db.exists("Currency", self.currency_usd):
-            frappe.get_doc(
-                {"doctype": "Currency", "currency": self.currency_usd}
-            ).insert()
-        if not frappe.db.exists("Currency", self.currency_sar):
-            frappe.get_doc(
-                {"doctype": "Currency", "currency": self.currency_sar}
-            ).insert()
-
-        # 2. Setup Party Master Hierarchy with unique names
+        # 1. Setup Party Master Hierarchy with unique names
         suffix = frappe.generate_hash(length=8)
         self.parent_pm = frappe.get_doc(
             {
@@ -103,10 +93,16 @@ class TestPartyDetailsOverride(FrappeTestCase):
             self.acc_sar = frappe.get_doc("Account", f"{sar_acc_name} - _TC")
 
         # 6. Map Group Account to Parent PM
-        self.parent_pm.append(
-            "accounts", {"company": self.company, "account": self.group_account.name}
+        parent_pm = frappe.get_doc("Party Master", self.parent_pm.name)
+        parent_pm.append(
+            "accounts",
+            {
+                "company": self.company,
+                "account": self.group_account.name,
+                "currency": "",
+            },
         )
-        self.parent_pm.save(ignore_permissions=True)
+        parent_pm.save(ignore_permissions=True)
 
         # 7. Setup Address for PM
         self.address = frappe.get_doc(
@@ -148,15 +144,7 @@ class TestPartyDetailsOverride(FrappeTestCase):
         settings = frappe.get_doc("Party Master Settings")
         settings.override_party_details_api = 1
         settings.save(ignore_permissions=True)
-
-        # 9. Ensure Company has default receivable account (for fallback test)
-        if not frappe.db.get_value(
-            "Company", self.company, "default_receivable_account"
-        ):
-            frappe.db.set_value(
-                "Company", self.company, "default_receivable_account", "Debtors - _TC"
-            )
-            frappe.clear_cache(doctype="Company", name=self.company)
+        frappe.clear_cache(doctype="Party Master Settings")
 
     def tearDown(self):
         frappe.db.rollback()
