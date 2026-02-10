@@ -719,14 +719,14 @@ def get_hierarchical_pm_account(pm_name, company, currency, enforce_strict=False
             print(f"DEBUG UPH: PM {pm_name} generic match result: {acc_data}")
 
         if acc_data and acc_data.get("account"):
-            target_account = acc_data.account
+            target_account = acc_data["account"]
             acc_meta = frappe.db.get_value(
                 "Account", target_account, ["is_group", "account_currency"], as_dict=1
             )
             print(f"DEBUG UPH: Found Account {target_account} metadata: {acc_meta}")
 
             if acc_meta:
-                if acc_meta.is_group:
+                if acc_meta.get("is_group"):
                     # Expansion logic for group accounts
                     leaf_filters = {
                         "parent_account": target_account,
@@ -749,7 +749,8 @@ def get_hierarchical_pm_account(pm_name, company, currency, enforce_strict=False
                     # It's a leaf account
                     # If strict, verify account currency matches transaction currency
                     is_match = (
-                        not enforce_strict or acc_meta.account_currency == currency
+                        not enforce_strict
+                        or acc_meta.get("account_currency") == currency
                     )
                     print(f"DEBUG UPH: Leaf account {target_account} match: {is_match}")
                     if is_match:
