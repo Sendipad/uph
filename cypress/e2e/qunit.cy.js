@@ -10,9 +10,7 @@ describe("UPH QUnit Tests", () => {
 	};
 
 	const assertQUnitPassed = (root) => {
-		cy.wrap(root)
-			.find("#qunit-testresult", { timeout: 180000 })
-			.should("contain", "completed");
+		cy.wrap(root).find("#qunit-testresult", { timeout: 180000 }).should("contain", "completed");
 		cy.wrap(root).find("#qunit-testresult .failed").should("contain", "0");
 	};
 
@@ -26,29 +24,48 @@ describe("UPH QUnit Tests", () => {
 			});
 	};
 
-	it("runs the QUnit suite for the UPH app", () => {
-		login();
-		cy.visit("/app/tests?app=uph");
-
-		cy.get("body", { timeout: 120000 }).then(($body) => {
+	const assertRunnerFromCurrentPage = () => {
+		return cy.get("body", { timeout: 120000 }).then(($body) => {
 			if ($body.find("#qunit-testresult").length) {
 				assertQUnitPassed($body);
-				return;
+				return true;
 			}
 
 			if ($body.find("iframe").length) {
 				assertQUnitFromIframe();
-				return;
+				return true;
 			}
 
-			cy.get("#qunit-testresult, iframe", { timeout: 180000 }).then(($runner) => {
-				if ($runner.filter("#qunit-testresult").length) {
-					cy.get("body").then(assertQUnitPassed);
+			return false;
+		});
+	};
+
+	it("runs the QUnit suite for the UPH app", () => {
+		login();
+
+		const candidates = [
+			"/app/tests?app=uph",
+			"/assets/frappe/js/test_runner.html?app=uph",
+			"/assets/frappe/js/test_runner.html",
+		];
+
+		const tryCandidate = (index = 0) => {
+			const candidate = candidates[index];
+			cy.visit(candidate, { failOnStatusCode: false });
+
+			assertRunnerFromCurrentPage().then((hasRunner) => {
+				if (hasRunner) {
 					return;
 				}
 
-				assertQUnitFromIframe();
+				if (index >= candidates.length - 1) {
+					throw new Error(`QUnit runner not found in known URLs: ${candidates.join(", ")}`);
+				}
+
+				tryCandidate(index + 1);
 			});
-		});
+		};
+
+		tryCandidate();
 	});
 });
