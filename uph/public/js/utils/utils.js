@@ -249,31 +249,11 @@ $(document).on("app_ready", function () {
 				frappe.ui.form.on(child, {
 					party_master: function (frm, cdt, cdn) {
 						let row = locals[cdt][cdn];
-
-						if (!row.party_master) {
-							frappe.model.set_value(cdt, cdn, fieldname, "");
-							frm.refresh_field(frm.pm_on_child_fieldname);
-							return;
-						}
-
-						uph.party.show_party_selection_dialog_callback(
-							frm,
-							row.party_master,
-							false,
-							(values) => {
-								// Set returned values from dialog
-
-								if (values) {
-									let grid = frm.fields_dict[frm.pm_on_child_fieldname].grid;
-
-									if (grid.get_field("party_type")) {
-										frappe.model.set_value(cdt, cdn, "party_type", values.party_type);
-									}
-									frappe.model.set_value(cdt, cdn, fieldname, values.party || values.name);
-									frm.refresh_field(frm.pm_on_child_fieldname);
-								}
-							},
-						);
+						uph.party.handle_party_master_change_in_child(frm, row);
+					},
+					[fieldname]: function (frm, cdt, cdn) {
+						let row = locals[cdt][cdn];
+						uph.party.on_party_field_change_in_child(frm, row);
 					},
 				});
 			})(doctype, child, fieldname);
