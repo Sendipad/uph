@@ -320,26 +320,41 @@ uph.party = {
 
 	// Child table handler for party_master change
 	handle_party_master_change_in_child: function (frm, row) {
-		if (!row.party_master || frm.uph_setting_party_master) return;
-		const fieldname = frm.pm_on_child_fieldname || (row.doctype === 'Journal Entry Account' ? 'party' : null);
-		if (!fieldname) return;
+		const fieldname = frm.pm_on_child_party_fieldname;
+		if (!fieldname || frm.uph_setting_party_master) return;
+
+		if (!row.party_master) {
+			const cdt = row.doctype;
+			const cdn = row.name;
+			frappe.model.set_value(cdt, cdn, fieldname, "");
+			const table_fieldname = frm.pm_on_child_table_fieldname;
+			if (table_fieldname) {
+				frm.refresh_field(table_fieldname);
+			}
+			return;
+		}
 
 		this.show_party_selection_dialog_callback(frm, row.party_master, false, (values) => {
 			if (values) {
 				frm.uph_setting_party_master = true;
 				try {
-					const grid = frm.fields_dict[frm.pm_on_child_fieldname || 'accounts'].grid;
-					if (grid.get_field("party_type")) {
-						frappe.model.set_value(row.doctype, row.name, "party_type", values.party_type);
+					const cdt = row.doctype;
+					const cdn = row.name;
+
+					if (frappe.meta.has_field(cdt, "party_type")) {
+						frappe.model.set_value(cdt, cdn, "party_type", values.party_type);
 					}
-					frappe.model.set_value(row.doctype, row.name, fieldname, values.party || values.name);
+					frappe.model.set_value(cdt, cdn, fieldname, values.party || values.name);
 
 					// Force ERPNext to fetch account if applicable
-					if (row.doctype === 'Journal Entry Account' && frm.script_manager) {
-						frm.script_manager.trigger('party', row.doctype, row.name);
+					if (cdt === 'Journal Entry Account' && frm.script_manager) {
+						frm.script_manager.trigger('party', cdt, cdn);
 					}
 
-					frm.refresh_field(frm.pm_on_child_fieldname || 'accounts');
+					const table_fieldname = frm.pm_on_child_table_fieldname;
+					if (table_fieldname) {
+						frm.refresh_field(table_fieldname);
+					}
 				} finally {
 					setTimeout(() => {
 						frm.uph_setting_party_master = false;
@@ -677,16 +692,29 @@ uph.party = {
 	},
 
 	handle_party_master_change: function (frm, fieldname) {
-		if (!frm.doc.party_master) return;
+		if (frm.uph_setting_party_master) return;
+
+		if (!frm.doc.party_master) {
+			frm.set_value(fieldname, "");
+			return;
+		}
+
 		this.show_party_selection_dialog_callback(frm, frm.doc.party_master, false, (values) => {
 			// Set returned values from dialog
 			if (values) {
-				if (!frm.is_single_party_type && frm.fields_dict["party_type"]) {
-					frm.set_value("party_type", values.party_type);
-					frm.refresh_field("party_type");
+				frm.uph_setting_party_master = true;
+				try {
+					if (!frm.is_single_party_type && frm.fields_dict["party_type"]) {
+						frm.set_value("party_type", values.party_type);
+						frm.refresh_field("party_type");
+					}
+					frm.set_value(fieldname, values.party || values.name);
+					frm.refresh_field(fieldname);
+				} finally {
+					setTimeout(() => {
+						frm.uph_setting_party_master = false;
+					}, 500);
 				}
-				frm.set_value(fieldname, values.party || values.name);
-				frm.refresh_field(fieldname);
 			}
 		});
 		this.check_duplicate_voucher_for_party_master(frm);
@@ -724,7 +752,8 @@ uph.party = {
 		frm.meta.fields.forEach((df) => {
 			if (df.fieldtype === "Table" && df.options === child_doctype) {
 				child_fieldname = df.fieldname;
-				frm.pm_on_child_fieldname = child_fieldname;
+				frm.pm_on_child_table_fieldname = child_fieldname;
+				frm.pm_on_child_party_fieldname = fieldname;
 			}
 		});
 
