@@ -110,4 +110,13 @@ jobs:
       - name: Run QUnit Tests
         working-directory: frappe-bench
         run: |
+          echo "127.0.0.1 test_site" | sudo tee -a /etc/hosts
+          bench --site test_site serve --port 8000 --noreload > /tmp/bench-serve.log 2>&1 &
+          for i in {1..30}; do
+            if curl -sf http://127.0.0.1:8000/api/method/ping >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          curl -sf http://test_site:8000/api/method/ping >/dev/null
           bench --site test_site run-ui-tests uph --headless
