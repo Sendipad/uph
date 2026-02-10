@@ -706,16 +706,12 @@ def get_hierarchical_pm_account(pm_name, company, currency, enforce_strict=False
 
         if not acc_data and not enforce_strict:
             # 2. Try generic match (fallback)
-            generic_acc = frappe.db.sql(
-                """
-                SELECT account FROM `tabParty Master Accounts`
-                WHERE parent = %s AND company = %s AND (currency IS NULL OR currency = '')
-                LIMIT 1
-            """,
-                (pm_name, company),
+            acc_data = frappe.db.get_value(
+                "Party Master Accounts",
+                {"parent": pm_name, "company": company, "currency": ["in", [None, ""]]},
+                ["account"],
                 as_dict=1,
             )
-            acc_data = generic_acc[0] if generic_acc else None
             print(f"DEBUG UPH: PM {pm_name} generic match result: {acc_data}")
 
         if acc_data and acc_data.get("account"):

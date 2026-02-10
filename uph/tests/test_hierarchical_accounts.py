@@ -17,6 +17,7 @@ class TestHierarchicalAccounts(FrappeTestCase):
         self.settings.override_party_details_api = 1
         self.settings.enforce_strict_currency = 0
         self.settings.save(ignore_permissions=True)
+        frappe.clear_cache(doctype="Party Master Settings")
         frappe.db.commit()
 
         # Setup Hierarchy
