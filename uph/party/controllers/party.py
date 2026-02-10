@@ -668,18 +668,31 @@ def get_party_details(
 
     # Hierarchical Account Lookup
     account_fieldname = "debit_to" if party_type == "Customer" else "credit_to"
-    if not party_details.get(account_fieldname):
-        transaction_currency = currency or party_details.get("currency")
-        if party_master and company and transaction_currency:
-            enforce_strict = settings.enforce_strict_currency
-            target_account = get_hierarchical_pm_account(
-                party_master,
-                company,
-                transaction_currency,
-                enforce_strict=enforce_strict,
-            )
-            if target_account:
-                party_details[account_fieldname] = target_account
+    party_default_currency = get_party_default_currency(party_type, party)
+    transaction_currency = currency or party_details.get("currency")
+    lookup_currency = transaction_currency
+    enforce_strict = settings.enforce_strict_currency
+    if enforce_strict and party_default_currency:
+        lookup_currency = party_default_currency
+
+    existing_account = party_details.get(account_fieldname)
+    if existing_account and enforce_strict and party_default_currency:
+        account_currency = frappe.db.get_value(
+            "Account", existing_account, "account_currency"
+        )
+        if account_currency and account_currency != party_default_currency:
+            existing_account = None
+            party_details[account_fieldname] = None
+
+    if not existing_account and party_master and company and lookup_currency:
+        target_account = get_hierarchical_pm_account(
+            party_master,
+            company,
+            lookup_currency,
+            enforce_strict=enforce_strict,
+        )
+        if target_account:
+            party_details[account_fieldname] = target_account
 
     return party_details
 
@@ -750,3 +763,10 @@ def get_hierarchical_pm_account(pm_name, company, currency, enforce_strict=False
         pm_name = frappe.db.get_value("Party Master", pm_name, "parent_party_master")
 
     return None
+
+
+def get_party_default_currency(party_type, party):
+    if not party or party_type not in ("Customer", "Supplier"):
+        return None
+
+    return frappe.db.get_value(party_type, party, "default_currency")

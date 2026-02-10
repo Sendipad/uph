@@ -267,3 +267,22 @@ class TestPartyDetailsOverride(FrappeTestCase):
             party=plain_customer.name, party_type="Customer", company=self.company
         )
         self.assertEqual(details.get("debit_to"), erp_details.get("debit_to"))
+
+    def test_strict_currency_uses_party_default_currency_account(self):
+        self.customer.reload()
+        self.customer.default_currency = self.currency_usd
+        self.customer.save(ignore_permissions=True)
+
+        settings = frappe.get_doc("Party Master Settings")
+        settings.enforce_strict_currency = 1
+        settings.save(ignore_permissions=True)
+        frappe.clear_cache(doctype="Party Master Settings")
+
+        details = uph_get_party_details(
+            party=self.customer.name,
+            party_type="Customer",
+            company=self.company,
+            currency=self.currency_sar,
+        )
+
+        self.assertEqual(details.get("debit_to"), self.acc_usd.name)
