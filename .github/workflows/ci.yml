@@ -46,7 +46,8 @@ jobs:
     name: v16
     needs: changes
     if: |
-      (github.ref != 'refs/heads/hotfix') &&
+      github.ref_name != 'hotfix' &&
+      github.event.pull_request.head.ref != 'hotfix' &&
       (github.event_name == 'workflow_dispatch' ||
        github.ref == 'refs/heads/develop' ||
        needs.changes.outputs.python == 'true' ||
@@ -67,6 +68,8 @@ jobs:
     name: v15
     needs: changes
     if: |
+      github.ref_name == 'hotfix' ||
+      github.event.pull_request.head.ref == 'hotfix' ||
       github.event_name == 'workflow_dispatch' ||
       github.ref == 'refs/heads/version-15' ||
       needs.changes.outputs.python == 'true' ||
