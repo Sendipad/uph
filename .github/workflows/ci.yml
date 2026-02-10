@@ -4,12 +4,14 @@ on:
   push:
     branches:
       - develop
+      - hotfix
       - version-15
     paths-ignore:
       - "**/*.md"
   pull_request:
     branches:
       - develop
+      - hotfix
       - version-15
     paths-ignore:
       - "**/*.md"
@@ -44,11 +46,12 @@ jobs:
     name: v16
     needs: changes
     if: |
-      github.event_name == 'workflow_dispatch' ||
-      github.ref == 'refs/heads/develop' ||
-      needs.changes.outputs.python == 'true' ||
-      needs.changes.outputs.javascript == 'true' ||
-      needs.changes.outputs.config == 'true'
+      (github.ref != 'refs/heads/hotfix') &&
+      (github.event_name == 'workflow_dispatch' ||
+       github.ref == 'refs/heads/develop' ||
+       needs.changes.outputs.python == 'true' ||
+       needs.changes.outputs.javascript == 'true' ||
+       needs.changes.outputs.config == 'true')
     uses: ./.github/workflows/reusable_test.yml
     with:
       frappe_branch: "develop"
