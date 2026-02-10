@@ -671,8 +671,12 @@ def get_party_details(
     if not party_details.get(account_fieldname):
         transaction_currency = currency or party_details.get("currency")
         if party_master and company and transaction_currency:
+            enforce_strict = settings.enforce_strict_currency
             target_account = get_hierarchical_pm_account(
-                party_master, company, transaction_currency
+                party_master,
+                company,
+                transaction_currency,
+                enforce_strict=enforce_strict,
             )
             if target_account:
                 party_details[account_fieldname] = target_account
@@ -680,34 +684,63 @@ def get_party_details(
     return party_details
 
 
-def get_hierarchical_pm_account(pm_name, company, currency):
+def get_hierarchical_pm_account(pm_name, company, currency, enforce_strict=False):
     """
-    Traverses the PM tree upwards to find a group account that contains
-    a leaf account with the matching currency.
+    Traverses the PM tree upwards to find an account matching company and currency.
+    1. Looks for exact currency match in PM Accounts.
+    2. If not strict, looks for generic match (empty currency) in PM Accounts.
+    3. Handles both leaf accounts and group accounts (expanding by currency).
     """
     while pm_name:
-        # Check if this PM node has a group account configured for the company
-        pm_group_account = frappe.db.get_value(
+        # 1. Try exact currency match
+        acc_data = frappe.db.get_value(
             "Party Master Accounts",
-            {"parent": pm_name, "company": company, "parenttype": "Party Master"},
-            "account",
+            {"parent": pm_name, "company": company, "currency": currency},
+            ["account"],
+            as_dict=1,
         )
 
-        if pm_group_account:
-            # Find a leaf account under this group that matches the currency
-            target_account = frappe.db.get_value(
-                "Account",
-                {
-                    "parent_account": pm_group_account,
-                    "account_currency": currency,
-                    "is_group": 0,
-                    "company": company,
-                    "disabled": 0,
-                },
-                "name",
+        if not acc_data and not enforce_strict:
+            # 2. Try generic match (fallback)
+            generic_acc = frappe.db.sql(
+                """
+                SELECT account FROM `tabParty Master Accounts`
+                WHERE parent = %s AND company = %s AND (currency IS NULL OR currency = '')
+                LIMIT 1
+            """,
+                (pm_name, company),
+                as_dict=1,
             )
-            if target_account:
-                return target_account
+            acc_data = generic_acc[0] if generic_acc else None
+
+        if acc_data and acc_data.get("account"):
+            target_account = acc_data.account
+            acc_meta = frappe.db.get_value(
+                "Account", target_account, ["is_group", "account_currency"], as_dict=1
+            )
+
+            if acc_meta:
+                if acc_meta.is_group:
+                    # Expansion logic for group accounts
+                    leaf_filters = {
+                        "parent_account": target_account,
+                        "account_currency": currency,
+                        "is_group": 0,
+                        "company": company,
+                        "disabled": 0,
+                    }
+                    leaf_match = frappe.db.get_value(
+                        "Account",
+                        leaf_filters,
+                        "name",
+                    )
+                    if leaf_match:
+                        return leaf_match
+                else:
+                    # It's a leaf account
+                    # If strict, verify account currency matches transaction currency
+                    if not enforce_strict or acc_meta.account_currency == currency:
+                        return target_account
 
         # Move up to parent PM
         pm_name = frappe.db.get_value("Party Master", pm_name, "parent_party_master")
