@@ -121,8 +121,8 @@ jobs:
         run: |
           bench get-app uph $GITHUB_WORKSPACE
           if [ "${{ inputs.setuptools_version }}" != "latest" ]; then
-            ./frappe-bench/env/bin/python -m pip install "setuptools${{ inputs.setuptools_version }}"
-            ./frappe-bench/env/bin/python -m pip install -e apps/uph
+            ./env/bin/python -m pip install "setuptools${{ inputs.setuptools_version }}"
+            ./env/bin/python -m pip install -e apps/uph
           fi
 
       - name: Create Site
