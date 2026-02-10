@@ -124,6 +124,7 @@ Conditions:
 | **Enable Party Analytic Accounting** | Activate PAA dimension |
 | **Check Party Master Duplicate Vouchers** | Prevent duplicate vouchers for same party master |
 | **Auto-set Party Master** | Automatically set PM on transactional documents |
+| **Enforce Strict Currency** | Strictly match transaction currency with PM Account currency |
 
 ---
 
