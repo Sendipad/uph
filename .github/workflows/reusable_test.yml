@@ -79,15 +79,15 @@ jobs:
           mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL character_set_server = 'utf8mb4'"
           mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL collation_server = 'utf8mb4_unicode_ci'"
 
-      - name: Install Frappe Bench
-        run: pip install frappe-bench
+      - name: Install Frappe Bench & Dependencies
+        run: pip install frappe-bench setuptools
 
       - name: Initialize Bench
         run: bench init --skip-redis-config-generation --frappe-branch ${{ inputs.frappe_branch }} frappe-bench
 
       - name: Fix v15 setuptools dependency
         run: |
-          ./frappe-bench/env/bin/pip install setuptools
+          ./frappe-bench/env/bin/pip install --upgrade setuptools
 
       - name: Configure Bench
         working-directory: frappe-bench

@@ -4,14 +4,20 @@ on:
   push:
     branches:
       - develop
-      - hotfix
       - version-15
     paths-ignore:
       - "**/*.md"
   pull_request:
+    branches:
+      - develop
+      - version-15
     paths-ignore:
       - "**/*.md"
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   changes:
