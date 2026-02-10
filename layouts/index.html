@@ -1,472 +1,103 @@
 {{ define "main" }}
-  <article class="markdown book-article">
-    <!-- Hero Section -->
-    <div class="book-hero" style="text-align:center; padding: 6rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); position: relative; overflow: hidden;">
-      <div style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); animation: rotate 20s linear infinite;"></div>
-      <div class="hero-content" style="position: relative; z-index: 1;">
-        <div class="hero-logo" style="margin-bottom: 3rem; animation: float 3s ease-in-out infinite;">
-          <img src="/uph-logo.png" alt="UPH Logo" style="width: 150px; height: 150px; border-radius: 30px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2), 0 10px 20px rgba(0, 0, 0, 0.1); border: 3px solid rgba(255, 255, 255, 0.3);"/>
-        </div>
-        
-        <div class="hero-badge" style="display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.5rem; background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 50px; color: white; font-size: 0.95rem; font-weight: 600; margin-bottom: 2rem; backdrop-filter: blur(10px);">
-          <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></span>
-          Version 2.7 Now Available
-        </div>
-        
-        <h1 style="font-size: clamp(3rem, 6vw, 5rem); font-weight: 800; line-height: 1.1; margin-bottom: 2rem; background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-          Unified Party Hub
-        </h1>
-        <p style="font-size: clamp(1.5rem, 3vw, 2rem); color: rgba(255, 255, 255, 0.9); margin-bottom: 1.5rem; font-weight: 300;">
-          Master Data Management for ERPNext
-        </p>
-        <p style="font-size: 1.25rem; color: rgba(255, 255, 255, 0.8); max-width: 800px; margin: 0 auto 3rem; line-height: 1.6;">
-          Centralize your customer, supplier, and employee data with intelligent hierarchy management, multi-currency support, and enterprise-grade governance.
-        </p>
-        
-        <div style="margin: 2rem 0; display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;">
-          <a href="./docs/introduction/" style="display: inline-flex; align-items: center; gap: 0.75rem; padding: 1.25rem 2.5rem; font-size: 1.125rem; font-weight: 600; border-radius: 16px; border: none; text-decoration: none; background: rgba(255, 255, 255, 0.95); color: #667eea; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); transition: all 0.3s ease;">
-            <i class="fas fa-rocket"></i>
-            Get Started
-          </a>
-          <a href="./docs/features/" style="display: inline-flex; align-items: center; gap: 0.75rem; padding: 1.25rem 2.5rem; font-size: 1.125rem; font-weight: 600; border-radius: 16px; border: 2px solid rgba(255, 255, 255, 0.3); text-decoration: none; background: transparent; color: white; backdrop-filter: blur(10px); transition: all 0.3s ease;">
-            <i class="fas fa-book"></i>
-            Documentation
-          </a>
-        </div>
+<section class="hero">
+  <div class="hero-background" aria-hidden="true">
+    <div class="gradient-orb orb-1"></div>
+    <div class="gradient-orb orb-2"></div>
+    <div class="gradient-orb orb-3"></div>
+  </div>
 
-        <!-- Stats -->
-        <div style="display: flex; justify-content: center; gap: 4rem; flex-wrap: wrap; margin-top: 4rem;">
-          <div style="text-align: center;">
-            <div style="font-size: 2.5rem; font-weight: 800; color: white;">10K+</div>
-            <div style="font-size: 1rem; color: rgba(255, 255, 255, 0.8); margin-top: 0.5rem;">Organizations</div>
-          </div>
-          <div style="text-align: center;">
-            <div style="font-size: 2.5rem; font-weight: 800; color: white;">50M+</div>
-            <div style="font-size: 1rem; color: rgba(255, 255, 255, 0.8); margin-top: 0.5rem;">Parties Managed</div>
-          </div>
-          <div style="text-align: center;">
-            <div style="font-size: 2.5rem; font-weight: 800; color: white;">99.9%</div>
-            <div style="font-size: 1rem; color: rgba(255, 255, 255, 0.8); margin-top: 0.5rem;">Uptime SLA</div>
-          </div>
-        </div>
+  <div class="hero-content container">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      Unified Party Hub for ERPNext
+    </div>
+
+    <h1 class="hero-title">Master Party Data. Reduce Duplication. Gain 360° Visibility.</h1>
+    <p class="hero-subtitle">
+      UPH centralizes customer, supplier, and employee records into one governed Party Master model with hierarchy,
+      relationship mapping, multi-currency support, and quality controls.
+    </p>
+
+    <div class="hero-buttons">
+      <a class="btn btn-primary" href="{{ "/docs/introduction/" | relLangURL }}">Get Started</a>
+      <a class="btn btn-secondary" href="{{ "/docs/features/" | relLangURL }}">Explore Features</a>
+      <a class="btn btn-outline" href="https://github.com/Sendipad/uph" target="_blank" rel="noopener">View GitHub</a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-number">One</div>
+        <div class="stat-label">Party Master per legal entity</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">Multi-role</div>
+        <div class="stat-label">Customer + Supplier + Employee linkage</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">Real-time</div>
+        <div class="stat-label">Data quality checks and duplicate workflows</div>
       </div>
     </div>
+  </div>
+</section>
 
-    <!-- Key Features Section -->
-    <div style="padding: 6rem 2rem; background: #f8fafc;">
-      <h2 style="font-size: clamp(2.5rem, 4vw, 3.5rem); font-weight: 800; text-align: center; margin-bottom: 1.5rem; color: #1e293b;">🚀 Powerful Features</h2>
-      <p style="text-align: center; font-size: 1.25rem; color: #64748b; max-width: 700px; margin: 0 auto 4rem; line-height: 1.6;">Everything you need to master your party data in ERPNext</p>
-
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2.5rem; max-width: 1400px; margin: 0 auto; padding: 0 2rem;">
-        <div style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); transition: all 0.3s ease;">
-          <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; font-size: 2rem;">
-            🌳
-          </div>
-          <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem;">Tree Hierarchy</h3>
-          <p style="color: #64748b; line-height: 1.7;">Organize parties in intelligent hierarchical structures with automatic parent-child relationships and cascading updates.</p>
-        </div>
-
-        <div style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); transition: all 0.3s ease;">
-          <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; font-size: 2rem;">
-            🔗
-          </div>
-          <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem;">Multi-Role Linking</h3>
-          <p style="color: #64748b; line-height: 1.7;">Link customers to suppliers, connect employees to multiple organizations, and manage complex relationship networks.</p>
-        </div>
-
-        <div style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); transition: all 0.3s ease;">
-          <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; font-size: 2rem;">
-            💱
-          </div>
-          <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem;">Multi-Currency Support</h3>
-          <p style="color: #64748b; line-height: 1.7;">Manage party balances and transactions across 150+ currencies with real-time exchange rates and hierarchical account mapping.</p>
-        </div>
-
-        <div style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); transition: all 0.3s ease;">
-          <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; font-size: 2rem;">
-            📊
-          </div>
-          <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem;">Analytics & Reporting</h3>
-          <p style="color: #64748b; line-height: 1.7;">Gain insights with built-in dashboards, financial reports, aging analysis, and customizable KPI widgets.</p>
-        </div>
-
-        <div style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); transition: all 0.3s ease;">
-          <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; font-size: 2rem;">
-            🛡️
-          </div>
-          <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem;">Data Governance</h3>
-          <p style="color: #64748b; line-height: 1.7;">Ensure data quality with validation rules, audit trails, compliance reporting, and role-based access controls.</p>
-        </div>
-
-        <div style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); transition: all 0.3s ease;">
-          <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; font-size: 2rem;">
-            ⚡
-          </div>
-          <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem;">SmartCache Performance</h3>
-          <p style="color: #64748b; line-height: 1.7;">Experience lightning-fast performance with intelligent caching, background sync, and optimized database queries.</p>
-        </div>
-      </div>
+<section class="section features">
+  <div class="container">
+    <div class="section-header">
+      <h2>Built for ERP teams that need governed master data</h2>
+      <p>UPH keeps ERPNext native workflows intact while adding a canonical party layer above them.</p>
     </div>
 
-    <!-- Why UPH Section -->
-    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 6rem 2rem;">
-      <h2 style="font-size: clamp(2.5rem, 4vw, 3.5rem); font-weight: 800; text-align: center; margin-bottom: 1.5rem; color: white;">💡 Why UPH?</h2>
-      <p style="text-align: center; font-size: 1.25rem; color: #94a3b8; max-width: 700px; margin: 0 auto 4rem; line-height: 1.6;">Standard ERPNext has limitations. UPH solves them.</p>
+    <div class="features-grid">
+      <article class="feature-card">
+        <div class="feature-icon">🌳</div>
+        <h3>Party Master Hierarchy</h3>
+        <p>Create parent-child party structures for holdings, regions, and branches with organized growth and traceability.</p>
+      </article>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2.5rem; max-width: 1200px; margin: 0 auto;">
-        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 2.5rem; backdrop-filter: blur(10px);">
-          <h3 style="font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 1rem;">⚠️ Fragmented Identity</h3>
-          <p style="color: #94a3b8; line-height: 1.7;">A single legal entity acting as both Customer and Supplier exists as two disconnected documents.</p>
-        </div>
+      <article class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <h3>Unified Role Linking</h3>
+        <p>Bind Customer, Supplier, and Employee documents to a single legal entity identity for cleaner operations.</p>
+      </article>
 
-        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 2.5rem; backdrop-filter: blur(10px);">
-          <h3 style="font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 1rem;">💱 Multi-Currency Complexity</h3>
-          <p style="color: #94a3b8; line-height: 1.7;">Transacting in multiple currencies often requires duplicate party records (e.g., "Customer USD", "Customer EUR").</p>
-        </div>
+      <article class="feature-card">
+        <div class="feature-icon">💱</div>
+        <h3>Multi-Currency Readiness</h3>
+        <p>Use one party context across currencies while preserving account and reporting logic.</p>
+      </article>
 
-        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 2.5rem; backdrop-filter: blur(10px);">
-          <h3 style="font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 1rem;">📊 Siloed Reporting</h3>
-          <p style="color: #94a3b8; line-height: 1.7;">Financial reports are segmented by specific Party records, making 360-degree visibility difficult.</p>
-        </div>
+      <article class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3>Data Quality Governance</h3>
+        <p>Detect probable duplicates, manage merges, and enforce data standards across party lifecycles.</p>
+      </article>
 
-        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 2.5rem; backdrop-filter: blur(10px);">
-          <h3 style="font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 1rem;">🔄 Data Redundancy</h3>
-          <p style="color: #94a3b8; line-height: 1.7;">Address and Contact data must be duplicated across multiple party roles.</p>
-        </div>
-      </div>
+      <article class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Consolidated Reporting</h3>
+        <p>Analyze transactions and balances by canonical party identity instead of fragmented role-specific records.</p>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon">⚙️</div>
+        <h3>Configurable & Extensible</h3>
+        <p>Control mappings, validations, document hooks, and custom integrations through settings and APIs.</p>
+      </article>
     </div>
+  </div>
+</section>
 
-    <!-- Core DocTypes Section -->
-    <div style="padding: 6rem 2rem; background: white;">
-      <h2 style="font-size: clamp(2.5rem, 4vw, 3.5rem); font-weight: 800; text-align: center; margin-bottom: 1.5rem; color: #1e293b;">📦 Core DocTypes</h2>
-      <p style="text-align: center; font-size: 1.25rem; color: #64748b; max-width: 700px; margin: 0 auto 4rem; line-height: 1.6;">Powerful data structures for comprehensive party management</p>
-
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
-        <div style="background: #f8fafc; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); transition: all 0.3s ease;">
-          <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem; font-size: 1.75rem;">
-            🎯
-          </div>
-          <h4 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 0.75rem;">Party Master</h4>
-          <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6;">Central hub with tree-based hierarchy, multi-role support, and consolidated visibility.</p>
-        </div>
-
-        <div style="background: #f8fafc; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); transition: all 0.3s ease;">
-          <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem; font-size: 1.75rem;">
-            📊
-          </div>
-          <h4 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 0.75rem;">Party Analytic Accounting</h4>
-          <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6;">Oracle TCA-like site accounting with multiple dimension types.</p>
-        </div>
-
-        <div style="background: #f8fafc; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); transition: all 0.3s ease;">
-          <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem; font-size: 1.75rem;">
-            🔗
-          </div>
-          <h4 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 0.75rem;">Party Master Parties</h4>
-          <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6;">Junction table linking Party Master to Customers, Suppliers, Employees.</p>
-        </div>
-
-        <div style="background: #f8fafc; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); transition: all 0.3s ease;">
-          <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem; font-size: 1.75rem;">
-            ⚙️
-          </div>
-          <h4 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 0.75rem;">Party Master Settings</h4>
-          <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6;">Central configuration for rules, field mapping, and PAA settings.</p>
-        </div>
-
-        <div style="background: #f8fafc; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); transition: all 0.3s ease;">
-          <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem; font-size: 1.75rem;">
-            🤝
-          </div>
-          <h4 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 0.75rem;">Party Relationship</h4>
-          <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6;">Define N-to-N relationships between parties with ownership tracking.</p>
-        </div>
-
-        <div style="background: #f8fafc; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); transition: all 0.3s ease;">
-          <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem; font-size: 1.75rem;">
-            📋
-          </div>
-          <h4 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 0.75rem;">Data Quality Dashboard</h4>
-          <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6;">Real-time governance score, linkage stats, and duplicate detection.</p>
-        </div>
-      </div>
+<section class="cta">
+  <div class="cta-content container">
+    <h2>Start with the docs, ship with confidence</h2>
+    <p>Follow installation, setup, feature guides, and API notes to roll out UPH in your ERPNext environment.</p>
+    <div class="cta-buttons">
+      <a class="btn btn-primary" href="{{ "/docs/introduction/installation/" | relLangURL }}">Installation Guide</a>
+      <a class="btn btn-outline" href="{{ "/docs/recreated/" | relLangURL }}">Recreated Docs</a>
     </div>
-
-    <!-- CTA Section -->
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 6rem 2rem; text-align: center;">
-      <h2 style="font-size: clamp(2.5rem, 4vw, 3.5rem); font-weight: 800; margin-bottom: 1.5rem; color: white;">🚀 Get Started Today</h2>
-      <p style="font-size: 1.25rem; color: rgba(255, 255, 255, 0.9); max-width: 700px; margin: 0 auto 3rem; line-height: 1.6;">Ready to transform your party data management?</p>
-      <div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;">
-        <a href="./docs/introduction/installation/" style="display: inline-flex; align-items: center; gap: 0.75rem; padding: 1.25rem 2.5rem; font-size: 1.125rem; font-weight: 600; border-radius: 16px; border: none; text-decoration: none; background: white; color: #667eea; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); transition: all 0.3s ease;">
-          <i class="fas fa-download"></i>
-          Installation Guide
-        </a>
-        <a href="./docs/introduction/quick-start/" style="display: inline-flex; align-items: center; gap: 0.75rem; padding: 1.25rem 2.5rem; font-size: 1.125rem; font-weight: 600; border-radius: 16px; border: 2px solid white; text-decoration: none; background: transparent; color: white; transition: all 0.3s ease;">
-          <i class="fas fa-fast-forward"></i>
-          Quick Start
-        </a>
-      </div>
-    </div>
-
-    <style>
-      @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-20px); }
-      }
-
-      @keyframes pulse {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.8; transform: scale(1.1); }
-      }
-
-      @keyframes rotate {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-
-      .book-article .book-hero .hero-content .hero-logo:hover {
-        transform: scale(1.05);
-      }
-
-      .book-article .book-hero .hero-content div[style*="background: white"]:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-      }
-
-      .book-article .book-hero .hero-content div[style*="background: rgba(255, 255, 255, 0.05)"]:hover {
-        background: rgba(255, 255, 255, 0.08);
-        transform: translateY(-5px);
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-      }
-
-      /* Responsive adjustments */
-      @media (max-width: 768px) {
-        .book-hero {
-          padding: 4rem 1.5rem !important;
-        }
-
-        .hero-content h1 {
-          font-size: 2.5rem !important;
-        }
-
-        .hero-content p {
-          font-size: 1.125rem !important;
-        }
-
-        .hero-stats {
-          gap: 2rem !important;
-        }
-
-        .stats-item div:first-child {
-          font-size: 2rem !important;
-        }
-      }
-
-      /* Floating AI Assistant Buttons */
-      .ai-floating-container {
-        position: fixed;
-        bottom: 2rem;
-        right: 2rem;
-        z-index: 1000;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-
-      .ai-floating-btn {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        cursor: pointer;
-        box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        position: relative;
-      }
-
-      .ai-floating-btn:hover {
-        transform: translateY(-4px) scale(1.05);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-      }
-
-      .ai-floating-btn::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        bottom: 100%;
-        right: 50%;
-        transform: translateX(50%);
-        margin-bottom: 0.5rem;
-        padding: 0.5rem 1rem;
-        background: #1e293b;
-        color: white;
-        font-size: 0.875rem;
-        font-weight: 500;
-        border-radius: 6px;
-        white-space: nowrap;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.2s ease;
-        pointer-events: none;
-      }
-
-      .ai-floating-btn:hover::after {
-        opacity: 1;
-        visibility: visible;
-      }
-
-      .ai-floating-btn.chatgpt {
-        background: linear-gradient(135deg, #10a37f 0%, #1a7f64 100%);
-        box-shadow: 0 4px 14px rgba(16, 163, 127, 0.4);
-      }
-
-      .ai-floating-btn.chatgpt:hover {
-        box-shadow: 0 6px 20px rgba(16, 163, 127, 0.5);
-      }
-
-      .ai-floating-btn.claude {
-        background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
-        box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
-      }
-
-      .ai-floating-btn.claude:hover {
-        box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5);
-      }
-
-      .ai-floating-btn.gemini {
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
-      }
-
-      .ai-floating-btn.gemini:hover {
-        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
-      }
-
-      /* Hide floating buttons on small screens to prevent overlap */
-      @media (max-width: 768px) {
-        .ai-floating-container {
-          bottom: 1rem;
-          right: 1rem;
-        }
-
-        .ai-floating-btn {
-          width: 48px;
-          height: 48px;
-          font-size: 1.25rem;
-        }
-      }
-    </style>
-
-    <!-- Floating AI Assistant Buttons -->
-    <div class="ai-floating-container">
-      <!-- ChatGPT Button -->
-      {{- $chatgptMessage := printf "I'm reading the %s documentation page titled \"%s\": %s\n\nPlease summarize this page and explain how to use it with examples." .Site.Title .Title .Permalink -}}
-      {{- $chatgptUrl := printf "https://chatgpt.com/?q=%s" (urlize $chatgptMessage) -}}
-      <a href="{{ $chatgptUrl }}" class="ai-floating-btn chatgpt" target="_blank" rel="noopener noreferrer" data-tooltip="Ask ChatGPT">
-        <i class="fab fa-openai"></i>
-      </a>
-
-      <!-- Claude Button -->
-      {{- $claudeMessage := printf "I'm reading the %s documentation page titled \"%s\": %s\n\nPlease summarize this page and explain how to use it with examples." .Site.Title .Title .Permalink -}}
-      {{- $claudeUrl := printf "https://claude.com/chat?q=%s" (urlize $claudeMessage) -}}
-      <a href="{{ $claudeUrl }}" class="ai-floating-btn claude" target="_blank" rel="noopener noreferrer" data-tooltip="Ask Claude">
-        <i class="fas fa-brain"></i>
-      </a>
-
-      <!-- Gemini Button -->
-      <button onclick="askGemini()" class="ai-floating-btn gemini" data-tooltip="Ask Gemini">
-        <i class="fas fa-sparkles"></i>
-      </button>
-    </div>
-
-    <!-- JavaScript for Gemini -->
-    <script>
-    function askGemini() {
-      // Get current page info
-      var pageTitle = document.title || '{{ .Title }}';
-      var pageUrl = window.location.href;
-      
-      // Create prompt
-      var prompt = 'I am reading the ' + pageTitle + ' documentation page at: ' + pageUrl + '\n\nPlease summarize this page and explain how to use it with examples.';
-      
-      // Copy prompt to clipboard
-      navigator.clipboard.writeText(prompt).then(function() {
-        // Open Gemini in new tab
-        window.open('https://gemini.google.com/app', '_blank');
-        
-        // Show brief notification
-        if (typeof frappe !== 'undefined') {
-          frappe.show_alert({
-            indicator: 'green',
-            message: 'Prompt copied! Paste it into Gemini.'
-          }, 3);
-        } else {
-          // Fallback notification using CSS
-          const notification = document.createElement('div');
-          notification.style.cssText = `
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            background: linear-gradient(135deg, #10a37f 0%, #1a7f64 100%);
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(16, 163, 127, 0.4);
-            z-index: 1001;
-            font-weight: 600;
-            animation: slideIn 0.3s ease;
-          `;
-          notification.textContent = 'Prompt copied! Paste it into Gemini.';
-          
-          const style = document.createElement('style');
-          style.textContent = `
-            @keyframes slideIn {
-              from {
-                transform: translateX(100%);
-                opacity: 0;
-              }
-              to {
-                transform: translateX(0);
-                opacity: 1;
-              }
-            }
-            @keyframes slideOut {
-              from {
-                transform: translateX(0);
-                opacity: 1;
-              }
-              to {
-                transform: translateX(100%);
-                opacity: 0;
-              }
-            }
-          `;
-          document.head.appendChild(style);
-          
-          document.body.appendChild(notification);
-          
-          // Remove notification after 3 seconds
-          setTimeout(() => {
-            notification.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => {
-              notification.remove();
-              style.remove();
-            }, 300);
-          }, 3000);
-        }
-      }).catch(function(err) {
-        console.error('Failed to copy: ', err);
-        window.open('https://gemini.google.com/app', '_blank');
-      });
-    }
-    </script>
-  </article>
+  </div>
+</section>
 {{ end }}
 
 {{ define "menu-container" }}

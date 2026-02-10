@@ -1,0 +1,116 @@
+{{- $title := .Title -}}
+{{- $url := .Permalink -}}
+{{- $summary := .Summary | plainify -}}
+
+<style>
+  .doc-ai-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin: 0 0 1rem;
+    flex-wrap: wrap;
+  }
+
+  .doc-ai-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #d4d4d8;
+    background: #fff;
+    color: #27272a;
+    border-radius: 999px;
+    padding: 0.35rem 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1.2;
+    transition: all 0.15s ease;
+  }
+
+  .doc-ai-btn:hover {
+    border-color: #a1a1aa;
+    color: #111827;
+    text-decoration: none;
+  }
+
+  .doc-ai-btn.chatgpt:hover {
+    border-color: #10a37f;
+    color: #0f766e;
+  }
+
+  .doc-ai-btn.gemini:hover {
+    border-color: #2563eb;
+    color: #1d4ed8;
+  }
+
+  .doc-ai-btn.claude:hover {
+    border-color: #9333ea;
+    color: #7e22ce;
+  }
+
+  @media (max-width: 768px) {
+    .doc-ai-actions {
+      justify-content: flex-start;
+    }
+  }
+</style>
+
+<div class="doc-ai-actions" data-page-title="{{ $title | htmlEscape }}" data-page-url="{{ $url | safeURL }}" data-page-summary="{{ $summary | htmlEscape }}">
+  <a class="doc-ai-btn chatgpt" href="#" data-ai="chatgpt" rel="noopener noreferrer" target="_blank">Ask ChatGPT</a>
+  <a class="doc-ai-btn gemini" href="#" data-ai="gemini" rel="noopener noreferrer" target="_blank">Ask Gemini</a>
+  <a class="doc-ai-btn claude" href="#" data-ai="claude" rel="noopener noreferrer" target="_blank">Ask Claude</a>
+</div>
+
+<script>
+(function () {
+  const container = document.querySelector('.doc-ai-actions');
+  if (!container) return;
+
+  function trimmed(text, maxLen) {
+    if (!text) return '';
+    const clean = String(text).replace(/\s+/g, ' ').trim();
+    return clean.length > maxLen ? clean.slice(0, maxLen) + '…' : clean;
+  }
+
+  function buildPrompt() {
+    const title = container.dataset.pageTitle || document.title;
+    const pageUrl = container.dataset.pageUrl || window.location.href;
+    const summary = container.dataset.pageSummary || '';
+    const article = document.querySelector('article.book-article');
+    const pageText = article ? article.innerText : '';
+    const context = trimmed(pageText || summary, 1800);
+
+    return [
+      'I am reading a documentation page and need help from this exact content.',
+      'Title: ' + title,
+      'URL: ' + pageUrl,
+      '',
+      'Page Content Context:',
+      context,
+      '',
+      'Please summarize the page and provide implementation-focused guidance with concrete examples.'
+    ].join('\n');
+  }
+
+  function providerUrl(provider, prompt) {
+    const encoded = encodeURIComponent(prompt);
+    if (provider === 'chatgpt') return 'https://chatgpt.com/?q=' + encoded;
+    if (provider === 'gemini') return 'https://gemini.google.com/app?prompt=' + encoded;
+    return 'https://claude.ai/new?q=' + encoded;
+  }
+
+  container.querySelectorAll('[data-ai]').forEach((btn) => {
+    btn.addEventListener('click', function (event) {
+      event.preventDefault();
+      const prompt = buildPrompt();
+      const targetUrl = providerUrl(btn.dataset.ai, prompt);
+      btn.href = targetUrl;
+      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+
+      if (btn.dataset.ai === 'gemini' && navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(prompt).catch(() => {});
+      }
+    });
+  });
+})();
+</script>
