@@ -110,4 +110,4 @@ jobs:
       - name: Run QUnit Tests
         working-directory: frappe-bench
         run: |
-          bench --site test_site run-ui-tests --app=uph --headless
+          bench --site test_site run-ui-tests --headless
