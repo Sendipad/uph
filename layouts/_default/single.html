@@ -1,8 +1,6 @@
 {{ define "main" }}
 <article class="markdown book-article">
+  {{- partial "docs/ai-page-actions" . -}}
   {{- .Content -}}
-  
-  <!-- AI Assistant Buttons -->
-  {{- partial "ai-assistant" . -}}
 </article>
 {{ end }}
