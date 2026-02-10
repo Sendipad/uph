@@ -713,8 +713,10 @@ def get_hierarchical_pm_account(pm_name, company, currency, enforce_strict=False
             as_dict=1,
         )
 
-        if not acc_data and not enforce_strict:
-            # 2. Try generic match (fallback) - Robust Python-based filtering
+        if not acc_data:
+            # 2. Try generic match (fallback row without currency).
+            # In strict mode this is still valid when the resolved account itself
+            # matches the requested currency (e.g. a group account expanded by currency).
             all_pm_accounts = frappe.db.get_values(
                 "Party Master Accounts",
                 {"parent": pm_name, "company": company},
