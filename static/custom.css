@@ -61,3 +61,53 @@ body,
     padding-left: 10px;
     color: #555;
 }
+
+.doc-ai-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin: 0 0 1rem 0;
+  flex-wrap: wrap;
+}
+
+.doc-ai-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d4d4d8;
+  background: #fff;
+  color: #27272a;
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.doc-ai-btn:hover {
+  border-color: #a1a1aa;
+  color: #111827;
+  text-decoration: none;
+}
+
+.doc-ai-btn.chatgpt:hover {
+  border-color: #10a37f;
+  color: #0f766e;
+}
+
+.doc-ai-btn.gemini:hover {
+  border-color: #2563eb;
+  color: #1d4ed8;
+}
+
+.doc-ai-btn.claude:hover {
+  border-color: #9333ea;
+  color: #7e22ce;
+}
+
+@media (max-width: 768px) {
+  .doc-ai-actions {
+    justify-content: flex-start;
+  }
+}
