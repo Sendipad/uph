@@ -249,11 +249,42 @@ $(document).on("app_ready", function () {
 				frappe.ui.form.on(child, {
 					party_master: function (frm, cdt, cdn) {
 						let row = locals[cdt][cdn];
-						uph.party.handle_party_master_change_in_child(frm, row);
-					},
-					[fieldname]: function (frm, cdt, cdn) {
-						let row = locals[cdt][cdn];
-						uph.party.on_party_field_change_in_child(frm, row);
+						const child_fieldname = uph.party.get_child_table_fieldname(frm, child);
+
+						if (!row.party_master) {
+							frappe.model.set_value(cdt, cdn, fieldname, "");
+							if (child_fieldname) {
+								frm.refresh_field(child_fieldname);
+							}
+							return;
+						}
+
+						uph.party.show_party_selection_dialog_callback(
+							frm,
+							row.party_master,
+							false,
+							(values) => {
+								// Set returned values from dialog
+
+								if (values) {
+									const update_steps = [];
+									const has_party_type = frappe.meta.has_field(cdt, "party_type");
+
+									if (has_party_type && values.party_type) {
+										update_steps.push(() =>
+											frappe.model.set_value(cdt, cdn, "party_type", values.party_type),
+										);
+									}
+									update_steps.push(() =>
+										frappe.model.set_value(cdt, cdn, fieldname, values.party || values.name),
+									);
+									if (child_fieldname) {
+										update_steps.push(() => frm.refresh_field(child_fieldname));
+									}
+									frappe.run_serially(update_steps);
+								}
+							},
+						);
 					},
 				});
 			})(doctype, child, fieldname);

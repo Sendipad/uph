@@ -163,6 +163,31 @@ uph.party = {
 			},
 		});
 	},
+	get_child_table_fieldname: function (frm, child_doctype) {
+		if (frm.pm_on_child_fieldname) {
+			return frm.pm_on_child_fieldname;
+		}
+		const child_field = frm.meta.fields.find(
+			(df) => df.fieldtype === "Table" && df.options === child_doctype,
+		);
+		return child_field ? child_field.fieldname : null;
+	},
+	get_party_master_from_child: function (frm) {
+		const child_table = frm.pm_on_child_fieldname;
+		if (!child_table || !frm.fields_dict?.[child_table]?.grid) {
+			return null;
+		}
+
+		const grid = frm.fields_dict[child_table].grid;
+		const selected =
+			typeof grid.get_selected_children === "function" ? grid.get_selected_children() : [];
+		const rows = selected?.length ? selected : frm.doc[child_table] || [];
+		const row = rows.find((r) => r.party_master);
+		return row ? row.party_master : null;
+	},
+	get_party_master_for_history: function (frm) {
+		return frm.doc.party_master || this.get_party_master_from_child(frm);
+	},
 
 
 	// ✅ NEW: Create party from tree node (fetches doc then calls dialog)
@@ -879,16 +904,30 @@ uph.party = {
 	},
 
 	add_party_master_history_shortcut: function (frm) {
+		if (frm.__pm_history_shortcut_registered) {
+			return;
+		}
+		frm.__pm_history_shortcut_registered = true;
+		const resolve_frm = () => (cur_frm && cur_frm.doc ? cur_frm : frm);
 		const shortcut_action = () => {
+			const active_frm = resolve_frm();
+			const party_master = this.get_party_master_for_history(active_frm);
+			if (!party_master) {
+				frappe.msgprint(__("Please set a Party Master first."));
+				return;
+			}
 			console.log("[UPH] Executing History Shortcut Action");
-			this.show_party_master_history_dialog(frm);
+			this.show_party_master_history_dialog(active_frm, party_master);
 		};
 
 		const condition = () => {
-			const has_pm = !!frm.doc.party_master;
+			if (!cur_frm || cur_frm.doc?.name !== frm.doc?.name) {
+				return false;
+			}
+			const has_pm = !!this.get_party_master_for_history(cur_frm);
 			console.log("[UPH] History shortcut condition checked, result:", has_pm);
 			return has_pm;
-		}
+		};
 
 		// Main Shortcut (User Requested)
 		frappe.ui.keys.add_shortcut({
@@ -918,8 +957,12 @@ uph.party = {
 		});
 	},
 
-	show_party_master_history_dialog: function (frm) {
-		const party_master = frm.doc.party_master;
+	show_party_master_history_dialog: function (frm, party_master_override) {
+		const party_master = party_master_override || frm.doc.party_master;
+		if (!party_master) {
+			frappe.msgprint(__("Please set a Party Master first."));
+			return;
+		}
 		frappe.call({
 			method: "uph.party.controllers.queries.get_party_master_history_stats",
 			args: { party_master: party_master },
