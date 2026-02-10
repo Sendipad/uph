@@ -85,6 +85,10 @@ jobs:
       - name: Initialize Bench
         run: bench init --skip-redis-config-generation --frappe-branch ${{ inputs.frappe_branch }} frappe-bench
 
+      - name: Fix v15 setuptools dependency
+        run: |
+          ./frappe-bench/env/bin/pip install setuptools
+
       - name: Configure Bench
         working-directory: frappe-bench
         run: |
@@ -104,7 +108,7 @@ jobs:
       - name: Create Site
         working-directory: frappe-bench
         run: |
-          bench new-site test_site --db-root-password root --admin-password admin --no-mariadb-socket
+          bench new-site test_site --db-root-password root --admin-password admin --mariadb-user-host-login-scope='%'
           bench --site test_site set-config allow_tests true
 
       - name: Setup ERPNext & UPH
