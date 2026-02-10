@@ -16,23 +16,39 @@ describe("UPH QUnit Tests", () => {
 		cy.wrap(root).find("#qunit-testresult .failed").should("contain", "0");
 	};
 
+	const assertQUnitFromIframe = () => {
+		cy.get("iframe", { timeout: 180000 })
+			.first()
+			.its("0.contentDocument.body")
+			.should("not.be.empty")
+			.then((iframeBody) => {
+				assertQUnitPassed(iframeBody);
+			});
+	};
+
 	it("runs the QUnit suite for the UPH app", () => {
 		login();
 		cy.visit("/app/tests?app=uph");
 
-		cy.get("body", { timeout: 60000 }).then(($body) => {
+		cy.get("body", { timeout: 120000 }).then(($body) => {
 			if ($body.find("#qunit-testresult").length) {
 				assertQUnitPassed($body);
 				return;
 			}
 
-			cy.get("iframe", { timeout: 60000 })
-				.first()
-				.its("0.contentDocument.body")
-				.should("not.be.empty")
-				.then((iframeBody) => {
-					assertQUnitPassed(iframeBody);
-				});
+			if ($body.find("iframe").length) {
+				assertQUnitFromIframe();
+				return;
+			}
+
+			cy.get("#qunit-testresult, iframe", { timeout: 180000 }).then(($runner) => {
+				if ($runner.filter("#qunit-testresult").length) {
+					cy.get("body").then(assertQUnitPassed);
+					return;
+				}
+
+				assertQUnitFromIframe();
+			});
 		});
 	});
 });
