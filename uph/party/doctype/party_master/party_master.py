@@ -40,6 +40,9 @@ class PartyMaster(NestedSet):
         from uph.party.doctype.party_master_accounts.party_master_accounts import (
             PartyMasterAccounts,
         )
+
+        # Added currency to TYPE_CHECKING
+        PartyMasterAccounts.currency: DF.Link | None
         from uph.party.doctype.party_master_parties.party_master_parties import (
             PartyMasterParties,
         )
@@ -177,6 +180,20 @@ class PartyMaster(NestedSet):
         self._validate_status_reasons()
         self._validate_party_name_uniqueness()
         self.validate_roles()
+        self._validate_accounts_uniqueness()
+
+    def _validate_accounts_uniqueness(self):
+        """Ensure (company, currency) is unique in the accounts table."""
+        seen = set()
+        for row in self.accounts:
+            key = (row.company, row.currency)
+            if key in seen:
+                frappe.throw(
+                    _(
+                        "Duplicate account configuration for Company {0} and Currency {1}"
+                    ).format(row.company, row.currency or _("Any"))
+                )
+            seen.add(key)
 
     def _validate_status_reasons(self):
         """Validate that disputed parties have reasons."""

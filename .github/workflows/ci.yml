@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - develop
+      - hotfix
+      - version-15
+    paths-ignore:
+      - "**/*.md"
+  pull_request:
+    branches:
+      - develop
+      - hotfix
+      - version-15
+    paths-ignore:
+      - "**/*.md"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.filter.outputs.python }}
+      javascript: ${{ steps.filter.outputs.javascript }}
+      config: ${{ steps.filter.outputs.config }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            python:
+              - "**/*.py"
+            javascript:
+              - "**/*.js"
+            config:
+              - "**/*.json"
+
+  test_v16:
+    name: v16
+    needs: changes
+    if: |
+      github.ref_name != 'hotfix' &&
+      github.event.pull_request.head.ref != 'hotfix' &&
+      (github.event_name == 'workflow_dispatch' ||
+       github.ref == 'refs/heads/develop' ||
+       needs.changes.outputs.python == 'true' ||
+       needs.changes.outputs.javascript == 'true' ||
+       needs.changes.outputs.config == 'true')
+    uses: ./.github/workflows/reusable_test.yml
+    with:
+      frappe_branch: "develop"
+      erpnext_branch: "develop"
+      python_version: "3.14"
+      node_version: "24"
+      mariadb_version: "10.11"
+      setuptools_version: "latest"
+      run_python: ${{ needs.changes.outputs.python == 'true' || needs.changes.outputs.config == 'true' }}
+      run_ui: ${{ needs.changes.outputs.javascript == 'true' || needs.changes.outputs.config == 'true' }}
+
+  test_v15:
+    name: v15
+    needs: changes
+    if: |
+      github.ref_name == 'hotfix' ||
+      github.event.pull_request.head.ref == 'hotfix' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.ref == 'refs/heads/version-15' ||
+      needs.changes.outputs.python == 'true' ||
+      needs.changes.outputs.javascript == 'true' ||
+      needs.changes.outputs.config == 'true'
+    uses: ./.github/workflows/reusable_test.yml
+    with:
+      frappe_branch: "version-15"
+      erpnext_branch: "version-15"
+      python_version: "3.10"
+      node_version: "18"
+      mariadb_version: "10.6"
+      setuptools_version: "<70"
+      run_python: ${{ needs.changes.outputs.python == 'true' || needs.changes.outputs.config == 'true' }}
+      run_ui: ${{ needs.changes.outputs.javascript == 'true' || needs.changes.outputs.config == 'true' }}

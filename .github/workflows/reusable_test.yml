@@ -1,0 +1,160 @@
+name: Reusable Test
+
+on:
+  workflow_call:
+    inputs:
+      frappe_branch:
+        required: true
+        type: string
+        default: "develop"
+      erpnext_branch:
+        required: true
+        type: string
+        default: "develop"
+      python_version:
+        required: true
+        type: string
+        default: "3.14"
+      node_version:
+        required: true
+        type: string
+        default: "24"
+      mariadb_version:
+        required: true
+        type: string
+        default: "10.11"
+      setuptools_version:
+        required: true
+        type: string
+        default: "latest"
+      run_python:
+        required: false
+        type: boolean
+        default: true
+      run_ui:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    services:
+      mariadb:
+        image: mariadb:${{ inputs.mariadb_version }}
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: --health-cmd="mariadb-admin ping" --health-interval=5s --health-timeout=2s --health-retries=3
+
+      redis-cache:
+        image: redis:alpine
+        ports:
+          - 13000:6379
+      redis-queue:
+        image: redis:alpine
+        ports:
+          - 11000:6379
+      redis-socketio:
+        image: redis:alpine
+        ports:
+          - 12000:6379
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libmariadb-dev-compat libmariadb-dev mariadb-client
+          if [ "${{ inputs.setuptools_version }}" != "latest" ]; then
+            python -m pip install --upgrade pip "setuptools${{ inputs.setuptools_version }}" wheel
+          else
+            python -m pip install --upgrade pip setuptools wheel
+          fi
+
+      - name: Configure MariaDB
+        run: |
+          mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL character_set_server = 'utf8mb4'"
+          mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL collation_server = 'utf8mb4_unicode_ci'"
+
+      - name: Install Frappe Bench & Dependencies
+        run: pip install frappe-bench
+
+      - name: Initialize Bench
+        run: |
+          bench init --skip-redis-config-generation --frappe-branch ${{ inputs.frappe_branch }} frappe-bench
+          if [ "${{ inputs.setuptools_version }}" != "latest" ]; then
+            cd frappe-bench
+            ./env/bin/python -m pip install --upgrade pip "setuptools${{ inputs.setuptools_version }}" wheel
+          fi
+
+      - name: Configure Bench
+        working-directory: frappe-bench
+        run: |
+          bench set-config -g db_host 127.0.0.1
+          bench set-config -g redis_cache redis://127.0.0.1:13000
+          bench set-config -g redis_queue redis://127.0.0.1:11000
+          bench set-config -g redis_socketio redis://127.0.0.1:12000
+
+      - name: Install ERPNext
+        working-directory: frappe-bench
+        run: bench get-app erpnext --branch ${{ inputs.erpnext_branch }}
+
+      - name: Install UPH
+        working-directory: frappe-bench
+        run: |
+          bench get-app uph $GITHUB_WORKSPACE
+          if [ "${{ inputs.setuptools_version }}" != "latest" ]; then
+            ./env/bin/python -m pip install "setuptools${{ inputs.setuptools_version }}"
+            ./env/bin/python -m pip install -e apps/uph
+          fi
+
+      - name: Create Site
+        working-directory: frappe-bench
+        run: |
+          bench new-site test_site --db-root-password root --admin-password admin --mariadb-user-host-login-scope='%'
+          bench --site test_site set-config allow_tests true
+
+      - name: Setup ERPNext & UPH
+        working-directory: frappe-bench
+        run: |
+          bench --site test_site install-app erpnext
+          bench --site test_site install-app uph
+          bench --site test_site execute uph.tests.test_utils.setup_erpnext_baseline
+
+      - name: Run Python Tests
+        if: ${{ inputs.run_python }}
+        working-directory: frappe-bench
+        run: |
+          bench --site test_site run-tests --app uph
+
+      - name: Run UI Tests
+        if: ${{ inputs.run_ui }}
+        working-directory: frappe-bench
+        run: |
+          pip install playwright
+          playwright install --with-deps chromium
+          echo "127.0.0.1 test_site" | sudo tee -a /etc/hosts
+          bench --site test_site serve --port 8000 --noreload > /tmp/bench-serve.log 2>&1 &
+          for i in {1..30}; do
+            if curl -sf http://127.0.0.1:8000/api/method/ping >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          bench --site test_site run-ui-tests uph --headless
