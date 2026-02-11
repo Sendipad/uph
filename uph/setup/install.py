@@ -227,7 +227,7 @@ def seed_default_party_master_structure():
 
     updated = False
     for row in structure:
-        _, changed = ensure_pm_node(
+        pm_name, changed = ensure_pm_node(
             row.get("party_number"),
             row.get("party_name"),
             row.get("parent_party_master"),
@@ -238,10 +238,10 @@ def seed_default_party_master_structure():
             updated = True
 
     # Create third-level nodes based on existing Customer/Supplier Groups
-    customers_parent, _ = ensure_pm_node(
+    customers_parent, _pm_changed = ensure_pm_node(
         "1300", _("Customers"), "1000", "Customer", "Customer Group"
     )
-    suppliers_parent, _ = ensure_pm_node(
+    suppliers_parent, _pm_changed = ensure_pm_node(
         "2100", _("Suppliers"), "2000", "Supplier", "Supplier Group"
     )
 
