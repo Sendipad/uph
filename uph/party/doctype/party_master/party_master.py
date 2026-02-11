@@ -40,9 +40,6 @@ class PartyMaster(NestedSet):
         from uph.party.doctype.party_master_accounts.party_master_accounts import (
             PartyMasterAccounts,
         )
-
-        # Added currency to TYPE_CHECKING
-        PartyMasterAccounts.currency: DF.Link | None
         from uph.party.doctype.party_master_parties.party_master_parties import (
             PartyMasterParties,
         )
@@ -249,7 +246,10 @@ class PartyMaster(NestedSet):
 
     def _validate_party_type_requirement(self):
         """Validate party type is set when parent exists."""
-        if not self.party_type and self.parent_party_master:
+        if self.flags.ignore_validate:
+            return
+
+        if not self.party_type and self.parent_party_master and not self.is_group:
             frappe.throw(_("Default Party Type is Mandatory"))
 
     def before_save(self):
@@ -300,13 +300,17 @@ class PartyMaster(NestedSet):
 
     def _generate_title(self):
         """Generate unique title."""
-        title = "{0}".format(self.party_name)
-        duplicate_title = frappe.db.get_list(
-            "Party Master", filters={"title": title, "name": ["!=", self.name]}
-        )
-        if duplicate_title:
-            title = title + "({0})".format(_(self.party_type))
-        self.title = title
+        if self.party_number:
+            self.title = f"{self.party_name} - {self.party_number}"
+        else:
+            self.title = self.party_name
+
+        # Ensure uniqueness if needed, though party_number should guarantee it
+        if frappe.db.exists(
+            "Party Master", {"title": self.title, "name": ["!=", self.name]}
+        ):
+            # Fallback if somehow duplicate
+            self.title = f"{self.title} ({self.party_type or 'Group'})"
 
     def _update_linked_count(self):
         """Update total linked party count."""

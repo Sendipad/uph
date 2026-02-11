@@ -1,0 +1,71 @@
+[
+    {
+        "party_number": "1000",
+        "party_name": "Debtors",
+        "children": [
+            {
+                "party_number": "1100",
+                "party_name": "Customers",
+                "party_type": "Customer",
+                "group_type": "Customer Group",
+                "children": [
+                    {
+                        "party_number": "1110",
+                        "party_name": "Local Customer",
+                        "party_type": "Customer",
+                        "group_type": "Customer Group"
+                    },
+                    {
+                        "party_number": "1120",
+                        "party_name": "Commercial Customer",
+                        "party_type": "Customer",
+                        "group_type": "Customer Group"
+                    },
+                    {
+                        "party_number": "1130",
+                        "party_name": "Foreign Customer",
+                        "party_type": "Customer",
+                        "group_type": "Customer Group"
+                    }
+                ]
+            },
+            {
+                "party_number": "1200",
+                "party_name": "Employees",
+                "party_type": "Employee"
+            }
+        ]
+    },
+    {
+        "party_number": "2000",
+        "party_name": "Creditors",
+        "children": [
+            {
+                "party_number": "2100",
+                "party_name": "Suppliers",
+                "party_type": "Supplier",
+                "group_type": "Supplier Group",
+                "children": [
+                    {
+                        "party_number": "2110",
+                        "party_name": "Local Supplier",
+                        "party_type": "Supplier",
+                        "group_type": "Supplier Group"
+                    },
+                    {
+                        "party_number": "2120",
+                        "party_name": "Foreign Supplier",
+                        "party_type": "Supplier",
+                        "group_type": "Supplier Group"
+                    }
+                ]
+            },
+            {
+                "party_number": "2200",
+                "party_name": "Services",
+                "party_type": "Supplier",
+                "group_type": "Supplier Group"
+            }
+        ]
+    }
+]
