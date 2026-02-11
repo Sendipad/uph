@@ -12,7 +12,7 @@ from uph.party.doctype.party_master_settings.party_master_settings import (
 
 def full_setup():
     """Run full setup for fresh install or substantial updates"""
-    run_pending_setup()
+    run_install_setup()
 
 
 def setup():
@@ -22,7 +22,14 @@ def setup():
 
 def on_migrate():
     """Run after migrate"""
-    run_pending_setup()
+    # Only run safe updates on migrate
+    ensure_essential_erpnext_fixtures()
+    setup_initial_document_types()
+    setup_party_types_table()
+    create_party_master_tree()
+    # seed_default_party_master_structure() # Skipped on migrate
+    create_party_analytic_accounting_dimension()
+    create_gender_fixtures()
 
 
 def after_install():
@@ -30,8 +37,8 @@ def after_install():
     post_install()
 
 
-def run_pending_setup():
-    """Run new setup safely for existing sites"""
+def run_install_setup():
+    """Run full setup including seeding for new installations"""
     ensure_essential_erpnext_fixtures()
     setup_initial_document_types()
     setup_party_types_table()
@@ -39,6 +46,11 @@ def run_pending_setup():
     seed_default_party_master_structure()
     create_party_analytic_accounting_dimension()
     create_gender_fixtures()
+
+
+def run_pending_setup():
+    """Legacy function, redirect to install setup for backward compatibility"""
+    run_install_setup()
 
 
 def ensure_essential_erpnext_fixtures():
@@ -114,223 +126,168 @@ def seed_default_party_master_structure():
     """Seed a default Party Master structure using translatable English labels.
 
     This is idempotent and only updates records if they are missing.
-    It also creates a level under Customers/Suppliers based on existing groups.
+    It supports recursive mapping of ERPNext Customer/Supplier groups.
     """
+    PartyMasterSeeder().run()
 
-    def ensure_pm_node(party_number, party_name, parent, party_type, group_type=None):
-        if party_number and frappe.db.exists("Party Master", party_number):
-            doc = frappe.get_doc("Party Master", party_number)
-            changed = False
-            if not doc.party_name:
-                doc.party_name = party_name
-                changed = True
-            if parent is not None and not doc.parent_party_master:
-                doc.parent_party_master = parent
-                changed = True
-            if doc.is_group != 1:
-                doc.is_group = 1
-                changed = True
-            if party_type and not doc.party_type:
-                doc.party_type = party_type
-                changed = True
-            if group_type and not doc.group_type:
-                doc.group_type = group_type
-                changed = True
-            if changed:
-                doc.flags.ignore_validate = True
-                doc.save(ignore_permissions=True)
-                return doc.name, True
-            return doc.name, False
 
-        if not party_number:
-            existing = frappe.get_all(
-                "Party Master",
-                filters={
-                    "party_name": party_name,
-                    "parent_party_master": parent,
-                    "is_group": 1,
-                },
-                pluck="name",
-                limit=1,
-            )
-            if existing:
-                return existing[0], False
+class PartyMasterSeeder:
+    def __init__(self):
+        self.updated = False
+        import json
 
-        doc = frappe.new_doc("Party Master")
-        if party_number:
-            doc.party_number = party_number
-        doc.party_name = party_name
-        doc.is_group = 1
-        doc.party_type = party_type
-        doc.group_type = group_type
-        doc.parent_party_master = parent
-        doc.flags.ignore_validate = True
+    def run(self):
+        structure = self.get_structure()
+        if not structure:
+            return
+
+        for node in structure:
+            self.process_node(node)
+
+        if self.updated:
+            from frappe.utils.nestedset import rebuild_tree
+
+            rebuild_tree("Party Master")
+            frappe.db.commit()
+
+    def get_structure(self):
+        import json
+
         try:
-            doc.insert(ignore_permissions=True, ignore_if_duplicate=True)
-        except Exception:
-            existing = (
-                frappe.db.exists("Party Master", party_number)
-                if party_number
-                else frappe.get_all(
-                    "Party Master",
-                    filters={
-                        "party_name": party_name,
-                        "parent_party_master": parent,
-                        "is_group": 1,
-                    },
-                    pluck="name",
-                    limit=1,
-                )
+            # fix: path should be relative to the app module
+            file_path = frappe.get_app_path(
+                "uph", "setup/data/party_master_structure.json"
             )
-            if existing:
-                return (existing if isinstance(existing, str) else existing[0]), False
-            raise
-        return doc.name, True
+            print(f"Loading structure from: {file_path}")
+            with open(file_path, "r") as f:
+                data = json.load(f)
+                print(f"Loaded {len(data)} root nodes.")
+                return data
+        except Exception as e:
+            frappe.log_error(
+                "Party Master Seeding Error", f"Could not load structure JSON: {e}"
+            )
+            print(f"Error loading structure: {e}")
+            return []
 
-    structure = [
-        {
-            "party_number": "1000",
-            "party_name": _("Debtors"),
-            "parent_party_master": None,
-            "is_group": 1,
-            "party_type": "Customer",
-            "group_type": "Customer Group",
-        },
-        {
-            "party_number": "1300",
-            "party_name": _("Customers"),
-            "parent_party_master": "1000",
-            "is_group": 1,
-            "party_type": "Customer",
-            "group_type": "Customer Group",
-        },
-        {
-            "party_number": "1301",
-            "party_name": _("Cash Sales"),
-            "parent_party_master": "1300",
-            "is_group": 1,
-            "party_type": "Customer",
-            "group_type": "Customer Group",
-        },
-        {
-            "party_number": "1600",
-            "party_name": _("Employees"),
-            "parent_party_master": "1000",
-            "is_group": 1,
-            "party_type": "Employee",
-        },
-        {
-            "party_number": "2000",
-            "party_name": _("Creditors"),
-            "parent_party_master": None,
-            "is_group": 1,
-            "party_type": "Supplier",
-            "group_type": "Supplier Group",
-        },
-        {
-            "party_number": "2100",
-            "party_name": _("Suppliers"),
-            "parent_party_master": "2000",
-            "is_group": 1,
-            "party_type": "Supplier",
-            "group_type": "Supplier Group",
-        },
-        {
-            "party_number": "3000",
-            "party_name": _("Company Branches"),
-            "parent_party_master": None,
-            "is_group": 1,
-            "party_type": "Customer",
-        },
-    ]
+    def process_node(self, node, parent=None):
+        # 1. Ensure current node exists
+        pm_name = self.ensure_node(node, parent)
 
-    updated = False
-    for row in structure:
-        pm_name, changed = ensure_pm_node(
-            row.get("party_number"),
-            row.get("party_name"),
-            row.get("parent_party_master"),
-            row.get("party_type"),
-            row.get("group_type"),
-        )
-        if changed:
-            updated = True
+        # 2. Process predefined children
+        if node.get("children"):
+            for child in node.get("children"):
+                self.process_node(child, parent=pm_name)
 
-    # Create third-level nodes based on existing Customer/Supplier Groups
-    customers_parent, _pm_changed = ensure_pm_node(
-        "1300", _("Customers"), "1000", "Customer", "Customer Group"
-    )
-    suppliers_parent, _pm_changed = ensure_pm_node(
-        "2100", _("Suppliers"), "2000", "Supplier", "Supplier Group"
-    )
+        # 3. Process dynamic sync (ERPNext Groups)
+        if node.get("sync_erpnext_group"):
+            self.sync_erpnext_groups(
+                node.get("sync_erpnext_group"), pm_name, node.get("party_type")
+            )
 
-    customer_groups = frappe.get_all(
-        "Customer Group",
-        filters={"parent_customer_group": ["!=", ""]},
-        pluck="name",
-        order_by="name asc",
-    )
-    for group_name in customer_groups:
-        existing = frappe.get_all(
-            "Party Master",
-            filters={
-                "group_type": "Customer Group",
-                "party_type_group": group_name,
-                "parent_party_master": customers_parent,
+    def ensure_node(self, node, parent):
+        party_number = node.get("party_number")
+
+        # Define identification filters
+        if party_number:
+            filters = {"party_number": party_number}
+        else:
+            # Fallback for nodes without fixed number
+            filters = {
+                "party_name": _(node.get("party_name")),
+                "parent_party_master": parent,
                 "is_group": 1,
-            },
-            pluck="name",
-            limit=1,
-        )
-        if existing:
-            continue
-        doc = frappe.new_doc("Party Master")
-        doc.party_name = group_name
-        doc.is_group = 1
-        doc.party_type = "Customer"
-        doc.group_type = "Customer Group"
-        doc.party_type_group = group_name
-        doc.parent_party_master = customers_parent
-        doc.flags.ignore_validate = True
-        doc.insert(ignore_permissions=True, ignore_if_duplicate=True)
-        updated = True
+            }
 
-    supplier_groups = frappe.get_all(
-        "Supplier Group",
-        filters={"parent_supplier_group": ["!=", ""]},
-        pluck="name",
-        order_by="name asc",
-    )
-    for group_name in supplier_groups:
-        existing = frappe.get_all(
-            "Party Master",
-            filters={
-                "group_type": "Supplier Group",
-                "party_type_group": group_name,
-                "parent_party_master": suppliers_parent,
+        # Prepare values
+        values = {
+            "party_name": _(node.get("party_name")),
+            "parent_party_master": parent,
+            "is_group": 1,
+            "party_type": node.get("party_type"),
+            "group_type": node.get("group_type"),
+            "party_type_group": node.get("party_type_group"),
+        }
+
+        return self.upsert(filters, values, party_number)
+
+    def upsert(self, filters, values, party_number=None):
+        existing = frappe.db.exists("Party Master", filters)
+
+        if existing:
+            doc = frappe.get_doc("Party Master", existing)
+            changed = False
+
+            # Compare values
+            for k, v in values.items():
+                if v is not None and doc.get(k) != v:
+                    doc.set(k, v)
+                    changed = True
+
+            # Ensure number matches strict ID if provided
+            if party_number and doc.party_number != party_number:
+                doc.party_number = party_number
+                changed = True
+
+            if not doc.title:
+                changed = True
+
+            if changed:
+                doc.flags.ignore_validate = False
+                doc.save(ignore_permissions=True)
+                self.updated = True
+
+            return doc.name
+        else:
+            doc = frappe.new_doc("Party Master")
+            doc.update(values)
+            if party_number:
+                doc.party_number = party_number
+
+            doc.flags.ignore_validate = False
+            doc.insert(ignore_permissions=True, ignore_if_duplicate=True)
+            self.updated = True
+            return doc.name
+
+    def sync_erpnext_groups(self, doctype, parent_pm, party_type):
+        group_type = doctype
+        parent_field = "parent_" + group_type.lower().replace(" ", "_")
+
+        groups = frappe.get_all(
+            doctype,
+            fields=["name", parent_field],
+            order_by="lft asc",
+        )
+
+        pm_map = {None: parent_pm}
+
+        for group in groups:
+            erp_parent = group.get(parent_field)
+            if not erp_parent:
+                erp_parent = None
+
+            pm_parent = pm_map.get(erp_parent)
+
+            if not pm_parent:
+                continue
+
+            filters = {
+                "party_type_group": group.name,
+                "group_type": group_type,
                 "is_group": 1,
-            },
-            pluck="name",
-            limit=1,
-        )
-        if existing:
-            continue
-        doc = frappe.new_doc("Party Master")
-        doc.party_name = group_name
-        doc.is_group = 1
-        doc.party_type = "Supplier"
-        doc.group_type = "Supplier Group"
-        doc.party_type_group = group_name
-        doc.parent_party_master = suppliers_parent
-        doc.flags.ignore_validate = True
-        doc.insert(ignore_permissions=True, ignore_if_duplicate=True)
-        updated = True
+            }
 
-    if updated:
-        from frappe.utils.nestedset import rebuild_tree
+            values = {
+                "party_name": group.name,
+                "party_type": party_type,
+                "group_type": group_type,
+                "party_type_group": group.name,
+                "parent_party_master": pm_parent,
+                "is_group": 1,
+            }
 
-        rebuild_tree("Party Master")
-        frappe.db.commit()
+            pm_name = self.upsert(filters, values)
+            pm_map[group.name] = pm_name
 
 
 def create_party_analytic_accounting_dimension():

@@ -534,12 +534,30 @@ def check_duplicate_voucher_party_master(
 def validate_party_master_on_document_types_smart(doc, method=None):
     from uph.party.controllers.cache_utils import is_configured_doctype
 
+    if (
+        frappe.flags.in_patch
+        or frappe.flags.in_install
+        or frappe.flags.in_migrate
+        or frappe.flags.in_import
+        or frappe.flags.in_setup_wizard
+    ):
+        return
+
     if is_configured_doctype(doc.doctype):
         validate_party_master_on_document_types(doc, method)
 
 
 def validate_party_master_on_target_party_type_smart(doc, method):
     from uph.party.controllers.cache_utils import is_configured_party_type
+
+    if (
+        frappe.flags.in_patch
+        or frappe.flags.in_install
+        or frappe.flags.in_migrate
+        or frappe.flags.in_import
+        or frappe.flags.in_setup_wizard
+    ):
+        return
 
     if is_configured_party_type(doc.doctype):
         validate_party_master_on_target_party_type(doc, method)
@@ -667,11 +685,7 @@ def get_party_details(
     original_get_default_contact = erp_party.get_default_contact
 
     def _pm_default_contact(doctype, name):
-        if (
-            pm.party_primary_contact
-            and doctype == party_type
-            and name == party
-        ):
+        if pm.party_primary_contact and doctype == party_type and name == party:
             return pm.party_primary_contact
         return original_get_default_contact(doctype, name)
 

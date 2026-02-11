@@ -221,9 +221,13 @@ def clear_all_caches():
 
 def get_configured_doctypes():
     def generator():
+        if not frappe.db.exists("DocType", "Party Master Settings"):
+            return set()
         settings = frappe.get_cached_doc(
             "Party Master Settings", "Party Master Settings"
         )
+        if not settings:
+            return set()
         return {d.document_type for d in settings.document_types if d.document_type}
 
     val = SmartCache.get_cached_value(CACHE_KEY_CONFIGURED_DOCTYPES, generator)
@@ -232,9 +236,13 @@ def get_configured_doctypes():
 
 def get_configured_party_types():
     def generator():
+        if not frappe.db.exists("DocType", "Party Master Settings"):
+            return set()
         settings = frappe.get_cached_doc(
             "Party Master Settings", "Party Master Settings"
         )
+        if not settings:
+            return set()
         return {d.party_type for d in settings.party_types if d.party_type}
 
     val = SmartCache.get_cached_value(CACHE_KEY_PARTY_TYPES, generator)
