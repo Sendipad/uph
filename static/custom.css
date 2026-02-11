@@ -101,3 +101,69 @@ body,
   .doc-ai-actions { justify-content: flex-start; }
 }
 
+
+.doc-breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.86rem;
+  color: #71717a;
+  margin-bottom: 0.75rem;
+}
+
+.doc-breadcrumbs a {
+  color: #4f46e5;
+  text-decoration: none;
+}
+
+.doc-breadcrumbs a:hover {
+  text-decoration: underline;
+}
+
+.doc-page-title {
+  margin-top: 0.75rem;
+}
+
+.doc-prev-next {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.doc-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid #e4e4e7;
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.8rem;
+  text-decoration: none;
+  font-weight: 600;
+  color: #18181b;
+  background: #fafafa;
+}
+
+.doc-nav-link:hover {
+  border-color: #a1a1aa;
+  background: #fff;
+}
+
+.doc-ai-btn svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.doc-ai-btn.chatgpt {
+  border-color: #10a37f33;
+}
+
+.doc-ai-btn.gemini {
+  border-color: #2563eb33;
+}
+
+.doc-ai-btn.claude {
+  border-color: #9333ea33;
+}

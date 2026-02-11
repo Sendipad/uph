@@ -3,9 +3,20 @@
 {{- $summary := .Summary | plainify -}}
 
 <div class="doc-ai-actions" data-page-title="{{ $title | htmlEscape }}" data-page-url="{{ $url | safeURL }}" data-page-summary="{{ $summary | htmlEscape }}">
-  <a class="doc-ai-btn chatgpt" href="#" data-ai="chatgpt" rel="noopener noreferrer" target="_blank">Ask ChatGPT</a>
-  <a class="doc-ai-btn gemini" href="#" data-ai="gemini" rel="noopener noreferrer" target="_blank">Ask Gemini</a>
-  <a class="doc-ai-btn claude" href="#" data-ai="claude" rel="noopener noreferrer" target="_blank">Ask Claude</a>
+  <a class="doc-ai-btn chatgpt" href="#" data-ai="chatgpt" rel="noopener noreferrer" target="_blank" aria-label="Ask ChatGPT">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a4.6 4.6 0 0 1 4.57 4.12 4.58 4.58 0 0 1 3.35 1.33 4.63 4.63 0 0 1-.09 6.56 4.59 4.59 0 0 1-.82 5.48 4.58 4.58 0 0 1-5.48.82A4.63 4.63 0 0 1 7 20.22a4.58 4.58 0 0 1-1.33-3.35A4.6 4.6 0 0 1 1.55 12a4.6 4.6 0 0 1 4.12-4.57A4.6 4.6 0 0 1 12 2m-.15 2.2a2.4 2.4 0 0 0-2.3 1.82l-.14.54-.55.03a2.4 2.4 0 0 0-1.35 4.3l.43.34-.17.52a2.4 2.4 0 0 0 3.11 3l.5-.2.37.38a2.4 2.4 0 0 0 4-2.14l.02-.55.52-.17a2.4 2.4 0 0 0-.72-4.71l-.55-.04-.14-.53a2.4 2.4 0 0 0-2.33-1.8Z"/></svg>
+    <span>Ask ChatGPT</span>
+  </a>
+
+  <a class="doc-ai-btn gemini" href="#" data-ai="gemini" rel="noopener noreferrer" target="_blank" aria-label="Ask Gemini">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2l2.1 5.8L20 10l-5.9 2.2L12 18l-2.1-5.8L4 10l5.9-2.2z"/></svg>
+    <span>Ask Gemini</span>
+  </a>
+
+  <a class="doc-ai-btn claude" href="#" data-ai="claude" rel="noopener noreferrer" target="_blank" aria-label="Ask Claude">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3c4.8 0 8.7 3.9 8.7 8.7 0 4.8-3.9 8.7-8.7 8.7-4.8 0-8.7-3.9-8.7-8.7C3.3 6.9 7.2 3 12 3m0 2.2a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13m-.2 2.2a1.1 1.1 0 0 1 1.1 1.1v2.5h2.5a1.1 1.1 0 1 1 0 2.2h-2.5v2.5a1.1 1.1 0 1 1-2.2 0v-2.5H8.2a1.1 1.1 0 0 1 0-2.2h2.5V8.5a1.1 1.1 0 0 1 1.1-1.1"/></svg>
+    <span>Ask Claude</span>
+  </a>
 </div>
 
 <script>
@@ -50,9 +61,7 @@
       const prompt = buildPrompt();
       const provider = providers[button.dataset.ai];
       if (!provider) return;
-      const targetUrl = provider(prompt);
-      window.open(targetUrl, '_blank', 'noopener,noreferrer');
-
+      window.open(provider(prompt), '_blank', 'noopener,noreferrer');
       if (button.dataset.ai === 'gemini' && navigator.clipboard?.writeText) {
         navigator.clipboard.writeText(prompt).catch(() => {});
       }

@@ -1,6 +1,27 @@
 {{ define "main" }}
 <article class="markdown book-article">
+  <nav class="doc-breadcrumbs" aria-label="Breadcrumb">
+    <a href="{{ "/" | relLangURL }}">Home</a>
+    {{ range .Ancestors.Reverse }}
+      <span class="separator">/</span>
+      <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
+    {{ end }}
+    <span class="separator">/</span>
+    <span aria-current="page">{{ .LinkTitle }}</span>
+  </nav>
+
   {{- partial "docs/ai-page-actions" . -}}
+
+  <h1 class="doc-page-title">{{ .Title }}</h1>
   {{- .Content -}}
+
+  <nav class="doc-prev-next" aria-label="Page navigation">
+    {{ with .PrevInSection }}
+      <a class="doc-nav-link prev" href="{{ .RelPermalink }}">← {{ .LinkTitle }}</a>
+    {{ end }}
+    {{ with .NextInSection }}
+      <a class="doc-nav-link next" href="{{ .RelPermalink }}">{{ .LinkTitle }} →</a>
+    {{ end }}
+  </nav>
 </article>
 {{ end }}
