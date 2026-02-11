@@ -113,31 +113,60 @@ def create_party_master_tree():
 def seed_default_party_master_structure():
     """Seed a default Party Master structure using translatable English labels.
 
-    This is idempotent and only updates records if they are missing or match known legacy names.
+    This is idempotent and only updates records if they are missing.
+    It also creates a level under Customers/Suppliers based on existing groups.
     """
 
-    def ensure_group(group_doctype, group_name):
-        if not (group_doctype and group_name):
-            return None
-        if frappe.db.exists(group_doctype, group_name):
-            return group_name
-        parent = (
-            "All Customer Groups"
-            if group_doctype == "Customer Group"
-            else "All Supplier Groups" if group_doctype == "Supplier Group" else None
-        )
-        if parent and frappe.db.exists(group_doctype, parent):
-            doc = frappe.new_doc(group_doctype)
-            doc.group_name = group_name
-            doc.parent_customer_group = (
-                parent if group_doctype == "Customer Group" else None
+    def ensure_pm_node(party_number, party_name, parent, party_type, group_type=None):
+        if party_number and frappe.db.exists("Party Master", party_number):
+            doc = frappe.get_doc("Party Master", party_number)
+            changed = False
+            if not doc.party_name:
+                doc.party_name = party_name
+                changed = True
+            if parent is not None and not doc.parent_party_master:
+                doc.parent_party_master = parent
+                changed = True
+            if doc.is_group != 1:
+                doc.is_group = 1
+                changed = True
+            if party_type and not doc.party_type:
+                doc.party_type = party_type
+                changed = True
+            if group_type and not doc.group_type:
+                doc.group_type = group_type
+                changed = True
+            if changed:
+                doc.flags.ignore_validate = True
+                doc.save(ignore_permissions=True)
+                return doc.name, True
+            return doc.name, False
+
+        if not party_number:
+            existing = frappe.get_all(
+                "Party Master",
+                filters={
+                    "party_name": party_name,
+                    "parent_party_master": parent,
+                    "is_group": 1,
+                },
+                pluck="name",
+                limit=1,
             )
-            doc.parent_supplier_group = (
-                parent if group_doctype == "Supplier Group" else None
-            )
-            doc.insert(ignore_permissions=True)
-            return group_name
-        return None
+            if existing:
+                return existing[0], False
+
+        doc = frappe.new_doc("Party Master")
+        if party_number:
+            doc.party_number = party_number
+        doc.party_name = party_name
+        doc.is_group = 1
+        doc.party_type = party_type
+        doc.group_type = group_type
+        doc.parent_party_master = parent
+        doc.flags.ignore_validate = True
+        doc.insert(ignore_permissions=True)
+        return doc.name, True
 
     structure = [
         {
@@ -165,31 +194,6 @@ def seed_default_party_master_structure():
             "group_type": "Customer Group",
         },
         {
-            "party_number": "1310",
-            "party_name": _("Local Customers"),
-            "parent_party_master": "1300",
-            "is_group": 1,
-            "party_type": "Customer",
-            "group_type": "Customer Group",
-        },
-        {
-            "party_number": "1320",
-            "party_name": _("International Customers"),
-            "parent_party_master": "1300",
-            "is_group": 1,
-            "party_type": "Customer",
-            "group_type": "Customer Group",
-            "party_type_group": _("Farmers"),
-        },
-        {
-            "party_number": "1340",
-            "party_name": _("Other Debtors - Advances"),
-            "parent_party_master": "1300",
-            "is_group": 1,
-            "party_type": "Customer",
-            "group_type": "Customer Group",
-        },
-        {
             "party_number": "1600",
             "party_name": _("Employees"),
             "parent_party_master": "1000",
@@ -205,25 +209,8 @@ def seed_default_party_master_structure():
             "group_type": "Supplier Group",
         },
         {
-            "party_number": "2110",
-            "party_name": _("Foreign Suppliers"),
-            "parent_party_master": "2000",
-            "is_group": 1,
-            "party_type": "Supplier",
-            "group_type": "Supplier Group",
-        },
-        {
-            "party_number": "2120",
-            "party_name": _("Local Suppliers"),
-            "parent_party_master": "2000",
-            "is_group": 1,
-            "party_type": "Supplier",
-            "group_type": "Supplier Group",
-            "party_type_group": _("Local"),
-        },
-        {
-            "party_number": "2140",
-            "party_name": _("Lessors and Service Providers"),
+            "party_number": "2100",
+            "party_name": _("Suppliers"),
             "parent_party_master": "2000",
             "is_group": 1,
             "party_type": "Supplier",
@@ -240,57 +227,85 @@ def seed_default_party_master_structure():
 
     updated = False
     for row in structure:
-        name = row["party_number"]
-        legacy_names = set(row.get("legacy_names") or [])
-        if frappe.db.exists("Party Master", name):
-            doc = frappe.get_doc("Party Master", name)
-            changed = False
-            if not doc.party_name or doc.party_name in legacy_names:
-                doc.party_name = row["party_name"]
-                changed = True
-            if (
-                row.get("parent_party_master") is not None
-                and not doc.parent_party_master
-            ):
-                doc.parent_party_master = row["parent_party_master"]
-                changed = True
-            if doc.is_group != 1:
-                doc.is_group = 1
-                changed = True
-            if row.get("party_type") and not doc.party_type:
-                doc.party_type = row["party_type"]
-                changed = True
-            if row.get("group_type") and not doc.group_type:
-                doc.group_type = row["group_type"]
-                changed = True
-            if row.get("default_currency") and not doc.default_currency:
-                doc.default_currency = row["default_currency"]
-                changed = True
-            if row.get("party_type_group") and not doc.party_type_group:
-                group_name = ensure_group(doc.group_type, row["party_type_group"])
-                if group_name:
-                    doc.party_type_group = group_name
-                    changed = True
-            if changed:
-                doc.flags.ignore_validate = True
-                doc.save(ignore_permissions=True)
-                updated = True
-        else:
-            doc = frappe.new_doc("Party Master")
-            doc.party_number = row["party_number"]
-            doc.party_name = row["party_name"]
-            doc.is_group = 1
-            doc.party_type = row.get("party_type")
-            doc.group_type = row.get("group_type")
-            doc.parent_party_master = row.get("parent_party_master")
-            doc.default_currency = row.get("default_currency")
-            if row.get("party_type_group"):
-                doc.party_type_group = ensure_group(
-                    doc.group_type, row["party_type_group"]
-                )
-            doc.flags.ignore_validate = True
-            doc.insert(ignore_permissions=True)
+        _, changed = ensure_pm_node(
+            row.get("party_number"),
+            row.get("party_name"),
+            row.get("parent_party_master"),
+            row.get("party_type"),
+            row.get("group_type"),
+        )
+        if changed:
             updated = True
+
+    # Create third-level nodes based on existing Customer/Supplier Groups
+    customers_parent, _ = ensure_pm_node(
+        "1300", _("Customers"), "1000", "Customer", "Customer Group"
+    )
+    suppliers_parent, _ = ensure_pm_node(
+        "2100", _("Suppliers"), "2000", "Supplier", "Supplier Group"
+    )
+
+    customer_groups = frappe.get_all(
+        "Customer Group",
+        filters={"parent_customer_group": ["!=", ""]},
+        pluck="name",
+        order_by="name asc",
+    )
+    for group_name in customer_groups:
+        existing = frappe.get_all(
+            "Party Master",
+            filters={
+                "group_type": "Customer Group",
+                "party_type_group": group_name,
+                "parent_party_master": customers_parent,
+                "is_group": 1,
+            },
+            pluck="name",
+            limit=1,
+        )
+        if existing:
+            continue
+        doc = frappe.new_doc("Party Master")
+        doc.party_name = group_name
+        doc.is_group = 1
+        doc.party_type = "Customer"
+        doc.group_type = "Customer Group"
+        doc.party_type_group = group_name
+        doc.parent_party_master = customers_parent
+        doc.flags.ignore_validate = True
+        doc.insert(ignore_permissions=True)
+        updated = True
+
+    supplier_groups = frappe.get_all(
+        "Supplier Group",
+        filters={"parent_supplier_group": ["!=", ""]},
+        pluck="name",
+        order_by="name asc",
+    )
+    for group_name in supplier_groups:
+        existing = frappe.get_all(
+            "Party Master",
+            filters={
+                "group_type": "Supplier Group",
+                "party_type_group": group_name,
+                "parent_party_master": suppliers_parent,
+                "is_group": 1,
+            },
+            pluck="name",
+            limit=1,
+        )
+        if existing:
+            continue
+        doc = frappe.new_doc("Party Master")
+        doc.party_name = group_name
+        doc.is_group = 1
+        doc.party_type = "Supplier"
+        doc.group_type = "Supplier Group"
+        doc.party_type_group = group_name
+        doc.parent_party_master = suppliers_parent
+        doc.flags.ignore_validate = True
+        doc.insert(ignore_permissions=True)
+        updated = True
 
     if updated:
         from frappe.utils.nestedset import rebuild_tree
