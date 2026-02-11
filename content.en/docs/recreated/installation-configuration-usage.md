@@ -1,88 +1,80 @@
 ---
-title: "Installation, Configuration, and Usage"
+title: "Installation, Setup, and Configuration"
 weight: 3
 ---
 
-# Installation & Setup
+# Installation and setup
 
 ## Prerequisites
 
-- Frappe/ERPNext deployment with bench tooling
-- Python runtime supported by your ERPNext version
-- MariaDB or PostgreSQL backend
+- ERPNext/Frappe environment with Bench
+- Installed dependency app: `erpnext` (required by hooks)
+- Site admin access
 
-## Installation Steps
+## Install
 
 ```bash
-bench get-app https://github.com/Sendipad/uph
-bench --site <your-site> install-app uph
-bench --site <your-site> migrate
+bench get-app <uph-repository-url>
+bench --site <site-name> install-app uph
+bench --site <site-name> migrate
 bench build --app uph
 bench restart
 ```
 
-## Initial Validation Checklist
+## Post-install initialization
 
-- Party workspace is visible
-- Party Master Settings is available
-- Core reports load successfully
-- Data quality dashboard returns baseline metrics
+The app defines an `after_install` entrypoint and boot-time setup hooks. After install:
 
-# Configuration Guide
+1. Open **Party Master Settings**.
+2. Seed/validate party type table and document type mappings.
+3. Create/update custom `party_master` fields on configured doctypes.
+4. Confirm `party_master` appears in target forms.
 
-## Core Settings
+# Configuration reference
 
-Configure **Party Master Settings** first:
+## Party Master Settings
 
-- Enable target party types (Customer/Supplier/Employee)
-- Define uniqueness boundaries per role and currency
-- Configure duplicate handling behavior (warn/stop)
-- Set linked DocTypes that should receive `party_master`
+Main configuration areas inferred from the settings controller:
 
-## Data Governance Setup
+- **Party types rules** (`reqd`, `allowed`, `rule_fieldname`)
+- **Document type mappings**
+  - `document_type`
+  - `parent_doctype`
+  - `party_fieldname`
+  - `party_type_fieldname`
+  - dynamic-party-type behavior
+- **Party master fields** mapping table for source/target field sync
 
-- Define normalization and duplicate quality rules
-- Set score threshold and review policy
-- Add exclusion rules for known safe duplicates
+The settings controller validates field existence and can reject non-system-manager edits for sensitive operations.
 
-## Reporting Setup
+## Recommended rollout sequence
 
-- Enable Party Analytic Accounting if used
-- Configure default account/currency behavior
-- Validate consolidated reports with sample records
+1. Configure party-type rules.
+2. Configure transactional doctypes that need `party_master`.
+3. Sync custom fields.
+4. Backfill or relink existing records.
+5. Enable/adjust data quality rules.
+6. Validate with health and account reports.
 
-# Feature-by-Feature Usage
+# Usage examples
 
-## Unified Role Linking
+## Example A: Link existing parties
 
-Use Party Master as root and link Customer/Supplier/Employee records to maintain one legal-entity profile.
+1. Create Party Master `PM-ACME`.
+2. Add roles: Customer + Supplier.
+3. Assign existing Customer/Supplier records to `PM-ACME`.
+4. Save and verify linked count + report visibility.
 
-## Hierarchy Management
+## Example B: Auto-manage party master in transactions
 
-Create parent and child Party Masters for holding-company, regional, and branch-level structures.
+1. In settings, map `Sales Invoice` and `Purchase Invoice`.
+2. Ensure `party_fieldname` points to `customer`/`supplier`.
+3. Save mapping and regenerate fields.
+4. Create new transactions and verify `party_master` is set/validated.
 
-## Relationship Management
+## Example C: Data quality enforcement
 
-Capture non-tree relations (ownership, affiliate, subsidiary) via Party Relationship model.
-
-## Data Quality Dashboard
-
-Use the dashboard APIs/UI to:
-
-- monitor quality metrics,
-- review possible duplicates,
-- execute merges,
-- track dismissed candidates.
-
-## Reporting
-
-Use Party Master-centric reports for cross-role financial and operational visibility.
-
-# Usage Example (Operational)
-
-1. Create `PM-ACME` as a Party Master.
-2. Link existing Customer and Supplier records for Acme.
-3. Configure account mapping for USD/EUR context.
-4. Post sales and purchase transactions.
-5. Review consolidated statement and quality status.
-
+1. Create Data Quality Rule for Customer.
+2. Add conditions (Exact + Fuzzy match on name/phone/email).
+3. Set action to warn or block.
+4. Save a record and review duplicate alert behavior.

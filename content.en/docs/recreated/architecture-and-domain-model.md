@@ -1,94 +1,84 @@
 ---
-title: "Architecture and Domain Model"
+title: "Architecture, Domain Model, and Workflows"
 weight: 2
 ---
 
-# Architecture Overview
+# Architecture overview
 
-UPH is represented as a non-intrusive extension model around ERPNext party entities.
+UPH is implemented as a Frappe app (`uph`) with these primary layers:
 
-## High-Level Layers
+1. **Domain layer** (`party_master`, role child tables, party analytic accounting).
+2. **Controller layer** (`party.py`, `queries.py`, `mdm.py`, `field.py`).
+3. **Settings and schema orchestration** (`party_master_settings.py`).
+4. **Caching and boot helpers** (`uph.__init__`, `party.boot`).
+5. **Reporting layer** (party account statement/balances, chronological ledger, health report).
 
-1. **Domain Layer**
-   - Party Master (canonical identity)
-   - Party role links (Customer/Supplier/Employee)
-   - Relationship model (N:N and hierarchy)
+## Domain model (inferred from doctype modules)
 
-2. **Configuration Layer**
-   - Party Master Settings (single DocType pattern)
-   - Per-party-type uniqueness and behavior controls
-   - Dynamic field mapping/injection controls
-
-3. **Validation + Governance Layer**
-   - Duplicate detection and normalization
-   - Quality scoring and dashboard APIs
-   - Merge/dismiss workflows
-
-4. **Accounting/Reporting Layer**
-   - Party Analytic Accounting for segmented reporting
-   - Currency/account-aware mappings
-   - Consolidated statements and health metrics
-
-5. **Performance Layer**
-   - Smart cache utility pattern
-   - Query optimization and batched updates
-   - Background queue updates for bulk consistency tasks
-
-## Domain Model (Inferred from Source)
-
-### Primary Entities
+### Primary Doctypes
 
 - **Party Master**
-  - Root identity for legal entities
-  - Supports parent-child hierarchy
-  - Holds governance and role linkage metadata
+  - Tree/nested-set behavior, hierarchical numbering, lifecycle hooks.
+  - Child tables include roles and linked parties.
+
+- **Party Master Role**
+  - Defines allowed roles (`party_type_role`) for a Party Master.
 
 - **Party Master Parties**
-  - Child/junction model connecting Party Master to role records
-  - Dynamic link pattern for party type + party record
+  - Links Party Master to concrete party documents with `party_type`, `party`, `party_name`, `currency`.
 
 - **Party Master Settings**
-  - Single settings document controlling runtime behavior
-  - Contains party-type rules, DocType settings, and field mapping controls
+  - Governs target doctypes, mapping rules, required/allowed policies, and auto-creation of `party_master` fields.
+
+- **Data Quality Rule / Data Quality Rule Condition**
+  - Configures duplicate matching criteria (exact/fuzzy/date range), weights, similarity, and filter expressions.
 
 - **Party Analytic Accounting**
-  - Additional accounting dimension model
-  - Supports effective dates and allow/restrict style controls
+  - Assigns analytics to Party Master/parties with allow/restrict company controls and effective date windows.
 
-- **Party Relationship**
-  - N-to-N relationship mapping for ownership/corporate links
+### Key relationships
 
-### Secondary/Operational Entities
+- One Party Master can map to many party records across multiple roles.
+- A party record maps to one Party Master (enforced/validated by rules).
+- Transactional doctypes can carry an auto-managed `party_master` field.
 
-- Duplicate tracking and exclusion model
-- Dashboard aggregation models/views
-- Quality rule models for validation thresholds and matching rules
+## Business workflows
 
-## Business Workflows
+## 1) Party Master lifecycle
 
-### 1) Canonical Party Onboarding
+- Create Party Master with hierarchical constraints.
+- Validate role consistency.
+- Auto-generate numbering and maintain linked-party counters.
+- Create primary contact/address helpers.
 
-1. Create Party Master.
-2. Attach one or more operational roles.
-3. Apply uniqueness and data quality checks.
-4. Start using role records in transactions while preserving canonical linkage.
+## 2) Rule-based party linking
 
-### 2) Multi-Currency Operations
+- `validate_party_master_on_target_party_type` enforces required/allowed logic.
+- `validate_party_master_on_document_types` sets or validates `party_master` on mapped documents.
+- Duplicate checks prevent conflicting party-to-master assignments.
 
-1. Configure account/currency mappings in Party Master context.
-2. Use the same legal entity across role transactions.
-3. Resolve appropriate account path by transaction context.
+## 3) Transactional synchronization
 
-### 3) Duplicate Management
+When a party's master changes, UPH can:
 
-1. Run duplicate detection via dashboard API.
-2. Review scored candidates.
-3. Merge duplicates or dismiss false positives.
-4. Trigger reference update process to preserve transactional integrity.
+- scan configured doctypes,
+- count/update historical rows,
+- optionally run queued/background update flows,
+- leave audit comments on Party Master.
 
-### 4) Background Reference Synchronization
+## 4) Duplicate governance workflow
 
-1. Party linkage changes trigger update workflow.
-2. Background job updates configured transactional DocTypes.
-3. New documents continue to be auto-tagged by hooks.
+`mdm.validate_document_quality` loads active quality rules and:
 
+- evaluates optional filter conditions,
+- detects potential duplicates by weighted criteria,
+- triggers configured action (warn/block) with scored records.
+
+## 5) Reporting workflow
+
+Reports aggregate by Party Master and linked parties to produce:
+
+- chronological movement,
+- account balances,
+- statement with opening/current logic,
+- health metrics (linked vs unlinked records).

@@ -3,91 +3,99 @@ title: "APIs, Hooks, Security, Extensibility, and Limitations"
 weight: 4
 ---
 
-# API Reference (Source-Inferred)
+# API and callable surface (source-inferred)
 
-The repository references the following callable paths and integration surfaces:
+## Boot/session helpers
 
-## Party APIs
+- `uph.party.boot.add_pm_doctypes`
+- `uph.party.boot.get_pm_doctypes`
+- `uph.party.boot.get_party_master_depends_on_fields`
 
-- `uph.party.controllers.party.get_party_details`
-- `uph.party.controllers.party.set_party_master`
+## Party and query controllers
 
-## Data Quality APIs
+- `uph.party.controllers.queries.party_master_link_query`
+- `uph.party.controllers.queries.get_party_master`
+- `uph.party.doctype.party_master.party_master.create_party_master`
+- `uph.party.doctype.party_master.party_master.create_party_from_party_master`
+- `uph.party.doctype.party_master.party_master.map_party_to_target`
+- `uph.party.doctype.party_master.party_master.assign_party_master_for_selection`
+
+## Data quality / MDM controllers
 
 - `uph.party.controllers.mdm.normalize_text`
 - `uph.party.controllers.mdm.validate_document_quality`
-- `uph.party.page.data_quality_dashboard.get_potential_duplicates`
-- `uph.party.page.data_quality_dashboard.merge_parties`
-- `uph.party.page.data_quality_dashboard.dismiss_duplicate`
-- `uph.party.page.data_quality_dashboard.get_dashboard_stats`
 
-## Query API
+## Regional helper
 
-- `uph.party.controllers.queries.party_master_link_query`
+- `uph.regional.arabic.money_in_words`
 
-## Background Update Entry Points
+# Hooks and events
 
-- `uph.party.controllers.party.on_change_party_master_update_transactional_document_types`
-- `uph.party.controllers.mdm._update_party_master_references` (documented as representative background sync function)
+Hooks indicate:
 
-# Hooks and Background Jobs
+- app include JS bundle (`uph.bundle.js` + rule builder js)
+- treeview support for `Party Master`
+- boot hook for injecting Party Master metadata
+- document event handlers on validate/update/change/trash/before_validate for mapped doctypes
 
-## Hook Patterns (Documented)
+These events enforce role compatibility, required party master rules, and transactional consistency.
 
-- `validate`
-- `before_validate`
-- `on_update`
-- `on_trash`
+# Background jobs and heavy operations
 
-## Workflow Impact
+From controller behavior and constants, UPH supports large-scale update patterns:
 
-- Enforce linkage and quality controls at save-time.
-- Keep existing transactional records consistent after merge/relink events.
-- Offload large updates into long queue jobs.
+- recount linked-party totals,
+- update existing mapped transaction rows,
+- optional queued updates for changed party assignments,
+- cache invalidation after mapping/settings changes.
 
-# Permissions and Security Model (Inferred)
+# Caching model
 
-1. Access control is expected to remain aligned with Frappe role permissions on involved DocTypes.
-2. Whitelisted APIs should be treated as privileged business endpoints and protected by standard authentication/session controls.
-3. Merge actions imply audit and governance requirements; maintain role-restricted access.
-4. Bulk update jobs should be considered sensitive operations and scheduled on trusted queues.
+UPH uses Redis/local cache helpers for:
 
-# Integration Points
+- party type list,
+- party-master-to-party mappings,
+- role lists,
+- doctype field maps,
+- usage-based link-search acceleration.
 
-- ERPNext standard party masters (Customer/Supplier/Employee)
-- Transactional DocTypes with injected `party_master` link fields
-- Reports and dashboard pages
-- Bench deployment lifecycle (`install-app`, `migrate`, `build`)
+# Permissions and security model
 
-# Extensibility and Customization
+## What is visible in code
 
-## Supported Extension Approaches
+- Validation routines frequently bypass during patch/install/import contexts.
+- Settings operations include privileged checks (e.g., System Manager guardrails).
+- Duplicate actions are designed to warn/throw based on configured policy.
 
-- Add custom DocTypes to Party Master field-injection configuration.
-- Register custom hook handlers around party validation life cycle.
-- Extend normalization strategy for locale-specific data quality logic.
-- Build custom analytics from Party Master and Party Analytic Accounting linkage.
+## Operational guidance
 
-## Documentation UI Customization
+- Restrict Settings and merge-sensitive actions to governance/admin roles.
+- Treat whitelisted methods as authenticated business APIs.
+- Audit bulk reassignments and duplicate resolution actions.
 
-This repository now includes visible top-right actions per page to send context to:
+# Integration points
 
-- Ask ChatGPT
-- Ask Gemini
-- Ask Claude
+- ERPNext party doctypes (Customer, Supplier, Employee, Shareholder support inferred in mappings)
+- Sales/Purchase and accounting transactional doctypes
+- Frappe reports and dashboard components
+- Multi-currency account behavior and Arabic number-to-words localization
 
-The action prompt includes page title, URL, and page text excerpt.
+# Extensibility and customization
 
-# Known Limitations and Assumptions
+- Add new party doctypes via Party Master Settings mappings.
+- Extend duplicate detection by adding conditions/weights/check types.
+- Extend transaction propagation by defining additional mapped doctypes.
+- Build custom reports by reusing party-master and linked-party query helpers.
 
-1. This repository primarily contains documentation-site source; underlying Python app modules are not present here.
-2. Detailed code-level behavior beyond referenced API paths cannot be fully validated from this repository alone.
-3. URL-based prompt prefill support can vary by AI provider over time.
-4. Large pages are truncated before context transmission to avoid URL-size limits.
+# Known limitations and assumptions
 
-# Developer Notes
+1. The repository currently ships Python bytecode (`.pyc`) rather than editable `.py` source for app logic; this documentation is reconstructed from static bytecode inspection.
+2. Bytecode analysis reveals callable names, constants, and structure, but not all comments/type hints.
+3. External behavior still depends on runtime metadata, custom fields, and live ERPNext data.
+4. AI-assistant URL prefill support may vary by provider and browser.
 
-- Site is Hugo-based using the Book theme.
-- Menu and docs hierarchy are configuration-driven (`config.toml`) and content-structure-driven.
-- Custom layout overrides live under `layouts/` and custom styling under `assets/custom.css` / `static/custom.css`.
+# Developer notes
 
+- The docs site is Hugo-based (Book theme overrides in `layouts/`).
+- UPH-specific docs UI customizations are in custom layouts/partials and custom CSS.
+- For app code maintenance, restore tracked `.py` sources alongside `.pyc` artifacts to improve traceability and reviewability.
