@@ -3,7 +3,7 @@ app_title = "Unified Party Hub"
 app_publisher = "Abdo Mohammed Ruzaqi"
 app_description = "Unified Party Hub (UPH) is an enterprise-grade Master Data Management (MDM) extension for ERPNext. It centralizes siloed business roles (Customers, Suppliers, Employees) into a unified, tree-based hierarchy, providing consolidated financial visibility and rigorous data governance across complex business ecosystems."
 app_email = "ruzaqi@gmail.com"
-app_version = "2.7.0"
+app_version = "2.9.0"
 app_license = "gpl-3.0"
 
 # Apps
