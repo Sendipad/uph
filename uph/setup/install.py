@@ -165,7 +165,26 @@ def seed_default_party_master_structure():
         doc.group_type = group_type
         doc.parent_party_master = parent
         doc.flags.ignore_validate = True
-        doc.insert(ignore_permissions=True)
+        try:
+            doc.insert(ignore_permissions=True, ignore_if_duplicate=True)
+        except Exception:
+            existing = (
+                frappe.db.exists("Party Master", party_number)
+                if party_number
+                else frappe.get_all(
+                    "Party Master",
+                    filters={
+                        "party_name": party_name,
+                        "parent_party_master": parent,
+                        "is_group": 1,
+                    },
+                    pluck="name",
+                    limit=1,
+                )
+            )
+            if existing:
+                return (existing if isinstance(existing, str) else existing[0]), False
+            raise
         return doc.name, True
 
     structure = [
@@ -273,7 +292,7 @@ def seed_default_party_master_structure():
         doc.party_type_group = group_name
         doc.parent_party_master = customers_parent
         doc.flags.ignore_validate = True
-        doc.insert(ignore_permissions=True)
+        doc.insert(ignore_permissions=True, ignore_if_duplicate=True)
         updated = True
 
     supplier_groups = frappe.get_all(
@@ -304,7 +323,7 @@ def seed_default_party_master_structure():
         doc.party_type_group = group_name
         doc.parent_party_master = suppliers_parent
         doc.flags.ignore_validate = True
-        doc.insert(ignore_permissions=True)
+        doc.insert(ignore_permissions=True, ignore_if_duplicate=True)
         updated = True
 
     if updated:
