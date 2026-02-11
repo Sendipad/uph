@@ -8,6 +8,7 @@ Beside It Will reflect the Change of set Party Master on Party Type Doctype
 """
 
 import frappe
+from erpnext import get_company_currency
 from erpnext.accounts.party import get_party_details as erp_get_party_details
 
 from uph.party.utils import get_mapped_fieldnames
@@ -590,42 +591,117 @@ def get_party_details(
     pos_profile=None,
     party_master=None,  # Added by UPH
 ):
-    # 1. Call standard ERPNext logic
-    party_details = erp_get_party_details(
-        party=party,
-        account=account,
-        party_type=party_type,
-        company=company,
-        posting_date=posting_date,
-        bill_date=bill_date,
-        price_list=price_list,
-        currency=currency,
-        doctype=doctype,
-        ignore_permissions=ignore_permissions,
-        fetch_payment_terms_template=fetch_payment_terms_template,
-        party_address=party_address,
-        company_address=company_address,
-        shipping_address=shipping_address,
-        dispatch_address=dispatch_address,
-        pos_profile=pos_profile,
-    )
-
-    # 2. UPH Override Logic
     settings = frappe.get_cached_doc("Party Master Settings")
     if not settings.override_party_details_api:
-        return party_details
+        return erp_get_party_details(
+            party=party,
+            account=account,
+            party_type=party_type,
+            company=company,
+            posting_date=posting_date,
+            bill_date=bill_date,
+            price_list=price_list,
+            currency=currency,
+            doctype=doctype,
+            ignore_permissions=ignore_permissions,
+            fetch_payment_terms_template=fetch_payment_terms_template,
+            party_address=party_address,
+            company_address=company_address,
+            shipping_address=shipping_address,
+            dispatch_address=dispatch_address,
+            pos_profile=pos_profile,
+        )
 
     # If party_master is not provided, try to fetch it from the party
     if not party_master and party:
         party_master = frappe.db.get_value(party_type, party, "party_master")
 
     if not party_master:
-        return party_details
+        return erp_get_party_details(
+            party=party,
+            account=account,
+            party_type=party_type,
+            company=company,
+            posting_date=posting_date,
+            bill_date=bill_date,
+            price_list=price_list,
+            currency=currency,
+            doctype=doctype,
+            ignore_permissions=ignore_permissions,
+            fetch_payment_terms_template=fetch_payment_terms_template,
+            party_address=party_address,
+            company_address=company_address,
+            shipping_address=shipping_address,
+            dispatch_address=dispatch_address,
+            pos_profile=pos_profile,
+        )
 
     # Fetch PM details
     pm = frappe.get_doc("Party Master", party_master)
 
-    # 3. Apply PM Details to party_details (Enrichment only if missing)
+    # Prefer PM defaults in the original ERPNext call to avoid re-fetching
+    party_default_currency = None
+    if party:
+        party_default_currency = frappe.db.get_value(
+            party_type, party, "default_currency"
+        )
+
+    if not currency and not party_default_currency and pm.default_currency:
+        currency = pm.default_currency
+
+    if not price_list and pm.default_price_list:
+        price_list = pm.default_price_list
+
+    pm_address = pm.party_primary_address
+    if pm_address:
+        if not party_address:
+            party_address = pm_address
+        if party_type in ["Customer", "Lead"] and not shipping_address:
+            shipping_address = pm_address
+        elif party_type not in ["Customer", "Lead"] and not dispatch_address:
+            dispatch_address = pm_address
+
+    # 1. Call standard ERPNext logic with PM-preferred defaults
+    from erpnext.accounts import party as erp_party
+
+    original_get_default_contact = erp_party.get_default_contact
+
+    def _pm_default_contact(doctype, name):
+        if (
+            pm.party_primary_contact
+            and doctype == party_type
+            and name == party
+        ):
+            return pm.party_primary_contact
+        return original_get_default_contact(doctype, name)
+
+    if pm.party_primary_contact:
+        erp_party.get_default_contact = _pm_default_contact
+
+    try:
+        party_details = erp_get_party_details(
+            party=party,
+            account=account,
+            party_type=party_type,
+            company=company,
+            posting_date=posting_date,
+            bill_date=bill_date,
+            price_list=price_list,
+            currency=currency,
+            doctype=doctype,
+            ignore_permissions=ignore_permissions,
+            fetch_payment_terms_template=fetch_payment_terms_template,
+            party_address=party_address,
+            company_address=company_address,
+            shipping_address=shipping_address,
+            dispatch_address=dispatch_address,
+            pos_profile=pos_profile,
+        )
+    finally:
+        if pm.party_primary_contact:
+            erp_party.get_default_contact = original_get_default_contact
+
+    # 2. Apply PM Details to party_details (Enrichment only if missing)
     # Contact Logic
     if not party_details.get("contact_person") and pm.party_primary_contact:
         party_details.contact_person = pm.party_primary_contact
@@ -668,23 +744,51 @@ def get_party_details(
 
     # Hierarchical Account Lookup
     account_fieldname = "debit_to" if party_type == "Customer" else "credit_to"
-    if not party_details.get(account_fieldname):
-        transaction_currency = currency or party_details.get("currency")
-        if party_master and company and transaction_currency:
-            enforce_strict = settings.enforce_strict_currency
-            target_account = get_hierarchical_pm_account(
-                party_master,
-                company,
-                transaction_currency,
-                enforce_strict=enforce_strict,
-            )
+    transaction_currency = party_details.get("currency") or currency
+    if not transaction_currency and company:
+        transaction_currency = get_company_currency(company)
+    if party_master and company and transaction_currency:
+        enforce_strict = settings.enforce_strict_currency
+        target_account = get_hierarchical_pm_account(
+            party_master,
+            company,
+            transaction_currency,
+            enforce_strict=enforce_strict,
+        )
+
+        current_account = party_details.get(account_fieldname)
+        if not current_account:
             if target_account:
                 party_details[account_fieldname] = target_account
+        else:
+            if enforce_strict:
+                account_currency = frappe.get_cached_value(
+                    "Account", current_account, "account_currency"
+                )
+                if account_currency and account_currency != transaction_currency:
+                    if target_account:
+                        party_details[account_fieldname] = target_account
+                    else:
+                        party_details[account_fieldname] = None
+
+    # Advance Account (ERPNext v15+)
+    if party_master and company and transaction_currency:
+        advance_account = get_hierarchical_pm_account(
+            party_master,
+            company,
+            transaction_currency,
+            enforce_strict=settings.enforce_strict_currency,
+            account_field="advance_account",
+        )
+        if advance_account and not party_details.get("advance_account"):
+            party_details["advance_account"] = advance_account
 
     return party_details
 
 
-def get_hierarchical_pm_account(pm_name, company, currency, enforce_strict=False):
+def get_hierarchical_pm_account(
+    pm_name, company, currency, enforce_strict=False, account_field="account"
+):
     """
     Traverses the PM tree upwards to find an account matching company and currency.
     1. Looks for exact currency match in PM Accounts.
@@ -696,25 +800,25 @@ def get_hierarchical_pm_account(pm_name, company, currency, enforce_strict=False
         acc_data = frappe.db.get_value(
             "Party Master Accounts",
             {"parent": pm_name, "company": company, "currency": currency},
-            ["account"],
+            [account_field, "currency"],
             as_dict=1,
         )
 
-        if not acc_data and not enforce_strict:
+        if (not acc_data or not acc_data.get(account_field)) and not enforce_strict:
             # 2. Try generic match (fallback) - Robust Python-based filtering
             all_pm_accounts = frappe.db.get_values(
                 "Party Master Accounts",
                 {"parent": pm_name, "company": company},
-                ["account", "currency"],
+                [account_field, "currency"],
                 as_dict=1,
             )
             for row in all_pm_accounts:
-                if not row.get("currency"):
+                if row.get(account_field) and not row.get("currency"):
                     acc_data = row
                     break
 
-        if acc_data and acc_data.get("account"):
-            target_account = acc_data["account"]
+        if acc_data and acc_data.get(account_field):
+            target_account = acc_data[account_field]
             acc_meta = frappe.db.get_value(
                 "Account", target_account, ["is_group", "account_currency"], as_dict=1
             )

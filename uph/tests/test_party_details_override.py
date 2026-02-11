@@ -267,3 +267,40 @@ class TestPartyDetailsOverride(FrappeTestCase):
             party=plain_customer.name, party_type="Customer", company=self.company
         )
         self.assertEqual(details.get("debit_to"), erp_details.get("debit_to"))
+
+    def test_advance_account_resolution(self):
+        suffix = frappe.generate_hash(length=8)
+        advance_acc_name = f"PM Advance USD {suffix}"
+        if not frappe.db.exists("Account", f"{advance_acc_name} - _TC"):
+            advance_acc = frappe.get_doc(
+                {
+                    "doctype": "Account",
+                    "account_name": advance_acc_name,
+                    "parent_account": "Temporary Accounts - _TC",
+                    "is_group": 0,
+                    "company": self.company,
+                    "account_currency": self.currency_usd,
+                    "account_type": "Receivable",
+                }
+            ).insert(ignore_permissions=True)
+        else:
+            advance_acc = frappe.get_doc("Account", f"{advance_acc_name} - _TC")
+
+        self.parent_pm.reload()
+        self.parent_pm.append(
+            "accounts",
+            {
+                "company": self.company,
+                "currency": self.currency_usd,
+                "advance_account": advance_acc.name,
+            },
+        )
+        self.parent_pm.save(ignore_permissions=True)
+
+        details = uph_get_party_details(
+            party=self.customer.name,
+            party_type="Customer",
+            company=self.company,
+            currency=self.currency_usd,
+        )
+        self.assertEqual(details.get("advance_account"), advance_acc.name)
