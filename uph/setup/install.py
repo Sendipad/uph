@@ -55,15 +55,21 @@ def run_pending_setup():
 
 def ensure_essential_erpnext_fixtures():
     """Create essential ERPNext records needed for UPH installation if they are missing"""
-    for party_type, acc_type in [("Customer", "Receivable"), ("Supplier", "Payable")]:
+    essential_party_types = [
+        ("Customer", "Receivable"),
+        ("Supplier", "Payable"),
+        ("Employee", "Receivable"),
+    ]
+    for party_type, acc_type in essential_party_types:
         if not frappe.db.exists("Party Type", party_type):
-            frappe.get_doc(
-                {
-                    "doctype": "Party Type",
-                    "party_type": party_type,
-                    "account_type": acc_type,
-                }
-            ).insert(ignore_permissions=True)
+            if frappe.db.exists("DocType", party_type):
+                frappe.get_doc(
+                    {
+                        "doctype": "Party Type",
+                        "party_type": party_type,
+                        "account_type": acc_type,
+                    }
+                ).insert(ignore_permissions=True)
     frappe.db.commit()
 
 
