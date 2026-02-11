@@ -167,7 +167,7 @@ def seed_default_party_master_structure():
         },
         {
             "party_number": "1310",
-            "party_name": _("Commercial Customers"),
+            "party_name": _("Local Customers"),
             "legacy_names": ["عملاء تجاريون"],
             "parent_party_master": "1300",
             "is_group": 1,
@@ -176,7 +176,7 @@ def seed_default_party_master_structure():
         },
         {
             "party_number": "1320",
-            "party_name": _("Agricultural Customers"),
+            "party_name": _("International Customers"),
             "legacy_names": ["عملاء مزارعون"],
             "parent_party_master": "1300",
             "is_group": 1,
