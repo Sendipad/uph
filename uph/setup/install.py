@@ -36,6 +36,7 @@ def run_pending_setup():
     setup_initial_document_types()
     setup_party_types_table()
     create_party_master_tree()
+    seed_default_party_master_structure()
     create_party_analytic_accounting_dimension()
     create_gender_fixtures()
 
@@ -107,6 +108,202 @@ def create_party_master_tree():
     doc.is_group = 1
     doc.party_number = "1000"
     doc.insert(ignore_permissions=True)
+
+
+def seed_default_party_master_structure():
+    """Seed a default Party Master structure using translatable English labels.
+
+    This is idempotent and only updates records if they are missing or match known legacy names.
+    """
+
+    def ensure_group(group_doctype, group_name):
+        if not (group_doctype and group_name):
+            return None
+        if frappe.db.exists(group_doctype, group_name):
+            return group_name
+        parent = (
+            "All Customer Groups"
+            if group_doctype == "Customer Group"
+            else "All Supplier Groups"
+            if group_doctype == "Supplier Group"
+            else None
+        )
+        if parent and frappe.db.exists(group_doctype, parent):
+            doc = frappe.new_doc(group_doctype)
+            doc.group_name = group_name
+            doc.parent_customer_group = parent if group_doctype == "Customer Group" else None
+            doc.parent_supplier_group = parent if group_doctype == "Supplier Group" else None
+            doc.insert(ignore_permissions=True)
+            return group_name
+        return None
+
+    structure = [
+        {
+            "party_number": "1000",
+            "party_name": _("Debtors"),
+            "legacy_names": ["مدينون", "All Party Masters", "Root Group"],
+            "parent_party_master": None,
+            "is_group": 1,
+            "party_type": "Customer",
+            "group_type": "Customer Group",
+        },
+        {
+            "party_number": "1300",
+            "party_name": _("Customers"),
+            "legacy_names": ["العملاء"],
+            "parent_party_master": "1000",
+            "is_group": 1,
+            "party_type": "Customer",
+            "group_type": "Customer Group",
+        },
+        {
+            "party_number": "1301",
+            "party_name": _("Cash Sales"),
+            "legacy_names": ["المبيعات النقدية"],
+            "parent_party_master": "1300",
+            "is_group": 1,
+            "party_type": "Customer",
+            "group_type": "Customer Group",
+        },
+        {
+            "party_number": "1310",
+            "party_name": _("Commercial Customers"),
+            "legacy_names": ["عملاء تجاريون"],
+            "parent_party_master": "1300",
+            "is_group": 1,
+            "party_type": "Customer",
+            "group_type": "Customer Group",
+        },
+        {
+            "party_number": "1320",
+            "party_name": _("Agricultural Customers"),
+            "legacy_names": ["عملاء مزارعون"],
+            "parent_party_master": "1300",
+            "is_group": 1,
+            "party_type": "Customer",
+            "group_type": "Customer Group",
+            "party_type_group": _("Farmers"),
+        },
+        {
+            "party_number": "1340",
+            "party_name": _("Other Debtors - Advances"),
+            "legacy_names": ["مدينون آخرون -سلف"],
+            "parent_party_master": "1300",
+            "is_group": 1,
+            "party_type": "Customer",
+            "group_type": "Customer Group",
+        },
+        {
+            "party_number": "1600",
+            "party_name": _("Employees"),
+            "legacy_names": ["المؤظفين"],
+            "parent_party_master": "1000",
+            "is_group": 1,
+            "party_type": "Customer",
+            "group_type": "Customer Group",
+            "default_currency": "YER",
+        },
+        {
+            "party_number": "2000",
+            "party_name": _("Creditors"),
+            "legacy_names": ["الدائنون"],
+            "parent_party_master": None,
+            "is_group": 1,
+            "party_type": "Supplier",
+            "group_type": "Supplier Group",
+        },
+        {
+            "party_number": "2110",
+            "party_name": _("Foreign Suppliers"),
+            "legacy_names": ["الموردين الخارجيون"],
+            "parent_party_master": "2000",
+            "is_group": 1,
+            "party_type": "Supplier",
+            "group_type": "Supplier Group",
+        },
+        {
+            "party_number": "2120",
+            "party_name": _("Local Suppliers"),
+            "legacy_names": ["الدائنون المحليون"],
+            "parent_party_master": "2000",
+            "is_group": 1,
+            "party_type": "Supplier",
+            "group_type": "Supplier Group",
+            "party_type_group": _("Local"),
+        },
+        {
+            "party_number": "2140",
+            "party_name": _("Lessors and Service Providers"),
+            "legacy_names": ["المؤجرين ومقدمي الخدمات"],
+            "parent_party_master": "2000",
+            "is_group": 1,
+            "party_type": "Supplier",
+            "group_type": "Supplier Group",
+        },
+        {
+            "party_number": "3000",
+            "party_name": _("Company Branches"),
+            "legacy_names": ["فروع الشركه"],
+            "parent_party_master": None,
+            "is_group": 1,
+            "party_type": "Customer",
+        },
+    ]
+
+    updated = False
+    for row in structure:
+        name = row["party_number"]
+        legacy_names = set(row.get("legacy_names") or [])
+        if frappe.db.exists("Party Master", name):
+            doc = frappe.get_doc("Party Master", name)
+            changed = False
+            if not doc.party_name or doc.party_name in legacy_names:
+                doc.party_name = row["party_name"]
+                changed = True
+            if row.get("parent_party_master") is not None and not doc.parent_party_master:
+                doc.parent_party_master = row["parent_party_master"]
+                changed = True
+            if doc.is_group != 1:
+                doc.is_group = 1
+                changed = True
+            if row.get("party_type") and not doc.party_type:
+                doc.party_type = row["party_type"]
+                changed = True
+            if row.get("group_type") and not doc.group_type:
+                doc.group_type = row["group_type"]
+                changed = True
+            if row.get("default_currency") and not doc.default_currency:
+                doc.default_currency = row["default_currency"]
+                changed = True
+            if row.get("party_type_group") and not doc.party_type_group:
+                group_name = ensure_group(doc.group_type, row["party_type_group"])
+                if group_name:
+                    doc.party_type_group = group_name
+                    changed = True
+            if changed:
+                doc.flags.ignore_validate = True
+                doc.save(ignore_permissions=True)
+                updated = True
+        else:
+            doc = frappe.new_doc("Party Master")
+            doc.party_number = row["party_number"]
+            doc.party_name = row["party_name"]
+            doc.is_group = 1
+            doc.party_type = row.get("party_type")
+            doc.group_type = row.get("group_type")
+            doc.parent_party_master = row.get("parent_party_master")
+            doc.default_currency = row.get("default_currency")
+            if row.get("party_type_group"):
+                doc.party_type_group = ensure_group(doc.group_type, row["party_type_group"])
+            doc.flags.ignore_validate = True
+            doc.insert(ignore_permissions=True)
+            updated = True
+
+    if updated:
+        from frappe.utils.nestedset import rebuild_tree
+
+        rebuild_tree("Party Master")
+        frappe.db.commit()
 
 
 def create_party_analytic_accounting_dimension():
