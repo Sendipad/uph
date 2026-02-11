@@ -124,15 +124,17 @@ def seed_default_party_master_structure():
         parent = (
             "All Customer Groups"
             if group_doctype == "Customer Group"
-            else "All Supplier Groups"
-            if group_doctype == "Supplier Group"
-            else None
+            else "All Supplier Groups" if group_doctype == "Supplier Group" else None
         )
         if parent and frappe.db.exists(group_doctype, parent):
             doc = frappe.new_doc(group_doctype)
             doc.group_name = group_name
-            doc.parent_customer_group = parent if group_doctype == "Customer Group" else None
-            doc.parent_supplier_group = parent if group_doctype == "Supplier Group" else None
+            doc.parent_customer_group = (
+                parent if group_doctype == "Customer Group" else None
+            )
+            doc.parent_supplier_group = (
+                parent if group_doctype == "Supplier Group" else None
+            )
             doc.insert(ignore_permissions=True)
             return group_name
         return None
@@ -141,7 +143,6 @@ def seed_default_party_master_structure():
         {
             "party_number": "1000",
             "party_name": _("Debtors"),
-            "legacy_names": ["مدينون", "All Party Masters", "Root Group"],
             "parent_party_master": None,
             "is_group": 1,
             "party_type": "Customer",
@@ -150,7 +151,6 @@ def seed_default_party_master_structure():
         {
             "party_number": "1300",
             "party_name": _("Customers"),
-            "legacy_names": ["العملاء"],
             "parent_party_master": "1000",
             "is_group": 1,
             "party_type": "Customer",
@@ -159,7 +159,6 @@ def seed_default_party_master_structure():
         {
             "party_number": "1301",
             "party_name": _("Cash Sales"),
-            "legacy_names": ["المبيعات النقدية"],
             "parent_party_master": "1300",
             "is_group": 1,
             "party_type": "Customer",
@@ -168,7 +167,6 @@ def seed_default_party_master_structure():
         {
             "party_number": "1310",
             "party_name": _("Local Customers"),
-            "legacy_names": ["عملاء تجاريون"],
             "parent_party_master": "1300",
             "is_group": 1,
             "party_type": "Customer",
@@ -177,7 +175,6 @@ def seed_default_party_master_structure():
         {
             "party_number": "1320",
             "party_name": _("International Customers"),
-            "legacy_names": ["عملاء مزارعون"],
             "parent_party_master": "1300",
             "is_group": 1,
             "party_type": "Customer",
@@ -187,7 +184,6 @@ def seed_default_party_master_structure():
         {
             "party_number": "1340",
             "party_name": _("Other Debtors - Advances"),
-            "legacy_names": ["مدينون آخرون -سلف"],
             "parent_party_master": "1300",
             "is_group": 1,
             "party_type": "Customer",
@@ -196,16 +192,13 @@ def seed_default_party_master_structure():
         {
             "party_number": "1600",
             "party_name": _("Employees"),
-            "legacy_names": ["المؤظفين"],
             "parent_party_master": "1000",
             "is_group": 1,
-            "party_type": "Customer",
-            "group_type": "Customer Group",
+            "party_type": "Employee",
         },
         {
             "party_number": "2000",
             "party_name": _("Creditors"),
-            "legacy_names": ["الدائنون"],
             "parent_party_master": None,
             "is_group": 1,
             "party_type": "Supplier",
@@ -214,7 +207,6 @@ def seed_default_party_master_structure():
         {
             "party_number": "2110",
             "party_name": _("Foreign Suppliers"),
-            "legacy_names": ["الموردين الخارجيون"],
             "parent_party_master": "2000",
             "is_group": 1,
             "party_type": "Supplier",
@@ -223,7 +215,6 @@ def seed_default_party_master_structure():
         {
             "party_number": "2120",
             "party_name": _("Local Suppliers"),
-            "legacy_names": ["الدائنون المحليون"],
             "parent_party_master": "2000",
             "is_group": 1,
             "party_type": "Supplier",
@@ -233,7 +224,6 @@ def seed_default_party_master_structure():
         {
             "party_number": "2140",
             "party_name": _("Lessors and Service Providers"),
-            "legacy_names": ["المؤجرين ومقدمي الخدمات"],
             "parent_party_master": "2000",
             "is_group": 1,
             "party_type": "Supplier",
@@ -242,7 +232,6 @@ def seed_default_party_master_structure():
         {
             "party_number": "3000",
             "party_name": _("Company Branches"),
-            "legacy_names": ["فروع الشركه"],
             "parent_party_master": None,
             "is_group": 1,
             "party_type": "Customer",
@@ -259,7 +248,10 @@ def seed_default_party_master_structure():
             if not doc.party_name or doc.party_name in legacy_names:
                 doc.party_name = row["party_name"]
                 changed = True
-            if row.get("parent_party_master") is not None and not doc.parent_party_master:
+            if (
+                row.get("parent_party_master") is not None
+                and not doc.parent_party_master
+            ):
                 doc.parent_party_master = row["parent_party_master"]
                 changed = True
             if doc.is_group != 1:
@@ -293,7 +285,9 @@ def seed_default_party_master_structure():
             doc.parent_party_master = row.get("parent_party_master")
             doc.default_currency = row.get("default_currency")
             if row.get("party_type_group"):
-                doc.party_type_group = ensure_group(doc.group_type, row["party_type_group"])
+                doc.party_type_group = ensure_group(
+                    doc.group_type, row["party_type_group"]
+                )
             doc.flags.ignore_validate = True
             doc.insert(ignore_permissions=True)
             updated = True
