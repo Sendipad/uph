@@ -7,36 +7,18 @@
   </div>
 
   <div class="hero-content container">
-    <div class="hero-badge">
-      <span class="badge-dot"></span>
-      Unified Party Hub for ERPNext
-    </div>
-
-    <h1 class="hero-title">Master Party Data. Reduce Duplication. Gain 360° Visibility.</h1>
-    <p class="hero-subtitle">
-      UPH centralizes customer, supplier, and employee records into one governed Party Master model with hierarchy,
-      relationship mapping, multi-currency support, and quality controls.
-    </p>
-
+    <div class="hero-badge"><span class="badge-dot"></span> Unified Party Hub for ERPNext</div>
+    <h1 class="hero-title">Modern data governance docs for your ERP rollout</h1>
+    <p class="hero-subtitle">UPH documentation now ships with a SaaS-style landing page, feature highlights, architecture overview, guided use-cases, and AI-assisted actions on every page.</p>
     <div class="hero-buttons">
       <a class="btn btn-primary" href="{{ "/docs/introduction/" | relLangURL }}">Get Started</a>
       <a class="btn btn-secondary" href="{{ "/docs/features/" | relLangURL }}">Explore Features</a>
-      <a class="btn btn-outline" href="https://github.com/Sendipad/uph" target="_blank" rel="noopener">View GitHub</a>
+      <a class="btn btn-outline" href="{{ "/docs/usecases/" | relLangURL }}">View Use Cases</a>
     </div>
-
     <div class="hero-stats">
-      <div class="stat-item">
-        <div class="stat-number">One</div>
-        <div class="stat-label">Party Master per legal entity</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-number">Multi-role</div>
-        <div class="stat-label">Customer + Supplier + Employee linkage</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-number">Real-time</div>
-        <div class="stat-label">Data quality checks and duplicate workflows</div>
-      </div>
+      <div class="stat-item"><div class="stat-number">360°</div><div class="stat-label">Party visibility</div></div>
+      <div class="stat-item"><div class="stat-number">3x</div><div class="stat-label">Faster onboarding paths</div></div>
+      <div class="stat-item"><div class="stat-number">1</div><div class="stat-label">Canonical party model</div></div>
     </div>
   </div>
 </section>
@@ -44,76 +26,77 @@
 <section class="section features">
   <div class="container">
     <div class="section-header">
-      <h2>Built for ERP teams that need governed master data</h2>
-      <p>UPH keeps ERPNext native workflows intact while adding a canonical party layer above them.</p>
+      <h2>Feature highlights</h2>
+      <p>Documentation built to mirror product capabilities with clear narrative, architecture, and adoption pathways.</p>
     </div>
 
     <div class="features-grid">
-      <article class="feature-card">
-        <div class="feature-icon">🌳</div>
-        <h3>Party Master Hierarchy</h3>
-        <p>Create parent-child party structures for holdings, regions, and branches with organized growth and traceability.</p>
-      </article>
+      <article class="feature-card"><div class="feature-icon">🏢</div><h3>Unified Party Model</h3><p>Map customer, supplier, and employee records to one governed entity identity.</p></article>
+      <article class="feature-card"><div class="feature-icon">🌐</div><h3>Multi-currency Operations</h3><p>Maintain role-level financial behavior without losing global party-level visibility.</p></article>
+      <article class="feature-card"><div class="feature-icon">🧭</div><h3>Clean Navigation</h3><p>Sidebar structure, breadcrumbs, and prev/next links keep teams moving through docs efficiently.</p></article>
+      <article class="feature-card"><div class="feature-icon">🤖</div><h3>AI Action Buttons</h3><p>Reusable buttons for ChatGPT, Gemini, and Claude open with page context in a new tab.</p></article>
+      <article class="feature-card"><div class="feature-icon">🧩</div><h3>Reusable Components</h3><p>Common UI building blocks keep docs consistent across reference, guides, and onboarding sections.</p></article>
+      <article class="feature-card"><div class="feature-icon">📚</div><h3>Markdown-first Authoring</h3><p>Writers keep using Hugo Markdown workflows while benefiting from richer visual presentation.</p></article>
+    </div>
+  </div>
+</section>
 
-      <article class="feature-card">
-        <div class="feature-icon">🔗</div>
-        <h3>Unified Role Linking</h3>
-        <p>Bind Customer, Supplier, and Employee documents to a single legal entity identity for cleaner operations.</p>
-      </article>
+<section class="section doctypes">
+  <div class="container">
+    <div class="section-header">
+      <h2>Architecture overview</h2>
+      <p>Understand the data model and synchronization strategy before implementation.</p>
+    </div>
+    <div class="doctypes-grid">
+      <article class="doctype-card"><div class="doctype-icon">🧱</div><div class="doctype-content"><h4>Domain model</h4><p>Party Master, Linked Parties, and Role records with clean identity boundaries.</p></div></article>
+      <article class="doctype-card"><div class="doctype-icon">🔄</div><div class="doctype-content"><h4>Background sync</h4><p>Existing transactional documents inherit Party Master references automatically.</p></div></article>
+      <article class="doctype-card"><div class="doctype-icon">🔐</div><div class="doctype-content"><h4>API + hooks</h4><p>Extensible behavior with predictable integration points and safe defaults.</p></div></article>
+      <article class="doctype-card"><div class="doctype-icon">🗂️</div><div class="doctype-content"><h4>Deep dive docs</h4><p>Read architecture details, implementation notes, and migration guidance.</p></div></article>
+    </div>
+  </div>
+</section>
 
-      <article class="feature-card">
-        <div class="feature-icon">💱</div>
-        <h3>Multi-Currency Readiness</h3>
-        <p>Use one party context across currencies while preserving account and reporting logic.</p>
-      </article>
+<section class="section usecases">
+  <div class="container">
+    <div class="section-header">
+      <h2>Use cases</h2>
+      <p>Documentation designed around real rollout scenarios for operations and finance teams.</p>
+    </div>
+    <div class="usecases-grid">
+      <article class="usecase-card"><div class="usecase-icon">🚀</div><h3>New ERPNext deployment</h3><p>Roll out UPH from day zero with clean setup and data quality conventions.</p></article>
+      <article class="usecase-card"><div class="usecase-icon">🏭</div><h3>Production migration at scale</h3><p>Migrate 1,000+ existing customers with controlled mapping and currency-aware linking.</p></article>
+      <article class="usecase-card"><div class="usecase-icon">📈</div><h3>Reporting modernization</h3><p>Move from fragmented party records to consolidated governance and reporting.</p></article>
+    </div>
+  </div>
+</section>
 
-      <article class="feature-card">
-        <div class="feature-icon">🛡️</div>
-        <h3>Data Quality Governance</h3>
-        <p>Detect probable duplicates, manage merges, and enforce data standards across party lifecycles.</p>
-      </article>
-
-      <article class="feature-card">
-        <div class="feature-icon">📊</div>
-        <h3>Consolidated Reporting</h3>
-        <p>Analyze transactions and balances by canonical party identity instead of fragmented role-specific records.</p>
-      </article>
-
-      <article class="feature-card">
-        <div class="feature-icon">⚙️</div>
-        <h3>Configurable & Extensible</h3>
-        <p>Control mappings, validations, document hooks, and custom integrations through settings and APIs.</p>
-      </article>
+<section class="section reports">
+  <div class="container">
+    <div class="section-header">
+      <h2>Screenshots and walkthrough placeholders</h2>
+      <p>Drop product captures into these slots as your release assets are finalized.</p>
+    </div>
+    <div class="reports-grid">
+      <article class="report-card"><h4>📸 Party tree view <span>Placeholder</span></h4><p>Recommended: hierarchy screenshot showing parent-child relationships and linked entities.</p></article>
+      <article class="report-card"><h4>📸 Data quality dashboard <span>Placeholder</span></h4><p>Recommended: duplicate detection and merge workflow with status indicators.</p></article>
+      <article class="report-card"><h4>📸 Architecture diagram <span>Available</span></h4><p><a href="{{ "/Architecture%20Deep-Dive.png" | relURL }}">Open existing architecture image asset</a>.</p></article>
     </div>
   </div>
 </section>
 
 <section class="cta">
   <div class="cta-content container">
-    <h2>Start with the docs, ship with confidence</h2>
-    <p>Follow installation, setup, feature guides, and API notes to roll out UPH in your ERPNext environment.</p>
+    <h2>Ready to deploy UPH with confidence?</h2>
+    <p>Start with installation, continue through architecture, and finish with production use-cases and API references.</p>
     <div class="cta-buttons">
-      <a class="btn btn-primary" href="{{ "/docs/introduction/installation/" | relLangURL }}">Installation Guide</a>
-      <a class="btn btn-outline" href="{{ "/docs/recreated/" | relLangURL }}">Recreated Docs</a>
+      <a class="btn btn-primary" href="{{ "/docs/introduction/installation/" | relLangURL }}">Install UPH</a>
+      <a class="btn btn-outline" href="{{ "/docs/Advanced/Architecture_Deep-Dive/" | relLangURL }}">Read Architecture</a>
+      <a class="btn btn-outline" href="{{ "/docs/Advanced/api-reference/" | relLangURL }}">Open API Reference</a>
     </div>
   </div>
 </section>
 {{ end }}
 
-{{ define "menu-container" }}
-<!-- -->
-{{ end }}
-
-{{ define "toc-container" }}
-<!-- -->
-{{ end }}
-
-{{ define "footer" }}
-<!-- -->
-{{ end }}
-
-{{ define "header" }}
-<nav>
-  {{ partial "docs/menu-hugo" (dict "Page" .Page "Menu" .Site.Menus.home) }}
-</nav>
-{{ end }}
+{{ define "menu-container" }}{{ end }}
+{{ define "toc-container" }}{{ end }}
+{{ define "footer" }}{{ end }}

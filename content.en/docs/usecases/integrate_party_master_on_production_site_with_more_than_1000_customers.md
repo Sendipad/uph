@@ -58,7 +58,7 @@ Enable a smooth migration where:
    - No impact on accounting data like GL Entries, invoice status, or amounts.  
 
    👉 See:  
-   **[How existing documents sync Party Master automatically]({{< relref "../advanced/background_sync_party_master_field_following_change_on_party.md" >}})
+   **[How existing documents sync Party Master automatically]({{< relref "../Advanced/background_sync_party_master_field_following_change_on_party.md" >}})**
 
 ### Result  
 Your 1,000+ customers are now fully migrated into the Party Master structure.  
