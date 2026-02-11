@@ -201,7 +201,6 @@ def seed_default_party_master_structure():
             "is_group": 1,
             "party_type": "Customer",
             "group_type": "Customer Group",
-            "default_currency": "YER",
         },
         {
             "party_number": "2000",
