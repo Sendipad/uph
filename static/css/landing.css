@@ -12,26 +12,26 @@
   --uph-success: #10b981;
   --uph-warning: #f59e0b;
   --uph-danger: #ef4444;
-  
+
   --uph-gradient-1: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   --uph-gradient-2: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%);
   --uph-gradient-3: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
-  
+
   --uph-bg-dark: #0f172a;
   --uph-bg-card: rgba(30, 41, 59, 0.8);
   --uph-bg-card-hover: rgba(30, 41, 59, 0.9);
   --uph-text-primary: #f8fafc;
   --uph-text-secondary: #94a3b8;
   --uph-border: rgba(255, 255, 255, 0.1);
-  
+
   --uph-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --uph-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --uph-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --uph-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  
+
   --uph-radius: 12px;
   --uph-radius-lg: 16px;
-  
+
   --uph-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -202,9 +202,19 @@ body {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0) translateX(0); }
-  33% { transform: translateY(-50px) translateX(50px); }
-  66% { transform: translateY(50px) translateX(-50px); }
+
+  0%,
+  100% {
+    transform: translateY(0) translateX(0);
+  }
+
+  33% {
+    transform: translateY(-50px) translateX(50px);
+  }
+
+  66% {
+    transform: translateY(50px) translateX(-50px);
+  }
 }
 
 .hero-content {
@@ -238,13 +248,29 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 @keyframes pulse-dot {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.2); opacity: 0.8; }
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
 }
 
 .hero-title {
@@ -501,16 +527,16 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 4px;
   background: var(--uph-gradient-1);
   opacity: 0;
   transition: var(--uph-transition);
 }
 
 .feature-card:hover {
-  transform: translateY(-8px);
-  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateY(-4px);
   box-shadow: var(--uph-shadow-xl);
+  border-color: rgba(99, 102, 241, 0.3);
 }
 
 .feature-card:hover::before {
@@ -518,15 +544,21 @@ body {
 }
 
 .feature-icon {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--uph-gradient-1);
-  border-radius: var(--uph-radius);
-  margin-bottom: 1.5rem;
-  font-size: 1.75rem;
+  margin-bottom: 1.25rem;
+  color: var(--uph-primary);
+}
+
+.feature-icon svg {
+  width: 28px;
+  height: 28px;
+  stroke-width: 2;
 }
 
 .feature-card h3 {
@@ -573,7 +605,6 @@ body {
 }
 
 .doctype-icon {
-  font-size: 1.5rem;
   width: 48px;
   height: 48px;
   display: flex;
@@ -582,6 +613,13 @@ body {
   background: var(--uph-gradient-1);
   border-radius: 12px;
   flex-shrink: 0;
+  color: white;
+}
+
+.doctype-icon svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2;
 }
 
 .doctype-content h4 {
@@ -672,7 +710,6 @@ body {
 }
 
 .usecase-icon {
-  font-size: 1.5rem;
   width: 48px;
   height: 48px;
   display: flex;
@@ -681,6 +718,13 @@ body {
   background: var(--uph-gradient-2);
   border-radius: 12px;
   margin-bottom: 1rem;
+  color: white;
+}
+
+.usecase-icon svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2;
 }
 
 .usecase-card h3 {
@@ -902,19 +946,19 @@ body {
   .hero {
     padding: 5rem 1.5rem 3rem;
   }
-  
+
   .hero-buttons {
     flex-direction: column;
   }
-  
+
   .hero-stats {
     gap: 2rem;
   }
-  
+
   .stats-item {
     flex: 1;
   }
-  
+
   .features-grid,
   .doctypes-grid,
   .reports-grid,
@@ -922,11 +966,11 @@ body {
   .problems-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .section {
     padding: 4rem 1.5rem;
   }
-  
+
   .footer-links {
     flex-direction: column;
     gap: 1rem;
@@ -937,23 +981,23 @@ body {
   .container {
     padding: 0 1rem;
   }
-  
+
   .nav-container {
     padding: 0 1rem;
   }
-  
+
   .hero {
     padding: 4rem 1rem 2rem;
   }
-  
+
   .hero-title {
     font-size: 2rem;
   }
-  
+
   .hero-subtitle {
     font-size: 1.125rem;
   }
-  
+
   .section {
     padding: 3rem 1rem;
   }

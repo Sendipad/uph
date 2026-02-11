@@ -1,252 +1,78 @@
 {{- /*
 AI Assistant Buttons Partial
-Creates buttons linking to various AI assistants with the current page URL as context.
-Includes both inline buttons and floating action button (FAB).
+Creates buttons linking to various AI assistants with context.
 */ -}}
-
-{{- $pageUrl := .Permalink -}}
 {{- $pageTitle := .Title -}}
-{{- $siteTitle := .Site.Title -}}
-
+{{- $pageUrl := .Permalink -}}
 <style>
-  /* AI Assistant Buttons Styles */
-  .ai-assistant-container {
-    margin: 2rem 0;
-    padding: 1.5rem;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
+  .ai-actions {
     display: flex;
+    gap: 0.5rem;
     flex-wrap: wrap;
-    gap: 0.75rem;
-    align-items: center;
-    justify-content: center;
+    margin: 1rem 0
   }
 
-  .ai-assistant-title {
-    width: 100%;
-    text-align: center;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 1rem;
-  }
-
-  .ai-assistant-btn {
+  .ai-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.25rem;
-    font-size: 0.95rem;
-    font-weight: 600;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
     text-decoration: none;
-    transition: all 0.2s ease;
-    color: white;
+    transition: all 0.2s;
+    color: white
   }
 
-  .ai-assistant-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    color: white;
-  }
-
-  .ai-assistant-btn i {
-    font-size: 1.1rem;
-  }
-
-  /* ChatGPT - Green */
   .ai-btn-chatgpt {
-    background: linear-gradient(135deg, #10a37f 0%, #1a7f64 100%);
+    background: #10a37f
   }
 
-  .ai-btn-chatgpt:hover {
-    background: linear-gradient(135deg, #1a7f64 0%, #10a37f 100%);
-  }
-
-  /* Claude - Purple */
   .ai-btn-claude {
-    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+    background: #a855f7
   }
 
-  .ai-btn-claude:hover {
-    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-  }
-
-  /* Gemini - Blue */
   .ai-btn-gemini {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: #3b82f6
   }
 
-  .ai-btn-gemini:hover {
-    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  .ai-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px)
   }
 
-  /* Dark mode support */
-  @media (prefers-color-scheme: dark) {
-    .ai-assistant-container {
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-      border-color: #334155;
-    }
-
-    .ai-assistant-title {
-      color: #f1f5f9;
-    }
-  }
-
-  /* Floating Action Button (FAB) */
   .ai-fab {
     position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    width: 56px;
-    height: 56px;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: #3b82f6;
     color: white;
     border: none;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
-    transition: all 0.3s ease;
-    z-index: 1000;
-    text-decoration: none;
+    z-index: 999
   }
 
   .ai-fab:hover {
-    transform: translateY(-4px) scale(1.05);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
-  }
-
-  /* FAB Tooltip */
-  .ai-fab::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 100%;
-    right: 50%;
-    transform: translateX(50%);
-    margin-bottom: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: #1e293b;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
-    border-radius: 6px;
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.2s ease;
-  }
-
-  .ai-fab:hover::after {
-    opacity: 1;
-    visibility: visible;
-  }
-
-  /* Hide FAB on small screens */
-  @media (max-width: 768px) {
-    .ai-fab {
-      bottom: 1rem;
-      right: 1rem;
-      width: 48px;
-      height: 48px;
-      font-size: 1.25rem;
-    }
+    transform: scale(1.05)
   }
 </style>
-
-<!-- Inline AI Assistant Section -->
-<div class="ai-assistant-container">
-  <div class="ai-assistant-title">
-    Ask an AI Assistant about this page
-  </div>
-
-  {{- /* ChatGPT Button */ -}}
-  {{- $chatgptMessage := printf "I'm reading the %s documentation page titled \"%s\": %s\n\nPlease summarize this page and explain how to use it with examples." $siteTitle $pageTitle $pageUrl -}}
-  {{- $chatgptUrl := printf "https://chatgpt.com/?q=%s" (urlize $chatgptMessage) -}}
-  <a href="{{ $chatgptUrl }}"
-     class="ai-assistant-btn ai-btn-chatgpt"
-     target="_blank"
-     rel="noopener noreferrer"
-     title="Ask ChatGPT about this page">
-    <i class="fab fa-js"></i>
-    <span>ChatGPT</span>
-  </a>
-
-  {{- /* Claude Button */ -}}
-  {{- $claudeUrl := printf "https://claude.com/" -}}
-  <a href="{{ $claudeUrl }}"
-     class="ai-assistant-btn ai-btn-claude"
-     target="_blank"
-     rel="noopener noreferrer"
-     title="Ask Claude about this page">
-    <i class="fas fa-brain"></i>
-    <span>Claude</span>
-  </a>
-
-  {{- /* Gemini Button with JavaScript */ -}}
-  <button onclick="askGemini()"
-     class="ai-assistant-btn ai-btn-gemini"
-     title="Ask Gemini about this page">
-    <i class="fas fa-sparkles"></i>
-    <span>Gemini</span>
-  </button>
+<div class="ai-actions">
+  <a href="https://chatgpt.com/?q={{$pageTitle}}+{{$pageUrl}}" target="_blank" class="ai-btn ai-btn-chatgpt"
+    title="Ask ChatGPT">ChatGPT</a>
+  <a href="https://claude.com/" target="_blank" class="ai-btn ai-btn-claude" title="Ask Claude">Claude</a>
+  <button onclick="copyGeminiPrompt('{{$pageTitle}}','{{$pageUrl}}')" class="ai-btn ai-btn-gemini"
+    title="Copy prompt for Gemini">Gemini</button>
 </div>
-
-<!-- Floating Action Button (FAB) -->
-<a href="#" onclick="askGemini(); return false;" class="ai-fab" data-tooltip="Ask AI about this page">
-  ✨
-</a>
-
-<!-- JavaScript for Gemini -->
+<button onclick="showAIMenu()" class="ai-fab" title="AI Assistant">✨</button>
 <script>
-function askGemini() {
-  // Get current page info
-  var pageTitle = document.title || '{{ $pageTitle }}';
-  var pageUrl = window.location.href;
-  
-  // Create prompt
-  var prompt = 'I am reading the ' + pageTitle + ' documentation page at: ' + pageUrl + '\n\nPlease summarize this page and explain how to use it with examples.';
-  
-  // Copy prompt to clipboard
-  navigator.clipboard.writeText(prompt).then(function() {
-    // Open Gemini in new tab
-    window.open('https://gemini.google.com/app', '_blank');
-    
-    // Show brief notification
-    if (typeof frappe !== 'undefined') {
-      frappe.show_alert({
-        indicator: 'green',
-        message: 'Prompt copied! Paste it into Gemini.'
-      }, 3);
-    } else {
-      // Fallback notification
-      alert('Prompt copied! Paste it into Gemini.');
-    }
-  }).catch(function(err) {
-    console.error('Failed to copy: ', err);
-    window.open('https://gemini.google.com/app', '_blank');
-  });
-}
-</script>
-
-<!-- Alternative: Direct Gemini link with UTM parameters -->
-<script>
-(function() {
-  var geminiLinks = document.querySelectorAll('.ai-btn-gemini, .ai-fab');
-  geminiLinks.forEach(function(link) {
-    link.addEventListener('click', function(e) {
-      if (link.tagName === 'A' && !link.getAttribute('href').startsWith('#')) {
-        return; // Let normal link work
-      }
-      e.preventDefault();
-      askGemini();
-    });
-  });
-})();
+  function copyGeminiPrompt(title, url) { var p = 'Reading: ' + title + ' ' + url; navigator.clipboard.writeText(p).then(function () { alert('Prompt copied! Paste in Gemini.') }) }
+  function showAIMenu() { document.querySelector('.ai-actions').scrollIntoView({ behavior: 'smooth' }) }
 </script>
