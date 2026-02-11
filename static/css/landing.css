@@ -556,9 +556,9 @@ body {
 }
 
 .feature-icon svg {
-  width: 28px;
-  height: 28px;
-  stroke-width: 2;
+  width: 28px !important;
+  height: 28px !important;
+  stroke-width: 2 !important;
 }
 
 .feature-card h3 {
@@ -617,9 +617,9 @@ body {
 }
 
 .doctype-icon svg {
-  width: 24px;
-  height: 24px;
-  stroke-width: 2;
+  width: 24px !important;
+  height: 24px !important;
+  stroke-width: 2 !important;
 }
 
 .doctype-content h4 {
@@ -722,9 +722,9 @@ body {
 }
 
 .usecase-icon svg {
-  width: 24px;
-  height: 24px;
-  stroke-width: 2;
+  width: 24px !important;
+  height: 24px !important;
+  stroke-width: 2 !important;
 }
 
 .usecase-card h3 {
