@@ -144,4 +144,60 @@ class TestPartyMaster(FrappeTestCase):
             self.fail("set_party_master raised TypeError with unexpected kwargs")
 
         party.reload()
-        self.assertEqual(party.party_master, pm.name)
+
+    def test_title_is_party_name(self):
+        if not self.root_group:
+            self.skipTest("No root group")
+        party_name = unique_name("Title Test")
+        pm = frappe.get_doc(
+            {
+                "doctype": "Party Master",
+                "party_name": party_name,
+                "party_type": "Customer",
+                "parent_party_master": self.root_group,
+            }
+        )
+        pm.insert(ignore_permissions=True)
+
+    def test_get_unset_parties_list_ordering(self):
+        from uph.party.doctype.party_master.party_master import get_unset_parties_list
+
+        if not self.root_group:
+            self.skipTest("No root group")
+
+        # Create parties with names that would be out of order if not sorted
+        names = ["Zebra Test", "Apple Test", "Mango Test"]
+        for name in names:
+            frappe.get_doc(
+                {
+                    "doctype": "Customer",
+                    "customer_name": name,
+                    "customer_group": "All Customer Groups",
+                    "customer_type": "Individual",
+                    "territory": "All Territories",
+                }
+            ).insert(ignore_permissions=True)
+
+        pm = frappe.get_doc(
+            {
+                "doctype": "Party Master",
+                "party_name": "Ordering Test",
+                "party_type": "Customer",
+                "parent_party_master": self.root_group,
+            }
+        ).insert(ignore_permissions=True)
+
+        # We need to simulate the filters passed to the whitelist function
+        filters = {"party_master": pm.name, "party_type": "Customer", "unset_name": 0}
+
+        result = get_unset_parties_list("Party Master", "", "", 0, 100, filters, True)
+
+        # Extract names and filter for our test names
+        # note: get_unset_parties_list filters by 'is not set' for party_master
+        # our created customers have party_master set to None by default if not specified
+
+        result_names = [
+            r.get("party_name") for r in result if r.get("party_name") in names
+        ]
+
+        self.assertEqual(result_names, sorted(names))

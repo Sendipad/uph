@@ -299,18 +299,8 @@ class PartyMaster(NestedSet):
             self.has_secondary_role_party = 1
 
     def _generate_title(self):
-        """Generate unique title."""
-        if self.party_number:
-            self.title = f"{self.party_name} - {self.party_number}"
-        else:
-            self.title = self.party_name
-
-        # Ensure uniqueness if needed, though party_number should guarantee it
-        if frappe.db.exists(
-            "Party Master", {"title": self.title, "name": ["!=", self.name]}
-        ):
-            # Fallback if somehow duplicate
-            self.title = f"{self.title} ({self.party_type or 'Group'})"
+        """Generate title from party name."""
+        self.title = self.party_name
 
     def _update_linked_count(self):
         """Update total linked party count."""
@@ -1250,7 +1240,13 @@ def get_unset_parties_list(
         if unset:
             or_filters = [[name_field, "like", f"%{x}%"] for x in words]
 
-        r = frappe.db.get_all(pt, filters=filter, or_filters=or_filters, fields=fields)
+        r = frappe.db.get_all(
+            pt,
+            filters=filter,
+            or_filters=or_filters,
+            fields=fields,
+            order_by=name_field,
+        )
 
         for row in r:
             row.update(
@@ -1261,6 +1257,9 @@ def get_unset_parties_list(
                 }
             )
             result.append(row)
+
+    # Global sort by party_name
+    result.sort(key=lambda x: x.get("party_name") or "")
     return result
 
 
