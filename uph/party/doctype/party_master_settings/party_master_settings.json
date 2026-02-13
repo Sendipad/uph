@@ -1,184 +1,290 @@
 {
- "actions": [],
- "allow_rename": 1,
- "creation": "2025-04-05 17:27:20.040931",
- "doctype": "DocType",
- "documentation": "https://sendipad.github.io/uph/en/docs/introduction/Settings/",
- "engine": "InnoDB",
- "field_order": [
-  "general_configuration_section",
-  "override_party_details_api",
-  "column_break_qzjp",
-  "enforce_strict_currency",
-  "party_type_rules_section",
-  "party_types",
-  "doctype_fields_mapping_section",
-  "document_types",
-  "party_master_to_party_sync_fields_section",
-  "party_master_fields",
-  "party_master_tab",
-  "tree_view_section",
-  "auto_expand_levels",
-  "column_break_jote",
-  "hide_balance",
-  "paa_tab",
-  "enable_party_analytic_accounting",
-  "duplicate_voucher_configuration_tab",
-  "duplicate_check_section",
-  "check_party_master_duplicate_vouchers",
-  "duplicate_voucher_action",
-  "role_to_bypass_duplicate_voucher"
- ],
- "fields": [
-  {
-   "fieldname": "doctype_fields_mapping_section",
-   "fieldtype": "Section Break",
-   "label": "DocType Fields Mapping"
-  },
-  {
-   "fieldname": "document_types",
-   "fieldtype": "Table",
-   "label": "Document Types",
-   "options": "Party Master Settings DocType"
-  },
-  {
-   "fieldname": "duplicate_check_section",
-   "fieldtype": "Section Break",
-   "label": "Duplicate Voucher Configuration"
-  },
-  {
-   "default": "1",
-   "fieldname": "check_party_master_duplicate_vouchers",
-   "fieldtype": "Check",
-   "label": "Check Party Master Duplicate Vouchers"
-  },
-  {
-   "default": "Warn",
-   "depends_on": "check_party_master_duplicate_vouchers",
-   "fieldname": "duplicate_voucher_action",
-   "fieldtype": "Select",
-   "label": "Duplicate Voucher Action",
-   "options": "Warn\nStop"
-  },
-  {
-   "depends_on": "check_party_master_duplicate_vouchers",
-   "fieldname": "role_to_bypass_duplicate_voucher",
-   "fieldtype": "Link",
-   "label": "Role to Bypass Duplicate Voucher Check",
-   "options": "Role"
-  },
-  {
-   "fieldname": "party_master_to_party_sync_fields_section",
-   "fieldtype": "Section Break",
-   "label": "Party Master To Party Sync Fields"
-  },
-  {
-   "fieldname": "party_master_fields",
-   "fieldtype": "Table",
-   "label": "Party Master Fields",
-   "options": "Party Master Settings DocField"
-  },
-  {
-   "fieldname": "party_type_rules_section",
-   "fieldtype": "Section Break",
-   "label": "Party Type Rules"
-  },
-  {
-   "fieldname": "party_types",
-   "fieldtype": "Table",
-   "label": "Party Types",
-   "options": "Party Master Settings Party Type"
-  },
-  {
-   "fieldname": "party_master_tab",
-   "fieldtype": "Tab Break",
-   "label": "Party Master"
-  },
-  {
-   "default": "3",
-   "fieldname": "auto_expand_levels",
-   "fieldtype": "Int",
-   "label": "Party Master Tree View Expand Lvele"
-  },
-  {
-   "fieldname": "column_break_jote",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "tree_view_section",
-   "fieldtype": "Section Break",
-   "label": "Tree View"
-  },
-  {
-   "default": "1",
-   "fieldname": "hide_balance",
-   "fieldtype": "Check",
-   "label": "Hide Balance in Tree"
-  },
-  {
-   "default": "1",
-   "fieldname": "override_party_details_api",
-   "fieldtype": "Check",
-   "label": "Override Party Details API "
-  },
-  {
-   "fieldname": "column_break_qzjp",
-   "fieldtype": "Column Break"
-  },
-  {
-   "default": "1",
-   "description": "Enable to enforce strict currency mapping document's currency to accounts head currency.",
-   "fieldname": "enforce_strict_currency",
-   "fieldtype": "Check",
-   "label": "Enforce Strict Currency Accounting"
-  },
-  {
-   "fieldname": "general_configuration_section",
-   "fieldtype": "Section Break",
-   "label": "General Configuration"
-  },
-  {
-   "default": "1",
-   "fieldname": "paa_tab",
-   "fieldtype": "Tab Break",
-   "label": "PAA"
-  },
-  {
-   "default": "0",
-   "fieldname": "enable_party_analytic_accounting",
-   "fieldtype": "Check",
-   "label": "Enable Party Analytic Accounting"
-  },
-  {
-   "fieldname": "duplicate_voucher_configuration_tab",
-   "fieldtype": "Tab Break",
-   "label": "Duplicate Voucher Configuration"
-  }
- ],
- "grid_page_length": 50,
- "index_web_pages_for_search": 1,
- "issingle": 1,
- "links": [],
- "modified": "2026-02-02 17:08:37.251635",
- "modified_by": "Administrator",
- "module": "Party",
- "name": "Party Master Settings",
- "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "print": 1,
-   "read": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  }
- ],
- "row_format": "Dynamic",
- "rows_threshold_for_grid_search": 20,
- "sort_field": "modified",
- "sort_order": "DESC",
- "states": []
+    "actions": [],
+    "allow_rename": 1,
+    "creation": "2025-04-05 17:27:20.040931",
+    "doctype": "DocType",
+    "documentation": "https://sendipad.github.io/uph/en/docs/introduction/Settings/",
+    "engine": "InnoDB",
+    "field_order": [
+        "general_configuration_section",
+        "override_party_details_api",
+        "column_break_qzjp",
+        "enforce_strict_currency",
+        "party_type_rules_section",
+        "party_types",
+        "doctype_fields_mapping_section",
+        "document_types",
+        "party_master_to_party_sync_fields_section",
+        "party_master_fields",
+        "governance_tab",
+        "numbering_section",
+        "numbering_format",
+        "column_break_gov1",
+        "digits_count",
+        "governance_rules_section",
+        "enforce_parent_numbering",
+        "enforce_cross_type_uniqueness",
+        "column_break_gov2",
+        "sync_erp_party_naming",
+        "role_prefix_mode",
+        "setup_section",
+        "setup_finished",
+        "column_break_gov3",
+        "language",
+        "party_master_tab",
+        "tree_view_section",
+        "auto_expand_levels",
+        "column_break_jote",
+        "hide_balance",
+        "paa_tab",
+        "enable_party_analytic_accounting",
+        "duplicate_voucher_configuration_tab",
+        "duplicate_check_section",
+        "check_party_master_duplicate_vouchers",
+        "duplicate_voucher_action",
+        "role_to_bypass_duplicate_voucher"
+    ],
+    "fields": [
+        {
+            "fieldname": "doctype_fields_mapping_section",
+            "fieldtype": "Section Break",
+            "label": "DocType Fields Mapping"
+        },
+        {
+            "fieldname": "document_types",
+            "fieldtype": "Table",
+            "label": "Document Types",
+            "options": "Party Master Settings DocType"
+        },
+        {
+            "fieldname": "duplicate_check_section",
+            "fieldtype": "Section Break",
+            "label": "Duplicate Voucher Configuration"
+        },
+        {
+            "default": "1",
+            "fieldname": "check_party_master_duplicate_vouchers",
+            "fieldtype": "Check",
+            "label": "Check Party Master Duplicate Vouchers"
+        },
+        {
+            "default": "Warn",
+            "depends_on": "check_party_master_duplicate_vouchers",
+            "fieldname": "duplicate_voucher_action",
+            "fieldtype": "Select",
+            "label": "Duplicate Voucher Action",
+            "options": "Warn\nStop"
+        },
+        {
+            "depends_on": "check_party_master_duplicate_vouchers",
+            "fieldname": "role_to_bypass_duplicate_voucher",
+            "fieldtype": "Link",
+            "label": "Role to Bypass Duplicate Voucher Check",
+            "options": "Role"
+        },
+        {
+            "fieldname": "party_master_to_party_sync_fields_section",
+            "fieldtype": "Section Break",
+            "label": "Party Master To Party Sync Fields"
+        },
+        {
+            "fieldname": "party_master_fields",
+            "fieldtype": "Table",
+            "label": "Party Master Fields",
+            "options": "Party Master Settings DocField"
+        },
+        {
+            "fieldname": "party_type_rules_section",
+            "fieldtype": "Section Break",
+            "label": "Party Type Rules"
+        },
+        {
+            "fieldname": "party_types",
+            "fieldtype": "Table",
+            "label": "Party Types",
+            "options": "Party Master Settings Party Type"
+        },
+        {
+            "fieldname": "party_master_tab",
+            "fieldtype": "Tab Break",
+            "label": "Party Master"
+        },
+        {
+            "default": "3",
+            "fieldname": "auto_expand_levels",
+            "fieldtype": "Int",
+            "label": "Party Master Tree View Expand Lvele"
+        },
+        {
+            "fieldname": "column_break_jote",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "tree_view_section",
+            "fieldtype": "Section Break",
+            "label": "Tree View"
+        },
+        {
+            "default": "1",
+            "fieldname": "hide_balance",
+            "fieldtype": "Check",
+            "label": "Hide Balance in Tree"
+        },
+        {
+            "default": "1",
+            "fieldname": "override_party_details_api",
+            "fieldtype": "Check",
+            "label": "Override Party Details API "
+        },
+        {
+            "fieldname": "column_break_qzjp",
+            "fieldtype": "Column Break"
+        },
+        {
+            "default": "1",
+            "description": "Enable to enforce strict currency mapping document's currency to accounts head currency.",
+            "fieldname": "enforce_strict_currency",
+            "fieldtype": "Check",
+            "label": "Enforce Strict Currency Accounting"
+        },
+        {
+            "fieldname": "general_configuration_section",
+            "fieldtype": "Section Break",
+            "label": "General Configuration"
+        },
+        {
+            "default": "1",
+            "fieldname": "paa_tab",
+            "fieldtype": "Tab Break",
+            "label": "PAA"
+        },
+        {
+            "default": "0",
+            "fieldname": "enable_party_analytic_accounting",
+            "fieldtype": "Check",
+            "label": "Enable Party Analytic Accounting"
+        },
+        {
+            "fieldname": "duplicate_voucher_configuration_tab",
+            "fieldtype": "Tab Break",
+            "label": "Duplicate Voucher Configuration"
+        },
+        {
+            "fieldname": "governance_tab",
+            "fieldtype": "Tab Break",
+            "label": "Governance"
+        },
+        {
+            "fieldname": "numbering_section",
+            "fieldtype": "Section Break",
+            "label": "Numbering"
+        },
+        {
+            "default": "Concatenated",
+            "description": "Choose how party numbers are formatted. Concatenated: 1000000001. Dash-Separated: 1000-000001.",
+            "fieldname": "numbering_format",
+            "fieldtype": "Select",
+            "label": "Numbering Format",
+            "options": "Concatenated\nDash-Separated"
+        },
+        {
+            "fieldname": "column_break_gov1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "default": "6",
+            "description": "Number of digits for the leaf party suffix (e.g. 6 means 000001\u2013999999 under each group).",
+            "fieldname": "digits_count",
+            "fieldtype": "Int",
+            "label": "Digits Count",
+            "non_negative": 1
+        },
+        {
+            "fieldname": "governance_rules_section",
+            "fieldtype": "Section Break",
+            "label": "Governance Rules"
+        },
+        {
+            "default": "0",
+            "description": "Enforce that child party numbers start with the parent group's prefix.",
+            "fieldname": "enforce_parent_numbering",
+            "fieldtype": "Check",
+            "label": "Enforce Parent Numbering Prefix"
+        },
+        {
+            "default": "0",
+            "description": "Prevent the same party (e.g. same Customer) from being linked to multiple Party Masters.",
+            "fieldname": "enforce_cross_type_uniqueness",
+            "fieldtype": "Check",
+            "label": "Enforce Cross-Type Uniqueness"
+        },
+        {
+            "fieldname": "column_break_gov2",
+            "fieldtype": "Column Break"
+        },
+        {
+            "default": "0",
+            "description": "Sync ERPNext party record names with Party Master numbering.",
+            "fieldname": "sync_erp_party_naming",
+            "fieldtype": "Check",
+            "label": "Sync ERP Party Naming"
+        },
+        {
+            "default": "Prefix",
+            "depends_on": "sync_erp_party_naming",
+            "description": "How to incorporate the role type into the party name.",
+            "fieldname": "role_prefix_mode",
+            "fieldtype": "Select",
+            "label": "Role Prefix Mode",
+            "options": "Prefix\nSuffix"
+        },
+        {
+            "fieldname": "setup_section",
+            "fieldtype": "Section Break",
+            "label": "Setup"
+        },
+        {
+            "default": "0",
+            "description": "Once checked, core governance settings (Numbering Format, Digits Count) become read-only to prevent accidental changes in production.",
+            "fieldname": "setup_finished",
+            "fieldtype": "Check",
+            "label": "Setup Finished"
+        },
+        {
+            "fieldname": "column_break_gov3",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "language",
+            "fieldtype": "Link",
+            "label": "Language",
+            "options": "Language"
+        }
+    ],
+    "grid_page_length": 50,
+    "index_web_pages_for_search": 1,
+    "issingle": 1,
+    "links": [],
+    "modified": "2026-02-13 20:20:00.000000",
+    "modified_by": "Administrator",
+    "module": "Party",
+    "name": "Party Master Settings",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "print": 1,
+            "read": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "row_format": "Dynamic",
+    "rows_threshold_for_grid_search": 20,
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": []
 }

@@ -106,23 +106,13 @@ export_python_type_annotations = True
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"uph.tasks.all"
-# 	],
-# 	"daily": [
-# 		"uph.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"uph.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"uph.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"uph.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+    "daily": [
+        "uph.party.controllers.duplicate_scanner.run_duplicate_scan",
+        "uph.party.controllers.unlinked_resolver.rebuild_unlinked_cache",
+        "uph.party.controllers.transaction_health.rebuild_health_cache",
+    ],
+}
 
 # Testing
 # -------

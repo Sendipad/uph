@@ -5,10 +5,7 @@ frappe.pages['data-quality-dashboard'].on_page_load = function (wrapper) {
         single_column: true
     });
 
-    // Store page reference
     page.main.addClass('data-quality-dashboard');
-
-    // Initialize dashboard
     new DataQualityDashboard(page);
 };
 
@@ -19,6 +16,15 @@ class DataQualityDashboard {
         this.current_offset = 0;
         this.limit = 20;
         this.min_score = 70;
+        this.active_tab = 'duplicates';
+
+        // Unlinked tab state
+        this.unlinked_offset = 0;
+        this.unlinked_limit = 20;
+
+        // Health tab state
+        this.health_offset = 0;
+        this.health_limit = 20;
 
         this.init();
     }
@@ -27,19 +33,30 @@ class DataQualityDashboard {
         this.setup_page_actions();
         this.render_layout();
         this.load_stats();
-        this.load_duplicates();
+        this.load_tab_content();
     }
 
     setup_page_actions() {
-        // Refresh button
         this.page.set_primary_action(__('Refresh'), () => {
+            frappe.cache = {};
             this.load_stats();
-            this.load_duplicates();
+            this.load_tab_content();
         }, 'refresh');
 
-        // Settings button
         this.page.add_menu_item(__('Settings'), () => {
             this.show_settings_dialog();
+        });
+
+        this.page.add_menu_item(__('Run Duplicate Scan'), () => {
+            frappe.call({
+                method: 'uph.party.controllers.duplicate_scanner.enqueue_duplicate_scan',
+                args: { min_score: this.min_score },
+                callback: (r) => {
+                    if (r.message && r.message.success) {
+                        frappe.show_alert({ message: r.message.message, indicator: 'blue' });
+                    }
+                }
+            });
         });
     }
 
@@ -47,35 +64,82 @@ class DataQualityDashboard {
         this.wrapper.html(`
             <div class="data-quality-container">
                 <!-- Stats Cards -->
-                <div class="stats-row" style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
-                    <div class="stat-card" id="stat-total-parties" style="flex: 1; min-width: 150px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
-                        <div class="stat-value" style="font-size: 2rem; font-weight: 600;">-</div>
-                        <div class="stat-label" style="color: var(--text-muted);">${__('Total Parties')}</div>
+                <div class="stats-row" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                    <div class="stat-card" id="stat-total-parties" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
+                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600;">-</div>
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Total Parties')}</div>
                     </div>
-                    <div class="stat-card" id="stat-potential-dups" style="flex: 1; min-width: 150px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
-                        <div class="stat-value" style="font-size: 2rem; font-weight: 600; color: var(--orange-500);">-</div>
-                        <div class="stat-label" style="color: var(--text-muted);">${__('Potential Duplicates')}</div>
+                    <div class="stat-card" id="stat-potential-dups" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
+                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--orange-500);">-</div>
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Potential Duplicates')}</div>
                     </div>
-                    <div class="stat-card" id="stat-incomplete" style="flex: 1; min-width: 150px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
-                        <div class="stat-value" style="font-size: 2rem; font-weight: 600; color: var(--yellow-500);">-</div>
-                        <div class="stat-label" style="color: var(--text-muted);">${__('Incomplete Records')}</div>
+                    <div class="stat-card" id="stat-unlinked" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
+                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--purple-500);">-</div>
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Unlinked Roles')}</div>
                     </div>
-                    <div class="stat-card" id="stat-exclusions" style="flex: 1; min-width: 150px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
-                        <div class="stat-value" style="font-size: 2rem; font-weight: 600; color: var(--green-500);">-</div>
-                        <div class="stat-label" style="color: var(--text-muted);">${__('Dismissed Pairs')}</div>
+                    <div class="stat-card" id="stat-drafts" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
+                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--yellow-500);">-</div>
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Draft Vouchers')}</div>
+                    </div>
+                    <div class="stat-card" id="stat-dismissed" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
+                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--green-500);">-</div>
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Dismissed Pairs')}</div>
                     </div>
                 </div>
 
-                <!-- Duplicates List -->
-                <div class="duplicates-section">
-                    <h3 style="margin-bottom: 1rem;">${__('Potential Duplicates')}</h3>
-                    <div class="duplicates-list" id="duplicates-list">
-                        <div class="text-muted">${__('Loading...')}</div>
-                    </div>
-                    <div class="pagination-controls" id="pagination" style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center;"></div>
+                <!-- Tabs -->
+                <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 1rem;">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-tab="duplicates" href="#" role="tab">
+                            ${__('Duplicates')}
+                            <span class="badge badge-pill" id="tab-badge-dups" style="margin-left: 4px;"></span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="unlinked" href="#" role="tab">
+                            ${__('Unlinked Roles')}
+                            <span class="badge badge-pill" id="tab-badge-unlinked" style="margin-left: 4px;"></span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="health" href="#" role="tab">
+                            ${__('Transaction Health')}
+                            <span class="badge badge-pill" id="tab-badge-health" style="margin-left: 4px;"></span>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content-area" id="tab-content">
+                    <div class="text-muted">${__('Loading...')}</div>
                 </div>
+                <div class="pagination-controls" id="pagination" style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center;"></div>
             </div>
         `);
+
+        // Bind tab clicks
+        this.wrapper.find('.nav-link').on('click', (e) => {
+            e.preventDefault();
+            const tab = $(e.currentTarget).data('tab');
+            this.switch_tab(tab);
+        });
+    }
+
+    switch_tab(tab) {
+        this.active_tab = tab;
+        this.wrapper.find('.nav-link').removeClass('active');
+        this.wrapper.find(`.nav-link[data-tab="${tab}"]`).addClass('active');
+        this.load_tab_content();
+    }
+
+    load_tab_content() {
+        if (this.active_tab === 'duplicates') {
+            this.load_duplicates();
+        } else if (this.active_tab === 'unlinked') {
+            this.load_unlinked();
+        } else if (this.active_tab === 'health') {
+            this.load_health();
+        }
     }
 
     load_stats() {
@@ -92,11 +156,38 @@ class DataQualityDashboard {
     update_stats(stats) {
         $('#stat-total-parties .stat-value').text(stats.total_parties || 0);
         $('#stat-potential-dups .stat-value').text(stats.potential_duplicates || 0);
-        $('#stat-incomplete .stat-value').text(stats.incomplete_parties || 0);
-        $('#stat-exclusions .stat-value').text(stats.total_exclusions || 0);
+        $('#stat-unlinked .stat-value').text(stats.unlinked_count || 0);
+        $('#stat-drafts .stat-value').text(stats.draft_voucher_count || 0);
+        $('#stat-dismissed .stat-value').text(stats.total_dismissed || 0);
+
+        // Update tab badges
+        if (stats.potential_duplicates) {
+            $('#tab-badge-dups').text(stats.potential_duplicates).show();
+        } else {
+            $('#tab-badge-dups').hide();
+        }
+        if (stats.unlinked_count) {
+            $('#tab-badge-unlinked').text(stats.unlinked_count).show();
+        } else {
+            $('#tab-badge-unlinked').hide();
+        }
+
+        const health_total = (stats.draft_voucher_count || 0) + (stats.cancelled_unamended_count || 0);
+        if (health_total) {
+            $('#tab-badge-health').text(health_total).show();
+        } else {
+            $('#tab-badge-health').hide();
+        }
     }
 
+    // ═══════════════════════════════════════════
+    // DUPLICATES TAB
+    // ═══════════════════════════════════════════
+
     load_duplicates() {
+        const content = $('#tab-content');
+        content.html(`<div class="text-muted">${__('Loading duplicates...')}</div>`);
+
         frappe.call({
             method: 'uph.party.page.data_quality_dashboard.data_quality_dashboard.get_potential_duplicates',
             args: {
@@ -113,15 +204,16 @@ class DataQualityDashboard {
     }
 
     render_duplicates(data) {
-        const list = $('#duplicates-list');
-        list.empty();
+        const content = $('#tab-content');
+        content.empty();
 
         if (!data.duplicates || data.duplicates.length === 0) {
-            list.html(`<div class="text-muted text-center" style="padding: 2rem;">${__('No potential duplicates found')}</div>`);
+            content.html(`<div class="text-muted text-center" style="padding: 2rem;">${__('No potential duplicates found')}</div>`);
+            this.render_pagination(0, 'duplicates');
             return;
         }
 
-        data.duplicates.forEach((dup, idx) => {
+        data.duplicates.forEach((dup) => {
             const card = $(`
                 <div class="duplicate-card" style="background: var(--card-bg); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; box-shadow: var(--shadow-sm);">
                     <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 1rem;">
@@ -155,7 +247,6 @@ class DataQualityDashboard {
                 </div>
             `);
 
-            // Bind button events
             card.find('.btn-dismiss').on('click', (e) => {
                 const $btn = $(e.currentTarget);
                 this.dismiss_duplicate($btn.data('party1'), $btn.data('party2'));
@@ -166,50 +257,16 @@ class DataQualityDashboard {
                 this.show_merge_dialog($btn.data('party1'), $btn.data('party2'));
             });
 
-            list.append(card);
+            content.append(card);
         });
 
-        // Render pagination
-        this.render_pagination(data.total);
+        this.render_pagination(data.total, 'duplicates');
     }
 
     get_score_color(score) {
         if (score >= 90) return 'var(--red-500)';
         if (score >= 80) return 'var(--orange-500)';
         return 'var(--yellow-600)';
-    }
-
-    render_pagination(total) {
-        const pagination = $('#pagination');
-        pagination.empty();
-
-        const total_pages = Math.ceil(total / this.limit);
-        const current_page = Math.floor(this.current_offset / this.limit) + 1;
-
-        if (total_pages <= 1) return;
-
-        // Previous button
-        if (current_page > 1) {
-            pagination.append(`<button class="btn btn-default btn-sm btn-prev">${__('Previous')}</button>`);
-        }
-
-        pagination.append(`<span style="padding: 0 1rem;">${__('Page {0} of {1}', [current_page, total_pages])}</span>`);
-
-        // Next button
-        if (current_page < total_pages) {
-            pagination.append(`<button class="btn btn-default btn-sm btn-next">${__('Next')}</button>`);
-        }
-
-        // Bind events
-        pagination.find('.btn-prev').on('click', () => {
-            this.current_offset = Math.max(0, this.current_offset - this.limit);
-            this.load_duplicates();
-        });
-
-        pagination.find('.btn-next').on('click', () => {
-            this.current_offset += this.limit;
-            this.load_duplicates();
-        });
     }
 
     dismiss_duplicate(party1, party2) {
@@ -312,6 +369,342 @@ class DataQualityDashboard {
         });
     }
 
+    // ═══════════════════════════════════════════
+    // UNLINKED ROLES TAB
+    // ═══════════════════════════════════════════
+
+    load_unlinked() {
+        const content = $('#tab-content');
+        content.html(`<div class="text-muted">${__('Loading unlinked roles...')}</div>`);
+
+        frappe.call({
+            method: 'uph.party.controllers.unlinked_resolver.get_unlinked_parties',
+            args: {
+                limit: this.unlinked_limit,
+                offset: this.unlinked_offset,
+            },
+            callback: (r) => {
+                if (r.message) {
+                    this.render_unlinked(r.message);
+                }
+            }
+        });
+    }
+
+    render_unlinked(data) {
+        const content = $('#tab-content');
+        content.empty();
+
+        if (!data.unlinked || data.unlinked.length === 0) {
+            content.html(`<div class="text-muted text-center" style="padding: 2rem;">${__('All role records are linked to a Party Master')}</div>`);
+            this.render_pagination(0, 'unlinked');
+            return;
+        }
+
+        // Header
+        content.append(`
+            <div style="display: flex; padding: 0.5rem 1rem; font-weight: 600; color: var(--text-muted); font-size: 0.85rem; border-bottom: 1px solid var(--border-color);">
+                <div style="flex: 2;">${__('Record')}</div>
+                <div style="flex: 1;">${__('Type')}</div>
+                <div style="flex: 1;">${__('Currency')}</div>
+                <div style="flex: 1; text-align: right;">${__('Actions')}</div>
+            </div>
+        `);
+
+        data.unlinked.forEach((item) => {
+            const row = $(`
+                <div class="unlinked-row" style="display: flex; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); background: var(--card-bg);">
+                    <div style="flex: 2;">
+                        <div style="font-weight: 500;">
+                            <a href="/app/${frappe.router.slug(item.role_doctype)}/${item.role_name}" target="_blank">${item.display_name}</a>
+                        </div>
+                        <div class="text-muted small">${item.role_name}</div>
+                    </div>
+                    <div style="flex: 1;">
+                        <span class="indicator-pill" style="font-size: 0.8rem;">${item.role_doctype}</span>
+                    </div>
+                    <div style="flex: 1;">${item.currency || '-'}</div>
+                    <div style="flex: 1; text-align: right;">
+                        <button class="btn btn-default btn-xs btn-suggest" data-doctype="${item.role_doctype}" data-name="${item.role_name}" data-display="${item.display_name}">
+                            ${__('Find & Link')}
+                        </button>
+                    </div>
+                </div>
+            `);
+
+            row.find('.btn-suggest').on('click', (e) => {
+                const $btn = $(e.currentTarget);
+                this.show_link_dialog($btn.data('doctype'), $btn.data('name'), $btn.data('display'));
+            });
+
+            content.append(row);
+        });
+
+        this.render_pagination(data.total, 'unlinked');
+    }
+
+    show_link_dialog(role_doctype, role_name, display_name) {
+        const d = new frappe.ui.Dialog({
+            title: __('Link {0} to Party Master', [display_name]),
+            fields: [
+                {
+                    fieldname: 'suggestions_html',
+                    fieldtype: 'HTML',
+                    options: `<div class="text-muted">${__('Loading suggestions...')}</div>`,
+                },
+                { fieldtype: 'Section Break' },
+                {
+                    fieldname: 'party_master',
+                    fieldtype: 'Link',
+                    label: __('Party Master'),
+                    options: 'Party Master',
+                    get_query: () => ({ filters: { is_group: 0, disabled: 0 } }),
+                    description: __('Select manually or pick from suggestions above'),
+                }
+            ],
+            primary_action_label: __('Link'),
+            primary_action: (values) => {
+                if (!values.party_master) {
+                    frappe.msgprint(__('Please select a Party Master'));
+                    return;
+                }
+                frappe.call({
+                    method: 'uph.party.controllers.unlinked_resolver.link_to_party_master',
+                    args: {
+                        role_doctype: role_doctype,
+                        role_name: role_name,
+                        party_master: values.party_master,
+                    },
+                    callback: (r) => {
+                        if (r.message && r.message.success) {
+                            d.hide();
+                            frappe.show_alert({ message: r.message.message, indicator: 'green' });
+                            this.load_stats();
+                            this.load_unlinked();
+                        }
+                    }
+                });
+            }
+        });
+        d.show();
+
+        // Load suggestions
+        frappe.call({
+            method: 'uph.party.controllers.unlinked_resolver.get_unlinked_suggestions',
+            args: {
+                role_doctype: role_doctype,
+                role_name: role_name,
+                limit: 5,
+            },
+            callback: (r) => {
+                if (r.message && r.message.suggestions && r.message.suggestions.length) {
+                    let html = `<div style="margin-bottom: 0.5rem; font-weight: 600;">${__('Suggested Matches')}</div>`;
+                    r.message.suggestions.forEach(s => {
+                        html += `
+                            <div class="suggestion-row" style="display: flex; align-items: center; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 0.5rem; cursor: pointer;" data-pm="${s.party_master}">
+                                <div style="flex: 2;">
+                                    <div style="font-weight: 500;">${s.party_name}</div>
+                                    <div class="text-muted small">${s.party_master} | ${s.party_type || ''}</div>
+                                </div>
+                                <div style="flex: 1; text-align: right;">
+                                    <span style="background: ${s.score >= 80 ? 'var(--green-100)' : 'var(--yellow-100)'}; color: ${s.score >= 80 ? 'var(--green-700)' : 'var(--yellow-700)'}; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.8rem; font-weight: 600;">
+                                        ${s.score}%
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    d.fields_dict.suggestions_html.$wrapper.html(html);
+                    // Click to select
+                    d.fields_dict.suggestions_html.$wrapper.find('.suggestion-row').on('click', function () {
+                        d.set_value('party_master', $(this).data('pm'));
+                    });
+                } else {
+                    d.fields_dict.suggestions_html.$wrapper.html(
+                        `<div class="text-muted">${__('No close matches found. Use the selector below.')}</div>`
+                    );
+                }
+            }
+        });
+    }
+
+    // ═══════════════════════════════════════════
+    // TRANSACTION HEALTH TAB
+    // ═══════════════════════════════════════════
+
+    load_health() {
+        const content = $('#tab-content');
+        content.html(`<div class="text-muted">${__('Loading transaction health...')}</div>`);
+
+        frappe.call({
+            method: 'uph.party.controllers.transaction_health.get_transaction_health',
+            args: {
+                limit: this.health_limit,
+                offset: this.health_offset,
+            },
+            callback: (r) => {
+                if (r.message) {
+                    this.render_health(r.message);
+                }
+            }
+        });
+    }
+
+    render_health(data) {
+        const content = $('#tab-content');
+        content.empty();
+
+        if (!data.parties || data.parties.length === 0) {
+            content.html(`<div class="text-muted text-center" style="padding: 2rem;">${__('No transaction health issues found')}</div>`);
+            this.render_pagination(0, 'health');
+            return;
+        }
+
+        // Header
+        content.append(`
+            <div style="display: flex; padding: 0.5rem 1rem; font-weight: 600; color: var(--text-muted); font-size: 0.85rem; border-bottom: 1px solid var(--border-color);">
+                <div style="flex: 2;">${__('Party Master')}</div>
+                <div style="flex: 1; text-align: center;">${__('Drafts')}</div>
+                <div style="flex: 1; text-align: center;">${__('Cancelled')}</div>
+                <div style="flex: 1; text-align: center;">${__('Severity')}</div>
+                <div style="flex: 1; text-align: right;">${__('Actions')}</div>
+            </div>
+        `);
+
+        data.parties.forEach(p => {
+            const severity_color = p.severity === 'High' ? 'var(--red-500)' : (p.severity === 'Medium' ? 'var(--orange-500)' : 'var(--yellow-600)');
+            const row = $(`
+                <div class="health-row" style="display: flex; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); background: var(--card-bg);">
+                    <div style="flex: 2;">
+                        <div style="font-weight: 500;">
+                            <a href="/app/party-master/${p.party_master}" target="_blank">${p.party_name}</a>
+                        </div>
+                        <div class="text-muted small">${p.party_number || '-'} | ${p.party_type || ''}</div>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <span style="font-weight: 600; color: ${p.draft_count > 0 ? 'var(--yellow-600)' : 'var(--text-muted)'};">${p.draft_count}</span>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <span style="font-weight: 600; color: ${p.cancelled_unamended_count > 0 ? 'var(--red-500)' : 'var(--text-muted)'};">${p.cancelled_unamended_count}</span>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <span style="color: ${severity_color}; font-weight: 600; font-size: 0.85rem;">${p.severity}</span>
+                    </div>
+                    <div style="flex: 1; text-align: right;">
+                        <button class="btn btn-default btn-xs btn-detail" data-pm="${p.party_master}">
+                            ${__('View Details')}
+                        </button>
+                    </div>
+                </div>
+            `);
+
+            row.find('.btn-detail').on('click', (e) => {
+                this.show_health_detail($(e.currentTarget).data('pm'));
+            });
+
+            content.append(row);
+        });
+
+        this.render_pagination(data.total, 'health');
+    }
+
+    show_health_detail(party_master) {
+        frappe.call({
+            method: 'uph.party.controllers.transaction_health.get_party_health_detail',
+            args: { party_master },
+            callback: (r) => {
+                if (!r.message || !r.message.vouchers || !r.message.vouchers.length) {
+                    frappe.msgprint(__('No problematic vouchers found for {0}', [party_master]));
+                    return;
+                }
+
+                let html = '<div class="frappe-list">';
+                r.message.vouchers.forEach(v => {
+                    const issue_color = v.issue_type === 'Draft' ? 'orange' : 'red';
+                    html += `
+                        <div style="padding: 0.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+                            <div>
+                                <a href="/app/${frappe.router.slug(v.doctype)}/${v.name}" target="_blank">${v.doctype}: ${v.name}</a>
+                            </div>
+                            <div>
+                                <span class="indicator-pill ${issue_color}">${v.issue_type}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+
+                frappe.msgprint({
+                    title: __('Voucher Issues — {0}', [party_master]),
+                    message: html,
+                    wide: true,
+                });
+            }
+        });
+    }
+
+    // ═══════════════════════════════════════════
+    // SHARED: Pagination
+    // ═══════════════════════════════════════════
+
+    render_pagination(total, tab) {
+        const pagination = $('#pagination');
+        pagination.empty();
+
+        let current_offset, limit;
+        if (tab === 'duplicates') {
+            current_offset = this.current_offset;
+            limit = this.limit;
+        } else if (tab === 'unlinked') {
+            current_offset = this.unlinked_offset;
+            limit = this.unlinked_limit;
+        } else {
+            current_offset = this.health_offset;
+            limit = this.health_limit;
+        }
+
+        const total_pages = Math.ceil(total / limit);
+        const current_page = Math.floor(current_offset / limit) + 1;
+
+        if (total_pages <= 1) return;
+
+        if (current_page > 1) {
+            pagination.append(`<button class="btn btn-default btn-sm btn-prev">${__('Previous')}</button>`);
+        }
+
+        pagination.append(`<span style="padding: 0 1rem;">${__('Page {0} of {1}', [current_page, total_pages])}</span>`);
+
+        if (current_page < total_pages) {
+            pagination.append(`<button class="btn btn-default btn-sm btn-next">${__('Next')}</button>`);
+        }
+
+        pagination.find('.btn-prev').on('click', () => {
+            if (tab === 'duplicates') {
+                this.current_offset = Math.max(0, this.current_offset - this.limit);
+            } else if (tab === 'unlinked') {
+                this.unlinked_offset = Math.max(0, this.unlinked_offset - this.unlinked_limit);
+            } else {
+                this.health_offset = Math.max(0, this.health_offset - this.health_limit);
+            }
+            this.load_tab_content();
+        });
+
+        pagination.find('.btn-next').on('click', () => {
+            if (tab === 'duplicates') {
+                this.current_offset += this.limit;
+            } else if (tab === 'unlinked') {
+                this.unlinked_offset += this.unlinked_limit;
+            } else {
+                this.health_offset += this.health_limit;
+            }
+            this.load_tab_content();
+        });
+    }
+
+    // ═══════════════════════════════════════════
+    // SETTINGS DIALOG
+    // ═══════════════════════════════════════════
+
     show_settings_dialog() {
         const d = new frappe.ui.Dialog({
             title: __('Dashboard Settings'),
@@ -334,9 +727,13 @@ class DataQualityDashboard {
             primary_action: (values) => {
                 this.min_score = values.min_score;
                 this.limit = values.limit;
+                this.unlinked_limit = values.limit;
+                this.health_limit = values.limit;
                 this.current_offset = 0;
+                this.unlinked_offset = 0;
+                this.health_offset = 0;
                 d.hide();
-                this.load_duplicates();
+                this.load_tab_content();
             }
         });
         d.show();

@@ -34,9 +34,13 @@ class TestDataQualityDashboard(FrappeTestCase):
 
         self.assertIn("total_parties", stats)
         self.assertIn("total_groups", stats)
-        self.assertIn("total_exclusions", stats)
+        self.assertIn("total_dismissed", stats)
+        self.assertIn("total_merged", stats)
         self.assertIn("incomplete_parties", stats)
         self.assertIn("potential_duplicates", stats)
+        self.assertIn("unlinked_count", stats)
+        self.assertIn("draft_voucher_count", stats)
+        self.assertIn("cancelled_unamended_count", stats)
 
         # Should have some parties
         self.assertGreaterEqual(stats["total_parties"], 0)
@@ -78,6 +82,7 @@ class TestDuplicateExclusion(FrappeTestCase):
                 "doctype": "Duplicate Exclusion",
                 "party_1": parties[0],
                 "party_2": parties[1],
+                "status": "Dismissed",
                 "dismissed_reason": "Test exclusion",
             }
         )
@@ -127,6 +132,7 @@ class TestDuplicateExclusion(FrappeTestCase):
                 "doctype": "Duplicate Exclusion",
                 "party_1": parties[0],
                 "party_2": parties[1],
+                "status": "Dismissed",
                 "dismissed_reason": "Test is_excluded_pair",
             }
         ).insert(ignore_permissions=True)

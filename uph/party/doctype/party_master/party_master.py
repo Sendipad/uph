@@ -732,6 +732,12 @@ def get_next_party_master_number(parent=None, is_group=0):
         if not parent and not is_group:
             frappe.throw("Cannot create a leaf Party Master without a parent group")
 
+        # Read configurable digits_count from settings (default 6)
+        digits_count = (
+            frappe.db.get_single_value("Party Master Settings", "digits_count") or 6
+        )
+        digits_count = int(digits_count)
+
         # ROOT GROUP
         if not parent and is_group:
             last_root = frappe.db.sql(
@@ -776,8 +782,8 @@ def get_next_party_master_number(parent=None, is_group=0):
                 (parent,),
             )[0][0]
 
-            suffix = int(str(last_leaf)[-6:] if last_leaf else 0) + 1
-            return f"{parent_number}{suffix:06d}"
+            suffix = int(str(last_leaf)[-digits_count:] if last_leaf else 0) + 1
+            return f"{parent_number}{suffix:0{digits_count}d}"
 
     except Exception as e:
         frappe.log_error(

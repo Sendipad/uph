@@ -19,9 +19,15 @@ class PartyMasterSettings(Document):
 
     if TYPE_CHECKING:
         from frappe.types import DF
-        from uph.party.doctype.party_master_settings_docfield.party_master_settings_docfield import PartyMasterSettingsDocField
-        from uph.party.doctype.party_master_settings_doctype.party_master_settings_doctype import PartyMasterSettingsDocType
-        from uph.party.doctype.party_master_settings_party_type.party_master_settings_party_type import PartyMasterSettingsPartyType
+        from uph.party.doctype.party_master_settings_docfield.party_master_settings_docfield import (
+            PartyMasterSettingsDocField,
+        )
+        from uph.party.doctype.party_master_settings_doctype.party_master_settings_doctype import (
+            PartyMasterSettingsDocType,
+        )
+        from uph.party.doctype.party_master_settings_party_type.party_master_settings_party_type import (
+            PartyMasterSettingsPartyType,
+        )
 
         auto_expand_levels: DF.Int
         check_party_master_duplicate_vouchers: DF.Check
@@ -34,10 +40,27 @@ class PartyMasterSettings(Document):
         party_master_fields: DF.Table[PartyMasterSettingsDocField]
         party_types: DF.Table[PartyMasterSettingsPartyType]
         role_to_bypass_duplicate_voucher: DF.Link | None
+
     # end: auto-generated types
     def validate(self):
         self.validate_document_types()
         self.validate_party_master_fields_options()
+        self._validate_governance_immutability()
+
+    def _validate_governance_immutability(self):
+        """Once setup_finished is set, lock core numbering settings."""
+        old = self.get_doc_before_save()
+        if not old or not old.setup_finished:
+            return
+
+        immutable_fields = ["numbering_format", "digits_count"]
+        for field in immutable_fields:
+            if self.get(field) != old.get(field):
+                frappe.throw(
+                    _(
+                        "Cannot change '{0}' after setup is finished. Uncheck 'Setup Finished' first."
+                    ).format(frappe.unscrub(field))
+                )
 
     def on_update(self):
         # Clear UPH controller caches (for smart hooks)

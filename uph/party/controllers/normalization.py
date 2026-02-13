@@ -20,29 +20,79 @@ class NormalizationUtils:
     """
 
     # Translation table for Arabic, Persian, and Latin accented characters
-    TRANSLATION_TABLE = str.maketrans({
-        # Arabic normalization
-        "أ": "ا", "إ": "ا", "آ": "ا", "ى": "ي", "ة": "ه", "ؤ": "و", "ئ": "ي", "ـ": "",
-        # Persian character mapping
-        "ك": "ک", "ي": "ی",
-        # Digits from Indian to Arabic
-        "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4",
-        "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9",
-        # Latin accents (lowercase)
-        "é": "e", "è": "e", "ê": "e", "ë": "e",
-        "á": "a", "à": "a", "â": "a", "ä": "a",
-        "í": "i", "ì": "i", "î": "i", "ï": "i",
-        "ó": "o", "ò": "o", "ô": "o", "ö": "o",
-        "ú": "u", "ù": "u", "û": "u", "ü": "u",
-        "ç": "c", "ñ": "n",
-        # Latin accents (uppercase)
-        "É": "E", "È": "E", "Ê": "E", "Ë": "E",
-        "Á": "A", "À": "A", "Â": "A", "Ä": "A",
-        "Í": "I", "Ì": "I", "Î": "I", "Ï": "I",
-        "Ó": "O", "Ò": "O", "Ô": "O", "Ö": "O",
-        "Ú": "U", "Ù": "U", "Û": "U", "Ü": "U",
-        "Ç": "C", "Ñ": "N",
-    })
+    TRANSLATION_TABLE = str.maketrans(
+        {
+            # Arabic normalization
+            "أ": "ا",
+            "إ": "ا",
+            "آ": "ا",
+            "ى": "ي",
+            "ة": "ه",
+            "ؤ": "و",
+            "ئ": "ي",
+            "ـ": "",
+            # Persian character mapping
+            "ك": "ک",
+            "ي": "ی",
+            # Digits from Indian to Arabic
+            "٠": "0",
+            "١": "1",
+            "٢": "2",
+            "٣": "3",
+            "٤": "4",
+            "٥": "5",
+            "٦": "6",
+            "٧": "7",
+            "٨": "8",
+            "٩": "9",
+            # Latin accents (lowercase)
+            "é": "e",
+            "è": "e",
+            "ê": "e",
+            "ë": "e",
+            "á": "a",
+            "à": "a",
+            "â": "a",
+            "ä": "a",
+            "í": "i",
+            "ì": "i",
+            "î": "i",
+            "ï": "i",
+            "ó": "o",
+            "ò": "o",
+            "ô": "o",
+            "ö": "o",
+            "ú": "u",
+            "ù": "u",
+            "û": "u",
+            "ü": "u",
+            "ç": "c",
+            "ñ": "n",
+            # Latin accents (uppercase)
+            "É": "E",
+            "È": "E",
+            "Ê": "E",
+            "Ë": "E",
+            "Á": "A",
+            "À": "A",
+            "Â": "A",
+            "Ä": "A",
+            "Í": "I",
+            "Ì": "I",
+            "Î": "I",
+            "Ï": "I",
+            "Ó": "O",
+            "Ò": "O",
+            "Ô": "O",
+            "Ö": "O",
+            "Ú": "U",
+            "Ù": "U",
+            "Û": "U",
+            "Ü": "U",
+            "Ç": "C",
+            "Ñ": "N",
+        }
+    )
 
     # Combining diacritical marks regex (Arabic + Latin)
     # Includes: Harakat (Arabic), Tanwin, Combining accents (Latin), etc.
@@ -120,18 +170,18 @@ class NormalizationUtils:
         if method == "rapidfuzz":
             try:
                 from rapidfuzz import fuzz
+
                 return fuzz.ratio(normalized1, normalized2)
             except ImportError:
                 pass
 
         # Fallback to difflib
         from difflib import SequenceMatcher
+
         return SequenceMatcher(None, normalized1, normalized2).ratio() * 100
 
     @classmethod
-    def is_similar(
-        cls, text1: str, text2: str, threshold: float = 80.0
-    ) -> bool:
+    def is_similar(cls, text1: str, text2: str, threshold: float = 80.0) -> bool:
         """
         Check if two texts are similar based on threshold.
         Default threshold is 80%.
@@ -149,15 +199,18 @@ class NormalizationUtils:
             return ""
 
         # Remove common prefixes/suffixes
-        name = re.sub(r"^(LLC|L\.L\.C|Inc|Corp|Ltd|GmbH)\s+", "", name, flags=re.IGNORECASE)
-        name = re.sub(r"\s+(LLC|L\.L\.C|Inc|Corp|Ltd|GmbH)$", "", name, flags=re.IGNORECASE)
+        name = re.sub(
+            r"^(LLC|L\.L\.C|Inc|Corp|Ltd|GmbH)\s+", "", name, flags=re.IGNORECASE
+        )
+        name = re.sub(
+            r"\s+(LLC|L\.L\.C|Inc|Corp|Ltd|GmbH)$", "", name, flags=re.IGNORECASE
+        )
 
         # Apply standard normalization
         return cls.normalize(name)
 
 
 # Module-level functions for backward compatibility
-@lru_cache(maxsize=1024)
 def normalize_text(text: str) -> str:
     """Backward-compatible wrapper for NormalizationUtils.normalize()"""
     return NormalizationUtils.normalize(text)
