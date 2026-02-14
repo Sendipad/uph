@@ -12,7 +12,8 @@ def add_pm_doctypes(bootinfo):
         setup_finished = frappe.db.get_single_value(
             "Party Master Settings", "setup_finished"
         )
-        bootinfo.uph_setup_needed = not setup_finished
+        is_setup_admin = frappe.session.user == "Administrator" or "System Manager" in frappe.get_roles(frappe.session.user)
+        bootinfo.uph_setup_needed = bool(not setup_finished and is_setup_admin)
         # print(f"DEBUG: Setup Finished: {setup_finished}, Flag: {bootinfo.uph_setup_needed}")
     except Exception as e:
         # print(f"DEBUG: Boot Error: {e}")
