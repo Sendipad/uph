@@ -1,0 +1,106 @@
+{
+    "actions": [],
+    "creation": "2026-02-14 16:30:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "status",
+        "similarity_score",
+        "party_1",
+        "party_2",
+        "section_break_5",
+        "blocking_key",
+        "checks_hash"
+    ],
+    "fields": [
+        {
+            "default": "Detected",
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Status",
+            "options": "Detected\nDismissed\nMerged",
+            "reqd": 1
+        },
+        {
+            "fieldname": "similarity_score",
+            "fieldtype": "Float",
+            "in_list_view": 1,
+            "label": "Similarity Score",
+            "precision": "2",
+            "read_only": 1
+        },
+        {
+            "fieldname": "party_1",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Party 1",
+            "options": "Party Master",
+            "read_only": 1,
+            "reqd": 1
+        },
+        {
+            "fieldname": "party_2",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Party 2",
+            "options": "Party Master",
+            "read_only": 1,
+            "reqd": 1
+        },
+        {
+            "fieldname": "section_break_5",
+            "fieldtype": "Section Break"
+        },
+        {
+            "fieldname": "blocking_key",
+            "fieldtype": "Data",
+            "hidden": 1,
+            "label": "Blocking Key",
+            "read_only": 1
+        },
+        {
+            "fieldname": "checks_hash",
+            "fieldtype": "Data",
+            "hidden": 1,
+            "label": "Checks Hash",
+            "read_only": 1
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "links": [],
+    "modified": "2026-02-14 16:30:00.000000",
+    "modified_by": "Administrator",
+    "module": "Party",
+    "name": "Potential Duplicate",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "Party Manager",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": []
+}

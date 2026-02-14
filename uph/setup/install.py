@@ -55,6 +55,46 @@ def _safe_setup_operations():
     create_party_master_tree()
     create_party_analytic_accounting_dimension()
     create_gender_fixtures()
+    create_custom_indices()
+
+
+def create_custom_indices():
+    """Create custom database indices for performance optimization."""
+    indices = [
+        # Table, Columns
+        ("tabSales Invoice", ["party_master", "docstatus"]),
+        ("tabPurchase Invoice", ["party_master", "docstatus"]),
+        ("tabPayment Entry", ["party_master", "docstatus"]),
+        ("tabJournal Entry", ["party_master", "docstatus"]),
+    ]
+
+    for table, columns in indices:
+        doctype = table.replace("tab", "")
+        if not frappe.db.exists("DocType", doctype):
+            continue
+
+        # check if columns exist
+        if not frappe.db.has_column(doctype, columns[0]) or not frappe.db.has_column(
+            doctype, columns[1]
+        ):
+            continue
+
+        index_name = (
+            f"uph_{table.replace('tab', '').replace(' ', '_').lower()}_pm_status"
+        )
+
+        # Check if index exists
+        if not frappe.db.sql(
+            f"SHOW INDEX FROM `{table}` WHERE Key_name = %s", (index_name,)
+        ):
+            try:
+                frappe.db.sql(
+                    f"CREATE INDEX `{index_name}` ON `{table}` ({', '.join(columns)})"
+                )
+            except Exception as e:
+                frappe.log_error(
+                    f"UPH: Failed to create index {index_name} on {table}: {str(e)}"
+                )
 
 
 def _post_install():
@@ -164,11 +204,12 @@ def seed_default_party_master_structure():
 
 
 class PartyMasterSeeder:
-    def __init__(self):
+    def __init__(self, structure=None):
         self.updated = False
+        self.structure = structure
 
     def run(self):
-        structure = self._load_structure()
+        structure = self.structure if self.structure else self._load_structure()
         if not structure:
             return
 

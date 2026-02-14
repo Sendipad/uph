@@ -13,3 +13,11 @@ import "./utils/field_option_helper.js";
 //import "./utils/rule_ui_manager";
 //import "./utils/rule__js";
 //import "./rule_form";
+
+$(document).on('app_ready', function () {
+    if (frappe.boot.uph_setup_needed) {
+        if (frappe.get_route()[0] !== 'setup-wizard') {
+            frappe.set_route('setup-wizard');
+        }
+    }
+});

@@ -24,7 +24,7 @@ class DuplicateExclusion(Document):
         party_1: DF.Link
         party_2: DF.Link
         similarity_score: DF.Float
-        status: DF.Literal["Detected", "Dismissed", "Merged"]
+        status: DF.Literal["Dismissed", "Detected", "Merged"]
     # end: auto-generated types
     """
     Duplicate Exclusion - Tracks duplicate detection candidates and

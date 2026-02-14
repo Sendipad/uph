@@ -102,25 +102,122 @@ The Party Master remains the canonical identity, structured as a tree for hierar
   * Selection of preferred tree structure (language-specific labels)
   * Configuration of numbering format and digits
   * Enabling/disabling governance rules
-* After completion, `setup_finished` = 1
+*   Administrator must run setup wizard if `setup_finished` = 0
+*   Wizard allows:
+
+    *   Selection of preferred tree structure (language-specific labels)
+    *   Configuration of numbering format and digits
+    *   Enabling/disabling governance rules
+*   After completion, `setup_finished` = 1
 
 ### Validator Hooks
 
-* Immutable party_number
-* Reserved range enforcement
-* Parent-child prefix enforcement (optional)
-* Cross-role uniqueness enforcement
-* DB-level unique index for collision prevention
+*   Immutable party_number
+*   Reserved range enforcement
+*   Parent-child prefix
+# 12. Technical Implementation Specification (Frappe-Native)
+
+This section defines the technical architecture using standard Frappe patterns, avoiding over-engineering and data duplication.
+
+---
+
+## 12.1 Core Principle: "Single Source of Truth"
+
+We will avoid creating "Shadow Tables" (copies of data) for Unlinked Records or Transaction Health. Instead, we will rely on **Database Indices** and **Redis Caching** to ensure performance without synchronization complexity.
+
+| Feature | Old Approaches (Antipattern) | Frappe-Native Approach |
+| :--- | :--- | :--- |
+| **Unlinked Records** | Sync to `Unlinked Role Index` table | Query `tabCustomer` directly with Index on `party_master` |
+| **Transaction Health** | Sync to `Party Transaction Health` table | Query `docstatus` Index + Redis Cache for Dashboard Stats |
+| **Duplicate Checking** | Complex Service Layer | Standard Controller Logic + `Potential Duplicate` DocType |
+
+---
+
+## 12.2 Database Schema Enhancements
+
+To make real-time queries fast (O(1) or O(log n)), we will add the following **Database Indices** via `hooks.py`:
+
+1.  **Party Master Link Fields**:
+    *   `tabCustomer` -> `party_master`
+    *   `tabSupplier` -> `party_master`
+    *   `tabEmployee` -> `party_master`
+    *   *Reason*: Allows instant count/fetch of `WHERE party_master IS NULL`.
+
+2.  **Transaction Fields**:
+    *   `tabSales Invoice` -> (`party_master`, `docstatus`)
+    *   `tabPurchase Invoice` -> (`party_master`, `docstatus`)
+    *   *Reason*: Allows "Covering Index" speed for health checks.
+
+3.  **Party Master**:
+    *   `normalized_party_name`: Ensure standard index exists.
+
+---
+
+## 12.3 New DocType: `Potential Duplicate`
+
+Unlike unlinked records, Duplicate Detection requires storing *new* information (similarity score, status) that doesn't exist on the party record.
+
+*   **DocType**: `Potential Duplicate`
+*   **Fields**:
+    *   `party_1` (Link: Party Master)
+    *   `party_2` (Link: Party Master)
+    *   `score` (Float)
+    *   `status` (Selet: Detected, Dismissed, Merged)
+    *   `checks_hash` (Data: Hash of names to detect changes)
+*   **Logic**:
+    *   Generated via background job.
+    *   "Dismiss" action simply updates `status` (no separate Exclusion Registry needed, can be combined).
+
+---
+
+## 12.4 Dashboard Architecture (Caching Strategy)
+
+The Dashboard will **never** run `COUNT(*)` on large tables during the HTTP Request.
+
+1.  **Cache Keys**:
+    *   `uph:stats:unlinked_count`
+    *   `uph:stats:health_issues`
+    *   `uph:stats:duplicate_count`
+
+2.  **Update Mechanism**:
+    *   **Lazy Loading**: If cache missing, compute and set (5 min TTL).
+    *   **Background Refresh**: Hourly job forces refresh of these keys.
+    *   **Event-Driven Invalidation**:
+        *   On `Customer` save (if `party_master` changed) -> Clear `unlinked_count`.
+        *   On `Duplicate` action -> Clear `duplicate_count`.
+
+---
+
+## 12.5 Background Jobs
+
+Standard `scheduler_events` in `hooks.py`:
+
+*   **`daily`**:
+    *   `uph.tasks.daily.run_full_duplicate_scan`: Full re-scan of duplicates.
+*   **`hourly`**:
+    *   `uph.tasks.hourly.refresh_dashboard_stats`: Re-warm the dashboard cache.
+
+---
+
+## 12.6 API Layer (Controllers)
+
+Logic resides in standard modules, not "Service" classes.
+
+*   `uph.party.doctype.party_master.party_master.py`: Core logic.
+*   `uph.party.api.dashboard.py`: Dashboard endpoints (reading Cache).
+*   `uph.party.api.duplicates.py`: Duplicate detection logic.
+*   Cross-role uniqueness enforcement
+*   DB-level unique index for collision prevention
 
 ---
 
 ## 5. Optional Extensions
 
-* Multi-company: Party Master global, company stored separately
-* Accounting dimension alignment: `Party Analytic Accounting`
-* Reserved blocks for future expansion
-* Multi-role secondary projection
-* Audit-ready: historical numbers never reused
+*   Multi-company: Party Master global, company stored separately
+*   Accounting dimension alignment: `Party Analytic Accounting`
+*   Reserved blocks for future expansion
+*   Multi-role secondary projection
+*   Audit-ready: historical numbers never reused
 
 ---
 
@@ -146,33 +243,33 @@ Reporting / Accounting / BI -> aligned with Party Master hierarchy
 
 ## 7. Multi-Language Support
 
-* `party_name` and tree labels are translatable
-* Setup wizard allows admin to select preferred language for the tree
-* All child nodes inherit translation unless overridden
+*   `party_name` and tree labels are translatable
+*   Setup wizard allows admin to select preferred language for the tree
+*   All child nodes inherit translation unless overridden
 
 ---
 
 ## 8. Enterprise Safeguards
 
-| Feature                         | Enforcement                 |
+| Feature | Enforcement |
 | ------------------------------- | --------------------------- |
-| Duplicate numbers               | Validator + DB unique index |
-| Number reuse                    | Optional registry table     |
-| Reserved misuse                 | Validator checks            |
-| Changing number after creation  | Validator checks            |
-| Cross-role uniqueness           | Validator checks            |
-| Parent-child prefix enforcement | Optional based on settings  |
-| ERPNext role naming sync        | Optional based on settings  |
+| Duplicate numbers | Validator + DB unique index |
+| Number reuse | Optional registry table |
+| Reserved misuse | Validator checks |
+| Changing number after creation | Validator checks |
+| Cross-role uniqueness | Validator checks |
+| Parent-child prefix enforcement | Optional based on settings |
+| ERPNext role naming sync | Optional based on settings |
 
 ---
 
 ## 9. Notes
 
-* Party Master remains independent from Chart of Accounts
-* ERPNext role records link to Party Master identity
-* Reserved ranges must never be used manually
-* Once `setup_finished` = 1, core numbering and format settings cannot be changed
-* Prefix/suffix logic allows multiple roles without identity collision
+*   Party Master remains independent from Chart of Accounts
+*   ERPNext role records link to Party Master identity
+*   Reserved ranges must never be used manually
+*   Once `setup_finished` = 1, core numbering and format settings cannot be changed
+*   Prefix/suffix logic allows multiple roles without identity collision
 
 ---
 
@@ -184,9 +281,9 @@ The Data Quality Dashboard becomes a modular governance center responsible for i
 
 The dashboard is divided into three engines:
 
-1. **Duplicate Detection Engine**
-2. **Unlinked Party Resolver Engine**
-3. **Transactional Integrity Monitor**
+1.  **Duplicate Detection Engine**
+2.  **Unlinked Party Resolver Engine**
+3.  **Transactional Integrity Monitor**
 
 Each engine is optimized for performance and designed to operate independently with caching and background processing.
 
@@ -196,25 +293,25 @@ Each engine is optimized for performance and designed to operate independently w
 
 Enhancements over current version:
 
-* Blocking strategy (prefix-based + optional phonetic key)
-* Cached similarity index table (materialized results)
-* Background scheduled recalculation
-* Merge workflow with transactional safety
-* Exclusion registry with indexed lookup
+*   Blocking strategy (prefix-based + optional phonetic key)
+*   Cached similarity index table (materialized results)
+*   Background scheduled recalculation
+*   Merge workflow with transactional safety
+*   Exclusion registry with indexed lookup
 
 #### Performance Optimizations
 
-* Maintain indexed column: `normalized_party_name`
-* Add DB index on first N characters (computed prefix field)
-* Maintain `duplicate_candidate` table updated async
-* Use sampling only for preview; full scan runs in background job
-* Store similarity score and last-evaluated timestamp
+*   Maintain indexed column: `normalized_party_name`
+*   Add DB index on first N characters (computed prefix field)
+*   Maintain `duplicate_candidate` table updated async
+*   Use sampling only for preview; full scan runs in background job
+*   Store similarity score and last-evaluated timestamp
 
 #### New Optional Improvements
 
-* Add phonetic normalization (Soundex/Metaphone) field
-* Add language-aware normalization rules
-* Add configurable similarity scorer (ratio, token_set_ratio)
+*   Add phonetic normalization (Soundex/Metaphone) field
+*   Add language-aware normalization rules
+*   Add configurable similarity scorer (ratio, token_set_ratio)
 
 ---
 
@@ -224,34 +321,34 @@ Purpose: Detect ERPNext role records (Customer, Supplier, Employee, etc.) that a
 
 #### Detection Logic
 
-* Scan configured role DocTypes
-* Find records where `party_master` is NULL or empty
-* Batch process to avoid memory spikes
+*   Scan configured role DocTypes
+*   Find records where `party_master` is NULL or empty
+*   Batch process to avoid memory spikes
 
 #### Resolver Capabilities
 
 For each unlinked record:
 
-1. Suggest existing Party Master using similarity search
-2. Show top-N match candidates with score
-3. Allow:
+1.  Suggest existing Party Master using similarity search
+2.  Show top-N match candidates with score
+3.  Allow:
 
-   * Link to existing Party Master
-   * Create new Party Master from role record
-   * Dismiss suggestion
+    *   Link to existing Party Master
+    *   Create new Party Master from role record
+    *   Dismiss suggestion
 
 #### Optimization Strategy
 
-* Cache normalized names for role records
-* Use prefix blocking before similarity scoring
-* Use background indexing job
-* Paginated server-side queries only
+*   Cache normalized names for role records
+*   Use prefix blocking before similarity scoring
+*   Use background indexing job
+*   Paginated server-side queries only
 
 #### Governance Rules
 
-* Prevent linking if rule_field mismatch (if enforced)
-* Enforce cross-type uniqueness if enabled
-* Log linkage actions in audit trail
+*   Prevent linking if rule_field mismatch (if enforced)
+*   Enforce cross-type uniqueness if enabled
+*   Log linkage actions in audit trail
 
 ---
 
@@ -261,31 +358,31 @@ Purpose: Detect Party Masters with problematic transactional states.
 
 #### Conditions Checked
 
-* Draft vouchers linked to party
-* Cancelled vouchers not amended
-* Inconsistent voucher status chains
-* Unsubmitted financial documents
+*   Draft vouchers linked to party
+*   Cancelled vouchers not amended
+*   Inconsistent voucher status chains
+*   Unsubmitted financial documents
 
 #### View Features
 
-* Group by Party Master
-* Show count of problematic vouchers
-* Drill-down per DocType
-* Quick actions:
+*   Group by Party Master
+*   Show count of problematic vouchers
+*   Drill-down per DocType
+*   Quick actions:
 
-  * Open voucher
-  * Exclude voucher from check
-  * Mark as reviewed
+    *   Open voucher
+    *   Exclude voucher from check
+    *   Mark as reviewed
 
 #### Optimization Strategy
 
-* Maintain aggregated summary table updated via hooks
-* Use DB-level filtered indexes on:
+*   Maintain aggregated summary table updated via hooks
+*   Use DB-level filtered indexes on:
 
-  * docstatus
-  * party_master
-* Avoid scanning large transaction tables on each request
-* Use scheduled background refresh
+    *   docstatus
+    *   party_master
+*   Avoid scanning large transaction tables on each request
+*   Use scheduled background refresh
 
 ---
 
@@ -293,14 +390,14 @@ Purpose: Detect Party Masters with problematic transactional states.
 
 Replace simple sampling counter with structured metrics:
 
-* Total Party Masters
-* Total Groups
-* Total Exclusions
-* Incomplete Party Numbers
-* Duplicate Candidates (cached table)
-* Unlinked Role Records
-* Parties With Draft Transactions
-* Parties With Cancelled-Unamended Transactions
+*   Total Party Masters
+*   Total Groups
+*   Total Exclusions
+*   Incomplete Party Numbers
+*   Duplicate Candidates (cached table)
+*   Unlinked Role Records
+*   Parties With Draft Transactions
+*   Parties With Cancelled-Unamended Transactions
 
 All metrics retrieved from cached aggregate table for O(1) reads.
 
@@ -366,362 +463,3 @@ This ensures constant-time dashboard rendering.
 
 ---
 
-
-# 12. Technical Implementation Specification (Production-Grade)
-
-This section defines concrete database schema, services, hooks, background jobs, APIs, and permission layers required to implement the enhanced Data Quality Dashboard.
-
----
-
-## 12.1 New DocTypes (Tables)
-
-### 1️⃣ Duplicate Candidate (Indexed Materialized Table)
-
-Purpose: Store precomputed similarity results.
-
-⚠ Note: This does NOT replace the existing **Duplicate Exclusion** DocType.
-
-* **Duplicate Exclusion** = manual governance registry (already implemented).
-* **Duplicate Candidate** = system-generated similarity index (new, materialized table).
-
-They serve different purposes and must coexist.
-
-Fields:
-
-* `party_1` (Link → Party Master, indexed)
-* `party_2` (Link → Party Master, indexed)
-* `similarity_score` (Float, indexed)
-* `status` (Select: Open, Merged, Excluded)
-* `last_evaluated_on` (Datetime, indexed)
-* `blocking_key` (Data, indexed)  # prefix or phonetic key
-
-Indexes:
-
-* Unique composite index on (`party_1`, `party_2`)
-* Index on (`similarity_score`)
-* Index on (`blocking_key`)
-
-Workflow Integration with Existing Duplicate Exclusion:
-
-* When user dismisses a duplicate:
-
-  * Insert record in **Duplicate Exclusion** (existing DocType)
-  * Update corresponding Duplicate Candidate.status = "Excluded"
-
-* During duplicate rebuild:
-
-  * Load Duplicate Exclusion pairs into memory
-  * Skip generating candidates for excluded pairs
-
-This preserves backward compatibility with your current implementation.
-
----
-
-### Enhancement to Existing Duplicate Exclusion DocType
-
-Your current schema is structurally correct and production-safe.
-
-Recommended improvements (non-breaking):
-
-1. Add DB-level unique constraint on sorted pair:
-
-   * Prevent duplicate exclusion records for same pair
-
-2. Add composite index:
-
-   * (`party_1`, `party_2`)
-
-3. Optional computed helper field:
-
-   * `pair_key` (Data, indexed)
-   * Value = sorted(party_1, party_2)
-   * Ensures O(1) lookup without Python sorting
-
-4. Add optional field:
-
-   * `is_system_generated` (Check)
-   * Future-proof if system auto-excludes low-confidence pairs
-
-These changes optimize performance without altering your current dismissal API.
-
----
-
-### 2️⃣ Unlinked Role Index
-
-Purpose: Store ERP role records without Party Master link.
-
-Fields:
-
-* `role_doctype` (Data, indexed)
-* `role_name` (Data, indexed)
-* `party_master` (Link → Party Master, nullable)
-* `normalized_name` (Data, indexed)
-* `suggested_party_master` (Link → Party Master)
-* `suggestion_score` (Float)
-* `status` (Select: Open, Linked, Dismissed)
-* `last_checked_on` (Datetime)
-
-Indexes:
-
-* Composite index (`role_doctype`, `status`)
-* Index (`normalized_name`)
-
----
-
-### 3️⃣ Party Transaction Health
-
-Purpose: Aggregated transactional integrity state per party.
-
-Fields:
-
-* `party_master` (Link → Party Master, unique)
-* `draft_count` (Int)
-* `cancelled_unamended_count` (Int)
-* `inconsistent_chain_count` (Int)
-* `severity_level` (Select: Low, Medium, High)
-* `last_updated_on` (Datetime)
-
-Index:
-
-* Unique index on `party_master`
-
----
-
-### 4️⃣ Data Quality Summary (Singleton)
-
-Purpose: O(1) dashboard metrics retrieval.
-
-Fields:
-
-* `total_parties`
-* `total_groups`
-* `duplicate_open_count`
-* `unlinked_role_count`
-* `parties_with_drafts`
-* `parties_with_cancelled_unamended`
-* `last_refreshed_on`
-
----
-
-## 12.2 Service Layer Architecture
-
-Create service modules under:
-
-```
-uph/party/services/
-    duplicate_service.py
-    unlinked_service.py
-    transaction_health_service.py
-    dashboard_service.py
-```
-
-### DuplicateService Responsibilities
-
-* Build blocking keys (prefix + optional phonetic)
-* Batch similarity scoring
-* Update Duplicate Candidate table
-* Handle merge workflow (delegating to PartyMergeService)
-* Maintain exclusion logic
-
-Public Methods:
-
-* `rebuild_index(batch_size=500)`
-* `get_candidates(limit, offset, filters)`
-* `mark_excluded(p1, p2)`
-* `merge(p1, p2)`
-
----
-
-### UnlinkedService Responsibilities
-
-* Scan configured role DocTypes
-* Normalize role names
-* Suggest Party Master using similarity engine
-* Persist suggestions
-* Handle linking operations
-
-Public Methods:
-
-* `rebuild_unlinked_index()`
-* `suggest_matches(role_doctype, role_name)`
-* `link(role_doctype, role_name, party_master)`
-
----
-
-### TransactionHealthService Responsibilities
-
-* Aggregate voucher state per party
-* Update Party Transaction Health table
-* Provide drill-down queries
-
-Public Methods:
-
-* `rebuild_health_index()`
-* `get_party_health(party_master)`
-* `exclude_voucher(doctype, name)`
-
----
-
-### DashboardService Responsibilities
-
-* Read-only access to summary tables
-* No heavy computations
-
-Public Methods:
-
-* `get_summary()`
-* `get_severity_distribution()`
-
----
-
-## 12.3 Background Jobs (Scheduler Events)
-
-In `hooks.py`:
-
-```
-scheduler_events = {
-    "hourly": [
-        "uph.party.services.duplicate_service.rebuild_index",
-        "uph.party.services.unlinked_service.rebuild_unlinked_index",
-    ],
-    "daily": [
-        "uph.party.services.transaction_health_service.rebuild_health_index",
-        "uph.party.services.dashboard_service.refresh_summary",
-    ]
-}
-```
-
-Rules:
-
-* Batch commits every N records
-* Use savepoints for rollback safety
-* Log execution time
-* Skip execution if previous job still running (locking flag)
-
----
-
-## 12.4 Hook Integration
-
-### On Party Master Insert/Update
-
-* Update normalized name
-* Re-evaluate blocking key
-* Schedule lightweight duplicate check for affected block
-
-### On Role DocType Insert
-
-* If `party_master` empty → enqueue unlinked index update
-
-### On Voucher Submit/Cancel
-
-* Incrementally update Party Transaction Health record
-
----
-
-## 12.5 API Layer (Whitelisted Endpoints)
-
-Replace heavy runtime computations with indexed reads.
-
-### Examples
-
-* `get_duplicate_candidates(limit, offset, filters)`
-* `get_unlinked_roles(limit, offset)`
-* `get_party_transaction_health(party_master)`
-* `resolve_unlinked(role_doctype, role_name, action)`
-* `resolve_transaction_issue(party_master, voucher)`
-
-All APIs must:
-
-* Enforce permission checks
-* Use server-side pagination
-* Avoid full-table scans
-
----
-
-## 12.6 Performance & Index Strategy
-
-Mandatory DB indexes:
-
-Party Master:
-
-* `normalized_party_name`
-* `party_number`
-
-Transaction tables:
-
-* `party_master`
-* `docstatus`
-* Composite (`party_master`, `docstatus`)
-
-Duplicate Candidate:
-
-* (`party_1`, `party_2`)
-* `similarity_score`
-
-Unlinked Role Index:
-
-* (`role_doctype`, `status`)
-
----
-
-## 12.7 Concurrency & Safety
-
-* Use explicit DB transactions during merges
-* Use row-level locking for merge pairs
-* Prevent concurrent merge of same party
-* Use advisory lock pattern during background jobs
-
----
-
-## 12.8 Permission Model
-
-Duplicate View:
-
-* Read: Party Master permission
-* Merge: Data Quality Manager role
-
-Unlinked Resolver:
-
-* Link/Create: Party Manager role
-
-Transaction Monitor:
-
-* View: Accounting Manager
-* Exclude Voucher: Restricted role
-
----
-
-## 12.9 Logging & Audit
-
-Create `Data Quality Audit Log` DocType:
-
-Fields:
-
-* `action_type` (Merge, Link, Exclude, Resolve)
-* `reference_1`
-* `reference_2`
-* `performed_by`
-* `performed_on`
-* `details`
-
-All state-changing operations must log entry.
-
----
-
-## 12.10 Deployment Strategy
-
-1. Add new DocTypes and indexes
-2. Backfill normalized names
-3. Run initial index build in background
-4. Enable dashboard to read from cached tables
-5. Deprecate runtime duplicate scanning endpoint
-
----
-
-This specification ensures:
-
-* Constant-time dashboard rendering
-* No large runtime scans
-* Scalable similarity indexing
-* Clear separation of computation and presentation
-* Enterprise-grade safety and auditability

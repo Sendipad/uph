@@ -1,0 +1,110 @@
+[
+    {
+        "party_name": "Commercial (External)",
+        "party_number": "1100",
+        "is_group": 1,
+        "children": [
+            {
+                "party_name": "Customers",
+                "party_number": "1110",
+                "is_group": 1,
+                "party_type": "Customer",
+                "group_type": "Customer Group",
+                "children": [
+                    {
+                        "party_name": "Retail",
+                        "party_number": "1111",
+                        "is_group": 1,
+                        "party_type": "Customer",
+                        "group_type": "Customer Group"
+                    },
+                    {
+                        "party_name": "Corporate",
+                        "party_number": "1112",
+                        "is_group": 1,
+                        "party_type": "Customer",
+                        "group_type": "Customer Group"
+                    },
+                    {
+                        "party_name": "Government",
+                        "party_number": "1113",
+                        "is_group": 1,
+                        "party_type": "Customer",
+                        "group_type": "Customer Group"
+                    }
+                ]
+            },
+            {
+                "party_name": "Suppliers",
+                "party_number": "1120",
+                "is_group": 1,
+                "party_type": "Supplier",
+                "group_type": "Supplier Group",
+                "children": [
+                    {
+                        "party_name": "Raw Material",
+                        "party_number": "1121",
+                        "is_group": 1,
+                        "party_type": "Supplier",
+                        "group_type": "Supplier Group"
+                    },
+                    {
+                        "party_name": "Service Provider",
+                        "party_number": "1122",
+                        "is_group": 1,
+                        "party_type": "Supplier",
+                        "group_type": "Supplier Group"
+                    },
+                    {
+                        "party_name": "Logistics",
+                        "party_number": "1123",
+                        "is_group": 1,
+                        "party_type": "Supplier",
+                        "group_type": "Supplier Group"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "party_name": "Internal Organization",
+        "party_number": "1200",
+        "is_group": 1,
+        "children": [
+            {
+                "party_name": "Employees",
+                "party_number": "1210",
+                "is_group": 1,
+                "party_type": "Employee"
+            },
+            {
+                "party_name": "Shareholders",
+                "party_number": "1220",
+                "is_group": 1,
+                "party_type": "Shareholder"
+            }
+        ]
+    },
+    {
+        "party_name": "Financial & Banking",
+        "party_number": "1400",
+        "is_group": 1,
+        "children": [
+            {
+                "party_name": "Banks",
+                "party_number": "1410",
+                "is_group": 1
+            },
+            {
+                "party_name": "Clearing Agents",
+                "party_number": "1420",
+                "is_group": 1
+            }
+        ]
+    },
+    {
+        "party_name": "Uncategorized",
+        "party_number": "1900",
+        "is_group": 1
+    }
+]

@@ -107,10 +107,11 @@ export_python_type_annotations = True
 # ---------------
 
 scheduler_events = {
+    "hourly": [
+        "uph.tasks.refresh_dashboard_stats",
+    ],
     "daily": [
-        "uph.party.controllers.duplicate_scanner.run_duplicate_scan",
-        "uph.party.controllers.unlinked_resolver.rebuild_unlinked_cache",
-        "uph.party.controllers.transaction_health.rebuild_health_cache",
+        "uph.tasks.run_full_duplicate_scan",
     ],
 }
 
