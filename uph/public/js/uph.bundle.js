@@ -15,7 +15,8 @@ import "./utils/field_option_helper.js";
 //import "./rule_form";
 
 $(document).on('app_ready', function () {
-    if (frappe.boot.uph_setup_needed) {
+    const isAdmin = frappe.session.user === 'Administrator' || (frappe.user_roles || []).includes('System Manager');
+    if (isAdmin && frappe.boot.uph_setup_needed) {
         if (frappe.get_route()[0] !== 'setup-wizard') {
             frappe.set_route('setup-wizard');
         }

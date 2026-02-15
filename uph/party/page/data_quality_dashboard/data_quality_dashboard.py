@@ -49,9 +49,23 @@ def get_dashboard_stats():
     """
     Get summary statistics from Redis Cache.
     """
+    total_dismissed = frappe.db.count("Duplicate Exclusion", {"status": "Dismissed"})
+    total_merged = frappe.db.count("Duplicate Exclusion", {"status": "Merged"})
+
+    incomplete_parties = frappe.db.count(
+        "Party Master",
+        {
+            "is_group": 0,
+            "party_type": ["in", [None, ""]],
+        },
+    )
+
     stats = {
         "total_parties": frappe.db.count("Party Master", {"is_group": 0}),
         "total_groups": frappe.db.count("Party Master", {"is_group": 1}),
+        "total_dismissed": total_dismissed,
+        "total_merged": total_merged,
+        "incomplete_parties": incomplete_parties,
         "unlinked_count": cint(frappe.cache.get_value("uph:stats:unlinked_count") or 0),
         "draft_voucher_count": cint(
             frappe.cache.get_value("uph:stats:health_draft") or 0

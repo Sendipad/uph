@@ -3,18 +3,10 @@ name: CI
 on:
   push:
     branches:
-      - develop
-      - hotfix
-      - version-15
-    paths-ignore:
-      - "**/*.md"
+      - "**"
   pull_request:
     branches:
-      - develop
-      - hotfix
-      - version-15
-    paths-ignore:
-      - "**/*.md"
+      - "**"
   workflow_dispatch:
 
 concurrency:
@@ -46,13 +38,10 @@ jobs:
     name: v16
     needs: changes
     if: |
-      github.ref_name != 'hotfix' &&
-      github.event.pull_request.head.ref != 'hotfix' &&
-      (github.event_name == 'workflow_dispatch' ||
-       github.ref == 'refs/heads/develop' ||
-       needs.changes.outputs.python == 'true' ||
-       needs.changes.outputs.javascript == 'true' ||
-       needs.changes.outputs.config == 'true')
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.base_ref != 'hotfix' && github.base_ref != 'version-15') ||
+      (github.event_name == 'push' && github.ref_name != 'hotfix' && github.ref_name != 'version-15' &&
+       (needs.changes.outputs.python == 'true' || needs.changes.outputs.javascript == 'true' || needs.changes.outputs.config == 'true'))
     uses: ./.github/workflows/reusable_test.yml
     with:
       frappe_branch: "develop"
@@ -61,20 +50,17 @@ jobs:
       node_version: "24"
       mariadb_version: "10.11"
       setuptools_version: "latest"
-      run_python: ${{ needs.changes.outputs.python == 'true' || needs.changes.outputs.config == 'true' }}
-      run_ui: ${{ needs.changes.outputs.javascript == 'true' || needs.changes.outputs.config == 'true' }}
+      run_python: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || needs.changes.outputs.python == 'true' || needs.changes.outputs.config == 'true' }}
+      run_ui: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || needs.changes.outputs.javascript == 'true' || needs.changes.outputs.config == 'true' }}
 
   test_v15:
     name: v15
     needs: changes
     if: |
-      github.ref_name == 'hotfix' ||
-      github.event.pull_request.head.ref == 'hotfix' ||
       github.event_name == 'workflow_dispatch' ||
-      github.ref == 'refs/heads/version-15' ||
-      needs.changes.outputs.python == 'true' ||
-      needs.changes.outputs.javascript == 'true' ||
-      needs.changes.outputs.config == 'true'
+      (github.event_name == 'pull_request' && (github.base_ref == 'hotfix' || github.base_ref == 'version-15')) ||
+      (github.event_name == 'push' && (github.ref_name == 'hotfix' || github.ref_name == 'version-15') &&
+       (needs.changes.outputs.python == 'true' || needs.changes.outputs.javascript == 'true' || needs.changes.outputs.config == 'true'))
     uses: ./.github/workflows/reusable_test.yml
     with:
       frappe_branch: "version-15"
@@ -83,5 +69,5 @@ jobs:
       node_version: "18"
       mariadb_version: "10.6"
       setuptools_version: "<70"
-      run_python: ${{ needs.changes.outputs.python == 'true' || needs.changes.outputs.config == 'true' }}
-      run_ui: ${{ needs.changes.outputs.javascript == 'true' || needs.changes.outputs.config == 'true' }}
+      run_python: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || needs.changes.outputs.python == 'true' || needs.changes.outputs.config == 'true' }}
+      run_ui: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || needs.changes.outputs.javascript == 'true' || needs.changes.outputs.config == 'true' }}

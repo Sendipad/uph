@@ -4,9 +4,22 @@ import os
 from frappe import _
 
 
+def _ensure_setup_admin_access():
+    """Only Administrator/System Manager can run setup wizard APIs."""
+    if frappe.session.user == "Administrator":
+        return
+    if "System Manager" in frappe.get_roles(frappe.session.user):
+        return
+    frappe.throw(
+        _("Only Administrator or System Manager can run Party Master setup."),
+        frappe.PermissionError,
+    )
+
+
 @frappe.whitelist()
 def get_setup_status():
     """Check if setup is already finished."""
+    _ensure_setup_admin_access()
     return {
         "setup_finished": frappe.db.get_single_value(
             "Party Master Settings", "setup_finished"
@@ -17,6 +30,7 @@ def get_setup_status():
 @frappe.whitelist()
 def get_tree_templates():
     """Return available templates from disk."""
+    _ensure_setup_admin_access()
     templates = []
     path = frappe.get_app_path("uph", "setup/data/templates")
 
@@ -56,6 +70,8 @@ def apply_setup_settings(settings: str, template_id: str):
     """
     Apply settings and seed the tree.
     """
+    _ensure_setup_admin_access()
+
     if frappe.db.get_single_value("Party Master Settings", "setup_finished"):
         frappe.throw(_("Setup is already finished."))
 
