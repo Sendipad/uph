@@ -7,6 +7,10 @@ def before_request():
         if not frappe.session.user or frappe.session.user == "Guest":
             return
 
+        # Do not enforce setup routing during automated tests (Python/UI)
+        if getattr(frappe.flags, "in_test", False):
+            return
+
         if frappe.session.user != "Administrator" and "System Manager" not in frappe.get_roles(
             frappe.session.user
         ):
@@ -27,7 +31,7 @@ def before_request():
             "/api/method/frappe.desk.desktop.get_desktop_page",
         }
 
-        if path.startswith("/app") and path not in allowed_paths:
+        if path.startswith("/app") and not path.startswith("/app/setup-wizard") and path not in allowed_paths:
             frappe.local.flags.redirect_location = "/app/setup-wizard"
             raise frappe.Redirect
     except frappe.Redirect:

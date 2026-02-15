@@ -1,4 +1,5 @@
 //file:apps/uph/uph/public/js/uph.bundle.js
+import "./utils/bootstrap.js";
 import "./utils/party.js";
 import "./utils/party_master_manager.js";
 import "./utils/utils.js";
