@@ -78,8 +78,14 @@ def refresh_dashboard_stats():
     # 3. Duplicate Count
     duplicate_count = frappe.db.count("Potential Duplicate", {"status": "Detected"})
 
+    # 4. Incomplete Parties (No party_type set)
+    incomplete_count = frappe.db.count(
+        "Party Master", {"is_group": 0, "party_type": ["is", "not set"]}
+    )
+
     # Update Cache
     frappe.cache.set_value("uph:stats:unlinked_count", unlinked_count)
+    frappe.cache.set_value("uph:stats:incomplete_count", incomplete_count)
     frappe.cache.set_value("uph:stats:health_draft", draft_count)
     frappe.cache.set_value("uph:stats:health_cancelled", cancelled_count)
     frappe.cache.set_value("uph:stats:duplicate_count", duplicate_count)

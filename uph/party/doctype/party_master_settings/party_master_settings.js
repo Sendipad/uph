@@ -12,6 +12,17 @@ frappe.ui.form.on("Party Master Settings", {
     },
 
     refresh: function (frm) {
+        // Enforce Setup Wizard if not finished
+        if (!frm.doc.setup_finished && frappe.user.has_role("System Manager")) {
+            frappe.msgprint({
+                title: __('Setup Required'),
+                message: __('UPH Setup is not complete. Redirecting to Setup Wizard...'),
+                indicator: 'orange'
+            });
+            frappe.set_route('uph-setup-wizard');
+            return;
+        }
+
         // Refresh the document_types grid
         frm.refresh_field('document_types');
 

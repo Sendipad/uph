@@ -59,9 +59,14 @@ def get_dashboard_stats():
         "cancelled_unamended_count": cint(
             frappe.cache.get_value("uph:stats:health_cancelled") or 0
         ),
+        "incomplete_parties": cint(
+            frappe.cache.get_value("uph:stats:incomplete_count") or 0
+        ),
         "potential_duplicates": cint(
             frappe.cache.get_value("uph:stats:duplicate_count") or 0
         ),
+        "total_dismissed": frappe.db.count("Duplicate Exclusion"),
+        "total_merged": frappe.db.count("Potential Duplicate", {"status": "Merged"}),
         "last_updated": frappe.cache.get_value("uph:stats:last_updated"),
     }
     return stats

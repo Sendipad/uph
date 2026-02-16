@@ -6,6 +6,9 @@ except ImportError:
     from frappe.test_runner import make_test_records
 
 
+from uph.setup.install import seed_default_party_master_structure
+
+
 def before_tests():
     """Setup necessary fixtures for tests, especially for clean environments like CI"""
     # 1. Initialize ERPNext Test baseline (Company, Fiscal Year, etc.)
@@ -26,6 +29,10 @@ def before_tests():
         except Exception as e:
             # We don't want to crash before_tests if some optional records fail.
             pass
+
+    # 3. Seed UPH Party Master Structure
+    # Required for tests to have a valid tree to work with
+    seed_default_party_master_structure()
 
 
 def setup_erpnext_test_fixtures():

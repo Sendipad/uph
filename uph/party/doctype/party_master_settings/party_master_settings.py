@@ -32,6 +32,7 @@ class PartyMasterSettings(Document):
         enforce_cross_type_uniqueness: DF.Check
         enforce_parent_numbering: DF.Check
         enforce_strict_currency: DF.Check
+        group_digits: DF.Int
         hide_balance: DF.Check
         language: DF.Link | None
         numbering_format: DF.Literal["Concatenated", "Dash-Separated"]

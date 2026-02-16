@@ -149,7 +149,6 @@ override_whitelisted_methods = {
 
 # Request Events
 # ----------------
-# before_request = ["uph.utils.before_request"]
 # after_request = ["uph.utils.after_request"]
 
 # Job Events

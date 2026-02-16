@@ -1,4 +1,4 @@
-frappe.pages['setup-wizard'].on_page_load = function (wrapper) {
+frappe.pages['uph-setup-wizard'].on_page_load = function (wrapper) {
     var page = frappe.ui.make_app_page({
         parent: wrapper,
         title: 'UPH Setup Wizard',
@@ -9,21 +9,27 @@ frappe.pages['setup-wizard'].on_page_load = function (wrapper) {
         constructor(page) {
             this.page = page;
             this.step = 1;
-            this.total_steps = 4;
+            this.total_steps = 5;
             this.settings = {};
             this.templates = [];
+            this.languages = [];
+            this.has_data = false;
 
             this.load_status();
         }
 
         load_status() {
             frappe.call({
-                method: "uph.party.page.setup_wizard.setup_wizard.get_setup_status",
+                method: "uph.party.page.uph_setup_wizard.uph_setup_wizard.get_setup_status",
                 callback: (r) => {
-                    if (r.message && r.message.setup_finished) {
-                        this.show_finished_screen();
-                    } else {
-                        this.load_templates();
+                    if (r.message) {
+                        if (r.message.setup_finished) {
+                            this.show_finished_screen();
+                        } else {
+                            this.has_data = r.message.has_data;
+                            this.languages = r.message.languages || [];
+                            this.load_templates();
+                        }
                     }
                 }
             });
@@ -31,7 +37,7 @@ frappe.pages['setup-wizard'].on_page_load = function (wrapper) {
 
         load_templates() {
             frappe.call({
-                method: "uph.party.page.setup_wizard.setup_wizard.get_tree_templates",
+                method: "uph.party.page.uph_setup_wizard.uph_setup_wizard.get_tree_templates",
                 callback: (r) => {
                     this.templates = r.message || [];
                     this.render();
@@ -50,6 +56,8 @@ frappe.pages['setup-wizard'].on_page_load = function (wrapper) {
             } else if (this.step === 3) {
                 this.render_templates(content);
             } else if (this.step === 4) {
+                this.render_data_check(content);
+            } else if (this.step === 5) {
                 this.render_completion(content);
             }
         }
@@ -71,8 +79,23 @@ frappe.pages['setup-wizard'].on_page_load = function (wrapper) {
         }
 
         render_settings(parent) {
+            let lang_options = this.languages.map(l => `<option value="${l.name}">${l.language_name}</option>`).join('');
+
             let html = `
-                <h3>Step 1: Numbering & Governance</h3>
+                <h3>Step 1: Configuration</h3>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label>Setup Language</label>
+                            <select class="form-control" id="uph-lang">
+                                <option value="">Select Language...</option>
+                                ${lang_options}
+                            </select>
+                            <p class="help-block">Initial chart of parties will be Seeded in this language.</p>
+                        </div>
+                    </div>
+                </div>
+                <hr>
                 <div class="form-group">
                     <label>Numbering Format</label>
                     <select class="form-control" id="uph-format">
@@ -80,18 +103,26 @@ frappe.pages['setup-wizard'].on_page_load = function (wrapper) {
                         <option value="Dash-Separated">Dash-Separated (e.g. 1100-10)</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>Digits Count (per block)</label>
-                    <input type="number" class="form-control" id="uph-digits" value="4">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label>Leaf Digits Count</label>
+                            <input type="number" class="form-control" id="uph-digits" value="6">
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label>Group Digits Count</label>
+                            <input type="number" class="form-control" id="uph-group-digits" value="4">
+                        </div>
+                    </div>
                 </div>
                 <hr>
                 <div class="checkbox">
                     <label><input type="checkbox" id="uph-unique"> Enforce Cross-Type Uniqueness</label>
-                    <p class="help-block">Prevent creating a Supplier with the same name as a Customer.</p>
                 </div>
                 <div class="checkbox">
                     <label><input type="checkbox" id="uph-sync" checked> Sync ERPNext Party Roles</label>
-                    <p class="help-block">Automatically name ERPNext Customer/Supplier records based on Party Master number.</p>
                 </div>
                 <br>
                 <button class="btn btn-default" id="btn-back">Back</button>
@@ -99,13 +130,17 @@ frappe.pages['setup-wizard'].on_page_load = function (wrapper) {
             `;
             parent.html(html);
 
-            // Restore values if needed
+            // Restore values
+            if (this.settings.language) $('#uph-lang').val(this.settings.language);
             if (this.settings.digits_count) $('#uph-digits').val(this.settings.digits_count);
+            if (this.settings.group_digits) $('#uph-group-digits').val(this.settings.group_digits);
 
             parent.find('#btn-back').on('click', () => { this.step--; this.render(); });
             parent.find('#btn-next').on('click', () => {
+                this.settings.language = $('#uph-lang').val();
                 this.settings.numbering_format = $('#uph-format').val();
                 this.settings.digits_count = parseInt($('#uph-digits').val());
+                this.settings.group_digits = parseInt($('#uph-group-digits').val());
                 this.settings.enforce_cross_type_uniqueness = $('#uph-unique').is(':checked') ? 1 : 0;
                 this.settings.sync_erp_party_naming = $('#uph-sync').is(':checked') ? 1 : 0;
                 this.step++;
@@ -143,6 +178,57 @@ frappe.pages['setup-wizard'].on_page_load = function (wrapper) {
             });
         }
 
+        render_data_check(parent) {
+            if (!this.has_data) {
+                this.step++;
+                this.render();
+                return;
+            }
+
+            let html = `
+                <h3>Data Detected</h3>
+                <div class="alert alert-info">
+                    Existing records found in Party Master. How do you want to proceed with the selected template structure?
+                </div>
+                
+                <div class="radio">
+                    <label><input type="radio" name="uph-proceed" value="skip" checked> Skip Seeding (Keep existing data as is)</label>
+                </div>
+                <div class="radio">
+                    <label><input type="radio" name="uph-proceed" value="update"> Merge/Update (Overwrite conflicting records if any)</label>
+                </div>
+                <div class="radio">
+                    <label><input type="radio" name="uph-proceed" value="fresh"> Fresh Start (Keep existing, but strictly seed new records)</label>
+                </div>
+                
+                <div class="checkbox" id="uph-conflict-container" style="display:none; margin-left: 20px;">
+                    <label><input type="checkbox" id="uph-update-existing" checked> Update existing records when conflict occurs</label>
+                </div>
+
+                <br>
+                <button class="btn btn-default" id="btn-back">Back</button>
+                <button class="btn btn-primary" id="btn-next">Next</button>
+            `;
+            parent.html(html);
+
+            parent.find('input[name="uph-proceed"]').on('change', function () {
+                if ($(this).val() === 'update') {
+                    $('#uph-conflict-container').show();
+                } else {
+                    $('#uph-conflict-container').hide();
+                }
+            });
+
+            parent.find('#btn-back').on('click', () => { this.step--; this.render(); });
+            parent.find('#btn-next').on('click', () => {
+                let choice = parent.find('input[name="uph-proceed"]:checked').val();
+                this.settings.skip_seeding = (choice === 'skip');
+                this.settings.update_existing = (choice === 'update' && $('#uph-update-existing').is(':checked'));
+                this.step++;
+                this.render();
+            });
+        }
+
         render_completion(parent) {
             let html = `
                 <h3>Ready to Setup?</h3>
@@ -166,7 +252,7 @@ frappe.pages['setup-wizard'].on_page_load = function (wrapper) {
 
         apply_setup() {
             frappe.call({
-                method: "uph.party.page.setup_wizard.setup_wizard.apply_setup_settings",
+                method: "uph.party.page.uph_setup_wizard.uph_setup_wizard.apply_setup_settings",
                 args: {
                     settings: JSON.stringify(this.settings),
                     template_id: this.settings.template_id

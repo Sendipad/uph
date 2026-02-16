@@ -7,9 +7,9 @@
     "modified": "2026-02-14 17:35:00.000000",
     "modified_by": "Administrator",
     "module": "Party",
-    "name": "setup-wizard",
+    "name": "uph-setup-wizard",
     "owner": "Administrator",
-    "page_name": "setup-wizard",
+    "page_name": "uph-setup-wizard",
     "public": 0,
     "roles": [
         {

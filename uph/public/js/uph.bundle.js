@@ -15,9 +15,22 @@ import "./utils/field_option_helper.js";
 //import "./rule_form";
 
 $(document).on('app_ready', function () {
-    if (frappe.boot.uph_setup_needed) {
-        if (frappe.get_route()[0] !== 'setup-wizard') {
-            frappe.set_route('setup-wizard');
+    const isAdmin = frappe.session.user === 'Administrator' || (frappe.user_roles || []).includes('System Manager');
+    if (isAdmin && frappe.boot.uph_setup_needed) {
+        const route = frappe.get_route();
+
+        // Target UPH Form and Tree views for enforcement
+        const isFormView = route[0] === 'Form' && ['Party Master', 'Potential Duplicate', 'Party Master Settings'].includes(route[1]);
+        const isTreeView = route[0] === 'Tree' && route[1] === 'Party Master';
+
+        if ((isFormView || isTreeView) && route[0] !== 'uph-setup-wizard') {
+            frappe.show_alert({
+                message: __('UPH Setup is required. Redirecting to Setup Wizard...'),
+                indicator: 'orange'
+            });
+            setTimeout(() => {
+                frappe.set_route('uph-setup-wizard');
+            }, 1000);
         }
     }
 });

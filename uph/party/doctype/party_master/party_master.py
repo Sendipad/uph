@@ -29,13 +29,23 @@ class PartyMaster(NestedSet):
     from typing import TYPE_CHECKING
 
     if TYPE_CHECKING:
-        from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import AllowedToTransactWith
-        from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import CustomerCreditLimit
+        from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import (
+            AllowedToTransactWith,
+        )
+        from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import (
+            CustomerCreditLimit,
+        )
         from erpnext.utilities.doctype.portal_user.portal_user import PortalUser
         from frappe.types import DF
-        from uph.party.doctype.party_master_accounts.party_master_accounts import PartyMasterAccounts
-        from uph.party.doctype.party_master_parties.party_master_parties import PartyMasterParties
-        from uph.party.doctype.party_master_role.party_master_role import PartyMasterRole
+        from uph.party.doctype.party_master_accounts.party_master_accounts import (
+            PartyMasterAccounts,
+        )
+        from uph.party.doctype.party_master_parties.party_master_parties import (
+            PartyMasterParties,
+        )
+        from uph.party.doctype.party_master_role.party_master_role import (
+            PartyMasterRole,
+        )
 
         account_manager: DF.Link | None
         accounts: DF.Table[PartyMasterAccounts]
@@ -61,11 +71,24 @@ class PartyMaster(NestedSet):
         is_internal_party: DF.Check
         is_primary_role: DF.Check
         language: DF.Link | None
-        legal_entity_type: DF.Literal["", "Sole Proprietor", "Partnership", "Corporation", "LLC", "NGO", "Freelancer", "Government", "Individual", "Other"]
+        legal_entity_type: DF.Literal[
+            "",
+            "Sole Proprietor",
+            "Partnership",
+            "Corporation",
+            "LLC",
+            "NGO",
+            "Freelancer",
+            "Government",
+            "Individual",
+            "Other",
+        ]
         lft: DF.Int
         market_segment: DF.Link | None
         mobile_no: DF.ReadOnly | None
-        naming_series: DF.Literal["{party_number}", ".{parent_party_master}.", "PM-{party_name}"]
+        naming_series: DF.Literal[
+            "{party_number}", ".{parent_party_master}.", "PM-{party_name}"
+        ]
         national_id: DF.Data | None
         normalized_party_name: DF.Data | None
         old_parent: DF.Link | None
@@ -87,7 +110,21 @@ class PartyMaster(NestedSet):
         rgt: DF.Int
         roles: DF.TableMultiSelect[PartyMasterRole]
         salutation: DF.Link | None
-        status: DF.Literal["Active", "Disabled", "Closed", "Credit Hold", "Delinquent", "Disputed", "Dormant", "Write-Off", "Approved", "On Hold", "Under Review", "Terminated", "Suspended"]
+        status: DF.Literal[
+            "Active",
+            "Disabled",
+            "Closed",
+            "Credit Hold",
+            "Delinquent",
+            "Disputed",
+            "Dormant",
+            "Write-Off",
+            "Approved",
+            "On Hold",
+            "Under Review",
+            "Terminated",
+            "Suspended",
+        ]
         tax_category: DF.Link | None
         tax_id: DF.Data | None
         tax_withholding_category: DF.Link | None
@@ -693,7 +730,7 @@ def get_next_party_master_number(parent=None, is_group=0):
 
     try:
         if not parent and not is_group:
-            frappe.throw("Cannot create a leaf Party Master without a parent group")
+            frappe.throw(_("Cannot create a leaf Party Master without a parent group"))
 
         # Read configurable digits_count from settings (default 6)
         digits_count = (
@@ -716,7 +753,7 @@ def get_next_party_master_number(parent=None, is_group=0):
         if parent and is_group:
             parent_number = frappe.db.get_value("Party Master", parent, "party_number")
             if not parent_number:
-                frappe.throw(f"Parent {parent} has no party number")
+                frappe.throw(_("Parent {0} has no party number").format(parent))
 
             last_sibling = frappe.db.sql(
                 """
@@ -734,7 +771,7 @@ def get_next_party_master_number(parent=None, is_group=0):
         if parent and not is_group:
             parent_number = frappe.db.get_value("Party Master", parent, "party_number")
             if not parent_number:
-                frappe.throw(f"Parent {parent} has no party number")
+                frappe.throw(_("Parent {0} has no party number").format(parent))
 
             last_leaf = frappe.db.sql(
                 """

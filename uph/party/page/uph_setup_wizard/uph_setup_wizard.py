@@ -6,11 +6,15 @@ from frappe import _
 
 @frappe.whitelist()
 def get_setup_status():
-    """Check if setup is already finished."""
+    """Check if setup is already finished and if data exists."""
     return {
         "setup_finished": frappe.db.get_single_value(
             "Party Master Settings", "setup_finished"
-        )
+        ),
+        "has_data": frappe.db.count("Party Master") > 1,
+        "languages": frappe.get_all(
+            "Language", fields=["name", "language_name"], order_by="language_name"
+        ),
     }
 
 
@@ -65,9 +69,11 @@ def apply_setup_settings(settings: str, template_id: str):
     doc = frappe.get_doc("Party Master Settings")
     for field in [
         "digits_count",
+        "group_digits",
         "numbering_format",
         "enforce_cross_type_uniqueness",
         "sync_erp_party_naming",
+        "language",
     ]:
         if field in data:
             doc.set(field, data[field])
@@ -76,16 +82,19 @@ def apply_setup_settings(settings: str, template_id: str):
     doc.save()
 
     # 2. Seed Tree
-    template_path = frappe.get_app_path(
-        "uph", f"setup/data/templates/{template_id}.json"
-    )
-    if os.path.exists(template_path):
-        with open(template_path, "r") as f:
-            structure = json.load(f)
+    if not data.get("skip_seeding"):
+        template_path = frappe.get_app_path(
+            "uph", f"setup/data/templates/{template_id}.json"
+        )
+        if os.path.exists(template_path):
+            with open(template_path, "r") as f:
+                structure = json.load(f)
 
-        from uph.setup.install import PartyMasterSeeder
+            from uph.setup.install import PartyMasterSeeder
 
-        seeder = PartyMasterSeeder(structure=structure)
-        seeder.run()
+            seeder = PartyMasterSeeder(
+                structure=structure, update_existing=data.get("update_existing")
+            )
+            seeder.run()
 
     return {"message": _("Setup Complete"), "success": True}
