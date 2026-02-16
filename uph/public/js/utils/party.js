@@ -1,4 +1,9 @@
-frappe.provide("uph.party");
+if (typeof frappe !== 'undefined') {
+	frappe.provide("uph");
+	frappe.provide("uph.party");
+}
+window.uph = window.uph || {};
+uph.party = uph.party || {};
 
 const SALES_DOCTYPES = [
 	"Quotation",

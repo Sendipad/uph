@@ -13,7 +13,10 @@ describe("UPH Frontend Utility Tests", () => {
 		cy.visit("/app", { failOnStatusCode: false });
 		cy.window({ timeout: 120000 }).should((win) => {
 			expect(win.frappe).to.exist;
-			expect(win.uph).to.exist;
+			if (win.frappe.boot) {
+				console.log("uph_setup_needed:", win.frappe.boot.uph_setup_needed);
+			}
+			expect(win.uph, "window.uph should exist").to.exist;
 			expect(win.uph.party).to.exist;
 		});
 	};

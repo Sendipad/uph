@@ -1,4 +1,8 @@
 //file:apps/uph/uph/public/js/uph.bundle.js
+if (typeof frappe !== 'undefined') {
+    frappe.provide("uph");
+}
+console.log("UPH Bundle Loading...");
 import "./utils/party.js";
 import "./utils/party_master_manager.js";
 import "./utils/utils.js";
@@ -15,9 +19,11 @@ import "./utils/field_option_helper.js";
 //import "./rule_form";
 
 $(document).on('app_ready', function () {
+    if (!frappe.session || !frappe.boot) return;
     const isAdmin = frappe.session.user === 'Administrator' || (frappe.user_roles || []).includes('System Manager');
     if (isAdmin && frappe.boot.uph_setup_needed) {
         const route = frappe.get_route();
+        if (!route) return;
 
         // Target UPH Form and Tree views for enforcement
         const isFormView = route[0] === 'Form' && ['Party Master', 'Potential Duplicate', 'Party Master Settings'].includes(route[1]);

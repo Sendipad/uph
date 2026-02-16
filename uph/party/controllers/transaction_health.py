@@ -14,7 +14,6 @@ Provides paginated queries and drill-down for the Data Quality Dashboard.
 import frappe
 from frappe import _
 from frappe.utils import cint
-from pypika.functions import Coalesce
 
 
 @frappe.whitelist()

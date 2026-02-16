@@ -31,13 +31,27 @@ def get_potential_duplicates(limit: int = 50, offset: int = 0, min_score: float 
         limit_page_length=limit,
     )
 
-    # Enrich with party names
-    for d in duplicates:
-        d.party_1_name = frappe.db.get_value("Party Master", d.party_1, "party_name")
-        d.party_2_name = frappe.db.get_value("Party Master", d.party_2, "party_name")
-        # Ensure we have normalized names if frontend expects them
-        d.normalized_name_1 = d.party_1_name  # simplified for display
-        d.normalized_name_2 = d.party_2_name  # simplified for display
+    # Bulk-fetch party names to avoid N+1 queries
+    if duplicates:
+        all_party_ids = set()
+        for d in duplicates:
+            all_party_ids.add(d.party_1)
+            all_party_ids.add(d.party_2)
+
+        party_names = {
+            p.name: p.party_name
+            for p in frappe.get_all(
+                "Party Master",
+                filters={"name": ["in", list(all_party_ids)]},
+                fields=["name", "party_name"],
+            )
+        }
+
+        for d in duplicates:
+            d.party_1_name = party_names.get(d.party_1, d.party_1)
+            d.party_2_name = party_names.get(d.party_2, d.party_2)
+            d.normalized_name_1 = d.party_1_name
+            d.normalized_name_2 = d.party_2_name
 
     total = frappe.db.count("Potential Duplicate", filters)
 
@@ -47,23 +61,26 @@ def get_potential_duplicates(limit: int = 50, offset: int = 0, min_score: float 
 @frappe.whitelist()
 def get_dashboard_stats():
     """
-    Get summary statistics from Redis Cache.
+    Get summary statistics. Delegates to canonical modules for health and unlinked
+    counts to avoid duplicating logic from transaction_health.py and unlinked_resolver.py.
     """
+    from uph.party.controllers.transaction_health import get_health_counts
+    from uph.party.controllers.unlinked_resolver import get_unlinked_count
+
+    # Health counts from canonical module (uses its own Redis cache)
+    health = get_health_counts()
+
     stats = {
         "total_parties": frappe.db.count("Party Master", {"is_group": 0}),
         "total_groups": frappe.db.count("Party Master", {"is_group": 1}),
-        "unlinked_count": cint(frappe.cache.get_value("uph:stats:unlinked_count") or 0),
-        "draft_voucher_count": cint(
-            frappe.cache.get_value("uph:stats:health_draft") or 0
-        ),
-        "cancelled_unamended_count": cint(
-            frappe.cache.get_value("uph:stats:health_cancelled") or 0
-        ),
+        "unlinked_count": get_unlinked_count(),
+        "draft_voucher_count": health.get("draft_voucher_count", 0),
+        "cancelled_unamended_count": health.get("cancelled_unamended_count", 0),
         "incomplete_parties": cint(
             frappe.cache.get_value("uph:stats:incomplete_count") or 0
         ),
-        "potential_duplicates": cint(
-            frappe.cache.get_value("uph:stats:duplicate_count") or 0
+        "potential_duplicates": frappe.db.count(
+            "Potential Duplicate", {"status": "Detected"}
         ),
         "total_dismissed": frappe.db.count("Duplicate Exclusion"),
         "total_merged": frappe.db.count("Potential Duplicate", {"status": "Merged"}),

@@ -1,5 +1,10 @@
-uph.party_type_pm_rules = {};
+if (typeof frappe !== 'undefined') {
+	frappe.provide("uph");
+}
+window.uph = window.uph || {};
+uph.party_type_pm_rules = uph.party_type_pm_rules || {};
 uph.get_party_type_party_master_rules = function (party_type, callback) {
+	if (!uph.party_type_pm_rules) uph.party_type_pm_rules = {};
 	if (Object.keys(uph.party_type_pm_rules).length === 0) {
 		frappe.call({
 			method:
@@ -19,6 +24,7 @@ uph.get_party_type_party_master_rules = function (party_type, callback) {
 }
 
 $(document).on("app_ready", function () {
+	if (!frappe.boot) return;
 	$.each(frappe.boot.party_account_types, function (p, a) {
 		frappe.ui.form.on(p, {
 			setup: function (frm) {
@@ -212,8 +218,10 @@ $(document).on("app_ready", function () {
 	});
 });
 $(document).on("app_ready", function () {
+	if (!frappe.boot || !frappe.boot.party_master_on_doctypes_depend_field) return;
 	let doctypes = frappe.boot.party_master_on_doctypes_depend_field;
 	$.each(doctypes, function (i, row) {
+		if (!row) return;
 		let [doctype, child, fieldname] = row;
 		if (doctype === child) {
 			(function (doctype, fieldname) {
