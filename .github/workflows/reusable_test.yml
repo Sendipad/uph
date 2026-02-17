@@ -14,7 +14,7 @@ on:
       python_version:
         required: true
         type: string
-        default: "3.11"
+        default: "3.12"
       node_version:
         required: true
         type: string
@@ -87,6 +87,14 @@ jobs:
             python -m pip install --upgrade pip setuptools wheel
           fi
 
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/setup.py', '**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Configure MariaDB
         run: |
           mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL character_set_server = 'utf8mb4'"
@@ -144,6 +152,24 @@ jobs:
         working-directory: frappe-bench
         run: |
           bench --site test_site run-tests --app uph
+
+      - name: Cache Yarn
+        if: ${{ inputs.run_ui }}
+        uses: actions/cache@v4
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Cache Cypress Binary
+        if: ${{ inputs.run_ui }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: ${{ runner.os }}-cypress-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cypress-
 
       - name: Run UI Tests
         if: ${{ inputs.run_ui }}
