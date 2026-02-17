@@ -14,11 +14,11 @@ on:
       python_version:
         required: true
         type: string
-        default: "3.14"
+        default: "3.11"
       node_version:
         required: true
         type: string
-        default: "24"
+        default: "20"
       mariadb_version:
         required: true
         type: string
@@ -135,7 +135,9 @@ jobs:
         run: |
           bench --site test_site install-app erpnext
           bench --site test_site install-app uph
+          bench --site test_site execute frappe.utils.install.complete_setup_wizard
           bench --site test_site execute uph.tests.test_utils.setup_erpnext_baseline
+          bench build --app uph
 
       - name: Run Python Tests
         if: ${{ inputs.run_python }}
@@ -147,12 +149,10 @@ jobs:
         if: ${{ inputs.run_ui }}
         working-directory: frappe-bench
         run: |
-          pip install playwright
-          playwright install --with-deps chromium
           echo "127.0.0.1 test_site" | sudo tee -a /etc/hosts
           bench --site test_site serve --port 8000 --noreload > /tmp/bench-serve.log 2>&1 &
           for i in {1..30}; do
-            if curl -sf http://127.0.0.1:8000/api/method/ping >/dev/null; then
+            if curl -sf http://test_site:8000/api/method/ping >/dev/null; then
               break
             fi
             sleep 2
