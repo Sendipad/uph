@@ -239,6 +239,67 @@ class NormalizationUtils:
         # Apply standard normalization
         return cls.normalize(name)
 
+    @classmethod
+    def get_soundex(cls, text: str) -> str:
+        """
+        Calculate Soundex phonetic key for a given text.
+        Standard American Soundex algorithm.
+        """
+        if not text:
+            return ""
+
+        text = cls.normalize(text).upper()
+        if not text:
+            return ""
+
+        # Remove non-alphabet characters
+        text = re.sub(r"[^A-Z]", "", text)
+        if not text:
+            return ""
+
+        first_char = text[0]
+
+        # Mapping table
+        mapping = {
+            "BFPV": "1",
+            "CGJKQSXZ": "2",
+            "DT": "3",
+            "L": "4",
+            "MN": "5",
+            "R": "6",
+        }
+
+        # Build mapping string
+        map_str = ""
+        for char in text:
+            found = False
+            for chars, code in mapping.items():
+                if char in chars:
+                    map_str += code
+                    found = True
+                    break
+            if not found:
+                map_str += "0"
+
+        # Remove adjacent duplicates
+        deduped = ""
+        prev = ""
+        for char in map_str:
+            if char != prev:
+                deduped += char
+                prev = char
+
+        # Remove zeros (vowels, H, W, Y) except the first char if it was a zero
+        # But we use the original first_char anyway
+        result = first_char
+        for char in deduped[1:]:
+            if char != "0":
+                result += char
+
+        # Pad or truncate to 4 characters
+        result = (result + "000")[:4]
+        return result
+
 
 # Module-level functions for backward compatibility
 def normalize_text(text: str) -> str:

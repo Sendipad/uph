@@ -7,3 +7,4 @@ uph.party.setup
 uph.patches.add_indexes
 uph.patches.setup_pm_fields
 uph.patches.populate_normalized_party_name
+uph.patches.migrate_duplicate_exclusion_to_party_issue

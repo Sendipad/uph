@@ -28,6 +28,10 @@
         "column_break_gov2",
         "sync_erp_party_naming",
         "role_prefix_mode",
+        "transaction_policy_section",
+        "transaction_policy_draft_days",
+        "column_break_policy",
+        "transaction_policy_cancelled_reference_days",
         "setup_section",
         "setup_finished",
         "column_break_gov3",
@@ -212,6 +216,31 @@
             "fieldname": "governance_rules_section",
             "fieldtype": "Section Break",
             "label": "Governance Rules"
+        },
+        {
+            "fieldname": "transaction_policy_section",
+            "fieldtype": "Section Break",
+            "label": "Transaction Policy"
+        },
+        {
+            "default": "30",
+            "fieldname": "transaction_policy_draft_days",
+            "fieldtype": "Int",
+            "label": "Draft Issue Threshold (Days)",
+            "description": "Create a Party Issue when a draft voucher is older than this many days.",
+            "non_negative": 1
+        },
+        {
+            "fieldname": "column_break_policy",
+            "fieldtype": "Column Break"
+        },
+        {
+            "default": "0",
+            "fieldname": "transaction_policy_cancelled_reference_days",
+            "fieldtype": "Int",
+            "label": "Cancelled Reference Grace (Days)",
+            "description": "Grace period before flagging cancelled vouchers still referenced in financial flow. 0 = no grace.",
+            "non_negative": 1
         },
         {
             "default": "0",

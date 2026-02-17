@@ -3,7 +3,7 @@ app_title = "Unified Party Hub"
 app_publisher = "Abdo Mohammed Ruzaqi"
 app_description = "Unified Party Hub (UPH) is an enterprise-grade Master Data Management (MDM) extension for ERPNext. It centralizes siloed business roles (Customers, Suppliers, Employees) into a unified, tree-based hierarchy, providing consolidated financial visibility and rigorous data governance across complex business ecosystems."
 app_email = "ruzaqi@gmail.com"
-app_version = "2.9.0"
+app_version = "3.0.0"
 app_license = "gpl-3.0"
 
 # Apps
@@ -109,10 +109,43 @@ export_python_type_annotations = True
 scheduler_events = {
     "hourly": [
         "uph.tasks.refresh_dashboard_stats",
+        "uph.party.controllers.unlinked_resolver.enqueue_unlinked_issue_scan",
+        "uph.party.controllers.transaction_health.enqueue_transaction_policy_scan",
     ],
     "daily": [
         "uph.tasks.run_full_duplicate_scan",
+        "uph.party.controllers.duplicate_scanner.enqueue_duplicate_scan",
     ],
+}
+
+# Fixtures (Workflow + Workflow States for Party Issue)
+fixtures = [
+    {
+        "doctype": "Workflow",
+        "filters": [["name", "in", ["Party Issue Workflow"]]],
+    },
+    {
+        "doctype": "Workflow State",
+        "filters": [
+            [
+                "workflow_state_name",
+                "in",
+                ["Open", "Under Review", "Resolved", "Ignored"],
+            ]
+        ],
+    },
+]
+
+# Database indexes
+db_table_indexes = {
+    "tabParty Issue": [
+        ["party"],
+        ["issue_type"],
+        ["status"],
+        ["severity"],
+        ["party", "status"],
+        ["reference_doctype", "reference_name"],
+    ]
 }
 
 # Testing

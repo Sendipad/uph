@@ -16,6 +16,16 @@ from uph.party.controllers.queries import get_unlinked_party
 
 def execute(filters=None):
     filters = frappe._dict(filters or {})
+    # Default party types when user did not filter and settings are empty
+    if not filters.get("party_type"):
+        try:
+            settings = frappe.get_cached_doc("Party Master Settings")
+            if settings and settings.party_types:
+                filters.party_type = [p.party_type for p in settings.party_types]
+        except Exception:
+            filters.party_type = []
+        if not filters.get("party_type"):
+            filters.party_type = ["Customer", "Supplier", "Employee"]
     data = get_data(filters)
     columns = get_columns()
     summary_data = get_party_type_summary(filters)
@@ -64,7 +74,9 @@ def get_party_type_summary(filters=None):
     party_types = filters.get("party_type", None)
     if not party_types:
         party_types = frappe.get_cached_doc("Party Master Settings").party_types
-        party_types = [p.party_type for p in party_types]
+        party_types = [p.party_type for p in party_types] if party_types else []
+    if not party_types:
+        party_types = ["Customer", "Supplier", "Employee"]
     chart_data = {
         "labels": [],
         "datasets": [

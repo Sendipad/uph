@@ -1,7 +1,7 @@
 frappe.pages['uph-setup-wizard'].on_page_load = function (wrapper) {
     var page = frappe.ui.make_app_page({
         parent: wrapper,
-        title: 'UPH Setup Wizard',
+        title: __('UPH Setup Wizard'),
         single_column: true
     });
 
@@ -66,12 +66,12 @@ frappe.pages['uph-setup-wizard'].on_page_load = function (wrapper) {
             $(`
                 <div class="text-center">
                     <img src="/assets/uph/images/uph_logo.png" style="max-height: 100px; margin-bottom: 20px;" onerror="this.style.display='none'">
-                    <h1>Welcome to Unified Party Hub</h1>
-                    <p class="lead">Let's set up your Master Data Management system.</p>
+                    <h1>${__('Welcome to Unified Party Hub')}</h1>
+                    <p class="lead">${__("Let's set up your Master Data Management system.")}</p>
                     <hr>
-                    <p>We will configure numbering, governance rules, and your initial party structure.</p>
+                    <p>${__('We will configure numbering, governance rules, and your initial party structure.')}</p>
                     <br>
-                    <button class="btn btn-primary btn-lg" id="btn-start">Get Started</button>
+                    <button class="btn btn-primary btn-lg" id="btn-start">${__('Get Started')}</button>
                 </div>
             `).appendTo(parent);
 
@@ -79,54 +79,54 @@ frappe.pages['uph-setup-wizard'].on_page_load = function (wrapper) {
         }
 
         render_settings(parent) {
-            let lang_options = this.languages.map(l => `<option value="${l.name}">${l.language_name}</option>`).join('');
+            let lang_options = this.languages.map(l => `<option value="${l.name}">${__(l.language_name)}</option>`).join('');
 
             let html = `
-                <h3>Step 1: Configuration</h3>
+                <h3>${__('Step 1: Configuration')}</h3>
                 <div class="row">
                     <div class="col-sm-6">
                         <div class="form-group">
-                            <label>Setup Language</label>
+                            <label>${__('Setup Language')}</label>
                             <select class="form-control" id="uph-lang">
-                                <option value="">Select Language...</option>
+                                <option value="">${__('Select Language...')}</option>
                                 ${lang_options}
                             </select>
-                            <p class="help-block">Initial chart of parties will be Seeded in this language.</p>
+                            <p class="help-block">${__('Initial chart of parties will be Seeded in this language.')}</p>
                         </div>
                     </div>
                 </div>
                 <hr>
                 <div class="form-group">
-                    <label>Numbering Format</label>
+                    <label>${__('Numbering Format')}</label>
                     <select class="form-control" id="uph-format">
-                        <option value="Concatenated">Concatenated (e.g. 110010)</option>
-                        <option value="Dash-Separated">Dash-Separated (e.g. 1100-10)</option>
+                        <option value="Concatenated">${__('Concatenated (e.g. 110010)')}</option>
+                        <option value="Dash-Separated">${__('Dash-Separated (e.g. 1100-10)')}</option>
                     </select>
                 </div>
                 <div class="row">
                     <div class="col-sm-6">
                         <div class="form-group">
-                            <label>Leaf Digits Count</label>
+                            <label>${__('Leaf Digits Count')}</label>
                             <input type="number" class="form-control" id="uph-digits" value="6">
                         </div>
                     </div>
                     <div class="col-sm-6">
                         <div class="form-group">
-                            <label>Group Digits Count</label>
+                            <label>${__('Group Digits Count')}</label>
                             <input type="number" class="form-control" id="uph-group-digits" value="4">
                         </div>
                     </div>
                 </div>
                 <hr>
                 <div class="checkbox">
-                    <label><input type="checkbox" id="uph-unique"> Enforce Cross-Type Uniqueness</label>
+                    <label><input type="checkbox" id="uph-unique"> ${__('Enforce Cross-Type Uniqueness')}</label>
                 </div>
                 <div class="checkbox">
-                    <label><input type="checkbox" id="uph-sync" checked> Sync ERPNext Party Roles</label>
+                    <label><input type="checkbox" id="uph-sync" checked> ${__('Sync ERPNext Party Roles')}</label>
                 </div>
                 <br>
-                <button class="btn btn-default" id="btn-back">Back</button>
-                <button class="btn btn-primary" id="btn-next">Next</button>
+                <button class="btn btn-default" id="btn-back">${__('Back')}</button>
+                <button class="btn btn-primary" id="btn-next">${__('Next')}</button>
             `;
             parent.html(html);
 
@@ -149,21 +149,21 @@ frappe.pages['uph-setup-wizard'].on_page_load = function (wrapper) {
         }
 
         render_templates(parent) {
-            let html = `<h3>Step 2: Choose Structure</h3><div class="list-group">`;
+            let html = `<h3>${__('Step 2: Choose Structure')}</h3><div class="list-group">`;
 
             this.templates.forEach(t => {
                 html += `
                     <a href="#" class="list-group-item template-item" data-id="${t.id}">
-                        <h4 class="list-group-item-heading">${t.name}</h4>
+                        <h4 class="list-group-item-heading">${__(t.name)}</h4>
                         <p class="list-group-item-text">
-                            Includes: ${t.preview.map(p => p.party_name).join(', ')} ...
+                            ${__('Includes')}: ${t.preview.map(p => __(p.party_name)).join(', ')} ...
                         </p>
                     </a>
                  `;
             });
             html += `</div>
                 <br>
-                 <button class="btn btn-default" id="btn-back">Back</button>
+                 <button class="btn btn-default" id="btn-back">${__('Back')}</button>
              `;
 
             parent.html(html);
@@ -186,28 +186,28 @@ frappe.pages['uph-setup-wizard'].on_page_load = function (wrapper) {
             }
 
             let html = `
-                <h3>Data Detected</h3>
+                <h3>${__('Data Detected')}</h3>
                 <div class="alert alert-info">
-                    Existing records found in Party Master. How do you want to proceed with the selected template structure?
+                    ${__('Existing records found in Party Master. How do you want to proceed with the selected template structure?')}
                 </div>
                 
                 <div class="radio">
-                    <label><input type="radio" name="uph-proceed" value="skip" checked> Skip Seeding (Keep existing data as is)</label>
+                    <label><input type="radio" name="uph-proceed" value="skip" checked> ${__('Skip Seeding (Keep existing data as is)')}</label>
                 </div>
                 <div class="radio">
-                    <label><input type="radio" name="uph-proceed" value="update"> Merge/Update (Overwrite conflicting records if any)</label>
+                    <label><input type="radio" name="uph-proceed" value="update"> ${__('Merge/Update (Overwrite conflicting records if any)')}</label>
                 </div>
                 <div class="radio">
-                    <label><input type="radio" name="uph-proceed" value="fresh"> Fresh Start (Keep existing, but strictly seed new records)</label>
+                    <label><input type="radio" name="uph-proceed" value="fresh"> ${__('Fresh Start (Keep existing, but strictly seed new records)')}</label>
                 </div>
                 
                 <div class="checkbox" id="uph-conflict-container" style="display:none; margin-left: 20px;">
-                    <label><input type="checkbox" id="uph-update-existing" checked> Update existing records when conflict occurs</label>
+                    <label><input type="checkbox" id="uph-update-existing" checked> ${__('Update existing records when conflict occurs')}</label>
                 </div>
 
                 <br>
-                <button class="btn btn-default" id="btn-back">Back</button>
-                <button class="btn btn-primary" id="btn-next">Next</button>
+                <button class="btn btn-default" id="btn-back">${__('Back')}</button>
+                <button class="btn btn-primary" id="btn-next">${__('Next')}</button>
             `;
             parent.html(html);
 
@@ -231,18 +231,18 @@ frappe.pages['uph-setup-wizard'].on_page_load = function (wrapper) {
 
         render_completion(parent) {
             let html = `
-                <h3>Ready to Setup?</h3>
-                <p>We will apply the following settings:</p>
+                <h3>${__('Ready to Setup?')}</h3>
+                <p>${__('We will apply the following settings:')}</p>
                 <ul>
-                    <li>Format: ${this.settings.numbering_format}</li>
-                    <li>Digits: ${this.settings.digits_count}</li>
-                    <li>Structure: ${this.settings.template_id}</li>
+                    <li>${__('Format')}: ${__(this.settings.numbering_format)}</li>
+                    <li>${__('Digits')}: ${this.settings.digits_count}</li>
+                    <li>${__('Structure')}: ${__(this.settings.template_id)}</li>
                 </ul>
                 <div class="alert alert-warning">
-                    This action will lock core settings and generate the initial tree.
+                    ${__('This action will lock core settings and generate the initial tree.')}
                 </div>
-                <button class="btn btn-default" id="btn-back">Back</button>
-                <button class="btn btn-success" id="btn-finish">Finish Setup</button>
+                <button class="btn btn-default" id="btn-back">${__('Back')}</button>
+                <button class="btn btn-success" id="btn-finish">${__('Finish Setup')}</button>
             `;
             parent.html(html);
 
@@ -273,11 +273,11 @@ frappe.pages['uph-setup-wizard'].on_page_load = function (wrapper) {
                     <div class="text-success" style="font-size: 48px; margin-bottom: 20px;">
                         <span class="fa fa-check-circle"></span>
                     </div>
-                    <h1>Setup Complete!</h1>
-                    <p class="lead">UPH is now ready to use.</p>
+                    <h1>${__('Setup Complete!')}</h1>
+                    <p class="lead">${__('UPH is now ready to use.')}</p>
                     <br>
-                    <a href="/app/party-master" class="btn btn-primary">Go to Party Master</a>
-                    <a href="/app/data-quality-dashboard" class="btn btn-default">Go to Dashboard</a>
+                    <a href="/app/party-master" class="btn btn-primary">${__('Go to Party Master')}</a>
+                    <a href="/app/data-quality-dashboard" class="btn btn-default">${__('Go to Dashboard')}</a>
                 </div>
             `).appendTo(this.page.main);
         }

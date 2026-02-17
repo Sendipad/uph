@@ -13,6 +13,9 @@ import frappe
 from frappe import _
 from frappe.utils import cint
 
+from uph.party.controllers.party_issue_utils import create_party_issue_if_missing
+from uph.hooks import tx_doctype_with_party_master
+
 
 @frappe.whitelist()
 def get_unlinked_parties(limit: int = 20, offset: int = 0, role_doctype: str = None):
@@ -107,6 +110,71 @@ def get_unlinked_parties(limit: int = 20, offset: int = 0, role_doctype: str = N
 
     # Sort and paginate
     all_unlinked.sort(key=lambda x: (x["role_doctype"], x["role_name"]))
+    paginated = all_unlinked[offset : offset + limit]
+
+    return {"unlinked": paginated, "total": total}
+
+
+@frappe.whitelist()
+def get_unlinked_transactions(
+    limit: int = 20, offset: int = 0, transaction_doctype: str = None
+):
+    """
+    Find ERPNext transactions where party_master is NULL or empty.
+    Vouchers like Sales Invoice, Payment Entry, etc.
+    """
+    limit = cint(limit) or 20
+    offset = cint(offset) or 0
+
+    tx_types = _get_configured_transaction_types()
+    if not tx_types:
+        return {"unlinked": [], "total": 0}
+
+    if transaction_doctype and transaction_doctype not in tx_types:
+        frappe.throw(_("Invalid transaction DocType: {0}").format(transaction_doctype))
+
+    types_to_scan = [transaction_doctype] if transaction_doctype else tx_types
+
+    all_unlinked = []
+    total = 0
+
+    for dt in types_to_scan:
+        if not frappe.db.exists("DocType", dt):
+            continue
+
+        meta = frappe.get_meta(dt)
+        if not meta.has_field("party_master"):
+            continue
+
+        # Count
+        total += frappe.db.count(dt, {"party_master": ["in", [None, ""]]})
+
+        # Fetch records
+        fields = ["name", "creation"]
+        if meta.has_field("owner"):
+            fields.append("owner")
+
+        records = frappe.get_all(
+            dt,
+            filters={"party_master": ["in", [None, ""]]},
+            fields=fields,
+            order_by="creation desc",
+            limit_page_length=0,
+        )
+
+        for r in records:
+            all_unlinked.append(
+                {
+                    "role_doctype": dt,
+                    "role_name": r.name,
+                    "display_name": f"{dt}: {r.name}",
+                    "owner": r.get("owner", ""),
+                    "creation": str(r.creation),
+                }
+            )
+
+    # Sort by creation desc
+    all_unlinked.sort(key=lambda x: x["creation"], reverse=True)
     paginated = all_unlinked[offset : offset + limit]
 
     return {"unlinked": paginated, "total": total}
@@ -241,12 +309,177 @@ def link_to_party_master(role_doctype: str, role_name: str, party_master: str):
     # Invalidate cache
     frappe.cache.delete_value("uph:dashboard_stats")
 
+    # Resolve related Party Issue if exists
+    issue_name = frappe.db.get_value(
+        "Party Issue",
+        {
+            "issue_type": "Unlinked",
+            "reference_doctype": role_doctype,
+            "reference_name": role_name,
+            "status": ["in", ["Open", "Under Review"]],
+        },
+        "name",
+    )
+    if issue_name:
+        frappe.db.set_value(
+            "Party Issue",
+            issue_name,
+            {
+                "status": "Resolved",
+                "resolved_on": frappe.utils.now_datetime(),
+                "resolved_by": frappe.session.user,
+            },
+        )
+
     return {
         "success": True,
         "message": _("{0} {1} linked to Party Master {2}").format(
             role_doctype, role_name, party_master
         ),
     }
+
+
+@frappe.whitelist()
+def get_unlinked_issues(limit: int = 20, offset: int = 0):
+    """
+    Fetch unlinked issues from Party Issue (governance registry).
+    """
+    limit = cint(limit) or 20
+    offset = cint(offset) or 0
+
+    filters = {"issue_type": "Unlinked", "status": ["in", ["Open", "Under Review"]]}
+    issues = frappe.get_all(
+        "Party Issue",
+        filters=filters,
+        fields=["name", "reference_doctype", "reference_name", "detected_on"],
+        order_by="detected_on desc",
+        limit_start=offset,
+        limit_page_length=limit,
+    )
+
+    if not issues:
+        return {"unlinked": [], "total": 0}
+
+    # Group references by doctype for bulk fetch
+    refs = {}
+    for issue in issues:
+        if not issue.reference_doctype or not issue.reference_name:
+            continue
+        refs.setdefault(issue.reference_doctype, []).append(issue.reference_name)
+
+    records_map = {}
+    for dt, names in refs.items():
+        if not frappe.db.exists("DocType", dt):
+            continue
+        if not frappe.has_permission(dt, "read"):
+            continue
+        meta = frappe.get_meta(dt)
+        fields = ["name"]
+        name_field = None
+        for candidate in [
+            f"{dt.lower().replace(' ', '_')}_name",
+            "employee_name",
+            "customer_name",
+            "supplier_name",
+        ]:
+            if meta.has_field(candidate):
+                name_field = candidate
+                fields.append(candidate)
+                break
+        if meta.has_field("default_currency"):
+            fields.append("default_currency")
+        rows = frappe.get_all(dt, filters={"name": ["in", names]}, fields=fields)
+        for r in rows:
+            records_map[(dt, r.name)] = r
+
+    result = []
+    for issue in issues:
+        dt = issue.reference_doctype
+        name = issue.reference_name
+        record = records_map.get((dt, name))
+        if not record:
+            continue
+        display = record.get(
+            f"{dt.lower().replace(' ', '_')}_name",
+            record.get("customer_name")
+            or record.get("supplier_name")
+            or record.get("employee_name")
+            or record.name,
+        )
+        result.append(
+            {
+                "role_doctype": dt,
+                "role_name": name,
+                "display_name": display,
+                "currency": record.get("default_currency", ""),
+                "issue": issue.name,
+            }
+        )
+
+    total = frappe.db.count("Party Issue", filters)
+    return {"unlinked": result, "total": total}
+
+
+def enqueue_unlinked_issue_scan():
+    """
+    Enqueue unlinked issue scan (async).
+    """
+    frappe.enqueue(
+        "uph.party.controllers.unlinked_resolver.run_unlinked_issue_scan",
+        queue="long",
+        timeout=1800,
+        job_id="uph_unlinked_issue_scan",
+        deduplicate=True,
+    )
+
+
+def run_unlinked_issue_scan():
+    """
+    Scan for unlinked role records and create Party Issue entries.
+    Forward-looking only; no auto-resolution.
+    """
+    root_party = _get_root_party_master()
+    if not root_party:
+        return
+
+    party_types = _get_configured_party_types()
+    for dt in party_types:
+        if not frappe.db.exists("DocType", dt):
+            continue
+        meta = frappe.get_meta(dt)
+        if not meta.has_field("party_master"):
+            continue
+
+        start = 0
+        page_len = 500
+        while True:
+            rows = frappe.get_all(
+                dt,
+                filters={"party_master": ["in", [None, ""]]},
+                fields=["name"],
+                limit_start=start,
+                limit_page_length=page_len,
+                order_by="name asc",
+            )
+            if not rows:
+                break
+
+            for row in rows:
+                create_party_issue_if_missing(
+                    party=root_party,
+                    issue_type="Unlinked",
+                    severity="Medium",
+                    status="Open",
+                    source_engine="unlinked_resolver",
+                    reference_doctype=dt,
+                    reference_name=row.name,
+                    details={
+                        "role_doctype": dt,
+                        "role_name": row.name,
+                    },
+                )
+
+            start += page_len
 
 
 def get_unlinked_count():
@@ -259,6 +492,28 @@ def get_unlinked_count():
     total = 0
 
     for dt in party_types:
+        if not frappe.db.exists("DocType", dt):
+            continue
+        meta = frappe.get_meta(dt)
+        if not meta.has_field("party_master"):
+            continue
+
+        total += frappe.db.count(dt, {"party_master": ["in", [None, ""]]})
+
+    frappe.cache.set_value(cache_key, total, expires_in_sec=300)
+    return total
+
+
+def get_unlinked_transaction_count():
+    """Get total count of unlinked transaction records."""
+    cache_key = "uph:unlinked_tx_count"
+    if cached := frappe.cache.get_value(cache_key):
+        return cached
+
+    tx_types = _get_configured_transaction_types()
+    total = 0
+
+    for dt in tx_types:
         if not frappe.db.exists("DocType", dt):
             continue
         meta = frappe.get_meta(dt)
@@ -289,3 +544,34 @@ def _get_configured_party_types():
     if types:
         return types
     return ["Customer", "Supplier", "Employee"]
+
+
+def _get_root_party_master():
+    """
+    Get root Party Master for orphan issue grouping.
+    """
+    root = frappe.db.get_value(
+        "Party Master",
+        {"is_group": 1, "parent_party_master": ["is", "not set"]},
+        "name",
+    )
+    return root
+
+
+def _get_configured_transaction_types():
+    """
+    Get the list of transaction types to scan for unlinked records.
+    """
+    try:
+        settings = frappe.get_cached_doc("Party Master Settings")
+        tx_types = []
+        for d in settings.document_types or []:
+            dt = d.document_type
+            if dt and not frappe.get_meta(dt).issingle:
+                tx_types.append(dt)
+
+        if not tx_types:
+            return tx_doctype_with_party_master
+        return tx_types
+    except Exception:
+        return tx_doctype_with_party_master

@@ -43,6 +43,8 @@ class PartyMasterSettings(Document):
         role_to_bypass_duplicate_voucher: DF.Link | None
         setup_finished: DF.Check
         sync_erp_party_naming: DF.Check
+        transaction_policy_cancelled_reference_days: DF.Int
+        transaction_policy_draft_days: DF.Int
     # end: auto-generated types
     def validate(self):
         self.validate_document_types()

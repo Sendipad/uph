@@ -26,6 +26,10 @@ class DataQualityDashboard {
         this.health_offset = 0;
         this.health_limit = 20;
 
+        // Unlinked Vouchers tab state
+        this.unlinked_vouchers_offset = 0;
+        this.unlinked_vouchers_limit = 20;
+
         this.init();
     }
 
@@ -71,7 +75,7 @@ class DataQualityDashboard {
                     </div>
                     <div class="stat-card" id="stat-potential-dups" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
                         <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--orange-500);">-</div>
-                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Potential Duplicates')}</div>
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Duplicate Issues')}</div>
                     </div>
                     <div class="stat-card" id="stat-unlinked" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
                         <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--purple-500);">-</div>
@@ -81,9 +85,13 @@ class DataQualityDashboard {
                         <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--yellow-500);">-</div>
                         <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Draft Vouchers')}</div>
                     </div>
+                    <div class="stat-card" id="stat-unlinked-vouchers" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
+                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--red-500);">-</div>
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Unlinked Vouchers')}</div>
+                    </div>
                     <div class="stat-card" id="stat-dismissed" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
                         <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--green-500);">-</div>
-                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Dismissed Pairs')}</div>
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Ignored Issues')}</div>
                     </div>
                 </div>
 
@@ -99,6 +107,12 @@ class DataQualityDashboard {
                         <a class="nav-link" data-tab="unlinked" href="#" role="tab">
                             ${__('Unlinked Roles')}
                             <span class="badge badge-pill" id="tab-badge-unlinked" style="margin-left: 4px;"></span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="unlinked_vouchers" href="#" role="tab">
+                            ${__('Unlinked Vouchers')}
+                            <span class="badge badge-pill" id="tab-badge-unlinked-vouchers" style="margin-left: 4px;"></span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -137,6 +151,8 @@ class DataQualityDashboard {
             this.load_duplicates();
         } else if (this.active_tab === 'unlinked') {
             this.load_unlinked();
+        } else if (this.active_tab === 'unlinked_vouchers') {
+            this.load_unlinked_vouchers();
         } else if (this.active_tab === 'health') {
             this.load_health();
         }
@@ -157,6 +173,7 @@ class DataQualityDashboard {
         $('#stat-total-parties .stat-value').text(stats.total_parties || 0);
         $('#stat-potential-dups .stat-value').text(stats.potential_duplicates || 0);
         $('#stat-unlinked .stat-value').text(stats.unlinked_count || 0);
+        $('#stat-unlinked-vouchers .stat-value').text(stats.unlinked_transaction_count || 0);
         $('#stat-drafts .stat-value').text(stats.draft_voucher_count || 0);
         $('#stat-dismissed .stat-value').text(stats.total_dismissed || 0);
 
@@ -170,6 +187,12 @@ class DataQualityDashboard {
             $('#tab-badge-unlinked').text(stats.unlinked_count).show();
         } else {
             $('#tab-badge-unlinked').hide();
+        }
+
+        if (stats.unlinked_transaction_count) {
+            $('#tab-badge-unlinked-vouchers').text(stats.unlinked_transaction_count).show();
+        } else {
+            $('#tab-badge-unlinked-vouchers').hide();
         }
 
         const health_total = (stats.draft_voucher_count || 0) + (stats.cancelled_unamended_count || 0);
@@ -219,9 +242,9 @@ class DataQualityDashboard {
                     <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 1rem;">
                         <div style="flex: 1; min-width: 200px;">
                             <div style="font-weight: 600;">
-                                <a href="/app/party-master/${dup.party_1.name}" target="_blank">${dup.party_1.party_name}</a>
+                                <a href="/app/party-master/${dup.party_1}" target="_blank">${dup.party_1_name || dup.party_1}</a>
                             </div>
-                            <div class="text-muted small">${dup.party_1.party_type || ''} | ${dup.party_1.party_number || '-'}</div>
+                            <div class="text-muted small">${dup.party_1 || '-'}</div>
                         </div>
                         <div style="text-align: center; padding: 0 1rem;">
                             <div class="similarity-badge" style="background: ${this.get_score_color(dup.similarity_score)}; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-weight: 600;">
@@ -231,16 +254,16 @@ class DataQualityDashboard {
                         </div>
                         <div style="flex: 1; min-width: 200px; text-align: right;">
                             <div style="font-weight: 600;">
-                                <a href="/app/party-master/${dup.party_2.name}" target="_blank">${dup.party_2.party_name}</a>
+                                <a href="/app/party-master/${dup.party_2}" target="_blank">${dup.party_2_name || dup.party_2}</a>
                             </div>
-                            <div class="text-muted small">${dup.party_2.party_type || ''} | ${dup.party_2.party_number || '-'}</div>
+                            <div class="text-muted small">${dup.party_2 || '-'}</div>
                         </div>
                     </div>
                     <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
-                        <button class="btn btn-default btn-sm btn-dismiss" data-party1="${dup.party_1.name}" data-party2="${dup.party_2.name}">
+                        <button class="btn btn-default btn-sm btn-dismiss" data-party1="${dup.party_1}" data-party2="${dup.party_2}">
                             ${__('Not a Duplicate')}
                         </button>
-                        <button class="btn btn-primary btn-sm btn-merge" data-party1="${dup.party_1.name}" data-party2="${dup.party_2.name}">
+                        <button class="btn btn-primary btn-sm btn-merge" data-party1="${dup.party_1}" data-party2="${dup.party_2}">
                             ${__('Merge')}
                         </button>
                     </div>
@@ -378,7 +401,7 @@ class DataQualityDashboard {
         content.html(`<div class="text-muted">${__('Loading unlinked roles...')}</div>`);
 
         frappe.call({
-            method: 'uph.party.controllers.unlinked_resolver.get_unlinked_parties',
+            method: 'uph.party.controllers.unlinked_resolver.get_unlinked_issues',
             args: {
                 limit: this.unlinked_limit,
                 offset: this.unlinked_offset,
@@ -532,6 +555,80 @@ class DataQualityDashboard {
     // TRANSACTION HEALTH TAB
     // ═══════════════════════════════════════════
 
+    // ═══════════════════════════════════════════
+    // UNLINKED VOUCHERS TAB
+    // ═══════════════════════════════════════════
+
+    load_unlinked_vouchers() {
+        const content = $('#tab-content');
+        content.html(`<div class="text-muted">${__('Loading unlinked vouchers...')}</div>`);
+
+        frappe.call({
+            method: 'uph.party.controllers.unlinked_resolver.get_unlinked_transactions',
+            args: {
+                limit: this.unlinked_vouchers_limit,
+                offset: this.unlinked_vouchers_offset,
+            },
+            callback: (r) => {
+                if (r.message) {
+                    this.render_unlinked_vouchers(r.message);
+                }
+            }
+        });
+    }
+
+    render_unlinked_vouchers(data) {
+        const content = $('#tab-content');
+        content.empty();
+
+        if (!data.unlinked || data.unlinked.length === 0) {
+            content.html(`<div class="text-muted text-center" style="padding: 2rem;">${__('All transactions are linked to a Party Master')}</div>`);
+            this.render_pagination(0, 'unlinked_vouchers');
+            return;
+        }
+
+        // Header
+        content.append(`
+            <div style="display: flex; padding: 0.5rem 1rem; font-weight: 600; color: var(--text-muted); font-size: 0.85rem; border-bottom: 1px solid var(--border-color);">
+                <div style="flex: 2;">${__('Voucher')}</div>
+                <div style="flex: 1;">${__('Type')}</div>
+                <div style="flex: 1;">${__('Created On')}</div>
+                <div style="flex: 1; text-align: right;">${__('Actions')}</div>
+            </div>
+        `);
+
+        data.unlinked.forEach((item) => {
+            const row = $(`
+                <div class="unlinked-row" style="display: flex; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); background: var(--card-bg);">
+                    <div style="flex: 2;">
+                        <div style="font-weight: 500;">
+                            <a href="/app/${frappe.router.slug(item.role_doctype)}/${item.role_name}" target="_blank">${item.role_name}</a>
+                        </div>
+                        <div class="text-muted small">${__('By')} ${item.owner}</div>
+                    </div>
+                    <div style="flex: 1;">
+                        <span class="indicator-pill" style="font-size: 0.8rem;">${item.role_doctype}</span>
+                    </div>
+                    <div style="flex: 1;">${frappe.datetime.global_date_format(item.creation)}</div>
+                    <div style="flex: 1; text-align: right;">
+                        <button class="btn btn-default btn-xs btn-suggest" data-doctype="${item.role_doctype}" data-name="${item.role_name}" data-display="${item.role_name}">
+                            ${__('Link')}
+                        </button>
+                    </div>
+                </div>
+            `);
+
+            row.find('.btn-suggest').on('click', (e) => {
+                const $btn = $(e.currentTarget);
+                this.show_link_dialog($btn.data('doctype'), $btn.data('name'), $btn.data('display'));
+            });
+
+            content.append(row);
+        });
+
+        this.render_pagination(data.total, 'unlinked_vouchers');
+    }
+
     load_health() {
         const content = $('#tab-content');
         content.html(`<div class="text-muted">${__('Loading transaction health...')}</div>`);
@@ -658,6 +755,9 @@ class DataQualityDashboard {
         } else if (tab === 'unlinked') {
             current_offset = this.unlinked_offset;
             limit = this.unlinked_limit;
+        } else if (tab === 'unlinked_vouchers') {
+            current_offset = this.unlinked_vouchers_offset;
+            limit = this.unlinked_vouchers_limit;
         } else {
             current_offset = this.health_offset;
             limit = this.health_limit;
@@ -683,6 +783,8 @@ class DataQualityDashboard {
                 this.current_offset = Math.max(0, this.current_offset - this.limit);
             } else if (tab === 'unlinked') {
                 this.unlinked_offset = Math.max(0, this.unlinked_offset - this.unlinked_limit);
+            } else if (tab === 'unlinked_vouchers') {
+                this.unlinked_vouchers_offset = Math.max(0, this.unlinked_vouchers_offset - this.unlinked_vouchers_limit);
             } else {
                 this.health_offset = Math.max(0, this.health_offset - this.health_limit);
             }
@@ -694,6 +796,8 @@ class DataQualityDashboard {
                 this.current_offset += this.limit;
             } else if (tab === 'unlinked') {
                 this.unlinked_offset += this.unlinked_limit;
+            } else if (tab === 'unlinked_vouchers') {
+                this.unlinked_vouchers_offset += this.unlinked_vouchers_limit;
             } else {
                 this.health_offset += this.health_limit;
             }
@@ -728,9 +832,11 @@ class DataQualityDashboard {
                 this.min_score = values.min_score;
                 this.limit = values.limit;
                 this.unlinked_limit = values.limit;
+                this.unlinked_vouchers_limit = values.limit;
                 this.health_limit = values.limit;
                 this.current_offset = 0;
                 this.unlinked_offset = 0;
+                this.unlinked_vouchers_offset = 0;
                 this.health_offset = 0;
                 d.hide();
                 this.load_tab_content();

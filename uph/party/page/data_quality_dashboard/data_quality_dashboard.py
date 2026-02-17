@@ -10,7 +10,7 @@ import json
 @frappe.whitelist()
 def get_potential_duplicates(limit: int = 50, offset: int = 0, min_score: float = 0):
     """
-    Get potential duplicate Party Masters from pre-computed Potential Duplicate table.
+    Get duplicate Party Issues from the governance registry.
     """
     if not frappe.has_permission("Party Master", "read"):
         frappe.throw(_("Not permitted to read Party Master"), frappe.PermissionError)
@@ -18,15 +18,15 @@ def get_potential_duplicates(limit: int = 50, offset: int = 0, min_score: float 
     limit = cint(limit) or 50
     offset = cint(offset) or 0
 
-    filters = {"status": "Detected"}
+    filters = {"issue_type": "Duplicate", "status": ["in", ["Open", "Under Review"]]}
     if float(min_score) > 0:
-        filters["similarity_score"] = [">=", float(min_score)]
+        filters["score"] = [">=", float(min_score)]
 
     duplicates = frappe.get_all(
-        "Potential Duplicate",
-        fields=["party_1", "party_2", "similarity_score", "status"],
+        "Party Issue",
+        fields=["party", "party_secondary", "score", "status"],
         filters=filters,
-        order_by="similarity_score desc",
+        order_by="score desc",
         limit_start=offset,
         limit_page_length=limit,
     )
@@ -35,8 +35,9 @@ def get_potential_duplicates(limit: int = 50, offset: int = 0, min_score: float 
     if duplicates:
         all_party_ids = set()
         for d in duplicates:
-            all_party_ids.add(d.party_1)
-            all_party_ids.add(d.party_2)
+            all_party_ids.add(d.party)
+            if d.party_secondary:
+                all_party_ids.add(d.party_secondary)
 
         party_names = {
             p.name: p.party_name
@@ -48,12 +49,15 @@ def get_potential_duplicates(limit: int = 50, offset: int = 0, min_score: float 
         }
 
         for d in duplicates:
+            d.party_1 = d.party
+            d.party_2 = d.party_secondary
             d.party_1_name = party_names.get(d.party_1, d.party_1)
             d.party_2_name = party_names.get(d.party_2, d.party_2)
             d.normalized_name_1 = d.party_1_name
             d.normalized_name_2 = d.party_2_name
+            d.similarity_score = d.score
 
-    total = frappe.db.count("Potential Duplicate", filters)
+    total = frappe.db.count("Party Issue", filters)
 
     return {"duplicates": duplicates, "total": total, "limit": limit, "offset": offset}
 
@@ -64,26 +68,56 @@ def get_dashboard_stats():
     Get summary statistics. Delegates to canonical modules for health and unlinked
     counts to avoid duplicating logic from transaction_health.py and unlinked_resolver.py.
     """
-    from uph.party.controllers.transaction_health import get_health_counts
-    from uph.party.controllers.unlinked_resolver import get_unlinked_count
-
-    # Health counts from canonical module (uses its own Redis cache)
-    health = get_health_counts()
+    def _cached_int(key, fallback):
+        val = frappe.cache.get_value(key)
+        if val is None:
+            return fallback
+        try:
+            return int(val)
+        except Exception:
+            return fallback
 
     stats = {
-        "total_parties": frappe.db.count("Party Master", {"is_group": 0}),
-        "total_groups": frappe.db.count("Party Master", {"is_group": 1}),
-        "unlinked_count": get_unlinked_count(),
-        "draft_voucher_count": health.get("draft_voucher_count", 0),
-        "cancelled_unamended_count": health.get("cancelled_unamended_count", 0),
-        "incomplete_parties": cint(
-            frappe.cache.get_value("uph:stats:incomplete_count") or 0
+        "total_parties": _cached_int(
+            "uph:stats:total_parties",
+            frappe.db.count("Party Master", {"is_group": 0}),
         ),
-        "potential_duplicates": frappe.db.count(
-            "Potential Duplicate", {"status": "Detected"}
+        "total_groups": _cached_int(
+            "uph:stats:total_groups",
+            frappe.db.count("Party Master", {"is_group": 1}),
         ),
-        "total_dismissed": frappe.db.count("Duplicate Exclusion"),
-        "total_merged": frappe.db.count("Potential Duplicate", {"status": "Merged"}),
+        "potential_duplicates": _cached_int(
+            "uph:stats:duplicate_open",
+            frappe.db.count(
+                "Party Issue",
+                {"issue_type": "Duplicate", "status": ["in", ["Open", "Under Review"]]},
+            ),
+        ),
+        "total_dismissed": _cached_int(
+            "uph:stats:duplicate_ignored",
+            frappe.db.count(
+                "Party Issue", {"issue_type": "Duplicate", "status": "Ignored"}
+            ),
+        ),
+        "total_merged": _cached_int(
+            "uph:stats:duplicate_resolved",
+            frappe.db.count(
+                "Party Issue", {"issue_type": "Duplicate", "status": "Resolved"}
+            ),
+        ),
+        "unlinked_count": _cached_int(
+            "uph:stats:unlinked_open",
+            frappe.db.count(
+                "Party Issue",
+                {"issue_type": "Unlinked", "status": ["in", ["Open", "Under Review"]]},
+            ),
+        ),
+        "draft_voucher_count": _cached_int("uph:stats:policy_draft", 0),
+        "cancelled_unamended_count": _cached_int("uph:stats:policy_cancelled", 0),
+        "unlinked_transaction_count": _cached_int(
+            "uph:stats:policy_mismatch", 0
+        ),
+        "incomplete_parties": _cached_int("uph:stats:incomplete_count", 0),
         "last_updated": frappe.cache.get_value("uph:stats:last_updated"),
     }
     return stats
@@ -101,59 +135,40 @@ def trigger_refresh():
 @frappe.whitelist()
 def dismiss_duplicate(party_1: str, party_2: str, reason: str = None):
     """
-    Dismiss a potential duplicate pair.
-    Updates 'Potential Duplicate' status and creates 'Duplicate Exclusion' record.
+    Dismiss a duplicate issue by setting status to Ignored.
     """
-    if not frappe.has_permission("Duplicate Exclusion", "create"):
+    if not frappe.has_permission("Party Issue", "write"):
         frappe.throw(_("Insufficient permissions to dismiss duplicates"))
 
-    # 1. Update Potential Duplicate if exists
-    # Check both directions just in case
-    potential = frappe.db.get_value(
-        "Potential Duplicate", {"party_1": party_1, "party_2": party_2}, "name"
-    )
+    from uph.party.controllers.party_issue_utils import normalize_party_pair
 
-    if not potential:
-        potential = frappe.db.get_value(
-            "Potential Duplicate", {"party_1": party_2, "party_2": party_1}, "name"
-        )
-
-    if potential:
-        frappe.db.set_value("Potential Duplicate", potential, "status", "Dismissed")
-
-    # 2. Link to existing Duplicate Exclusion logic
-    # Check if already excluded
-    from uph.party.doctype.duplicate_exclusion.duplicate_exclusion import (
-        is_excluded_pair,
-    )
-
-    if is_excluded_pair(party_1, party_2):
-        return {"success": True, "message": _("This pair is already excluded")}
-
-    # Normalize order for Exclusion
-    if party_1 > party_2:
-        party_1, party_2 = party_2, party_1
-
-    # Insert into Duplicate Exclusion
-    doc = frappe.get_doc(
+    party_1, party_2 = normalize_party_pair(party_1, party_2)
+    issue_name = frappe.db.get_value(
+        "Party Issue",
         {
-            "doctype": "Duplicate Exclusion",
-            "party_1": party_1,
-            "party_2": party_2,
-            "status": "Dismissed",
-            "dismissed_by": frappe.session.user,
-            "dismissed_on": frappe.utils.today(),
-            "dismissed_reason": reason or _("Manually dismissed"),
-        }
+            "party": party_1,
+            "party_secondary": party_2,
+            "issue_type": "Duplicate",
+            "status": ["in", ["Open", "Under Review"]],
+        },
+        "name",
     )
-    doc.insert(ignore_permissions=True)
+    if not issue_name:
+        return {"success": True, "message": _("Duplicate issue not found")}
 
-    # Decrement cache count immediately for UX
-    count = cint(frappe.cache.get_value("uph:stats:duplicate_count") or 0)
-    if count > 0:
-        frappe.cache.set_value("uph:stats:duplicate_count", count - 1)
+    frappe.db.set_value(
+        "Party Issue",
+        issue_name,
+        {
+            "status": "Ignored",
+            "resolved_on": frappe.utils.now_datetime(),
+            "resolved_by": frappe.session.user,
+        },
+    )
+    frappe.db.commit()
 
-    return {"success": True, "message": _("Duplicate pair has been dismissed")}
+    trigger_refresh()
+    return {"success": True, "message": _("Duplicate issue has been ignored")}
 
 
 @frappe.whitelist()
@@ -181,17 +196,30 @@ def merge_parties(
     )
 
     if result.get("success"):
-        # Update Potential Duplicate status
-        potential = frappe.db.get_value(
-            "Potential Duplicate",
+        # Update Party Issue status
+        from uph.party.controllers.party_issue_utils import normalize_party_pair
+
+        party_1, party_2 = normalize_party_pair(primary_party, secondary_party)
+        issue_name = frappe.db.get_value(
+            "Party Issue",
             {
-                "party_1": ["in", [primary_party, secondary_party]],
-                "party_2": ["in", [primary_party, secondary_party]],
+                "party": party_1,
+                "party_secondary": party_2,
+                "issue_type": "Duplicate",
+                "status": ["in", ["Open", "Under Review"]],
             },
             "name",
         )
-        if potential:
-            frappe.db.set_value("Potential Duplicate", potential, "status", "Merged")
+        if issue_name:
+            frappe.db.set_value(
+                "Party Issue",
+                issue_name,
+                {
+                    "status": "Resolved",
+                    "resolved_on": frappe.utils.now_datetime(),
+                    "resolved_by": frappe.session.user,
+                },
+            )
 
         # Trigger stats refresh
         trigger_refresh()

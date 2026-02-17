@@ -26,7 +26,7 @@ $(document).on('app_ready', function () {
         if (!route) return;
 
         // Target UPH Form and Tree views for enforcement
-        const isFormView = route[0] === 'Form' && ['Party Master', 'Potential Duplicate', 'Party Master Settings'].includes(route[1]);
+        const isFormView = route[0] === 'Form' && ['Party Master', 'Party Issue', 'Party Master Settings'].includes(route[1]);
         const isTreeView = route[0] === 'Tree' && route[1] === 'Party Master';
 
         if ((isFormView || isTreeView) && route[0] !== 'uph-setup-wizard') {
