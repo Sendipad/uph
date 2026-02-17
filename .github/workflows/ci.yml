@@ -58,7 +58,7 @@ jobs:
       frappe_branch: "develop"
       erpnext_branch: "develop"
       python_version: "3.14"
-      node_version: "20"
+      node_version: "24"
       mariadb_version: "10.11"
       setuptools_version: "latest"
       run_python: ${{ needs.changes.outputs.python == 'true' || needs.changes.outputs.config == 'true' }}
@@ -80,7 +80,7 @@ jobs:
       frappe_branch: "version-16"
       erpnext_branch: "version-16"
       python_version: "3.14"
-      node_version: "20"
+      node_version: "24"
       mariadb_version: "10.11"
       setuptools_version: "latest"
       run_python: ${{ needs.changes.outputs.python == 'true' || needs.changes.outputs.config == 'true' }}
