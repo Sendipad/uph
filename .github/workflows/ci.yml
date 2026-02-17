@@ -42,8 +42,8 @@ jobs:
             config:
               - "**/*.json"
 
-  test_v16:
-    name: v16
+  test_v17:
+    name: v17
     needs: changes
     if: |
       github.ref_name != 'hotfix' &&
@@ -57,6 +57,28 @@ jobs:
     with:
       frappe_branch: "develop"
       erpnext_branch: "develop"
+      python_version: "3.12"
+      node_version: "20"
+      mariadb_version: "10.11"
+      setuptools_version: "latest"
+      run_python: ${{ needs.changes.outputs.python == 'true' || needs.changes.outputs.config == 'true' }}
+      run_ui: ${{ needs.changes.outputs.javascript == 'true' || needs.changes.outputs.config == 'true' }}
+
+  test_v16:
+    name: v16
+    needs: changes
+    if: |
+      github.ref_name != 'hotfix' &&
+      github.event.pull_request.head.ref != 'hotfix' &&
+      (github.event_name == 'workflow_dispatch' ||
+       github.ref == 'refs/heads/version-16' ||
+       needs.changes.outputs.python == 'true' ||
+       needs.changes.outputs.javascript == 'true' ||
+       needs.changes.outputs.config == 'true')
+    uses: ./.github/workflows/reusable_test.yml
+    with:
+      frappe_branch: "version-16"
+      erpnext_branch: "version-16"
       python_version: "3.12"
       node_version: "20"
       mariadb_version: "10.11"

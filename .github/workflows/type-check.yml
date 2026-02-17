@@ -8,3 +8,4 @@ jobs:
   typecheck:
     name: Types
     uses: frappe/frappe/.github/workflows/_base-type-check.yml@develop
+    secrets: inherit
