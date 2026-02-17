@@ -181,6 +181,36 @@ class NormalizationUtils:
         return SequenceMatcher(None, normalized1, normalized2).ratio() * 100
 
     @classmethod
+    def fuzzy_extract(
+        cls, query: str, choices: list, scorer: str = "ratio", limit: int = 10
+    ) -> list:
+        """
+        Extract top matches from choices using fuzzy matching.
+        Returns list of (match, score, index) tuples.
+        """
+        if not query or not choices:
+            return []
+
+        try:
+            from rapidfuzz import fuzz, process
+
+            scorer_func = getattr(fuzz, scorer, fuzz.ratio)
+            return process.extract(query, choices, scorer=scorer_func, limit=limit)
+        except ImportError:
+            # Fallback to difflib
+            import difflib
+
+            # difflib.get_close_matches returns strings, we need (match, score, index)
+            matches = difflib.get_close_matches(query, choices, n=limit, cutoff=0.6)
+            results = []
+            for match in matches:
+                idx = choices.index(match)
+                # Calculate ratio for the score
+                score = difflib.SequenceMatcher(None, query, match).ratio() * 100
+                results.append((match, score, idx))
+            return results
+
+    @classmethod
     def is_similar(cls, text1: str, text2: str, threshold: float = 80.0) -> bool:
         """
         Check if two texts are similar based on threshold.

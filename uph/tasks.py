@@ -97,11 +97,9 @@ def run_full_duplicate_scan():
     Scans for duplicates and populates Potential Duplicate table.
     Runs daily.
     """
-    try:
-        from rapidfuzz import fuzz, process
-    except ImportError:
-        # Fallback or skip if not installed
-        return
+    # Scans for duplicates and populates Potential Duplicate table.
+    # Runs daily.
+    # We use NormalizationUtils which handles fuzzy matching and fallbacks.
 
     # Clear old detected records (optional, or we can upsert)
     # For now, let's keep it simple: finding new ones.
@@ -124,6 +122,14 @@ def run_full_duplicate_scan():
             p.normalized_party_name = NormalizationUtils.normalize_party_name(
                 p.party_name
             )
+            # Persist for future use
+            frappe.db.set_value(
+                "Party Master",
+                p.name,
+                "normalized_party_name",
+                p.normalized_party_name,
+                update_modified=False,
+            )
 
     # Group by prefix (blocking)
     blocks = {}
@@ -140,24 +146,40 @@ def run_full_duplicate_scan():
     # Load existing pairs to avoid re-inserting
     # This might be heavy if table is huge, better to use unique constraints or INSERT IGNORE in logic
 
+    # Process blocks
+    existing_pairs = set()
+
+    # Optimization: If total parties are small, do one big block
+    if len(parties) < 1000:
+        blocks = {"all": parties}
+
     for prefix, group in blocks.items():
         if len(group) < 2:
             continue
 
         # Compare within group
-        names = [p.normalized_party_name for p in group]
+        # Create a list of (normalized_name, party_record) to preserve mapping
+        group_data = [
+            (p.normalized_party_name, p) for p in group if p.normalized_party_name
+        ]
+        if not group_data:
+            continue
+
+        names = [d[0] for d in group_data]
 
         for i, p1 in enumerate(group):
-            # Compare p1 against rest
             p1_name = p1.normalized_party_name
+            if not p1_name:
+                continue
 
-            matches = process.extract(
-                p1_name, names, scorer=fuzz.ratio, score_cutoff=85, limit=10
+            matches = NormalizationUtils.fuzzy_extract(
+                p1_name, names, scorer="ratio", limit=10
             )
 
             for match_name, score, idx in matches:
-                p2 = group[idx]
-                if p1.name == p2.name:
+                p2 = group_data[idx][1]
+
+                if p1.name == p2.name or score < 85:
                     continue
 
                 # Sort pair to ensure consistency
