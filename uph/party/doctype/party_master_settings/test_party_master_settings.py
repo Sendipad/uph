@@ -145,17 +145,22 @@ class TestPartyMasterSettings(FrappeTestCase):
         original_setup = settings.setup_finished
 
         try:
-            # Simulate: first save with setup_finished=1
+            # Simulate: doc is already setup_finished
             settings.db_set("setup_finished", 1)
-            settings.reload()
 
-            # Now try changing numbering_format
-            settings.numbering_format = (
+            # Now create a changed version in memory
+            updated_settings = frappe.get_doc("Party Master Settings")
+            # Manually set the "before save" state for the mock-validation
+            updated_settings._doc_before_save = settings
+
+            updated_settings.numbering_format = (
                 "Dash-Separated"
                 if original_format == "Concatenated"
                 else "Concatenated"
             )
-            self.assertRaises(frappe.ValidationError, settings.validate)
+
+            # Now validate should throw because setup_finished=1 and numbering_format changed
+            self.assertRaises(frappe.ValidationError, updated_settings.validate)
         finally:
             settings.db_set("setup_finished", original_setup)
             settings.db_set("numbering_format", original_format)
