@@ -113,7 +113,6 @@ scheduler_events = {
         "uph.party.controllers.transaction_health.enqueue_transaction_policy_scan",
     ],
     "daily": [
-        "uph.tasks.run_full_duplicate_scan",
         "uph.party.controllers.duplicate_scanner.enqueue_duplicate_scan",
     ],
 }

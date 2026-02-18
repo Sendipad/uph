@@ -14,6 +14,21 @@ CACHE_KEY_DEPENDS_ON = "uph:depends_on_fields"
 CACHE_KEY_FUNCTIONAL_MAPPING = "uph:functional_mapping"
 CACHE_TTL = 3600  # 1 hour
 
+# Dashboard cache keys
+DASHBOARD_STATS_KEYS = [
+    "uph:stats:duplicate_open",
+    "uph:stats:duplicate_ignored",
+    "uph:stats:duplicate_resolved",
+    "uph:stats:unlinked_open",
+    "uph:stats:policy_draft",
+    "uph:stats:policy_cancelled",
+    "uph:stats:policy_mismatch",
+    "uph:stats:total_parties",
+    "uph:stats:total_groups",
+    "uph:stats:incomplete_count",
+    "uph:stats:last_updated",
+]
+
 
 class SmartCache:
     """
@@ -217,6 +232,19 @@ def clear_all_caches():
 
     # 3. Clear Document Cache
     frappe.clear_document_cache("Party Master Settings", "Party Master Settings")
+
+
+def invalidate_dashboard_stats():
+    """
+    Clear dashboard-related cache keys to avoid stale cards.
+    """
+    for key in DASHBOARD_STATS_KEYS:
+        frappe.cache.delete_value(key)
+
+    # Related aggregates used by dashboard/list endpoints
+    frappe.cache.delete_value("uph:unlinked_count")
+    frappe.cache.delete_value("uph:unlinked_tx_count")
+    frappe.cache.delete_value("uph:health_counts")
 
 
 def get_configured_doctypes():

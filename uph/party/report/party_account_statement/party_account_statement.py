@@ -356,20 +356,34 @@ def get_data(filters, party_master):
 
         # Cache warning for this party_master if it changed
         if current_pm != last_pm and not hide_warning:
-            warnings = unposted_voucher.get(current_pm, [])
-            if warnings:
+            raw_warnings = unposted_voucher.get(current_pm, [])
+            if raw_warnings:
+                # Aggregate by doctype
+                aggr = defaultdict(lambda: {"draft": 0, "cancelled": 0})
+                for rw in raw_warnings:
+                    if rw.get("docstatus") == 0:
+                        aggr[rw.get("doctype")]["draft"] += 1
+                    elif rw.get("docstatus") == 2:
+                        aggr[rw.get("doctype")]["cancelled"] += 1
+
                 msg = _("On Hold Vouchers:")
-                for d in warnings:
-                    if d.get("draft_count"):
-                        msg += f'{_(d.get("doctype"))}: {d.get("draft_count")} {_("Draft")} '
-                    if d.get("cancelled_count"):
-                        msg += f'{d.get("cancelled_count")} {_("Cancelled")} '
-                cached_warning_row = {
-                    "party_name": party.get("party_name"),
-                    "party_master": current_pm,
-                    "remarks": msg.strip(),
-                    "warning": 1,
-                }
+                has_msg = False
+                for dt_name, counts in aggr.items():
+                    if counts["draft"] or counts["cancelled"]:
+                        has_msg = True
+                        msg += f" {_(dt_name)}: "
+                        if counts["draft"]:
+                            msg += f'{counts["draft"]} {_("Draft")} '
+                        if counts["cancelled"]:
+                            msg += f'{counts["cancelled"]} {_("Cancelled")} '
+
+                if has_msg:
+                    cached_warning_row = {
+                        "party_name": party.get("party_name"),
+                        "party_master": current_pm,
+                        "remarks": msg.strip(),
+                        "warning": 1,
+                    }
 
         last_pm = current_pm
 
@@ -484,6 +498,7 @@ def query_gl(filters, dimension):
         GL.against_voucher,
         GL.against,
         GL.is_opening,
+        GL.creation,
     ] + dimension
     if filters.get("in_company_currency"):
         fields.extend([GL.debit.as_("debit_in_cc"), GL.credit.as_("credit_in_cc")])

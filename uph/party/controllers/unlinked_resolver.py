@@ -14,6 +14,7 @@ from frappe import _
 from frappe.utils import cint
 
 from uph.party.controllers.party_issue_utils import create_party_issue_if_missing
+from uph.party.controllers.cache_utils import invalidate_dashboard_stats
 from uph.hooks import tx_doctype_with_party_master
 
 
@@ -37,7 +38,6 @@ def get_unlinked_parties(limit: int = 20, offset: int = 0, role_doctype: str = N
 
     types_to_scan = [role_doctype] if role_doctype else party_types
 
-    results = []
     total = 0
 
     for dt in types_to_scan:
@@ -60,8 +60,8 @@ def get_unlinked_parties(limit: int = 20, offset: int = 0, role_doctype: str = N
         dt_count = count_result[0]["cnt"] if count_result else 0
         total += dt_count
 
-    # Now fetch actual records across all types with offset/limit
-    all_unlinked = []
+    # Now fetch actual records across all types with offset/limit (SQL pagination)
+    selects = []
     for dt in types_to_scan:
         if not frappe.db.exists("DocType", dt):
             continue
@@ -70,8 +70,7 @@ def get_unlinked_parties(limit: int = 20, offset: int = 0, role_doctype: str = N
         if not meta.has_field("party_master"):
             continue
 
-        # Build fields list
-        fields = ["name"]
+        # Build display name field
         name_field = None
         for candidate in [
             f"{dt.lower().replace(' ', '_')}_name",
@@ -83,34 +82,39 @@ def get_unlinked_parties(limit: int = 20, offset: int = 0, role_doctype: str = N
                 name_field = candidate
                 break
 
+        display_expr = "`name`"
         if name_field:
-            fields.append(name_field)
+            display_expr = f"COALESCE(`{name_field}`, `name`)"
 
-        # Add currency if available
+        currency_expr = "''"
         if meta.has_field("default_currency"):
-            fields.append("default_currency")
+            currency_expr = "COALESCE(`default_currency`, '')"
 
-        records = frappe.get_all(
-            dt,
-            filters={"party_master": ["in", [None, ""]]},
-            fields=fields,
-            order_by="name asc",
-            limit_page_length=0,
+        selects.append(
+            f"""
+            SELECT
+                {frappe.db.escape(dt)} AS role_doctype,
+                `name` AS role_name,
+                {display_expr} AS display_name,
+                {currency_expr} AS currency
+            FROM `tab{dt}`
+            WHERE (party_master IS NULL OR party_master = '')
+        """
         )
 
-        for r in records:
-            all_unlinked.append(
-                {
-                    "role_doctype": dt,
-                    "role_name": r.name,
-                    "display_name": r.get(name_field, r.name) if name_field else r.name,
-                    "currency": r.get("default_currency", ""),
-                }
-            )
+    if not selects:
+        return {"unlinked": [], "total": total}
 
-    # Sort and paginate
-    all_unlinked.sort(key=lambda x: (x["role_doctype"], x["role_name"]))
-    paginated = all_unlinked[offset : offset + limit]
+    union_query = " UNION ALL ".join(selects)
+    paginated = frappe.db.sql(
+        f"""
+        SELECT * FROM ({union_query}) AS unlinked
+        ORDER BY role_doctype, role_name
+        LIMIT %s OFFSET %s
+        """,
+        (limit, offset),
+        as_dict=True,
+    )
 
     return {"unlinked": paginated, "total": total}
 
@@ -135,8 +139,8 @@ def get_unlinked_transactions(
 
     types_to_scan = [transaction_doctype] if transaction_doctype else tx_types
 
-    all_unlinked = []
     total = 0
+    selects = []
 
     for dt in types_to_scan:
         if not frappe.db.exists("DocType", dt):
@@ -149,33 +153,36 @@ def get_unlinked_transactions(
         # Count
         total += frappe.db.count(dt, {"party_master": ["in", [None, ""]]})
 
-        # Fetch records
-        fields = ["name", "creation"]
+        owner_expr = "''"
         if meta.has_field("owner"):
-            fields.append("owner")
+            owner_expr = "COALESCE(`owner`, '')"
 
-        records = frappe.get_all(
-            dt,
-            filters={"party_master": ["in", [None, ""]]},
-            fields=fields,
-            order_by="creation desc",
-            limit_page_length=0,
+        selects.append(
+            f"""
+            SELECT
+                {frappe.db.escape(dt)} AS role_doctype,
+                `name` AS role_name,
+                CONCAT({frappe.db.escape(dt)}, ': ', `name`) AS display_name,
+                {owner_expr} AS owner,
+                `creation` AS creation
+            FROM `tab{dt}`
+            WHERE (party_master IS NULL OR party_master = '')
+        """
         )
 
-        for r in records:
-            all_unlinked.append(
-                {
-                    "role_doctype": dt,
-                    "role_name": r.name,
-                    "display_name": f"{dt}: {r.name}",
-                    "owner": r.get("owner", ""),
-                    "creation": str(r.creation),
-                }
-            )
+    if not selects:
+        return {"unlinked": [], "total": total}
 
-    # Sort by creation desc
-    all_unlinked.sort(key=lambda x: x["creation"], reverse=True)
-    paginated = all_unlinked[offset : offset + limit]
+    union_query = " UNION ALL ".join(selects)
+    paginated = frappe.db.sql(
+        f"""
+        SELECT * FROM ({union_query}) AS unlinked
+        ORDER BY creation DESC
+        LIMIT %s OFFSET %s
+        """,
+        (limit, offset),
+        as_dict=True,
+    )
 
     return {"unlinked": paginated, "total": total}
 
@@ -238,16 +245,16 @@ def get_unlinked_suggestions(role_doctype: str, role_name: str, limit: int = 5):
     if not parties:
         return {"suggestions": []}
 
-    # Build choices
+    # Build choices (keep index mapping to avoid collisions)
     choices = []
-    choice_map = {}
+    choice_parties = []
     for p in parties:
         norm = p.normalized_party_name or NormalizationUtils.normalize_party_name(
             p.party_name or ""
         )
         if norm:
             choices.append(norm)
-            choice_map[norm] = p
+            choice_parties.append(p)
 
     if not choices:
         return {"suggestions": []}
@@ -261,17 +268,18 @@ def get_unlinked_suggestions(role_doctype: str, role_name: str, limit: int = 5):
     for match_text, score, _idx in matches:
         if score < 50:
             continue
-        p = choice_map.get(match_text)
-        if p:
-            suggestions.append(
-                {
-                    "party_master": p.name,
-                    "party_name": p.party_name,
-                    "party_type": p.party_type,
-                    "party_number": p.party_number,
-                    "score": round(score, 1),
-                }
-            )
+        p = choice_parties[_idx] if _idx is not None else None
+        if not p:
+            continue
+        suggestions.append(
+            {
+                "party_master": p.name,
+                "party_name": p.party_name,
+                "party_type": p.party_type,
+                "party_number": p.party_number,
+                "score": round(score, 1),
+            }
+        )
 
     return {"suggestions": suggestions}
 
@@ -307,7 +315,7 @@ def link_to_party_master(role_doctype: str, role_name: str, party_master: str):
     doc.save()
 
     # Invalidate cache
-    frappe.cache.delete_value("uph:dashboard_stats")
+    invalidate_dashboard_stats()
 
     # Resolve related Party Issue if exists
     issue_name = frappe.db.get_value(
@@ -337,6 +345,118 @@ def link_to_party_master(role_doctype: str, role_name: str, party_master: str):
             role_doctype, role_name, party_master
         ),
     }
+
+
+@frappe.whitelist()
+def create_party_master_from_unlinked_role(role_doctype: str, role_name: str):
+    """
+    Create a new Party Master from an unlinked role record.
+    Automatically finds a parent group and links the record.
+    """
+    if not frappe.has_permission("Party Master", "create"):
+        frappe.throw(
+            _("Insufficient permissions to create Party Master"), frappe.PermissionError
+        )
+
+    if not frappe.db.exists(role_doctype, role_name):
+        frappe.throw(_("{0} {1} does not exist").format(role_doctype, role_name))
+
+    # Get role record details
+    role_doc = frappe.get_doc(role_doctype, role_name)
+
+    # Check if already linked
+    if role_doc.get("party_master"):
+        return {
+            "success": True,
+            "party_master": role_doc.party_master,
+            "message": _("Already linked to {0}").format(role_doc.party_master),
+        }
+
+    # Heuristic to find parent group
+    parent_group = _find_best_parent_group_for_role(role_doctype)
+    if not parent_group:
+        frappe.throw(
+            _(
+                "Could not find a suitable parent group in Party Master for {0}. Please create one first."
+            ).format(role_doctype)
+        )
+
+    # Basic mapping
+    meta = frappe.get_meta(role_doctype)
+    name_field = None
+    for candidate in [
+        f"{role_doctype.lower().replace(' ', '_')}_name",
+        "customer_name",
+        "supplier_name",
+        "employee_name",
+    ]:
+        if meta.has_field(candidate):
+            name_field = candidate
+            break
+
+    party_name = role_doc.get(name_field) or role_name
+
+    # Create Party Master
+    pm = frappe.new_doc("Party Master")
+    pm.party_name = party_name
+    pm.party_type = role_doctype
+    pm.parent_party_master = parent_group
+    pm.is_group = 0
+
+    # Map extra fields
+    if meta.has_field("default_currency"):
+        pm.default_currency = role_doc.default_currency
+    if meta.has_field("tax_id"):
+        pm.tax_id = role_doc.tax_id
+    if meta.has_field("territory"):
+        pm.territory = role_doc.territory
+
+    pm.insert()
+
+    # Link the role record
+    role_doc.db_set("party_master", pm.name)
+
+    # Invalidate cache
+    invalidate_dashboard_stats()
+
+    return {
+        "success": True,
+        "party_master": pm.name,
+        "message": _("Created Party Master {0} and linked to {1}").format(
+            pm.name, role_name
+        ),
+    }
+
+
+def _find_best_parent_group_for_role(role_doctype: str):
+    """
+    Find the most suitable parent group in Party Master for a given role.
+    Matches by party_type or name.
+    """
+    # 1. Exact match by party_type in groups
+    group = frappe.db.get_value(
+        "Party Master", {"party_type": role_doctype, "is_group": 1}, "name"
+    )
+    if group:
+        return group
+
+    # 2. Match by name (e.g. "Customers" for "Customer")
+    group = frappe.db.get_value(
+        "Party Master",
+        {"party_name": ["like", f"%{role_doctype}%"], "is_group": 1},
+        "name",
+    )
+    if group:
+        return group
+
+    # 3. Fallback to any root group
+    group = frappe.db.get_value(
+        "Party Master",
+        {"is_group": 1, "parent_party_master": ["is", "not set"]},
+        "name",
+    )
+
+    return group
 
 
 @frappe.whitelist()

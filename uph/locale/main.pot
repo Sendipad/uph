@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Unified Party Hub VERSION\n"
 "Report-Msgid-Bugs-To: ruzaqi@gmail.com\n"
-"POT-Creation-Date: 2026-02-18 02:41+0307\n"
-"PO-Revision-Date: 2026-02-18 02:41+0307\n"
+"POT-Creation-Date: 2026-02-18 23:49+0307\n"
+"PO-Revision-Date: 2026-02-18 23:49+0307\n"
 "Last-Translator: ruzaqi@gmail.com\n"
 "Language-Team: ruzaqi@gmail.com\n"
 "MIME-Version: 1.0\n"
@@ -98,7 +98,7 @@ msgstr ""
 msgid "Accounting"
 msgstr ""
 
-#: uph/party/report/party_account_statement/party_account_statement.html:99
+#: uph/party/report/party_account_statement/party_account_statement.html:113
 msgid "Accounting Dimension"
 msgstr ""
 
@@ -146,7 +146,7 @@ msgstr ""
 msgid "Add"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_tree.js:349
+#: uph/party/doctype/party_master/party_master_tree.js:362
 msgid "Add Child"
 msgstr ""
 
@@ -312,7 +312,7 @@ msgstr ""
 
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:235
 #: uph/party/report/party_account_balances/party_account_balances.py:177
-#: uph/party/report/party_account_statement/party_account_statement.html:102
+#: uph/party/report/party_account_statement/party_account_statement.html:116
 #: uph/party/report/party_account_statement/party_account_statement.py:157
 msgid "Balance"
 msgstr ""
@@ -320,7 +320,7 @@ msgstr ""
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:263
 #: uph/party/report/party_account_balances/party_account_balances.py:167
 #: uph/party/report/party_account_balances/party_account_balances.py:195
-#: uph/party/report/party_account_statement/party_account_statement.py:658
+#: uph/party/report/party_account_statement/party_account_statement.py:673
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:749
 msgid "Balance ({0})"
 msgstr ""
@@ -431,7 +431,7 @@ msgid "Change Posting Date"
 msgstr ""
 
 #: uph/party/doctype/party_master/party_master_tree.js:3
-#: uph/party/doctype/party_master/party_master_tree.js:320
+#: uph/party/doctype/party_master/party_master_tree.js:333
 msgid "Chart of Party"
 msgstr ""
 
@@ -637,7 +637,7 @@ msgstr ""
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
 #: uph/party/report/party_account_balances/party_account_balances.js:70
 #: uph/party/report/party_account_statement/party_account_statement.js:164
-#: uph/party/report/party_account_statement/party_account_statement.py:618
+#: uph/party/report/party_account_statement/party_account_statement.py:633
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.js:132
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:709
 #: uph/party/report/party_master_ledger/party_master_ledger.js:121
@@ -664,7 +664,7 @@ msgid "Create New Party Master"
 msgstr ""
 
 #: uph/party/doctype/party_master/party_master.js:67
-#: uph/party/doctype/party_master/party_master_tree.js:363
+#: uph/party/doctype/party_master/party_master_tree.js:376
 #: uph/public/js/utils/party.js:436
 msgid "Create Party"
 msgstr ""
@@ -693,7 +693,7 @@ msgid "Created On"
 msgstr ""
 
 #: uph/party/doctype/party_master/party_master_tree.js:50
-#: uph/party/doctype/party_master/party_master_tree.js:333
+#: uph/party/doctype/party_master/party_master_tree.js:346
 msgid "Created new Party Master {0}"
 msgstr ""
 
@@ -702,15 +702,15 @@ msgid "Creation"
 msgstr ""
 
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:228
-#: uph/party/report/party_account_statement/party_account_statement.html:101
+#: uph/party/report/party_account_statement/party_account_statement.html:115
 #: uph/party/report/party_account_statement/party_account_statement.py:152
-#: uph/party/report/party_account_statement/party_account_statement.py:562
+#: uph/party/report/party_account_statement/party_account_statement.py:577
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:653
 msgid "Credit"
 msgstr ""
 
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:256
-#: uph/party/report/party_account_statement/party_account_statement.py:651
+#: uph/party/report/party_account_statement/party_account_statement.py:666
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:742
 msgid "Credit ({0})"
 msgstr ""
@@ -749,7 +749,7 @@ msgstr ""
 #: uph/party/report/party_account_balances/party_account_balances.js:138
 #: uph/party/report/party_account_balances/party_account_balances.py:183
 #: uph/party/report/party_account_statement/party_account_statement.js:215
-#: uph/party/report/party_account_statement/party_account_statement.py:548
+#: uph/party/report/party_account_statement/party_account_statement.py:563
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.js:183
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:639
 #: uph/party/report/party_master_ledger/party_master_ledger.js:96
@@ -821,20 +821,20 @@ msgstr ""
 
 #. Label of a Date field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
-#: uph/party/report/party_account_statement/party_account_statement.html:96
+#: uph/party/report/party_account_statement/party_account_statement.html:110
 msgid "Date"
 msgstr ""
 
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:221
-#: uph/party/report/party_account_statement/party_account_statement.html:100
+#: uph/party/report/party_account_statement/party_account_statement.html:114
 #: uph/party/report/party_account_statement/party_account_statement.py:147
-#: uph/party/report/party_account_statement/party_account_statement.py:555
+#: uph/party/report/party_account_statement/party_account_statement.py:570
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:646
 msgid "Debit"
 msgstr ""
 
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:249
-#: uph/party/report/party_account_statement/party_account_statement.py:644
+#: uph/party/report/party_account_statement/party_account_statement.py:659
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:735
 msgid "Debit ({0})"
 msgstr ""
@@ -1028,7 +1028,7 @@ msgstr ""
 
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:109
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:131
-#: uph/party/report/party_account_statement/party_account_statement.html:115
+#: uph/party/report/party_account_statement/party_account_statement.html:129
 #: uph/party/report/party_account_statement/party_account_statement.py:313
 #: uph/party/report/party_account_statement/party_account_statement.py:348
 msgid "Dr"
@@ -1075,7 +1075,7 @@ msgstr ""
 msgid "Duplicate Exclusion Exists"
 msgstr ""
 
-#: uph/party/controllers/party.py:254
+#: uph/party/controllers/party.py:264
 msgid "Duplicate Exists"
 msgstr ""
 
@@ -1091,7 +1091,7 @@ msgstr ""
 msgid "Duplicate Relationship"
 msgstr ""
 
-#: uph/party/controllers/duplicate_scanner.py:38
+#: uph/party/controllers/duplicate_scanner.py:39
 msgid "Duplicate Scan Skipped"
 msgstr ""
 
@@ -1115,7 +1115,7 @@ msgstr ""
 msgid "Duplicate account configuration for Company {0} and Currency {1}"
 msgstr ""
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:171
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:182
 msgid "Duplicate issue has been ignored"
 msgstr ""
 
@@ -1123,7 +1123,7 @@ msgstr ""
 msgid "Duplicate issue not found"
 msgstr ""
 
-#: uph/party/controllers/duplicate_scanner.py:195
+#: uph/party/controllers/duplicate_scanner.py:196
 msgid "Duplicate scan has been queued"
 msgstr ""
 
@@ -1143,7 +1143,7 @@ msgstr ""
 msgid "Dynamic type As Parent"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_tree.js:357
+#: uph/party/doctype/party_master/party_master_tree.js:370
 msgid "Edit"
 msgstr ""
 
@@ -1383,8 +1383,8 @@ msgstr ""
 msgid "Fresh Start (Keep existing, but strictly seed new records)"
 msgstr ""
 
-#: uph/party/report/party_account_statement/party_account_statement.html:56
-#: uph/party/report/party_account_statement/party_account_statement.html:81
+#: uph/party/report/party_account_statement/party_account_statement.html:71
+#: uph/party/report/party_account_statement/party_account_statement.html:95
 msgid "From"
 msgstr ""
 
@@ -1615,7 +1615,7 @@ msgstr ""
 msgid "Initial chart of parties will be Seeded in this language."
 msgstr ""
 
-#: uph/party/controllers/unlinked_resolver.py:286
+#: uph/party/controllers/unlinked_resolver.py:294
 msgid "Insufficient permissions"
 msgstr ""
 
@@ -1627,7 +1627,7 @@ msgstr ""
 msgid "Insufficient permissions to merge parties"
 msgstr ""
 
-#: uph/party/controllers/duplicate_scanner.py:182
+#: uph/party/controllers/duplicate_scanner.py:183
 msgid "Insufficient permissions to run duplicate scan"
 msgstr ""
 
@@ -1659,7 +1659,7 @@ msgstr ""
 msgid "Invalid data format for selection. Expected list of lists."
 msgstr ""
 
-#: uph/party/controllers/unlinked_resolver.py:36
+#: uph/party/controllers/unlinked_resolver.py:37
 msgid "Invalid role DocType: {0}"
 msgstr ""
 
@@ -1667,7 +1667,7 @@ msgstr ""
 msgid "Invalid selection. Please choose a valid party."
 msgstr ""
 
-#: uph/party/controllers/unlinked_resolver.py:134
+#: uph/party/controllers/unlinked_resolver.py:138
 msgid "Invalid transaction DocType: {0}"
 msgstr ""
 
@@ -2005,7 +2005,7 @@ msgstr ""
 msgid "Net Receivable: {0}"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_tree.js:327
+#: uph/party/doctype/party_master/party_master_tree.js:340
 msgid "New"
 msgstr ""
 
@@ -2143,7 +2143,7 @@ msgstr ""
 msgid "On Hold"
 msgstr ""
 
-#: uph/party/report/party_account_statement/party_account_statement.py:361
+#: uph/party/report/party_account_statement/party_account_statement.py:369
 msgid "On Hold Vouchers:"
 msgstr ""
 
@@ -2296,7 +2296,7 @@ msgstr ""
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.js:23
 #: uph/party/report/party_account_balances/party_account_balances.js:16
 #: uph/party/report/party_account_statement/party_account_statement.js:23
-#: uph/party/report/party_account_statement/party_account_statement.py:598
+#: uph/party/report/party_account_statement/party_account_statement.py:613
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.js:16
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:689
 #: uph/party/workspace/party/party.json uph/public/js/utils/party.js:1006
@@ -2321,7 +2321,7 @@ msgstr ""
 msgid "Party 2"
 msgstr ""
 
-#: uph/party/controllers/party.py:309
+#: uph/party/controllers/party.py:319
 msgid "Party : {0} Has been deleted"
 msgstr ""
 
@@ -2438,7 +2438,7 @@ msgstr ""
 #: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:482
 #: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:661
 #: uph/party/report/party_account_balances/party_account_balances.py:152
-#: uph/party/report/party_account_statement/party_account_statement.py:581
+#: uph/party/report/party_account_statement/party_account_statement.py:596
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:672
 #: uph/party/report/party_health/party_health.js:5
 #: uph/party/report/party_health/party_health.py:12
@@ -2547,20 +2547,20 @@ msgstr ""
 msgid "Party Master mismatch or missing for Party {0} ({1})"
 msgstr ""
 
-#: uph/party/controllers/party.py:237
-msgid "Party Master {0} Could be not Exists or is group or has not Role of {1} or not enabled"
-msgstr ""
-
 #: uph/party/controllers/transaction_health.py:113
-#: uph/party/controllers/unlinked_resolver.py:292
+#: uph/party/controllers/unlinked_resolver.py:300
 msgid "Party Master {0} does not exist"
 msgstr ""
 
-#: uph/party/controllers/party.py:255
+#: uph/party/controllers/party.py:265
 msgid "Party Master {0} has a Party {1} with {2}"
 msgstr ""
 
-#: uph/party/controllers/unlinked_resolver.py:299
+#: uph/party/controllers/party.py:247
+msgid "Party Master {0} is invalid for {1}: {2}"
+msgstr ""
+
+#: uph/party/controllers/unlinked_resolver.py:307
 msgid "Party Master {0} is not valid for {1} (may be a group, disabled, or missing the role)"
 msgstr ""
 
@@ -2580,7 +2580,7 @@ msgstr ""
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.js:10
 #: uph/party/report/party_account_balances/party_account_balances.py:157
 #: uph/party/report/party_account_statement/party_account_statement.js:10
-#: uph/party/report/party_account_statement/party_account_statement.py:576
+#: uph/party/report/party_account_statement/party_account_statement.py:591
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:667
 #: uph/party/report/party_health/party_health.py:19
 #: uph/party/report/unlinked_parties/unlinked_parties.py:26
@@ -2647,7 +2647,7 @@ msgstr ""
 #: uph/party/report/party_account_balances/party_account_balances.js:109
 #: uph/party/report/party_account_balances/party_account_balances.py:147
 #: uph/party/report/party_account_statement/party_account_statement.js:186
-#: uph/party/report/party_account_statement/party_account_statement.py:592
+#: uph/party/report/party_account_statement/party_account_statement.py:607
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.js:154
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:683
 msgid "Party Type"
@@ -2748,7 +2748,7 @@ msgid "Portal Users"
 msgstr ""
 
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:196
-#: uph/party/report/party_account_statement/party_account_statement.py:522
+#: uph/party/report/party_account_statement/party_account_statement.py:537
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:613
 msgid "Posting Date"
 msgstr ""
@@ -2843,7 +2843,7 @@ msgstr ""
 
 #: uph/party/report/party_account_balances/party_account_balances.js:81
 #: uph/party/report/party_account_statement/party_account_statement.js:175
-#: uph/party/report/party_account_statement/party_account_statement.py:635
+#: uph/party/report/party_account_statement/party_account_statement.py:650
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.js:143
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:726
 msgid "Project"
@@ -2967,8 +2967,8 @@ msgid "Relationships"
 msgstr ""
 
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:276
-#: uph/party/report/party_account_statement/party_account_statement.html:98
-#: uph/party/report/party_account_statement/party_account_statement.py:541
+#: uph/party/report/party_account_statement/party_account_statement.html:112
+#: uph/party/report/party_account_statement/party_account_statement.py:556
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:632
 msgid "Remarks"
 msgstr ""
@@ -3365,8 +3365,8 @@ msgstr ""
 msgid "State"
 msgstr ""
 
-#: uph/party/report/party_account_statement/party_account_statement.html:49
-#: uph/party/report/party_account_statement/party_account_statement.html:76
+#: uph/party/report/party_account_statement/party_account_statement.html:59
+#: uph/party/report/party_account_statement/party_account_statement.html:90
 msgid "Statement of Account"
 msgstr ""
 
@@ -3562,7 +3562,7 @@ msgstr ""
 msgid "Territory"
 msgstr ""
 
-#: uph/party/report/party_account_statement/party_account_statement.py:569
+#: uph/party/report/party_account_statement/party_account_statement.py:584
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:660
 msgid "The Balance"
 msgstr ""
@@ -3789,7 +3789,7 @@ msgstr ""
 msgid "View Details"
 msgstr ""
 
-#: uph/party/doctype/party_master/party_master_tree.js:371
+#: uph/party/doctype/party_master/party_master_tree.js:384
 msgid "View Ledger"
 msgstr ""
 
@@ -3806,25 +3806,25 @@ msgid "Voucher Issues — {0}"
 msgstr ""
 
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:202
-#: uph/party/report/party_account_statement/party_account_statement.py:528
+#: uph/party/report/party_account_statement/party_account_statement.py:543
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:619
 #: uph/party/report/party_health/party_health.py:32
 msgid "Voucher No"
 msgstr ""
 
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:270
-#: uph/party/report/party_account_statement/party_account_statement.py:535
+#: uph/party/report/party_account_statement/party_account_statement.py:550
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:626
 msgid "Voucher Subtype"
 msgstr ""
 
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:283
-#: uph/party/report/party_account_statement/party_account_statement.py:609
+#: uph/party/report/party_account_statement/party_account_statement.py:624
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:700
 msgid "Voucher Type"
 msgstr ""
 
-#: uph/party/report/party_account_statement/party_account_statement.html:97
+#: uph/party/report/party_account_statement/party_account_statement.html:111
 msgid "Voucher Type & No."
 msgstr ""
 
@@ -3902,6 +3902,18 @@ msgstr ""
 msgid "horizontally Arrangement"
 msgstr ""
 
+#: uph/party/controllers/party.py:241
+msgid "is a group"
+msgstr ""
+
+#: uph/party/controllers/party.py:238
+msgid "is disabled"
+msgstr ""
+
+#: uph/party/controllers/party.py:243
+msgid "missing the role of {0}"
+msgstr ""
+
 #: uph/party/report/party_account_balances/party_account_balances.js:129
 #: uph/party/report/party_account_statement/party_account_statement.js:206
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.js:174
@@ -3912,12 +3924,12 @@ msgstr ""
 msgid "only."
 msgstr ""
 
-#: uph/party/controllers/duplicate_scanner.py:39
+#: uph/party/controllers/duplicate_scanner.py:40
 msgid "rapidfuzz is not installed. Install with: pip install rapidfuzz"
 msgstr ""
 
-#: uph/party/report/party_account_statement/party_account_statement.html:57
-#: uph/party/report/party_account_statement/party_account_statement.html:82
+#: uph/party/report/party_account_statement/party_account_statement.html:72
+#: uph/party/report/party_account_statement/party_account_statement.html:96
 msgid "to"
 msgstr ""
 
@@ -3927,7 +3939,7 @@ msgstr ""
 msgid "{0} - {1}"
 msgstr ""
 
-#: uph/party/controllers/party.py:368
+#: uph/party/controllers/party.py:378
 msgid "{0} Count: {1}"
 msgstr ""
 
@@ -3957,12 +3969,12 @@ msgstr ""
 msgid "{0} is mandatory"
 msgstr ""
 
-#: uph/party/controllers/unlinked_resolver.py:190
-#: uph/party/controllers/unlinked_resolver.py:289
+#: uph/party/controllers/unlinked_resolver.py:197
+#: uph/party/controllers/unlinked_resolver.py:297
 msgid "{0} {1} does not exist"
 msgstr ""
 
-#: uph/party/controllers/unlinked_resolver.py:336
+#: uph/party/controllers/unlinked_resolver.py:344
 msgid "{0} {1} linked to Party Master {2}"
 msgstr ""
 

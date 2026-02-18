@@ -60,11 +60,14 @@ class TestDuplicateIssues(FrappeTestCase):
         if len(parties) < 2:
             self.skipTest("Need at least 2 Party Masters for this test")
 
+        from uph.party.controllers.party_issue_utils import normalize_party_pair
+
+        party_1, party_2 = normalize_party_pair(parties[0], parties[1])
         issue = frappe.get_doc(
             {
                 "doctype": "Party Issue",
-                "party": parties[0],
-                "party_secondary": parties[1],
+                "party": party_1,
+                "party_secondary": party_2,
                 "issue_type": "Duplicate",
                 "severity": "Medium",
                 "status": "Open",
@@ -72,7 +75,7 @@ class TestDuplicateIssues(FrappeTestCase):
             }
         ).insert(ignore_permissions=True)
 
-        result = dismiss_duplicate(parties[0], parties[1], reason="Test ignore")
+        result = dismiss_duplicate(party_1, party_2, reason="Test ignore")
         self.assertTrue(result.get("success"))
 
         issue.reload()

@@ -233,10 +233,20 @@ def validate_party_master_on_target_party_type(doc, method):
         if doc.party_master and not is_valide_party_master_to_party(
             doc.party_master, doc.doctype
         ):
+            pm_data = frappe.get_cached_doc("Party Master", doc.party_master)
+            reason = (
+                _("is disabled")
+                if pm_data.disabled
+                else (
+                    _("is a group")
+                    if pm_data.is_group
+                    else _("missing the role of {0}").format(_(doc.doctype))
+                )
+            )
             frappe.throw(
-                _(
-                    "Party Master {0} Could be not Exists or is group or has not Role of {1} or not enabled"
-                ).format(doc.party_master, doc.doctype)
+                _("Party Master {0} is invalid for {1}: {2}").format(
+                    doc.party_master, _(doc.doctype), reason
+                )
             )
         if doc.party_master:
             filters = {
@@ -826,14 +836,14 @@ def sync_party_name_from_party_master(doc):
     # Determine if this is a secondary role
     is_primary = pm.party_type == party_type
 
-    if "Prefix" in mode:
+    if mode and "Prefix" in mode:
         prefix = f"{party_type}-"
         if mode == "Prefix for All Role":
             new_name = f"{prefix}{pm.party_number}"
         elif mode == "Prefix for Secondary Role" and not is_primary:
             new_name = f"{prefix}{pm.party_number}"
 
-    elif "Suffix" in mode:
+    elif mode and "Suffix" in mode:
         suffix = f"-{party_type}"
         if mode == "Suffix for All Role":
             new_name = f"{pm.party_number}{suffix}"

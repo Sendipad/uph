@@ -13,6 +13,9 @@ Test Coverage:
 - Permission checks
 """
 
+import random
+import string
+
 import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import now_datetime
@@ -103,6 +106,18 @@ class TestPartyMergeService(FrappeTestCase):
             (f"%{self.test_prefix}%",),
         )
 
+    def _unique_numeric(self, length=10):
+        while True:
+            value = "".join(random.choices(string.digits, k=length))
+            if not frappe.db.exists("Party Master", value):
+                return value
+
+    def _unique_docname(self, doctype, prefix):
+        while True:
+            name = f"{prefix}-{frappe.generate_hash(length=6)}"
+            if not frappe.db.exists(doctype, name):
+                return name
+
     def _create_party_master(
         self, name_suffix: str, party_type: str = "Customer"
     ) -> str:
@@ -119,6 +134,7 @@ class TestPartyMergeService(FrappeTestCase):
                 "parent_party_master": parent,
             }
         )
+        pm.party_number = self._unique_numeric()
         pm.insert(ignore_permissions=True)
         frappe.db.commit()
         return pm.name
@@ -145,6 +161,7 @@ class TestPartyMergeService(FrappeTestCase):
             }
         )
         customer.flags.ignore_validate = True
+        customer.name = self._unique_docname("Customer", "TEST-CUST")
         customer.insert(ignore_permissions=True)
         frappe.db.commit()
         return customer.name

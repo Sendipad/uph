@@ -520,9 +520,12 @@ class DataQualityDashboard {
                 limit: 5,
             },
             callback: (r) => {
-                if (r.message && r.message.suggestions && r.message.suggestions.length) {
+                const suggestions = r.message && r.message.suggestions ? r.message.suggestions : [];
+                const max_score = suggestions.length ? Math.max(...suggestions.map(s => s.score)) : 0;
+
+                if (suggestions.length) {
                     let html = `<div style="margin-bottom: 0.5rem; font-weight: 600;">${__('Suggested Matches')}</div>`;
-                    r.message.suggestions.forEach(s => {
+                    suggestions.forEach(s => {
                         html += `
                             <div class="suggestion-row" style="display: flex; align-items: center; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 0.5rem; cursor: pointer;" data-pm="${s.party_master}">
                                 <div style="flex: 2;">
@@ -538,6 +541,7 @@ class DataQualityDashboard {
                         `;
                     });
                     d.fields_dict.suggestions_html.$wrapper.html(html);
+
                     // Click to select
                     d.fields_dict.suggestions_html.$wrapper.find('.suggestion-row').on('click', function () {
                         d.set_value('party_master', $(this).data('pm'));
@@ -546,6 +550,43 @@ class DataQualityDashboard {
                     d.fields_dict.suggestions_html.$wrapper.html(
                         `<div class="text-muted">${__('No close matches found. Use the selector below.')}</div>`
                     );
+                }
+
+                // Show "Create New Party Master" button if suggestions are missing or low score
+                if (max_score < 80) {
+                    const create_btn = $(`
+                        <div style="margin-top: 1rem; text-align: center;">
+                            <button class="btn btn-primary btn-sm btn-create-pm">
+                                <i class="fa fa-plus" style="margin-right: 5px;"></i>
+                                ${__('Create New Party Master')}
+                            </button>
+                            <div class="text-muted small" style="margin-top: 5px;">
+                                ${__('Create a new Party Master for this record automatically')}
+                            </div>
+                        </div>
+                    `);
+
+                    create_btn.find('.btn-create-pm').on('click', () => {
+                        frappe.confirm(__('Are you sure you want to create a new Party Master for {0}?', [display_name]), () => {
+                            frappe.call({
+                                method: 'uph.party.controllers.unlinked_resolver.create_party_master_from_unlinked_role',
+                                args: {
+                                    role_doctype: role_doctype,
+                                    role_name: role_name
+                                },
+                                callback: (r) => {
+                                    if (r.message && r.message.success) {
+                                        d.hide();
+                                        frappe.show_alert({ message: r.message.message, indicator: 'green' });
+                                        this.load_stats();
+                                        this.load_unlinked();
+                                    }
+                                }
+                            });
+                        });
+                    });
+
+                    d.fields_dict.suggestions_html.$wrapper.append(create_btn);
                 }
             }
         });

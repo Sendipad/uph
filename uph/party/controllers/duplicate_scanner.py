@@ -21,6 +21,7 @@ from uph.party.controllers.party_issue_utils import (
     normalize_party_pair,
     TERMINAL_STATUSES,
 )
+from uph.party.controllers.cache_utils import invalidate_dashboard_stats
 
 def run_duplicate_scan(
     min_score: float = 80.0, block_len: int = 2, chunk_size: int = 250
@@ -155,7 +156,7 @@ def run_duplicate_scan(
             )
 
     # Invalidate dashboard stats cache
-    frappe.cache.delete_value("uph:dashboard_stats")
+    invalidate_dashboard_stats()
 
     frappe.publish_realtime(
         "duplicate_scan_progress",

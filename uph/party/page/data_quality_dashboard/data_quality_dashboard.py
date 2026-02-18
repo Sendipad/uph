@@ -156,15 +156,26 @@ def dismiss_duplicate(party_1: str, party_2: str, reason: str = None):
     if not issue_name:
         return {"success": True, "message": _("Duplicate issue not found")}
 
-    frappe.db.set_value(
-        "Party Issue",
-        issue_name,
-        {
-            "status": "Ignored",
-            "resolved_on": frappe.utils.now_datetime(),
-            "resolved_by": frappe.session.user,
-        },
-    )
+    updates = {
+        "status": "Ignored",
+        "resolved_on": frappe.utils.now_datetime(),
+        "resolved_by": frappe.session.user,
+    }
+
+    if reason:
+        details = {}
+        details_json = frappe.db.get_value("Party Issue", issue_name, "details_json")
+        if details_json:
+            try:
+                details = json.loads(details_json) or {}
+            except Exception:
+                details = {}
+        details["dismiss_reason"] = reason
+        details["dismissed_by"] = frappe.session.user
+        details["dismissed_on"] = str(frappe.utils.now_datetime())
+        updates["details_json"] = json.dumps(details)
+
+    frappe.db.set_value("Party Issue", issue_name, updates)
     frappe.db.commit()
 
     trigger_refresh()
