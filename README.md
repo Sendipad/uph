@@ -5,9 +5,9 @@
   <h3>Master Data Management (MDM) for Frappe/ERPNext</h3>
   <p><b>Centralize. Unify. Govern.</b></p>
 
-  [![CI v17](https://img.shields.io/github/actions/workflow/status/Sendipad/uph/ci.yml?branch=develop&job=v17&label=CI%20v17)](https://github.com/Sendipad/uph/actions/workflows/ci.yml)
-  [![CI v16](https://img.shields.io/github/actions/workflow/status/Sendipad/uph/ci.yml?branch=version-16&job=v16&label=CI%20v16)](https://github.com/Sendipad/uph/actions/workflows/ci.yml)
-  [![CI v15](https://img.shields.io/github/actions/workflow/status/Sendipad/uph/ci.yml?branch=version-15&job=v15&label=CI%20v15)](https://github.com/Sendipad/uph/actions/workflows/ci.yml)
+  [![CI v17](https://img.shields.io/github/actions/workflow/status/Sendipad/uph/ci.yml?branch=develop&job=test_v17&label=CI%20v17)](https://github.com/Sendipad/uph/actions/workflows/ci.yml)
+  [![CI v16](https://img.shields.io/github/actions/workflow/status/Sendipad/uph/ci.yml?branch=develop&job=test_v16&label=CI%20v16)](https://github.com/Sendipad/uph/actions/workflows/ci.yml)
+  [![CI v15](https://img.shields.io/github/actions/workflow/status/Sendipad/uph/ci.yml?branch=develop&job=test_v15&label=CI%20v15)](https://github.com/Sendipad/uph/actions/workflows/ci.yml)
   <br>
   <img src="https://img.shields.io/badge/Frappe%20%2F%20ERPNext-v15+-red?style=for-the-badge" alt="Supports ERPNext v15+"/>
   <img src="https://img.shields.io/github/v/release/Sendipad/uph?style=for-the-badge" alt="Latest Release"/>
