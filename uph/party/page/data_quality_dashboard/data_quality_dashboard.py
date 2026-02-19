@@ -8,7 +8,7 @@ import json
 
 
 @frappe.whitelist()
-def get_potential_duplicates(limit: int = 50, offset: int = 0, min_score: float = 0):
+def get_duplicate_issues(limit: int = 50, offset: int = 0, min_score: float = 0):
     """
     Get duplicate Party Issues from the governance registry.
     """
@@ -68,6 +68,7 @@ def get_dashboard_stats():
     Get summary statistics. Delegates to canonical modules for health and unlinked
     counts to avoid duplicating logic from transaction_health.py and unlinked_resolver.py.
     """
+
     def _cached_int(key, fallback):
         val = frappe.cache.get_value(key)
         if val is None:
@@ -86,7 +87,7 @@ def get_dashboard_stats():
             "uph:stats:total_groups",
             frappe.db.count("Party Master", {"is_group": 1}),
         ),
-        "potential_duplicates": _cached_int(
+        "duplicate_issues": _cached_int(
             "uph:stats:duplicate_open",
             frappe.db.count(
                 "Party Issue",
@@ -114,9 +115,7 @@ def get_dashboard_stats():
         ),
         "draft_voucher_count": _cached_int("uph:stats:policy_draft", 0),
         "cancelled_unamended_count": _cached_int("uph:stats:policy_cancelled", 0),
-        "unlinked_transaction_count": _cached_int(
-            "uph:stats:policy_mismatch", 0
-        ),
+        "unlinked_transaction_count": _cached_int("uph:stats:policy_mismatch", 0),
         "incomplete_parties": _cached_int("uph:stats:incomplete_count", 0),
         "last_updated": frappe.cache.get_value("uph:stats:last_updated"),
     }
@@ -161,6 +160,9 @@ def dismiss_duplicate(party_1: str, party_2: str, reason: str = None):
         "resolved_on": frappe.utils.now_datetime(),
         "resolved_by": frappe.session.user,
     }
+
+    if reason:
+        updates["dismiss_reason"] = reason
 
     if reason:
         details = {}

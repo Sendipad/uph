@@ -73,7 +73,7 @@ class DataQualityDashboard {
                         <div class="stat-value" style="font-size: 1.75rem; font-weight: 600;">-</div>
                         <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Total Parties')}</div>
                     </div>
-                    <div class="stat-card" id="stat-potential-dups" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
+                    <div class="stat-card" id="stat-duplicate-issues" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
                         <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--orange-500);">-</div>
                         <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Duplicate Issues')}</div>
                     </div>
@@ -171,15 +171,15 @@ class DataQualityDashboard {
 
     update_stats(stats) {
         $('#stat-total-parties .stat-value').text(stats.total_parties || 0);
-        $('#stat-potential-dups .stat-value').text(stats.potential_duplicates || 0);
+        $('#stat-duplicate-issues .stat-value').text(stats.duplicate_issues || 0);
         $('#stat-unlinked .stat-value').text(stats.unlinked_count || 0);
         $('#stat-unlinked-vouchers .stat-value').text(stats.unlinked_transaction_count || 0);
         $('#stat-drafts .stat-value').text(stats.draft_voucher_count || 0);
         $('#stat-dismissed .stat-value').text(stats.total_dismissed || 0);
 
         // Update tab badges
-        if (stats.potential_duplicates) {
-            $('#tab-badge-dups').text(stats.potential_duplicates).show();
+        if (stats.duplicate_issues) {
+            $('#tab-badge-dups').text(stats.duplicate_issues).show();
         } else {
             $('#tab-badge-dups').hide();
         }
@@ -212,7 +212,7 @@ class DataQualityDashboard {
         content.html(`<div class="text-muted">${__('Loading duplicates...')}</div>`);
 
         frappe.call({
-            method: 'uph.party.page.data_quality_dashboard.data_quality_dashboard.get_potential_duplicates',
+            method: 'uph.party.page.data_quality_dashboard.data_quality_dashboard.get_duplicate_issues',
             args: {
                 limit: this.limit,
                 offset: this.current_offset,

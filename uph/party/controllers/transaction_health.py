@@ -17,7 +17,9 @@ from frappe import _
 from frappe.utils import add_days, cint, now_datetime
 
 from uph.party.controllers.party_issue_utils import create_party_issue_if_missing
-from uph.party.controllers.cache_utils import get_doctypes_functional_fields_mapping_as_dict
+from uph.party.controllers.cache_utils import (
+    get_doctypes_functional_fields_mapping_as_dict,
+)
 
 
 @frappe.whitelist()
@@ -31,7 +33,10 @@ def get_transaction_health(limit: int = 20, offset: int = 0):
 
     issues = frappe.get_all(
         "Party Issue",
-        filters={"issue_type": "Transaction Policy", "status": ["in", ["Open", "Under Review"]]},
+        filters={
+            "issue_type": "Transaction Policy",
+            "status": ["in", ["Open", "Under Review"]],
+        },
         fields=["party", "details_json"],
         limit_page_length=0,
     )
@@ -190,15 +195,21 @@ def run_transaction_policy_scan():
     mappings = get_doctypes_functional_fields_mapping_as_dict()
 
     for dt_info in tx_doctypes:
-        dt = dt_info.get("doctype")
+        dt = dt_info.get("document_type")
+        parent_dt = dt_info.get("parent_doctype") or dt
+
         if not dt or not frappe.db.exists("DocType", dt):
             continue
 
         meta = frappe.get_meta(dt)
         if meta.issingle or meta.is_virtual:
             continue
-        if not meta.has_field("party_master") or not meta.has_field("docstatus"):
+        if not meta.has_field("party_master"):
             continue
+
+        is_child = dt != parent_dt
+        # For child table, we use 'parent' field as the reference name
+        ref_field = "parent" if is_child else "name"
 
         # Draft older than threshold
         start = 0
@@ -211,7 +222,7 @@ def run_transaction_policy_scan():
                     "party_master": ["is", "set"],
                     "creation": ["<=", cutoff_draft],
                 },
-                fields=["name", "party_master", "creation"],
+                fields=["name", "party_master", "creation", ref_field],
                 limit_start=start,
                 limit_page_length=page_len,
                 order_by="creation asc",
@@ -227,55 +238,112 @@ def run_transaction_policy_scan():
                     severity=severity,
                     status="Open",
                     source_engine="transaction_health",
-                    reference_doctype=dt,
-                    reference_name=d.name,
+                    reference_doctype=parent_dt,
+                    reference_name=d.get(ref_field),
                     details={"issue": "draft_overdue", "age_days": age_days},
                 )
             start += page_len
 
-        # Cancelled voucher still referenced in GL Entry
-        cancelled_filters = "AND dt.modified <= %(cutoff)s" if cutoff_cancelled else ""
-        cancelled_params = {
-            "doctype": dt,
-            "cutoff": cutoff_cancelled,
-        }
-        cancelled = frappe.db.sql(
-            f"""
-            SELECT dt.name, dt.party_master
-            FROM `tab{dt}` dt
-            INNER JOIN `tabGL Entry` gle
-                ON gle.voucher_type = %(doctype)s
-               AND gle.voucher_no = dt.name
-               AND gle.is_cancelled = 0
-            WHERE dt.docstatus = 2
-              AND dt.party_master IS NOT NULL
-              AND dt.party_master != ''
-              {cancelled_filters}
-        """,
-            cancelled_params,
-            as_dict=True,
-        )
-        for row in cancelled or []:
-            create_party_issue_if_missing(
-                party=row.party_master,
-                issue_type="Transaction Policy",
-                severity="High",
-                status="Open",
-                source_engine="transaction_health",
-                reference_doctype=dt,
-                reference_name=row.name,
-                details={"issue": "cancelled_referenced"},
-            )
+        # Cancelled voucher not amended
+        # For child records, we must check 'amended_from' on the PARENT
+        has_amended_from = False
+        if is_child:
+            has_amended_from = frappe.get_meta(parent_dt).has_field("amended_from")
+        else:
+            has_amended_from = meta.has_field("amended_from")
+
+        if has_amended_from:
+            if is_child:
+                # Subquery/Join logic for child tables
+                # We want cancelled vouchers (docstatus=2) where parent's amended_from is null
+                # We use frappe.get_all but we need to fetch 'parent' to check against amended parents
+                filters = [
+                    ["docstatus", "=", 2],
+                    ["party_master", "is", "set"],
+                ]
+                if cutoff_cancelled:
+                    filters.append(["modified", "<=", cutoff_cancelled])
+
+                cancelled = frappe.get_all(
+                    dt,
+                    filters=filters,
+                    fields=["party_master", "parent", "modified"],
+                )
+
+                if cancelled:
+                    parent_names = list(set(r.parent for r in cancelled))
+                    amended_parents = frappe.get_all(
+                        parent_dt,
+                        filters={
+                            "name": ["in", parent_names],
+                            "amended_from": ["is", "set"],
+                        },
+                        pluck="name",
+                    )
+
+                    for r in cancelled:
+                        if r.parent in amended_parents:
+                            continue
+
+                        create_party_issue_if_missing(
+                            party=r.party_master,
+                            issue_type="Transaction Policy",
+                            severity="High",
+                            status="Open",
+                            source_engine="transaction_health",
+                            reference_doctype=parent_dt,
+                            reference_name=r.parent,
+                            details={"issue": "cancelled_referenced"},
+                        )
+            else:
+                filters = {
+                    "docstatus": 2,
+                    "party_master": ["is", "set"],
+                    "amended_from": ["in", [None, ""]],
+                }
+                if cutoff_cancelled:
+                    filters["modified"] = ["<=", cutoff_cancelled]
+
+                cancelled_start = 0
+                while True:
+                    cancelled = frappe.get_all(
+                        dt,
+                        filters=filters,
+                        fields=["name", "party_master", "modified"],
+                        limit_start=cancelled_start,
+                        limit_page_length=page_len,
+                        order_by="modified asc",
+                    )
+                    if not cancelled:
+                        break
+
+                    for row in cancelled:
+                        create_party_issue_if_missing(
+                            party=row.party_master,
+                            issue_type="Transaction Policy",
+                            severity="High",
+                            status="Open",
+                            source_engine="transaction_health",
+                            reference_doctype=parent_dt,
+                            reference_name=row.get(ref_field),
+                            details={"issue": "cancelled_referenced"},
+                        )
+                    cancelled_start += page_len
 
         # Status inconsistency: party_master mismatch vs party record
         map_conf = mappings.get(dt)
         if map_conf and not map_conf.get("is_dynamic_party_type"):
             party_fieldname = map_conf.get("party_fieldname")
             party_type = map_conf.get("party_type")
-            if party_fieldname and party_type and frappe.db.exists("DocType", party_type):
+            if (
+                party_fieldname
+                and party_type
+                and frappe.db.exists("DocType", party_type)
+            ):
+                parent_select = ", dt.parent" if is_child else ""
                 rows = frappe.db.sql(
                     f"""
-                    SELECT dt.name, dt.party_master, p.party_master AS expected_pm
+                    SELECT dt.name {parent_select}, dt.party_master, p.party_master AS expected_pm
                     FROM `tab{dt}` dt
                     INNER JOIN `tab{party_type}` p ON p.name = dt.`{party_fieldname}`
                     WHERE dt.docstatus = 1
@@ -294,14 +362,13 @@ def run_transaction_policy_scan():
                         severity="High",
                         status="Open",
                         source_engine="transaction_health",
-                        reference_doctype=dt,
-                        reference_name=row.name,
+                        reference_doctype=parent_dt,
+                        reference_name=row.get(ref_field),
                         details={
                             "issue": "party_master_mismatch",
                             "expected_pm": row.expected_pm,
                         },
                     )
-
 
 
 def get_health_counts():
@@ -315,38 +382,69 @@ def get_health_counts():
     cancelled_total = 0
 
     for dt_info in tx_doctypes:
-        dt = dt_info.get("doctype")
+        dt = dt_info.get("document_type")
+        parent_dt = dt_info.get("parent_doctype") or dt
+
         if not dt or not frappe.db.exists("DocType", dt):
             continue
 
         meta = frappe.get_meta(dt)
-        if not meta.has_field("party_master") or not meta.has_field("docstatus"):
+        if not meta.has_field("party_master"):
             continue
 
+        is_child = dt != parent_dt
+
         # Draft count
-        draft_total += frappe.db.count(
+        d_cnt = frappe.db.count(
             dt,
             {
                 "docstatus": 0,
                 "party_master": ["is", "set"],
             },
         )
+        draft_total += d_cnt
 
         # Cancelled-unamended count
-        if meta.has_field("amended_from"):
+        has_amended_from = False
+        if is_child:
+            has_amended_from = frappe.get_meta(parent_dt).has_field("amended_from")
+        else:
+            has_amended_from = meta.has_field("amended_from")
+
+        if has_amended_from:
             table = frappe.qb.DocType(dt)
-            result = (
-                frappe.qb.from_(table)
-                .select(frappe.query_builder.functions.Count("*").as_("cnt"))
-                .where(
-                    (table.docstatus == 2)
-                    & (table.party_master.isnotnull())
-                    & (table.party_master != "")
-                    & ((table.amended_from.isnull()) | (table.amended_from == ""))
+            if is_child:
+                parent_table = frappe.qb.DocType(parent_dt)
+                result = (
+                    frappe.qb.from_(table)
+                    .join(parent_table)
+                    .on(table.parent == parent_table.name)
+                    .select(frappe.query_builder.functions.Count(table.name).as_("cnt"))
+                    .where(
+                        (table.docstatus == 2)
+                        & (table.party_master.isnotnull())
+                        & (table.party_master != "")
+                        & (
+                            (parent_table.amended_from.isnull())
+                            | (parent_table.amended_from == "")
+                        )
+                    )
+                    .run(as_dict=True)
                 )
-                .run(as_dict=True)
-            )
-            cancelled_total += result[0]["cnt"] if result else 0
+            else:
+                result = (
+                    frappe.qb.from_(table)
+                    .select(frappe.query_builder.functions.Count("*").as_("cnt"))
+                    .where(
+                        (table.docstatus == 2)
+                        & (table.party_master.isnotnull())
+                        & (table.party_master != "")
+                        & ((table.amended_from.isnull()) | (table.amended_from == ""))
+                    )
+                    .run(as_dict=True)
+                )
+            c_cnt = result[0]["cnt"] if result else 0
+            cancelled_total += c_cnt
 
     counts = {
         "draft_voucher_count": draft_total,
@@ -367,36 +465,48 @@ def rebuild_health_cache():
 def _get_transaction_doctypes():
     """
     Get the list of transaction DocTypes configured in Party Master Settings.
-    Returns list of dicts with 'doctype' key.
+    Returns list of dicts with 'document_type' and 'parent_doctype' keys.
     """
     try:
         settings = frappe.get_cached_doc("Party Master Settings")
         tx_doctypes = []
         for d in settings.document_types or []:
-            dt = d.get("parent_doctype") or d.get("document_type")
+            dt = d.get("document_type")
+            parent_dt = d.get("parent_doctype") or dt
             if dt and not frappe.get_meta(dt).issingle:
-                tx_doctypes.append({"doctype": dt})
+                tx_doctypes.append({"document_type": dt, "parent_doctype": parent_dt})
+
         # Fallback to sensible defaults when nothing is configured
         if not tx_doctypes:
             return [
-                {"doctype": "Sales Invoice"},
-                {"doctype": "Purchase Invoice"},
-                {"doctype": "Payment Entry"},
-                {"doctype": "Journal Entry"},
+                {"document_type": "Sales Invoice", "parent_doctype": "Sales Invoice"},
+                {
+                    "document_type": "Purchase Invoice",
+                    "parent_doctype": "Purchase Invoice",
+                },
+                {"document_type": "Payment Entry", "parent_doctype": "Payment Entry"},
+                {
+                    "document_type": "Journal Entry Account",
+                    "parent_doctype": "Journal Entry",
+                },
             ]
-        # Deduplicate
+
+        # Deduplicate by document_type
         seen = set()
         unique = []
-        for dt in tx_doctypes:
-            if dt["doctype"] not in seen:
-                seen.add(dt["doctype"])
-                unique.append(dt)
+        for d in tx_doctypes:
+            if d["document_type"] not in seen:
+                seen.add(d["document_type"])
+                unique.append(d)
         return unique
     except Exception:
         # Fallback
         return [
-            {"doctype": "Sales Invoice"},
-            {"doctype": "Purchase Invoice"},
-            {"doctype": "Payment Entry"},
-            {"doctype": "Journal Entry"},
+            {"document_type": "Sales Invoice", "parent_doctype": "Sales Invoice"},
+            {"document_type": "Purchase Invoice", "parent_doctype": "Purchase Invoice"},
+            {"document_type": "Payment Entry", "parent_doctype": "Payment Entry"},
+            {
+                "document_type": "Journal Entry Account",
+                "parent_doctype": "Journal Entry",
+            },
         ]

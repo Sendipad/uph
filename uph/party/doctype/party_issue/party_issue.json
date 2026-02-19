@@ -105,6 +105,12 @@
             "label": "Details JSON"
         },
         {
+            "fieldname": "dismiss_reason",
+            "fieldtype": "Small Text",
+            "label": "Dismiss Reason",
+            "read_only": 1
+        },
+        {
             "fieldname": "section_break_meta",
             "fieldtype": "Section Break",
             "label": "Metadata"

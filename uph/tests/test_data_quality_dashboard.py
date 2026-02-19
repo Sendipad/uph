@@ -12,13 +12,13 @@ from frappe.tests.utils import FrappeTestCase
 class TestDataQualityDashboard(FrappeTestCase):
     """Test suite for Data Quality Dashboard functionality."""
 
-    def test_get_potential_duplicates(self):
-        """Test get_potential_duplicates API."""
+    def test_get_duplicate_issues(self):
+        """Test get_duplicate_issues API."""
         from uph.party.page.data_quality_dashboard.data_quality_dashboard import (
-            get_potential_duplicates,
+            get_duplicate_issues,
         )
 
-        result = get_potential_duplicates(limit=50, min_score=50)
+        result = get_duplicate_issues(limit=50, min_score=50)
 
         self.assertIn("duplicates", result)
         self.assertIn("total", result)
@@ -37,7 +37,7 @@ class TestDataQualityDashboard(FrappeTestCase):
         self.assertIn("total_dismissed", stats)
         self.assertIn("total_merged", stats)
         self.assertIn("incomplete_parties", stats)
-        self.assertIn("potential_duplicates", stats)
+        self.assertIn("duplicate_issues", stats)
         self.assertIn("unlinked_count", stats)
         self.assertIn("draft_voucher_count", stats)
         self.assertIn("cancelled_unamended_count", stats)
