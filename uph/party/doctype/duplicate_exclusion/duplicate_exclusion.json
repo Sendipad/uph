@@ -8,10 +8,19 @@
   "party_1",
   "party_2",
   "column_break_1",
+  "status",
   "dismissed_on",
   "dismissed_by",
   "section_break_2",
-  "dismissed_reason"
+  "dismissed_reason",
+  "detection_metadata_section",
+  "similarity_score",
+  "column_break_det1",
+  "detected_on",
+  "normalized_names_section",
+  "normalized_name_1",
+  "column_break_det2",
+  "normalized_name_2"
  ],
  "fields": [
   {
@@ -61,10 +70,66 @@
    "fieldname": "dismissed_reason",
    "fieldtype": "Small Text",
    "label": "Reason"
+  },
+  {
+   "default": "Detected",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Dismissed\nDetected\nMerged",
+   "read_only": 1
+  },
+  {
+   "fieldname": "detection_metadata_section",
+   "fieldtype": "Section Break",
+   "label": "Detection Metadata"
+  },
+  {
+   "fieldname": "similarity_score",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Similarity Score",
+   "precision": "1",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_det1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Now",
+   "fieldname": "detected_on",
+   "fieldtype": "Datetime",
+   "label": "Detected On",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "normalized_names_section",
+   "fieldtype": "Section Break",
+   "label": "Normalized Names"
+  },
+  {
+   "fieldname": "normalized_name_1",
+   "fieldtype": "Data",
+   "label": "Normalized Name 1",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_det2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "normalized_name_2",
+   "fieldtype": "Data",
+   "label": "Normalized Name 2",
+   "read_only": 1
   }
  ],
  "links": [],
- "modified": "2026-02-07 17:28:56.021115",
+ "modified": "2026-02-14 15:59:35.114959",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Duplicate Exclusion",

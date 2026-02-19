@@ -1,0 +1,29 @@
+{
+    "add_total_row": 0,
+    "columns": [],
+    "creation": "2026-02-14 17:15:00.000000",
+    "disabled": 0,
+    "docstatus": 0,
+    "doctype": "Report",
+    "filters": [],
+    "idx": 0,
+    "is_standard": "Yes",
+    "letter_head": "Standard",
+    "modified": "2026-02-14 17:15:00.000000",
+    "modified_by": "Administrator",
+    "module": "Party",
+    "name": "Party Health",
+    "owner": "Administrator",
+    "prepared_report": 0,
+    "ref_doctype": "Party Master",
+    "report_name": "Party Health",
+    "report_type": "Script Report",
+    "roles": [
+        {
+            "role": "System Manager"
+        },
+        {
+            "role": "Accounting Manager"
+        }
+    ]
+}

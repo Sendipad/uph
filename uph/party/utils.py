@@ -445,20 +445,10 @@ def get_party_master_list(doctype, txt, searchfield, start, page_len, filters):
 
 
 # ============================================================================
-# NORMALIZATION UTILS (Consolidated - use NormalizationUtils class)
+# NORMALIZATION UTILS (Re-exported from normalization module)
 # ============================================================================
 
-def normalize_text(text: str) -> str:
-    """
-    Normalize text for fuzzy matching.
-    Wrapper around NormalizationUtils.normalize() for backward compatibility.
-    """
-    return NormalizationUtils.normalize(text)
-
-
-def normalize_party_name(name: str) -> str:
-    """
-    Normalize party name specifically.
-    Wrapper around NormalizationUtils.normalize_party_name() for backward compatibility.
-    """
-    return NormalizationUtils.normalize_party_name(name)
+from uph.party.controllers.normalization import (
+    normalize_text,
+    normalize_party_name,
+)  # noqa: F401

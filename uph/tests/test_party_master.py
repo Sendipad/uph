@@ -7,6 +7,10 @@ def unique_name(base="Test"):
     return f"{base}_{now_datetime().strftime('%H%M%S%f')}"
 
 
+def unique_party_number():
+    return f"9{now_datetime().strftime('%H%M%S%f')}"
+
+
 class TestPartyMaster(FrappeTestCase):
     @classmethod
     def setUpClass(cls):
@@ -26,12 +30,12 @@ class TestPartyMaster(FrappeTestCase):
             {
                 "doctype": "Party Master",
                 "party_name": unique_name("Test PM"),
+                "party_number": unique_party_number(),
                 "party_type": "Customer",
                 "parent_party_master": self.root_group,
                 "is_group": 0,
             }
         )
-        pm.flags.update_party_number = True
         pm.insert(ignore_permissions=True)
         self.assertTrue(frappe.db.exists("Party Master", pm.name))
         self.assertIsNotNone(pm.party_number)
@@ -44,6 +48,7 @@ class TestPartyMaster(FrappeTestCase):
             {
                 "doctype": "Party Master",
                 "party_name": name,
+                "party_number": unique_party_number(),
                 "party_type": "Customer",
                 "parent_party_master": self.root_group,
             }
@@ -53,6 +58,7 @@ class TestPartyMaster(FrappeTestCase):
                 {
                     "doctype": "Party Master",
                     "party_name": name,
+                    "party_number": unique_party_number(),
                     "party_type": "Supplier",
                     "parent_party_master": self.root_group,
                 }
@@ -65,6 +71,7 @@ class TestPartyMaster(FrappeTestCase):
             {
                 "doctype": "Party Master",
                 "party_name": unique_name("Disputed"),
+                "party_number": unique_party_number(),
                 "party_type": "Customer",
                 "parent_party_master": self.root_group,
                 "status": "Disputed",
@@ -80,6 +87,7 @@ class TestPartyMaster(FrappeTestCase):
             {
                 "doctype": "Party Master",
                 "party_name": unique_name("Role"),
+                "party_number": unique_party_number(),
                 "party_type": "Customer",
                 "parent_party_master": self.root_group,
                 "has_secondary_role_party": 1,
@@ -99,11 +107,11 @@ class TestPartyMaster(FrappeTestCase):
             {
                 "doctype": "Party Master",
                 "party_name": unique_name("Test Normalize"),
+                "party_number": unique_party_number(),
                 "party_type": "Customer",
                 "parent_party_master": self.root_group,
             }
         )
-        pm.flags.update_party_number = True
         pm.insert(ignore_permissions=True)
         self.assertIsNotNone(pm.normalized_party_name)
 
@@ -116,6 +124,7 @@ class TestPartyMaster(FrappeTestCase):
             {
                 "doctype": "Party Master",
                 "party_name": unique_name("Master for Link"),
+                "party_number": unique_party_number(),
                 "party_type": "Customer",
                 "parent_party_master": self.root_group,
             }
@@ -153,6 +162,7 @@ class TestPartyMaster(FrappeTestCase):
             {
                 "doctype": "Party Master",
                 "party_name": party_name,
+                "party_number": unique_party_number(),
                 "party_type": "Customer",
                 "parent_party_master": self.root_group,
             }
@@ -182,6 +192,7 @@ class TestPartyMaster(FrappeTestCase):
             {
                 "doctype": "Party Master",
                 "party_name": "Ordering Test",
+                "party_number": unique_party_number(),
                 "party_type": "Customer",
                 "parent_party_master": self.root_group,
             }

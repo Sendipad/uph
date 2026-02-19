@@ -1,0 +1,41 @@
+[
+    {
+        "party_name": "Commercial",
+        "party_number": "1100",
+        "is_group": 1,
+        "children": [
+            {
+                "party_name": "Customers",
+                "party_number": "1110",
+                "is_group": 1,
+                "party_type": "Customer",
+                "group_type": "Customer Group"
+            },
+            {
+                "party_name": "Suppliers",
+                "party_number": "1120",
+                "is_group": 1,
+                "party_type": "Supplier",
+                "group_type": "Supplier Group"
+            }
+        ]
+    },
+    {
+        "party_name": "Internal",
+        "party_number": "1200",
+        "is_group": 1,
+        "children": [
+            {
+                "party_name": "Employees",
+                "party_number": "1210",
+                "is_group": 1,
+                "party_type": "Employee"
+            }
+        ]
+    },
+    {
+        "party_name": "Other",
+        "party_number": "1900",
+        "is_group": 1
+    }
+]

@@ -1,33 +1,43 @@
 <style>
-  h2, h4, h5 {
+  h2,
+  h4,
+  h5 {
     text-align: center;
     font-weight: bold;
   }
+
   h2.title {
     color: black;
   }
+
   h2.name {
     color: blue;
   }
+
   h5.date-range {
     color: red;
   }
+
   table {
     margin-bottom: 15px;
     page-break-inside: auto;
   }
+
   thead th {
     text-align: center;
     background-color: rgba(211, 202, 202, 0.6);
     font-size: 12px;
   }
+
   td {
     font-size: 10px;
   }
+
   .highlight {
     background-color: rgb(243, 196, 139);
     font-weight: bold;
   }
+
   .alert-warning {
     background-color: #fff3cd;
     border: 1px solid #ffeeba;
@@ -36,136 +46,141 @@
     font-weight: bold;
     font-size: 10px;
   }
+
   .remark-align {
     text-align: left;
   }
-  
+
   [dir="ltr"] .remark-align {
     text-align: right;
   }
-  
 </style>
 
-<h2 class="title">{%= __("Statement of Account") %}</h2>
-
+<h2 class="text-center" style="font-weight: bold;">{%= __("Statement of Account") %}</h2>
 {% if (filters.cost_center || filters.branch) { %}
-  <h4>{%= filters.cost_center || filters.branch %}</h4>
+<h4 class="text-center">
+  {%= filters.cost_center || filters.branch %}
+</h4>
 {% } %}
 
-<h5 class="date-range">
+<h2 class="text-center" style="color: blue; font-weight:bold">
+  {%= filters.party_name %}
+</h2>
+
+<h5 class="text-center" style="font-weight: bold;color:red">
   {%= __("From")%}: {%= frappe.datetime.str_to_user(filters.from_date) %}&nbsp;
   {%= __("to") %}: {%= frappe.datetime.str_to_user(filters.to_date) %}
 </h5>
 
+<hr>
+
 {% var current_party_master = null; %}
-{% for (var i = 0; i < data.length; i++) { %}
-  {% if (Object.keys(data[i]).length === 0||data[i].warning) { continue; } %}
+{% for (var i = 0; i < data.length; i++) { %} {% if (Object.keys(data[i]).length===0||data[i].warning) { continue; } %}
+  {% if (data[i].party_master !==current_party_master) { %} {% if (current_party_master !==null) { %} </tbody>
+  </table>
 
-  {% if (data[i].party_master !== current_party_master) { %}
-    {% if (current_party_master !== null) { %}
-      </tbody></table>
-     
-      {% if (data[i - 1] && data[i - 1].warning) { %}
-        <div class="alert-warning">
-          {%= data[i - 1].remarks %}
-        </div>
-      {% } %}
-      <p class="text-right text-muted">وقت الطباعه  : {%=
-        frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>
-      <div style="page-break-before: always;"></div>
-      <h2 class="title">{%= __("Statement of Account") %}</h2>
-      {% if (filters.cost_center || filters.branch) { %}
-        <h4>{%= filters.cost_center || filters.branch %}</h4>
-      {% } %}
-      <h5 class="date-range">
-        {%= __("From")%}: {%= frappe.datetime.str_to_user(filters.from_date) %}&nbsp;
-        {%= __("to") %}: {%= frappe.datetime.str_to_user(filters.to_date) %}
-      </h5>
-    {% } %}
-
-    <h4>
-      {%= data[i].party_master %} - {%= data[i].party_name %}
-    </h4>
-
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th colspan="8">{%= data[i].party_master %} - {%= data[i].party_name %}</th>
-        </tr>
-        <tr>
-          <th>{%= __("Date") %}</th>
-          <th>{%= __("Voucher Type & No.") %}</th>
-          <th>{%= __("Remarks") %}</th>
-          <th>{%= __("Accounting Dimension") %}</th>
-          <th>{%= __("Debit") %}</th>
-          <th>{%= __("Credit") %}</th>
-          <th>{%= __("Balance","Statements") %}</th>
-        </tr>
-      </thead>
-      <tbody>
-    {% current_party_master = data[i].party_master; %}
+  {% if (data[i - 1] && data[i - 1].warning) { %}
+  <div class="alert-warning">
+    {%= data[i - 1].remarks %}
+  </div>
   {% } %}
-  {% if (data[i].rowtype) { %}
-  <tr class="highlight">
-    <td colspan="4" style="text-align: {%= frappe.boot.lang === 'ar' ? 'left' : 'right' %};">
-      {%= data[i].remarks %}
-    </td>
-      
-    {% if (data[i].rowtype === "Opening Balance" || data[i].rowtype === "Closing Balance") { %}
-      {% if (data[i].status === __("Dr")) { %}
-      <td colspan="3"  style="text-align: {%= frappe.boot.lang === 'ar' ? 'right' : 'left' %};color:red">
+  <p class="text-right text-muted">وقت الطباعه : {%=
+    frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>
+  <div style="page-break-before: always;"></div>
+  <h2 class="title">{%= __("Statement of Account") %}</h2>
+  {% if (filters.cost_center || filters.branch) { %}
+  <h4>{%= filters.cost_center || filters.branch %}</h4>
+  {% } %}
+  <h5 class="date-range">
+    {%= __("From")%}: {%= frappe.datetime.str_to_user(filters.from_date) %}&nbsp;
+    {%= __("to") %}: {%= frappe.datetime.str_to_user(filters.to_date) %}
+  </h5>
+  {% } %}
+
+  <h4>
+    {%= data[i].party_master %} - {%= data[i].party_name %}
+  </h4>
+
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th colspan="8">{%= data[i].party_master %} - {%= data[i].party_name %}</th>
+      </tr>
+      <tr>
+        <th>{%= __("Date") %}</th>
+        <th>{%= __("Voucher Type & No.") %}</th>
+        <th>{%= __("Remarks") %}</th>
+        <th>{%= __("Accounting Dimension") %}</th>
+        <th>{%= __("Debit") %}</th>
+        <th>{%= __("Credit") %}</th>
+        <th>{%= __("Balance","Statements") %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% current_party_master = data[i].party_master; %}
+      {% } %}
+      {% if (data[i].rowtype) { %}
+      <tr class="highlight">
+        <td colspan="4" style="text-align: {%= frappe.boot.lang === 'ar' ? 'left' : 'right' %};">
+          {%= data[i].remarks %}
+        </td>
+
+        {% if (data[i].rowtype === "Opening Balance" || data[i].rowtype === "Closing Balance") { %}
+        {% if (data[i].status === __("Dr")) { %}
+        <td colspan="3" style="text-align: {%= frappe.boot.lang === 'ar' ? 'right' : 'left' %};color:red">
           {%= format_currency(data[i].balance, data[i].currency) %} &nbsp; {%= data[i].status %}
         </td>
-      {% } else { %}
-      <td colspan="3" style="text-align:center;color:blue">
-        {%= format_currency(data[i].balance, data[i].currency) %} &nbsp; {%= data[i].status %}
+        {% } else { %}
+        <td colspan="3" style="text-align:center;color:blue">
+          {%= format_currency(data[i].balance, data[i].currency) %} &nbsp; {%= data[i].status %}
         </td>
+        {% } %}
+        {% } else { %}
+        <td style="text-align:right;">{%= format_currency(data[i].debit, data[i].currency) %}</td>
+        <td style="text-align:right;">{%= format_currency(data[i].credit, data[i].currency) %}</td>
+        <td style="text-align:right;">
+          {%= format_currency(data[i].balance, data[i].currency) %} &nbsp; {%= data[i].status %}
+        </td>
+        {% } %}
+      </tr>
+      {% continue; %}
       {% } %}
-    {% } else { %}
-      <td style="text-align:right;">{%= format_currency(data[i].debit, data[i].currency) %}</td>
-      <td style="text-align:right;">{%= format_currency(data[i].credit, data[i].currency) %}</td>
-      <td style="text-align:right;">
-        {%= format_currency(data[i].balance, data[i].currency) %} &nbsp; {%= data[i].status %}
-      </td>
-    {% } %}
-  </tr>
-  {% continue; %}
-{% } %}
 
-  <tr>
-    <td>{%= frappe.datetime.str_to_user(data[i].posting_date) %}</td>
-    <td style="text-align:center; direction:rtl;">
-      {%= __(data[i].voucher_subtype,"Voucher Type") || __(data[i].voucher_type) %}<br>{%= data[i].voucher_no %}
-    </td>
-    <td style="white-space:normal; line-height: 12px;">
-      {%= data[i].remarks %}
-    </td>
-    <td>
-      {%= __(data[i].cost_center) || __(data[i].branch) %}
-      {% if (data[i].party_analytic_accounting) { %}
-        <br>{%= data[i].party_analytic_accounting %}
+      <tr>
+        <td>{%= frappe.datetime.str_to_user(data[i].posting_date) %}</td>
+        <td style="text-align:center; direction:rtl;">
+          {%= __(data[i].voucher_subtype,"Voucher Type") || __(data[i].voucher_type) %}<br>{%= data[i].voucher_no %}
+        </td>
+        <td style="white-space:normal; line-height: 12px;">
+          {%= data[i].remarks %}
+        </td>
+        <td>
+          {%= __(data[i].cost_center) || __(data[i].branch) %}
+          {% if (data[i].party_analytic_accounting) { %}
+          <br>{%= data[i].party_analytic_accounting %}
+          {% } %}
+        </td>
+        <td style="text-align:right;">
+          {%= format_currency(data[i].debit, data[i].currency) %}
+        </td>
+        <td style="text-align:right;">
+          {%= format_currency(data[i].credit, data[i].currency) %}
+        </td>
+        <td style="text-align:right;">
+          {%= format_currency(data[i].balance, data[i].currency) %}
+        </td>
+      </tr>
       {% } %}
-    </td>
-    <td style="text-align:right;">
-      {%= format_currency(data[i].debit, data[i].currency) %}
-    </td>
-    <td style="text-align:right;">
-      {%= format_currency(data[i].credit, data[i].currency) %}
-    </td>
-    <td style="text-align:right;">
-      {%= format_currency(data[i].balance, data[i].currency) %}
-    </td>
-  </tr>
-{% } %}
 
-{% if (current_party_master !== null) { %}
-  </tbody></table>
+      {% if (current_party_master !== null) { %}
+    </tbody>
+  </table>
 
   {% if (data[data.length - 1].warning) { %}
-    <div class="alert-warning">
-      {%= data[data.length - 1].remarks %}
-    </div>
+  <div class="alert-warning">
+    {%= data[data.length - 1].remarks %}
+  </div>
   {% } %}
   <p class="text-right text-muted">وقت طباعة التقرير : {%=
     frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>
-{% } %}
+  {% } %}

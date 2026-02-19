@@ -291,7 +291,7 @@ def get_data(filters, party_master):
                     "debit": totals.get("total_debit", 0),
                     "credit": totals.get("total_credit", 0),
                     **party,
-                    "remarks": "Current Period Totals",
+                    "remarks": _("Current Period Totals"),
                     "current_balance": (
                         totals.get("debit", 0) - totals.get("credit", 0)
                     ),

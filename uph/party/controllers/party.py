@@ -233,10 +233,20 @@ def validate_party_master_on_target_party_type(doc, method):
         if doc.party_master and not is_valide_party_master_to_party(
             doc.party_master, doc.doctype
         ):
+            pm_data = frappe.get_cached_doc("Party Master", doc.party_master)
+            reason = (
+                _("is disabled")
+                if pm_data.disabled
+                else (
+                    _("is a group")
+                    if pm_data.is_group
+                    else _("missing the role of {0}").format(_(doc.doctype))
+                )
+            )
             frappe.throw(
-                _(
-                    "Party Master {0} Could be not Exists or is group or has not Role of {1} or not enabled"
-                ).format(doc.party_master, doc.doctype)
+                _("Party Master {0} is invalid for {1}: {2}").format(
+                    doc.party_master, _(doc.doctype), reason
+                )
             )
         if doc.party_master:
             filters = {
@@ -258,6 +268,9 @@ def validate_party_master_on_target_party_type(doc, method):
                         doc.get(rule_fieldname) if rule_fieldname else "",
                     ),
                 )
+
+        # Sync Naming if enabled
+        sync_party_name_from_party_master(doc)
 
     if method == "on_update":
         old_doc = doc.get_doc_before_save()
@@ -798,6 +811,64 @@ def get_party_details(
             party_details["advance_account"] = advance_account
 
     return party_details
+
+
+def sync_party_name_from_party_master(doc):
+    """
+    Syncs the Party (Customer/Supplier) name with Party Master numbering
+    based on the 'Role Prefix Mode' setting.
+    """
+    if not doc.party_master:
+        return
+
+    settings = frappe.get_cached_doc("Party Master Settings")
+    if not settings.sync_erp_party_naming:
+        return
+
+    pm = frappe.get_cached_doc("Party Master", doc.party_master)
+    if not pm.party_number:
+        return
+
+    mode = settings.role_prefix_mode
+    party_type = doc.doctype
+    new_name = pm.party_number
+
+    # Determine if this is a secondary role
+    is_primary = pm.party_type == party_type
+
+    if mode and "Prefix" in mode:
+        prefix = f"{party_type}-"
+        if mode == "Prefix for All Role":
+            new_name = f"{prefix}{pm.party_number}"
+        elif mode == "Prefix for Secondary Role" and not is_primary:
+            new_name = f"{prefix}{pm.party_number}"
+
+    elif mode and "Suffix" in mode:
+        suffix = f"-{party_type}"
+        if mode == "Suffix for All Role":
+            new_name = f"{pm.party_number}{suffix}"
+        elif mode == "Suffix Secondary Roles" and not is_primary:
+            new_name = f"{pm.party_number}{suffix}"
+
+    # If name is different, we need to rename or set name
+    if doc.name != new_name:
+        if doc.is_new():
+            doc.name = new_name
+        else:
+            # Rename existing document
+            # We must use frappe.rename_doc but be careful about recursion
+            # and transaction handling. rename_doc commits by default.
+            # Ideally, we shouldn't rename inside validate/save loops.
+            # But the user asked for sync.
+            # We'll use enqueue to avoid blocking/recursion issues.
+            frappe.enqueue(
+                "frappe.model.rename_doc.rename_doc",
+                doctype=doc.doctype,
+                old=doc.name,
+                new=new_name,
+                force=True,
+                show_alert=False,
+            )
 
 
 def get_hierarchical_pm_account(

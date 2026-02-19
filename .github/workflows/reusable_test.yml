@@ -87,6 +87,14 @@ jobs:
             python -m pip install --upgrade pip setuptools wheel
           fi
 
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/setup.py', '**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Configure MariaDB
         run: |
           mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL character_set_server = 'utf8mb4'"
@@ -135,7 +143,9 @@ jobs:
         run: |
           bench --site test_site install-app erpnext
           bench --site test_site install-app uph
+          bench --site test_site execute frappe.utils.install.complete_setup_wizard
           bench --site test_site execute uph.tests.test_utils.setup_erpnext_baseline
+          bench build --app uph
 
       - name: Run Python Tests
         if: ${{ inputs.run_python }}
@@ -143,16 +153,32 @@ jobs:
         run: |
           bench --site test_site run-tests --app uph
 
+      - name: Cache Yarn
+        if: ${{ inputs.run_ui }}
+        uses: actions/cache@v4
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Cache Cypress Binary
+        if: ${{ inputs.run_ui }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: ${{ runner.os }}-cypress-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cypress-
+
       - name: Run UI Tests
         if: ${{ inputs.run_ui }}
         working-directory: frappe-bench
         run: |
-          pip install playwright
-          playwright install --with-deps chromium
           echo "127.0.0.1 test_site" | sudo tee -a /etc/hosts
           bench --site test_site serve --port 8000 --noreload > /tmp/bench-serve.log 2>&1 &
           for i in {1..30}; do
-            if curl -sf http://127.0.0.1:8000/api/method/ping >/dev/null; then
+            if curl -sf http://test_site:8000/api/method/ping >/dev/null; then
               break
             fi
             sleep 2

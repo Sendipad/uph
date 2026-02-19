@@ -1,3 +1,6 @@
+import random
+import string
+
 import frappe
 from frappe.tests.utils import FrappeTestCase
 from uph.party.controllers.party import (
@@ -10,6 +13,13 @@ from uph.party.controllers.queries import party_master_link_query
 
 
 from uph.tests.setup_mixin import AccountsTestMixin
+
+
+def _unique_party_number(length=10):
+    while True:
+        value = "".join(random.choices(string.digits, k=length))
+        if not frappe.db.exists("Party Master", value):
+            return value
 
 
 class TestPartyControllers(FrappeTestCase, AccountsTestMixin):
@@ -145,27 +155,23 @@ class TestPartyControllers(FrappeTestCase, AccountsTestMixin):
         si.insert()
         si_name = si.name
 
-        # Create a second Party Master
-        new_pm_name = frappe.db.get_value(
-            "Party Master", {"party_name": "_Test New PM"}
-        )
-        if not new_pm_name:
-            # Use the same parent as the existing test party master to ensure validity
-            existing_pm = frappe.get_doc("Party Master", self.party_master)
-            parent_group = existing_pm.parent_party_master
+        # Create a second Party Master (unique to avoid collisions)
+        existing_pm = frappe.get_doc("Party Master", self.party_master)
+        parent_group = existing_pm.parent_party_master
 
-            new_pm = frappe.get_doc(
-                {
-                    "doctype": "Party Master",
-                    "party_name": "_Test New PM",
-                    "parent_party_master": parent_group,
-                    "is_group": 0,
-                    "party_type": "Customer",
-                    "type": "Individual",
-                }
-            )
-            new_pm.insert()
-            new_pm_name = new_pm.name
+        new_pm = frappe.get_doc(
+            {
+                "doctype": "Party Master",
+                "party_name": f"_Test New PM {frappe.generate_hash(length=6)}",
+                "parent_party_master": parent_group,
+                "is_group": 0,
+                "party_type": "Customer",
+                "type": "Individual",
+            }
+        )
+        new_pm.party_number = _unique_party_number()
+        new_pm.insert(ignore_permissions=True)
+        new_pm_name = new_pm.name
 
         # Update customer's party master
         customer_doc = frappe.get_doc("Customer", self.customer)

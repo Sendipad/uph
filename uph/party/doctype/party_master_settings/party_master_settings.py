@@ -25,19 +25,46 @@ class PartyMasterSettings(Document):
 
         auto_expand_levels: DF.Int
         check_party_master_duplicate_vouchers: DF.Check
+        digits_count: DF.Int
         document_types: DF.Table[PartyMasterSettingsDocType]
         duplicate_voucher_action: DF.Literal["Warn", "Stop"]
         enable_party_analytic_accounting: DF.Check
+        enforce_cross_type_uniqueness: DF.Check
+        enforce_parent_numbering: DF.Check
         enforce_strict_currency: DF.Check
+        group_digits: DF.Int
         hide_balance: DF.Check
+        language: DF.Link | None
+        numbering_format: DF.Literal["Concatenated", "Dash-Separated"]
         override_party_details_api: DF.Check
         party_master_fields: DF.Table[PartyMasterSettingsDocField]
         party_types: DF.Table[PartyMasterSettingsPartyType]
+        role_prefix_mode: DF.Literal["Prefix", "Suffix"]
         role_to_bypass_duplicate_voucher: DF.Link | None
+        setup_finished: DF.Check
+        sync_erp_party_naming: DF.Check
+        transaction_policy_cancelled_reference_days: DF.Int
+        transaction_policy_draft_days: DF.Int
     # end: auto-generated types
     def validate(self):
         self.validate_document_types()
         self.validate_party_master_fields_options()
+        self._validate_governance_immutability()
+
+    def _validate_governance_immutability(self):
+        """Once setup_finished is set, lock core numbering settings."""
+        old = self.get_doc_before_save()
+        if not old or not old.setup_finished:
+            return
+
+        immutable_fields = ["numbering_format", "digits_count"]
+        for field in immutable_fields:
+            if self.get(field) != old.get(field):
+                frappe.throw(
+                    _(
+                        "Cannot change '{0}' after setup is finished. Uncheck 'Setup Finished' first."
+                    ).format(frappe.unscrub(field))
+                )
 
     def on_update(self):
         # Clear UPH controller caches (for smart hooks)

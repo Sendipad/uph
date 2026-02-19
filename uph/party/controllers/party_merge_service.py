@@ -78,64 +78,82 @@ class PartyMergeService:
 
         try:
             self.ignore_validation = bool(ignore_validation)
-            # Start savepoint for atomic rollback
-            frappe.db.savepoint("party_merge_start")
 
-            # 1. Analyze linked parties for both PMs
-            primary_parties = self._analyze_linked_parties(primary_pm)
-            secondary_parties = self._analyze_linked_parties(secondary_pm)
+            # Advisory lock to prevent concurrent merges on the same parties
+            lock_key = f"uph:party_merge:{':'.join(sorted([primary_pm, secondary_pm]))}"
+            if not frappe.cache.set(lock_key, frappe.session.user, nx=True, ex=120):
+                frappe.throw(
+                    _(
+                        "A merge operation is already in progress for these parties. Please try again later."
+                    )
+                )
 
-            # 2. Classify merge types per party type
-            merge_plan = self._classify_merge_types(primary_parties, secondary_parties)
+            try:
+                # Start savepoint for atomic rollback
+                frappe.db.savepoint("party_merge_start")
 
-            self._log(f"Merge plan: {merge_plan}")
+                # 1. Analyze linked parties for both PMs
+                primary_parties = self._analyze_linked_parties(primary_pm)
+                secondary_parties = self._analyze_linked_parties(secondary_pm)
 
-            # 3. Execute party-level operations based on classification
-            for party_type, operations in merge_plan.items():
-                for op in operations:
-                    if op["action"] == "merge":
-                        self._execute_party_merge(
-                            primary_party=op["primary"],
-                            secondary_party=op["secondary"],
-                            party_type=party_type,
-                        )
-                    elif op["action"] == "relink":
-                        self._execute_party_relink(
-                            party_name=op["party"],
-                            party_type=party_type,
-                            new_pm=primary_pm,
-                        )
+                # 2. Classify merge types per party type
+                merge_plan = self._classify_merge_types(
+                    primary_parties, secondary_parties
+                )
 
-            # 4. Transfer Party Master child tables (accounts, roles, etc)
-            self._transfer_pm_child_tables(primary_pm, secondary_pm, fields_to_keep)
+                self._log(f"Merge plan: {merge_plan}")
 
-            # 5. Update all transactional document references
-            self._update_party_master_references(secondary_pm, primary_pm)
+                # 3. Execute party-level operations based on classification
+                for party_type, operations in merge_plan.items():
+                    for op in operations:
+                        if op["action"] == "merge":
+                            self._execute_party_merge(
+                                primary_party=op["primary"],
+                                secondary_party=op["secondary"],
+                                party_type=party_type,
+                            )
+                        elif op["action"] == "relink":
+                            self._execute_party_relink(
+                                party_name=op["party"],
+                                party_type=party_type,
+                                new_pm=primary_pm,
+                            )
 
-            # 6. Delete secondary Party Master
-            self._delete_secondary_pm(secondary_pm, primary_pm)
+                # 4. Transfer Party Master child tables (accounts, roles, etc)
+                self._transfer_pm_child_tables(primary_pm, secondary_pm, fields_to_keep)
 
-            # 7. Invalidate caches
-            SmartCache.invalidate_party_master_parties(primary_pm)
-            SmartCache.invalidate_party_master_parties(secondary_pm)
+                # 5. Update all transactional document references
+                self._update_party_master_references(secondary_pm, primary_pm)
 
-            frappe.db.commit()
+                # 6. Delete secondary Party Master
+                self._delete_secondary_pm(secondary_pm, primary_pm)
 
-            return {
-                "success": True,
-                "message": _("{0} has been merged into {1}").format(
-                    secondary_pm, primary_pm
-                ),
-                "merge_log": self.merge_log,
-                "operations": merge_plan,
-            }
+                # 7. Invalidate caches
+                SmartCache.invalidate_party_master_parties(primary_pm)
+                SmartCache.invalidate_party_master_parties(secondary_pm)
 
-        except Exception as e:
-            frappe.db.rollback(save_point="party_merge_start")
-            frappe.log_error(
-                title=_("Party Merge Failed"),
-                message=f"Failed to merge {secondary_pm} into {primary_pm}: {str(e)}\n\nLog: {self.merge_log}",
-            )
+                frappe.db.commit()
+
+                return {
+                    "success": True,
+                    "message": _("{0} has been merged into {1}").format(
+                        secondary_pm, primary_pm
+                    ),
+                    "merge_log": self.merge_log,
+                    "operations": merge_plan,
+                }
+
+            except Exception as e:
+                frappe.db.rollback(save_point="party_merge_start")
+                frappe.log_error(
+                    title=_("Party Merge Failed"),
+                    message=f"Failed to merge {secondary_pm} into {primary_pm}: {str(e)}\n\nLog: {self.merge_log}",
+                )
+                raise
+            finally:
+                frappe.cache.delete(lock_key)
+
+        except Exception:
             raise
 
     def _analyze_linked_parties(self, pm_name: str) -> dict:
@@ -277,7 +295,9 @@ class PartyMergeService:
 
         # Update all link fields using Frappe's rename utilities
         link_fields = get_link_fields(party_type)
-        update_link_field_values(link_fields, secondary_party, primary_party, party_type)
+        update_link_field_values(
+            link_fields, secondary_party, primary_party, party_type
+        )
         rename_dynamic_links(party_type, secondary_party, primary_party)
 
         # Delete secondary party

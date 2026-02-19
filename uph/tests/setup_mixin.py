@@ -1,3 +1,6 @@
+import random
+import string
+
 import frappe
 from frappe import qb
 
@@ -5,6 +8,21 @@ from erpnext.stock.doctype.item.test_item import create_item
 
 
 class AccountsTestMixin:
+    def _unique_suffix(self, length=6):
+        return frappe.generate_hash(length=length)
+
+    def _unique_numeric(self, length=10):
+        while True:
+            value = "".join(random.choices(string.digits, k=length))
+            if not frappe.db.exists("Party Master", value):
+                return value
+
+    def _unique_docname(self, doctype, prefix):
+        while True:
+            name = f"{prefix}-{self._unique_suffix()}"
+            if not frappe.db.exists(doctype, name):
+                return name
+
     def create_party_master(self, party_name="_Test Party Master"):
         # 1. Ensure Root Group exists
         root_name = frappe.db.exists(
@@ -22,18 +40,18 @@ class AccountsTestMixin:
             ).insert(ignore_permissions=True)
             root_name = root.name
 
-        # 2. Create Leaf under Root
-        name = frappe.db.exists("Party Master", {"party_name": party_name})
-        if not name:
-            pm = frappe.new_doc("Party Master")
-            pm.party_name = party_name
-            pm.parent_party_master = root_name
-            pm.party_type = "Customer"
-            pm.type = "Individual"
-            pm.insert(ignore_permissions=True)
-            self.party_master = pm.name
-        else:
-            self.party_master = name
+        # 2. Create Leaf under Root (always unique for tests)
+        if frappe.db.exists("Party Master", {"party_name": party_name}):
+            party_name = f"{party_name} {self._unique_suffix()}"
+
+        pm = frappe.new_doc("Party Master")
+        pm.party_name = party_name
+        pm.parent_party_master = root_name
+        pm.party_type = "Customer"
+        pm.type = "Individual"
+        pm.party_number = self._unique_numeric()
+        pm.insert(ignore_permissions=True)
+        self.party_master = pm.name
 
     def create_company(self, company_name="_Test Company", abbr="_TC"):
         self.company_abbr = abbr
@@ -70,55 +88,37 @@ class AccountsTestMixin:
         self, customer_name="_Test Customer", party_master=None, currency=None
     ):
         currency = currency or (getattr(self, "currency", None))
-        if not frappe.db.exists("Customer", {"customer_name": customer_name}):
-            customer = frappe.new_doc("Customer")
-            customer.customer_name = customer_name
-            customer.type = "Individual"
-            if party_master:
-                customer.party_master = party_master
-            if currency:
-                customer.default_currency = currency
-            customer.save()
-            self.customer = customer.name
-        else:
-            self.customer = frappe.db.get_value(
-                "Customer", {"customer_name": customer_name}
-            )
-            update_data = {}
-            if party_master:
-                update_data["party_master"] = party_master
-            if currency:
-                update_data["default_currency"] = currency
-            if update_data:
-                frappe.db.set_value("Customer", self.customer, update_data)
+        if frappe.db.exists("Customer", {"customer_name": customer_name}):
+            customer_name = f"{customer_name} {self._unique_suffix()}"
+
+        customer = frappe.new_doc("Customer")
+        customer.customer_name = customer_name
+        customer.type = "Individual"
+        customer.name = self._unique_docname("Customer", "TEST-CUST")
+        if party_master:
+            customer.party_master = party_master
+        if currency:
+            customer.default_currency = currency
+        customer.save()
+        self.customer = customer.name
 
     def create_supplier(
         self, supplier_name="_Test Supplier", party_master=None, currency=None
     ):
-        if not frappe.db.exists("Supplier", {"supplier_name": supplier_name}):
-            supplier = frappe.new_doc("Supplier")
-            supplier.supplier_name = supplier_name
-            supplier.supplier_type = "Individual"
-            supplier.supplier_group = "Local"
-            if party_master:
+        if frappe.db.exists("Supplier", {"supplier_name": supplier_name}):
+            supplier_name = f"{supplier_name} {self._unique_suffix()}"
 
-                supplier.party_master = party_master
-
-            if currency:
-                supplier.default_currency = currency
-            supplier.save()
-            self.supplier = supplier.name
-        else:
-            self.supplier = frappe.db.get_value(
-                "Supplier", {"supplier_name": supplier_name}
-            )
-            update_data = {}
-            if party_master:
-                update_data["party_master"] = party_master
-            if currency:
-                update_data["default_currency"] = currency
-            if update_data:
-                frappe.db.set_value("Supplier", self.supplier, update_data)
+        supplier = frappe.new_doc("Supplier")
+        supplier.supplier_name = supplier_name
+        supplier.supplier_type = "Individual"
+        supplier.supplier_group = "Local"
+        supplier.name = self._unique_docname("Supplier", "TEST-SUP")
+        if party_master:
+            supplier.party_master = party_master
+        if currency:
+            supplier.default_currency = currency
+        supplier.save()
+        self.supplier = supplier.name
 
     def create_item(
         self,

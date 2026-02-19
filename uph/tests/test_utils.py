@@ -6,6 +6,9 @@ except ImportError:
     from frappe.test_runner import make_test_records
 
 
+from uph.setup.install import seed_default_party_master_structure
+
+
 def before_tests():
     """Setup necessary fixtures for tests, especially for clean environments like CI"""
     # 1. Initialize ERPNext Test baseline (Company, Fiscal Year, etc.)
@@ -25,6 +28,42 @@ def before_tests():
             make_test_records(doctype, commit=True)
         except Exception as e:
             # We don't want to crash before_tests if some optional records fail.
+            pass
+
+    # 3. Seed UPH Party Master Structure
+    # Required for tests to have a valid tree to work with
+    seed_default_party_master_structure()
+
+    # 4. Ensure default Address Template (prevents failures in clean CI)
+    ensure_address_template()
+
+
+def ensure_address_template():
+    """Ensure a default Address Template exists to prevent validation errors in tests"""
+    if not frappe.db.exists("Address Template", {"country": "Saudi Arabia"}):
+        try:
+            frappe.get_doc(
+                {
+                    "doctype": "Address Template",
+                    "country": "Saudi Arabia",
+                    "is_default": 0,
+                    "template": "{{ address_line1 }}\n{{ city }}\n{{ country }}",
+                }
+            ).insert(ignore_permissions=True)
+        except Exception:
+            pass
+
+    if not frappe.db.exists("Address Template", {"is_default": 1}):
+        try:
+            frappe.get_doc(
+                {
+                    "doctype": "Address Template",
+                    "country": "India",
+                    "is_default": 1,
+                    "template": "{{ address_line1 }}\n{{ city }}\n{{ country }}",
+                }
+            ).insert(ignore_permissions=True)
+        except Exception:
             pass
 
 

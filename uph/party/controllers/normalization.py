@@ -20,29 +20,79 @@ class NormalizationUtils:
     """
 
     # Translation table for Arabic, Persian, and Latin accented characters
-    TRANSLATION_TABLE = str.maketrans({
-        # Arabic normalization
-        "أ": "ا", "إ": "ا", "آ": "ا", "ى": "ي", "ة": "ه", "ؤ": "و", "ئ": "ي", "ـ": "",
-        # Persian character mapping
-        "ك": "ک", "ي": "ی",
-        # Digits from Indian to Arabic
-        "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4",
-        "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9",
-        # Latin accents (lowercase)
-        "é": "e", "è": "e", "ê": "e", "ë": "e",
-        "á": "a", "à": "a", "â": "a", "ä": "a",
-        "í": "i", "ì": "i", "î": "i", "ï": "i",
-        "ó": "o", "ò": "o", "ô": "o", "ö": "o",
-        "ú": "u", "ù": "u", "û": "u", "ü": "u",
-        "ç": "c", "ñ": "n",
-        # Latin accents (uppercase)
-        "É": "E", "È": "E", "Ê": "E", "Ë": "E",
-        "Á": "A", "À": "A", "Â": "A", "Ä": "A",
-        "Í": "I", "Ì": "I", "Î": "I", "Ï": "I",
-        "Ó": "O", "Ò": "O", "Ô": "O", "Ö": "O",
-        "Ú": "U", "Ù": "U", "Û": "U", "Ü": "U",
-        "Ç": "C", "Ñ": "N",
-    })
+    TRANSLATION_TABLE = str.maketrans(
+        {
+            # Arabic normalization
+            "أ": "ا",
+            "إ": "ا",
+            "آ": "ا",
+            "ى": "ي",
+            "ة": "ه",
+            "ؤ": "و",
+            "ئ": "ي",
+            "ـ": "",
+            # Persian character mapping
+            "ك": "ک",
+            "ي": "ی",
+            # Digits from Indian to Arabic
+            "٠": "0",
+            "١": "1",
+            "٢": "2",
+            "٣": "3",
+            "٤": "4",
+            "٥": "5",
+            "٦": "6",
+            "٧": "7",
+            "٨": "8",
+            "٩": "9",
+            # Latin accents (lowercase)
+            "é": "e",
+            "è": "e",
+            "ê": "e",
+            "ë": "e",
+            "á": "a",
+            "à": "a",
+            "â": "a",
+            "ä": "a",
+            "í": "i",
+            "ì": "i",
+            "î": "i",
+            "ï": "i",
+            "ó": "o",
+            "ò": "o",
+            "ô": "o",
+            "ö": "o",
+            "ú": "u",
+            "ù": "u",
+            "û": "u",
+            "ü": "u",
+            "ç": "c",
+            "ñ": "n",
+            # Latin accents (uppercase)
+            "É": "E",
+            "È": "E",
+            "Ê": "E",
+            "Ë": "E",
+            "Á": "A",
+            "À": "A",
+            "Â": "A",
+            "Ä": "A",
+            "Í": "I",
+            "Ì": "I",
+            "Î": "I",
+            "Ï": "I",
+            "Ó": "O",
+            "Ò": "O",
+            "Ô": "O",
+            "Ö": "O",
+            "Ú": "U",
+            "Ù": "U",
+            "Û": "U",
+            "Ü": "U",
+            "Ç": "C",
+            "Ñ": "N",
+        }
+    )
 
     # Combining diacritical marks regex (Arabic + Latin)
     # Includes: Harakat (Arabic), Tanwin, Combining accents (Latin), etc.
@@ -120,18 +170,48 @@ class NormalizationUtils:
         if method == "rapidfuzz":
             try:
                 from rapidfuzz import fuzz
+
                 return fuzz.ratio(normalized1, normalized2)
             except ImportError:
                 pass
 
         # Fallback to difflib
         from difflib import SequenceMatcher
+
         return SequenceMatcher(None, normalized1, normalized2).ratio() * 100
 
     @classmethod
-    def is_similar(
-        cls, text1: str, text2: str, threshold: float = 80.0
-    ) -> bool:
+    def fuzzy_extract(
+        cls, query: str, choices: list, scorer: str = "ratio", limit: int = 10
+    ) -> list:
+        """
+        Extract top matches from choices using fuzzy matching.
+        Returns list of (match, score, index) tuples.
+        """
+        if not query or not choices:
+            return []
+
+        try:
+            from rapidfuzz import fuzz, process
+
+            scorer_func = getattr(fuzz, scorer, fuzz.ratio)
+            return process.extract(query, choices, scorer=scorer_func, limit=limit)
+        except ImportError:
+            # Fallback to difflib
+            import difflib
+
+            # difflib.get_close_matches returns strings, we need (match, score, index)
+            matches = difflib.get_close_matches(query, choices, n=limit, cutoff=0.6)
+            results = []
+            for match in matches:
+                idx = choices.index(match)
+                # Calculate ratio for the score
+                score = difflib.SequenceMatcher(None, query, match).ratio() * 100
+                results.append((match, score, idx))
+            return results
+
+    @classmethod
+    def is_similar(cls, text1: str, text2: str, threshold: float = 80.0) -> bool:
         """
         Check if two texts are similar based on threshold.
         Default threshold is 80%.
@@ -149,15 +229,79 @@ class NormalizationUtils:
             return ""
 
         # Remove common prefixes/suffixes
-        name = re.sub(r"^(LLC|L\.L\.C|Inc|Corp|Ltd|GmbH)\s+", "", name, flags=re.IGNORECASE)
-        name = re.sub(r"\s+(LLC|L\.L\.C|Inc|Corp|Ltd|GmbH)$", "", name, flags=re.IGNORECASE)
+        name = re.sub(
+            r"^(LLC|L\.L\.C|Inc|Corp|Ltd|GmbH)\s+", "", name, flags=re.IGNORECASE
+        )
+        name = re.sub(
+            r"\s+(LLC|L\.L\.C|Inc|Corp|Ltd|GmbH)$", "", name, flags=re.IGNORECASE
+        )
 
         # Apply standard normalization
         return cls.normalize(name)
 
+    @classmethod
+    def get_soundex(cls, text: str) -> str:
+        """
+        Calculate Soundex phonetic key for a given text.
+        Standard American Soundex algorithm.
+        """
+        if not text:
+            return ""
+
+        text = cls.normalize(text).upper()
+        if not text:
+            return ""
+
+        # Remove non-alphabet characters
+        text = re.sub(r"[^A-Z]", "", text)
+        if not text:
+            return ""
+
+        first_char = text[0]
+
+        # Mapping table
+        mapping = {
+            "BFPV": "1",
+            "CGJKQSXZ": "2",
+            "DT": "3",
+            "L": "4",
+            "MN": "5",
+            "R": "6",
+        }
+
+        # Build mapping string
+        map_str = ""
+        for char in text:
+            found = False
+            for chars, code in mapping.items():
+                if char in chars:
+                    map_str += code
+                    found = True
+                    break
+            if not found:
+                map_str += "0"
+
+        # Remove adjacent duplicates
+        deduped = ""
+        prev = ""
+        for char in map_str:
+            if char != prev:
+                deduped += char
+                prev = char
+
+        # Remove zeros (vowels, H, W, Y) except the first char if it was a zero
+        # But we use the original first_char anyway
+        result = first_char
+        for char in deduped[1:]:
+            if char != "0":
+                result += char
+
+        # Pad or truncate to 4 characters
+        result = (result + "000")[:4]
+        return result
+
 
 # Module-level functions for backward compatibility
-@lru_cache(maxsize=1024)
 def normalize_text(text: str) -> str:
     """Backward-compatible wrapper for NormalizationUtils.normalize()"""
     return NormalizationUtils.normalize(text)

@@ -1,5 +1,10 @@
-uph.party_type_pm_rules = {};
+if (typeof frappe !== 'undefined') {
+	frappe.provide("uph");
+}
+window.uph = window.uph || {};
+uph.party_type_pm_rules = uph.party_type_pm_rules || {};
 uph.get_party_type_party_master_rules = function (party_type, callback) {
+	if (!uph.party_type_pm_rules) uph.party_type_pm_rules = {};
 	if (Object.keys(uph.party_type_pm_rules).length === 0) {
 		frappe.call({
 			method:
@@ -19,6 +24,7 @@ uph.get_party_type_party_master_rules = function (party_type, callback) {
 }
 
 $(document).on("app_ready", function () {
+	if (!frappe.boot) return;
 	$.each(frappe.boot.party_account_types, function (p, a) {
 		frappe.ui.form.on(p, {
 			setup: function (frm) {
@@ -212,8 +218,10 @@ $(document).on("app_ready", function () {
 	});
 });
 $(document).on("app_ready", function () {
+	if (!frappe.boot || !frappe.boot.party_master_on_doctypes_depend_field) return;
 	let doctypes = frappe.boot.party_master_on_doctypes_depend_field;
 	$.each(doctypes, function (i, row) {
+		if (!row) return;
 		let [doctype, child, fieldname] = row;
 		if (doctype === child) {
 			(function (doctype, fieldname) {
@@ -264,17 +272,17 @@ uph.utils.open_client_script_generator_dialog = function (
 	additional_fields = [],
 ) {
 	const base_fields = [
-		{ fieldtype: "Section Break", label: "Details", collapsible: 1, collapsed: 1 },
+		{ fieldtype: "Section Break", label: __("Details"), collapsible: 1, collapsed: 1 },
 		{
 			fieldtype: "Link",
 			fieldname: "document_type",
-			label: "Document Type",
+			label: __("Document Type"),
 			options: "DocType",
 			default: options.document_type || frm.doc.document_type || frm.doc.doctype,
 		},
 		{
 			fieldtype: "Data",
-			label: "Method",
+			label: __("Method"),
 			fieldname: "method",
 			default: options.method,
 			read_only: 1,
@@ -282,22 +290,22 @@ uph.utils.open_client_script_generator_dialog = function (
 		{ fieldtype: "Column Break" },
 		{
 			fieldtype: "Data",
-			label: "Job Type",
+			label: __("Job Type"),
 			fieldname: "job_type",
 			default: frm.doc.doctype,
 			read_only: 1,
 		},
 		{
 			fieldtype: "Data",
-			label: "Job Name",
+			label: __("Job Name"),
 			fieldname: "job_name",
 			default: frm.doc.name,
 			read_only: 1,
 		},
-		{ fieldtype: "Section Break", label: "Script Settings" },
+		{ fieldtype: "Section Break", label: __("Script Settings") },
 		{
 			fieldname: "trigger_event",
-			label: "Trigger Event",
+			label: __("Trigger Event"),
 			fieldtype: "Select",
 			options: "Before Insert\nBefore Submit\nOn Load",
 			reqd: 1,
@@ -305,23 +313,23 @@ uph.utils.open_client_script_generator_dialog = function (
 		},
 		{
 			fieldname: "target_field",
-			label: "Target Field",
+			label: __("Target Field"),
 			fieldtype: "Data",
 		},
 		{
 			fieldname: "script_name",
-			label: "Script Name",
+			label: __("Script Name"),
 			fieldtype: "Data",
 		},
 		{
 			fieldname: "trigger_on_fields",
-			label: "Trigger on Field Change",
+			label: __("Trigger on Field Change"),
 			fieldtype: "Data",
 			default: options.trigger_on_fields || "",
 		},
 		{
 			fieldname: "execution_mode",
-			label: "Execution Behavior",
+			label: __("Execution Behavior"),
 			fieldtype: "Select",
 			options: "set_values\nshow_dialog\nalert\nmsgprint",
 			default: "set_values",
@@ -330,28 +338,28 @@ uph.utils.open_client_script_generator_dialog = function (
 		{
 			fieldtype: "Check",
 			fieldname: "enable_custom_button",
-			label: "Enable Custom Button",
+			label: __("Enable Custom Button"),
 			default: 1,
 		},
 		{
 			fieldtype: "Check",
 			fieldname: "run_on_not_saved",
-			label: "Trigger on Unsaved Doc",
+			label: __("Trigger on Unsaved Doc"),
 		},
 		{
 			fieldtype: "Check",
 			fieldname: "run_on_after_save",
-			label: "Trigger After Save",
+			label: __("Trigger After Save"),
 		},
 		{
 			fieldtype: "Check",
 			fieldname: "run_on_submitted",
-			label: "Trigger on Submitted Doc",
+			label: __("Trigger on Submitted Doc"),
 		},
 	];
 
 	const dialog = new frappe.ui.Dialog({
-		title: "Client Script Generator",
+		title: __("Client Script Generator"),
 		fields: [...base_fields, ...additional_fields],
 		primary_action_label: "Generate",
 		size: "extra-large",
@@ -365,7 +373,7 @@ uph.utils.open_client_script_generator_dialog = function (
 				args: { options: values },
 				callback(r) {
 					if (r.message) {
-						frappe.msgprint("Client Script Generated!");
+						frappe.msgprint(__("Client Script Generated!"));
 						frappe.set_route("Form", "Client Script", r.message);
 					}
 				},

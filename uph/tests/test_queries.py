@@ -1,3 +1,6 @@
+import random
+import string
+
 import frappe
 import uph
 from frappe.tests.utils import FrappeTestCase
@@ -14,6 +17,20 @@ from uph.party.controllers.queries import (
 )
 from uph.party.controllers.cache_utils import SmartCache, clear_all_caches
 from uph.tests.setup_mixin import AccountsTestMixin
+
+
+def _unique_party_number(length=10):
+    while True:
+        value = "".join(random.choices(string.digits, k=length))
+        if not frappe.db.exists("Party Master", value):
+            return value
+
+
+def _unique_docname(doctype, prefix):
+    while True:
+        name = f"{prefix}-{frappe.generate_hash(length=6)}"
+        if not frappe.db.exists(doctype, name):
+            return name
 
 
 class TestQueries(FrappeTestCase, AccountsTestMixin):
@@ -74,6 +91,7 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
                 "party_name": "_Test Group PM",
                 "is_group": 1,
                 "party_type": "Customer",
+                "party_number": _unique_party_number(),
             }
         ).insert(ignore_permissions=True)
 
@@ -84,6 +102,7 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
                 "is_group": 0,
                 "parent_party_master": group_pm.name,
                 "party_type": "Customer",
+                "party_number": _unique_party_number(),
             }
         ).insert(ignore_permissions=True)
 
@@ -105,6 +124,7 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
                 "is_group": 0,
                 "parent_party_master": parent,
                 "party_type": "Customer",
+                "party_number": _unique_party_number(),
             }
         ).insert(ignore_permissions=True)
 
@@ -135,6 +155,7 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
                 "is_group": 0,
                 "parent_party_master": parent,
                 "party_type": "Customer",
+                "party_number": _unique_party_number(),
             }
         ).insert(ignore_permissions=True)
         pm2 = frappe.get_doc(
@@ -144,6 +165,7 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
                 "is_group": 0,
                 "parent_party_master": parent,
                 "party_type": "Customer",
+                "party_number": _unique_party_number(),
             }
         ).insert(ignore_permissions=True)
 
@@ -167,22 +189,26 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
 
         # Create a customer without party_master - but since party_master is mandatory, we need to set it temporarily
         cust_name = "_Test Unlinked Customer"
-        if not frappe.db.exists("Customer", cust_name):
-            cust = frappe.get_doc(
-                {
-                    "doctype": "Customer",
-                    "customer_name": cust_name,
-                    "party_master": self.party_master,
-                }
-            )
-            cust.insert(ignore_permissions=True)
+        if frappe.db.exists("Customer", {"customer_name": cust_name}):
+            cust_name = f"{cust_name} {frappe.generate_hash(length=6)}"
+
+        cust = frappe.get_doc(
+            {
+                "doctype": "Customer",
+                "customer_name": cust_name,
+                "party_master": self.party_master,
+            }
+        )
+        cust.name = _unique_docname("Customer", "TEST-CUST")
+        cust.insert(ignore_permissions=True)
+        cust_id = cust.name
 
         # Now unset the party_master to test the unlinked function
-        frappe.db.set_value("Customer", cust_name, "party_master", None)
+        frappe.db.set_value("Customer", cust_id, "party_master", None)
 
         result = get_unlinked_party({"party_type": "Customer"})
         names = [r.get("name") for r in result]
-        self.assertIn(cust_name, names)
+        self.assertIn(cust_id, names)
 
     def test_get_counts_of_unposted_or_cancelled_vouchers(self):
         from uph.party.controllers.queries import (
@@ -249,6 +275,7 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
                 "is_group": 0,
                 "parent_party_master": parent,
                 "party_type": "Customer",
+                "party_number": _unique_party_number(),
             }
         ).insert(ignore_permissions=True)
 
@@ -259,7 +286,9 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
                 "customer_name": "PM Linked Customer",
                 "party_master": pm.name,
             }
-        ).insert(ignore_permissions=True)
+        )
+        customer.name = _unique_docname("Customer", "TEST-CUST")
+        customer.insert(ignore_permissions=True)
 
         # Create a Sales Invoice to generate some stats
         si = frappe.get_doc(
@@ -313,6 +342,7 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
                     "is_group": 0,
                     "parent_party_master": parent,
                     "party_type": "Customer",
+                    "party_number": _unique_party_number(),
                 }
             ).insert(ignore_permissions=True)
 
@@ -356,6 +386,7 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
                 "is_group": 0,
                 "parent_party_master": parent,
                 "party_type": "Customer",
+                "party_number": _unique_party_number(),
             }
         ).insert(ignore_permissions=True)
         pm2 = frappe.get_doc(
@@ -365,6 +396,7 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
                 "is_group": 0,
                 "parent_party_master": parent,
                 "party_type": "Supplier",
+                "party_number": _unique_party_number(),
             }
         ).insert(ignore_permissions=True)
 
@@ -377,7 +409,9 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
                     "supplier_name": "Batch Supp 2",
                     "party_master": pm2.name,
                 }
-            ).insert(ignore_permissions=True)
+            )
+            sap.name = _unique_docname("Supplier", "TEST-SUP")
+            sap.insert(ignore_permissions=True)
 
         result = get_party_master_parties_db([pm1.name, pm2.name])
         # Should find both Customer and Supplier
@@ -394,6 +428,7 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
                 "party_name": "Group Dash PM",
                 "is_group": 1,
                 "party_type": "Customer",
+                "party_number": _unique_party_number(),
             }
         ).insert(ignore_permissions=True)
 
@@ -404,6 +439,7 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
                 "parent_party_master": group_pm.name,
                 "is_group": 0,
                 "party_type": "Customer",
+                "party_number": _unique_party_number(),
             }
         ).insert(ignore_permissions=True)
 
@@ -414,6 +450,7 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
                 "parent_party_master": group_pm.name,
                 "is_group": 0,
                 "party_type": "Customer",
+                "party_number": _unique_party_number(),
             }
         ).insert(ignore_permissions=True)
 
@@ -449,9 +486,13 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
 def create_customer(name, party_master=None):
     customer_id = frappe.db.exists("Customer", {"customer_name": name})
     if not customer_id:
+        if frappe.db.exists("Customer", {"customer_name": name}):
+            name = f"{name} {frappe.generate_hash(length=6)}"
         cust = frappe.get_doc(
             {"doctype": "Customer", "customer_name": name, "party_master": party_master}
-        ).insert(ignore_permissions=True)
+        )
+        cust.name = _unique_docname("Customer", "TEST-CUST")
+        cust.insert(ignore_permissions=True)
         return cust.name
     else:
         if party_master:

@@ -270,11 +270,11 @@ frappe.treeview_settings["Party Master"] = {
 				const treeview = frappe.views.trees["Party Master"];
 
 				if (!party_master) {
-					cur_tree.root_value = null;
-					cur_tree.root_label = cur_tree.opts.root_label;
-					delete cur_tree.args.name;
-					treeview.set_title();
-					cur_tree.make_tree();
+					treeview.root_value = null;
+					treeview.root_label = treeview.opts.root_label;
+					delete treeview.args.name;
+					treeview.page.set_title(__(treeview.opts.root_label));
+					treeview.get_root(); // Use get_root to find actual roots
 					return;
 				}
 
@@ -289,26 +289,39 @@ frappe.treeview_settings["Party Master"] = {
 						if (!r.message) return;
 
 						const { is_group, parent_party_master } = r.message;
-						const new_root = is_group ? party_master : (parent_party_master || cur_tree.opts.root_label);
+						const new_root = is_group ? party_master : (parent_party_master || null);
 
-						cur_tree.root_value = new_root;
-						cur_tree.root_label = new_root;
-						cur_tree.args.name = party_master;
-						treeview.set_title();
+						treeview.root_value = new_root;
+						treeview.root_label = new_root || treeview.opts.root_label;
+						treeview.args.name = party_master;
+						treeview.page.set_title(new_root || __(treeview.opts.root_label));
 
-						cur_tree.make_tree();
+						treeview.make_tree();
 
 						setTimeout(() => {
 							treeview.expand_configured_levels();
 						}, 500);
 
 						if (!is_group && party_master) {
-							setTimeout(() => {
+							// Wait for expansion then find and click the leaf
+							let attempts = 0;
+							const highlight_leaf = () => {
 								const leaf_node = cur_tree.nodes[party_master];
 								if (leaf_node) {
 									cur_tree.on_node_click(leaf_node);
+									// Scroll to the selected node
+									setTimeout(() => {
+										leaf_node.$tree_link.get(0).scrollIntoView({
+											behavior: "smooth",
+											block: "center",
+										});
+									}, 100);
+								} else if (attempts < 5) {
+									attempts++;
+									setTimeout(highlight_leaf, 500);
 								}
-							}, 2000);
+							};
+							setTimeout(highlight_leaf, 1000);
 						}
 					},
 				});
