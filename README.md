@@ -2,7 +2,9 @@
   <a href="https://github.com/Sendipad/uph">
     <img src="https://github.com/user-attachments/assets/424defe6-b5cc-4f77-aa94-7d74c67ff7cc" alt="UPH Logo" height="100px" width="100px"/>
   </a>
-  <h3>Master Data Management (MDM) for Frappe/ERPNext</h3>
+  <h3> Unified Party Hub (UPH) for Frappe/ERPNext</h3>
+ <h4>Master Data Management (MDM) for Frappe/ERPNext</h4>
+  
   <p><b>Centralize. Unify. Govern.</b></p>
 
   [![CI develop](https://img.shields.io/github/actions/workflow/status/Sendipad/uph/ci.yml?branch=develop&job=test_v17&label=CI%20develop)](https://github.com/Sendipad/uph/actions/workflows/ci.yml)
