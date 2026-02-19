@@ -2,11 +2,14 @@
   <a href="https://github.com/Sendipad/uph">
     <img src="https://github.com/user-attachments/assets/424defe6-b5cc-4f77-aa94-7d74c67ff7cc" alt="UPH Logo" height="100px" width="100px"/>
   </a>
-  <h3>Master Data Management (MDM) for Frappe/ERPNext</h3>
+  <h3> Unified Party Hub (UPH) for Frappe/ERPNext</h3>
+ <h4>Master Data Management (MDM) for Frappe/ERPNext</h4>
+  
   <p><b>Centralize. Unify. Govern.</b></p>
 
-  [![Test v15](https://github.com/Sendipad/uph/actions/workflows/test_v15.yml/badge.svg)](https://github.com/Sendipad/uph/actions/workflows/test_v15.yml)
-  [![Test Develop (v16)](https://github.com/Sendipad/uph/actions/workflows/test_develop.yml/badge.svg)](https://github.com/Sendipad/uph/actions/workflows/test_develop.yml)
+  [![CI develop](https://img.shields.io/github/actions/workflow/status/Sendipad/uph/ci.yml?branch=develop&job=test_v17&label=CI%20develop)](https://github.com/Sendipad/uph/actions/workflows/ci.yml)
+  [![CI v16](https://img.shields.io/github/actions/workflow/status/Sendipad/uph/ci.yml?branch=develop&job=test_v16&label=CI%20v16)](https://github.com/Sendipad/uph/actions/workflows/ci.yml)
+  [![CI v15](https://img.shields.io/github/actions/workflow/status/Sendipad/uph/ci.yml?branch=develop&job=test_v15&label=CI%20v15)](https://github.com/Sendipad/uph/actions/workflows/ci.yml)
   <br>
   <img src="https://img.shields.io/badge/Frappe%20%2F%20ERPNext-v15+-red?style=for-the-badge" alt="Supports ERPNext v15+"/>
   <img src="https://img.shields.io/github/v/release/Sendipad/uph?style=for-the-badge" alt="Latest Release"/>
@@ -50,6 +53,31 @@ Standard ERPNext implementations often face challenges when managing complex bus
 - **Data Redundancy**: Address and Contact data must be duplicated across multiple party roles.
 
 UPH solves these problems by introducing the **Party Master** - a central governance layer that sits above standard ERPNext Party types.
+
+---
+
+## v3 Update Notes (Merge Confirmation)
+
+### ✅ Migration Patch Included
+
+The v3 merge includes a post-model migration patch:
+
+- `uph.patches.migrate_duplicate_exclusion_to_party_issue`
+
+This patch migrates legacy **Duplicate Exclusion** records into **Party Issue** records and maps legacy statuses (`Detected`, `Dismissed`, `Merged`) into the new issue workflow states (`Open`, `Ignored`, `Resolved`).
+
+### New UX/UI Additions in v3
+
+- **UPH Setup Wizard** (`uph-setup-wizard`) for first-run setup, language/template selection, numbering rules, and safe seeding options.
+- **Auto-redirect guard** for Administrator/System Manager to enforce setup completion before using core UPH forms/tree views.
+- **Data Quality Dashboard UX expansion** with dedicated tabs for Duplicate Issues, Unlinked Roles, Unlinked Vouchers, and Transaction Health.
+
+### Key Feature Fixes/Enhancements in v3
+
+- Unified governance model using **Party Issue** as the operational issue registry.
+- Duplicate scanning with normalized fuzzy matching and queue-based execution.
+- Unlinked role resolution with suggestion-based linking and create-from-role flow.
+- Transaction policy checks for draft aging, cancelled-unamended detection, and party-master mismatch analysis.
 
 ---
 
@@ -121,6 +149,13 @@ Define N-to-N relationships between parties:
 Rules for excluding duplicates:
 - **Exclusion Criteria**: Define rules to ignore certain duplicates
 - **Document Types**: Apply rules to specific doctypes
+
+### 7. Party Issue ([`Party Issue`](uph/party/doctype/party_issue/party_issue.json))
+Unified governance issue registry introduced in v3:
+- **Issue Types**: Duplicate, Unlinked, Health, Transaction Policy
+- **Workflow States**: Open, Under Review, Resolved, Ignored
+- **Operational Metadata**: score, source engine, references, JSON details
+- **Migration Target**: receives migrated records from legacy Duplicate Exclusion patch
 
 ---
 
@@ -220,6 +255,13 @@ Real-time data quality monitoring:
 - **Duplicate Detection**: Potential duplicates identification
 - **Tax ID Compliance**: Missing tax ID tracking
 - **Quick Actions**: Link parties, merge duplicates, create exclusions
+
+### 2. UPH Setup Wizard ([`UPH Setup Wizard`](uph/party/page/uph_setup_wizard/uph_setup_wizard.json))
+Guided onboarding flow for v3:
+- **First-Run Detection**: Blocks incomplete setup for privileged users
+- **Language & Template Selection**: Seeds initial party structure from templates
+- **Governance Setup**: Numbering format, group/leaf digits, uniqueness/sync toggles
+- **Safe Seeding Mode**: Skip, merge/update, or strict fresh-seed behavior when data exists
 
 ---
 
