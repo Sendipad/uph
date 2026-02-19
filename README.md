@@ -2,431 +2,160 @@
   <a href="https://github.com/Sendipad/uph">
     <img src="https://github.com/user-attachments/assets/424defe6-b5cc-4f77-aa94-7d74c67ff7cc" alt="UPH Logo" height="100px" width="100px"/>
   </a>
-  <h3>Master Data Management (MDM) for Frappe/ERPNext</h3>
-  <p><b>Centralize. Unify. Govern.</b></p>
+  <h2>Unified Party Hub (UPH)</h2>
+  <p><b>Enterprise Party Master Data Governance for Frappe / ERPNext</b></p>
 
   [![Test v15](https://github.com/Sendipad/uph/actions/workflows/test_v15.yml/badge.svg)](https://github.com/Sendipad/uph/actions/workflows/test_v15.yml)
   [![Test Develop (v16)](https://github.com/Sendipad/uph/actions/workflows/test_develop.yml/badge.svg)](https://github.com/Sendipad/uph/actions/workflows/test_develop.yml)
-  <br>
-  <img src="https://img.shields.io/badge/Frappe%20%2F%20ERPNext-v15+-red?style=for-the-badge" alt="Supports ERPNext v15+"/>
-  <img src="https://img.shields.io/github/v/release/Sendipad/uph?style=for-the-badge" alt="Latest Release"/>
-  <img src="https://img.shields.io/badge/Localization-Arabic%20(100%25)-green?style=for-the-badge" alt="Arabic 100%"/>
-  <br><br>
-
-  <a href="#overview">Overview</a> •
-  <a href="#core-doctypes">Core DocTypes</a> •
-  <a href="#reports">Reports</a> •
-  <a href="#pages">Pages</a> •
-  <a href="#features">Features</a> •
-  <a href="#architecture">Architecture</a> •
-  <a href="#installation">Installation</a>
 </div>
 
 ---
 
-## 🖼️ Visual Insights
-
-<p align="center">
-  <img src="screenshots/party_master_tree.png" alt="Party Master Tree Hierarchy" width="800" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
-  <br>
-  <i>Advanced Tree Hierarchy providing consolidated financial visibility at every node.</i>
-</p>
-
----
-
-# Unified Party Hub (UPH)
-
-**Unified Party Hub (UPH)** is an enterprise-grade Master Data Management (MDM) extension for ERPNext. It centralizes siloed business roles (Customers, Suppliers, Employees) into a unified, tree-based hierarchy, providing consolidated financial visibility and rigorous data governance across complex business ecosystems.
-
-> **Target users:** ERPNext implementers who need a single, governed entity for parties that can act as customer, supplier, employee, etc.
-
 ## Overview
 
-Standard ERPNext implementations often face challenges when managing complex business entities:
+UPH centralizes party identity across ERPNext roles (Customer, Supplier, Employee, and related transaction contexts) using **Party Master** as the canonical record. It adds governance workflows, issue tracking, duplicate detection, setup onboarding, and data-quality monitoring.
 
-- **Fragmented Identity**: A single legal entity acting as both a Customer and a Supplier exists as two disconnected documents.
-- **Multi-Currency Logic**: Transacting with the same party in multiple currencies often requires creating duplicate party records (e.g., "Customer USD", "Customer EUR") to map to specific Receivable/Payable accounts.
-- **Siloed Reporting**: Financial reports (General Ledger, Aging) are segmented by the specific Party record, making it difficult to get a 360-degree view of the legal entity's total exposure.
-- **Data Redundancy**: Address and Contact data must be duplicated across multiple party roles.
-
-UPH solves these problems by introducing the **Party Master** - a central governance layer that sits above standard ERPNext Party types.
+In v3, UPH moved from isolated “alerts” patterns to a unified issue-driven governance model using **Party Issue** records and scheduled scans.
 
 ---
 
-## Quick Start
+## What’s New in v3
 
-> **Prerequisites:** Frappe/ERPNext v15+ and a working bench site.
+### 1) Setup Wizard Onboarding
 
-```bash
-# Install app
-bench get-app https://github.com/Sendipad/uph
-bench --site {your-site} install-app uph
+A guided `uph-setup-wizard` page now handles first-time configuration:
 
-# Migrate to apply fixtures and setup
-bench --site {your-site} migrate
-```
+- setup status detection (`setup_finished` + data presence)
+- language-aware template selection from `uph/setup/data/templates`
+- numbering configuration (format, leaf/group digits)
+- governance toggles (cross-type uniqueness, ERP naming sync)
+- safe data-seeding choices when existing Party Master data already exists
 
-After install, open **Party Master Settings** and review:
-- Party type rules
-- Doctype mappings for transactional documents
-- Duplicate voucher prevention rules
+If setup is incomplete, admins are automatically redirected from UPH core forms/tree to the wizard.
 
----
+### 2) Data Quality Dashboard UX Upgrade
 
-## Core DocTypes
+`data-quality-dashboard` now exposes multi-tab governance operations:
 
-UPH introduces the following DocTypes to manage party data:
+- **Duplicate Issues**
+- **Unlinked Roles**
+- **Unlinked Vouchers**
+- **Transaction Health**
 
-### 1. Party Master ([`Party Master`](uph/party/doctype/party_master/party_master.json))
-The central hub for all party entities. Key features:
-- **Tree-based Hierarchy**: Supports parent-child relationships for organizational structures
-- **Hierarchical Numbering**: Automatic numbering based on parent node
-- **Multi-Role Support**: Link Customers, Suppliers, Employees under one entity
-- **Legal Identity**: Tax ID, registration numbers, legal entity types
-- **Contacts & Addresses**: Centralized contact and address management
-- **Primary/Secondary Roles**: Define primary role and link secondary roles
-- **Internal Party**: Mark as internal party for inter-company transactions
+with stat cards, badges, refresh actions, and background scan triggers.
 
-### 2. Party Analytic Accounting ([`Party Analytic Accounting`](uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json))
-Enables Oracle TCA-like site accounting. Features:
-- **Accounting Non-Duplication**: Eliminates redundant accounts for branches
-- **Multiple Dimension Types**: Site, Business Unit, Branch, Territory, Cost Center, Factory/Plant
-- **Company-Specific Rules**: Configure rules per company
-- **Effective Dating**: Track validity periods for accounting dimensions
-- **Allow/Restrict Rules**: Control which parties can use specific dimensions
+### 3) Party Issue Governance Layer
 
-### 3. Party Master Parties ([`Party Master Parties`](uph/party/doctype/party_master_parties/party_master_parties.json))
-Junction table linking Party Master to ERPNext parties:
-- **Dynamic Links**: Links to Customer, Supplier, Employee, Shareholder
-- **Currency Tracking**: Track currency per linked party
-- **Party Name**: Reference to the linked party name
+New doctype: **Party Issue**
 
-### 4. Party Master Settings ([`Party Master Settings`](uph/party/doctype/party_master_settings/party_master_settings.json))
-Central configuration for UPH:
-- **Party Type Rules**: Configure uniqueness rules per party type
-- **DocType Mapping**: Inject party_master field into transactional documents
-- **Field Synchronization**: Sync fields between Party Master and linked parties
-- **PAA Configuration**: Enable and configure Party Analytic Accounting
-- **Tree View Settings**: Auto-expand levels, hide balance
-- **Duplicate Voucher Check**: Prevent duplicate vouchers for same Party Master
+- Supports issue classes: `Duplicate`, `Unlinked`, `Health`, `Transaction Policy`
+- Workflow states: `Open`, `Under Review`, `Resolved`, `Ignored`
+- Stores metadata and references (`reference_doctype`, `reference_name`, `details_json`)
+- Used by dashboard actions (dismiss, merge, resolve) and all scanner pipelines
 
-### 5. Party Relationship ([`Party Relationship`](uph/party/doctype/party_relationship/party_relationship.json))
-Define N-to-N relationships between parties:
-- **Relationship Types**: Parent/Subsidiary, Ownership, Management
-- **Ownership Percentages**: Track ownership stakes
-- **Validity Periods**: Define relationship effective dates
-- **Party Relationship Type**: Configure relationship type master data
+### 4) Scanner & Monitoring Enhancements
 
-### 6. Duplicate Exclusion ([`Duplicate Exclusion`](uph/party/doctype/duplicate_exclusion/duplicate_exclusion.json))
-Rules for excluding duplicates:
-- **Exclusion Criteria**: Define rules to ignore certain duplicates
-- **Document Types**: Apply rules to specific doctypes
+- Duplicate scan with block-based name grouping + fuzzy matching (RapidFuzz)
+- Unlinked role and unlinked transaction detection with suggestion-based linking
+- Transaction policy scans for:
+  - draft aging
+  - cancelled but unamended vouchers
+  - party-master mismatch between vouchers and linked party records
+- Scheduled jobs refresh and re-open caches to keep dashboard responsive
 
 ---
 
-## Key Workflows
+## Migration Notes (v3 Merge)
 
-### 1) Create a Party Master
-1. Create a new **Party Master**.
-2. Set **Party Type**, legal identity fields, and (optionally) hierarchy parent.
-3. Link existing parties (Customer/Supplier/Employee) or create new ones.
+✅ **Yes — v3 includes a migration patch.**
 
-### 2) Link Existing Parties
-Use **Party Master > Parties** to link existing parties to a single entity. The system enforces:
-- Role rules (primary/secondary).
-- Duplicate constraints from **Party Master Settings**.
+`uph/patches.txt` registers:
 
-### 3) Transactional Validation
-- Transactional documents mapped in **Party Master Settings** will validate or auto‑set `party_master`.
-- Party Analytic Accounting (PAA) validation will enforce Party Master consistency.
+- `uph.patches.migrate_duplicate_exclusion_to_party_issue`
 
-### Supporting DocTypes
-- [`Party Master Accounts`](uph/party/doctype/party_master_accounts/party_master_accounts.json): Account mappings per party
-- [`Party Master Role`](uph/party/doctype/party_master_role/party_master_role.json): Role definitions
-- [`Party Analytic Accounting Party`](uph/party/doctype/party_analytic_accounting_party/party_analytic_accounting_party.json): PAA party assignments
-- [`Party Analytic Accounting Allowed Company`](uph/party/doctype/party_analytic_accounting_allowed_company/party_analytic_accounting_allowed_company.json): Company permissions for PAA
-- [`Party Master Settings DocType`](uph/party/doctype/party_master_settings_doctype/party_master_settings_doctype.json): DocType configuration
-- [`Party Master Settings DocField`](uph/party/doctype/party_master_settings_docfield/party_master_settings_docfield.json): Field mapping configuration
-- [`Party Master Settings Party Type`](uph/party/doctype/party_master_settings_party_type/party_master_settings_party_type.json): Party type rules configuration
+This patch migrates legacy **Duplicate Exclusion** records into **Party Issue** entries, maps old statuses to new workflow statuses, preserves historical metadata, and avoids duplicate issue creation.
 
----
+### Status mapping used by migration
 
-## Reports
-
-UPH provides comprehensive reporting capabilities:
-
-### 1. Party Master Ledger ([`Party Master Ledger`](uph/party/report/party_master_ledger/party_master_ledger.json))
-Consolidated ledger view across all linked parties:
-- Filter by Party Master, party type, company, date range
-- View all transactions under a single Party Master
-- Consolidated totals across linked parties
-
-### 2. Party Account Balances ([`Party Account Balances`](uph/party/report/party_account_balances/party_account_balances.json))
-Account balance reporting per party:
-- Receivable/Payable balances
-- Currency-wise breakdown
-- Aging analysis
-
-### 3. Party Accounting Ledger ([`Party Accounting Ledger`](uph/party/report/party_accounting_ledger/party_accounting_ledger.json))
-Detailed accounting transactions:
-- Filter by Party Master and accounting dimension
-- Voucher-wise details
-- Debit/Credit summaries
-
-### 4. Party Ledger ([`Party Ledger`](uph/party/report/party_ledger/party_ledger.json))
-Standard party ledger with Party Master integration:
-- Enhanced with Party Master link
-- Extended filtering options
-
-### 5. Chronological Party Ledger ([`Chronological Party Ledger`](uph/party/report/chronological_party_ledger/chronological_party_ledger.json))
-Time-based party transaction history:
-- Chronological transaction listing
-- Date-wise summaries
-- Transaction type filtering
-
-### 6. Party Account Statement ([`Party Account Statement`](uph/party/report/party_account_statement/party_account_statement.json))
-Customer/statement-style reporting:
-- Statement format output
-- Balance confirmation ready
-- Transaction details with running balance
-
-### 7. Party Master Health Report ([`Party Master Health Report`](uph/party/report/party_master_health_report/party_master_health_report.json))
-Data quality and governance reporting:
-- Linkage status
-- Missing tax IDs
-- Unlinked parties
-- Data completeness metrics
-
----
-
-## Configuration Notes
-
-### Party Master Settings (Core)
-- **DocType Mapping:** Determines which transactional documents require `party_master`.
-- **Party Type Rules:** Defines required/unique fields per party type.
-- **Duplicate Voucher Check:** Prevents duplicate vouchers for the same Party Master.
-
-### Party Analytic Accounting (Optional)
-- If enabled, PAA enforces accounting dimension consistency for linked parties.
-
----
-
-## Pages
-
-### 1. Data Quality Dashboard ([`Data Quality Dashboard`](uph/party/page/data_quality_dashboard/data_quality_dashboard.json))
-Real-time data quality monitoring:
-- **Governance Score**: Overall data quality metric
-- **Linkage Statistics**: Linked vs unlinked parties
-- **Duplicate Detection**: Potential duplicates identification
-- **Tax ID Compliance**: Missing tax ID tracking
-- **Quick Actions**: Link parties, merge duplicates, create exclusions
-
----
-
-## Features
-
-### 🛡️ Party Identity Governance
-- Real-time governance score tracking
-- Linkage statistics and visualization
-- Smart duplicate detection using fuzzy matching
-- Tax ID validation and compliance tracking
-
-### 🚀 Production-Ready Onboarding
-- Smart linking dialog for bulk association
-- "Create Party As" wizard for instant role provisioning
-- Automatic inheritance of address, contact, and tax data
-- Bulk migration support for existing parties
-
-### 💱 Hierarchical Multi-Currency Support
-- Define group accounts at Party Master level
-- Automatic hierarchy traversal for currency matching
-- Single party entity with multi-currency transactions
-- Correct GL mapping per currency
-
-### ⚡ High-Performance Architecture
-- **SmartCache**: Redis-based caching layer
-- **Batched Processing**: Optimized SQL queries
-- **Request Scoping**: Local cache per request
-- **Query Builder**: Uses frappe.qb for efficiency
-
-### 📊 Party Analytic Accounting
-- Oracle TCA-like site accounting
-- Multiple dimension types (Site, Branch, Territory, etc.)
-- Company-specific rules
-- Allow/Restrict functionality
-- Effective dating support
-
-### 🌳 Tree-Based Hierarchy
-- Parent-child organizational structures
-- Consolidated balance visibility at every level
-- Hierarchical numbering system
-- Automatic cascading updates
-
-### 🔗 Relationship Management
-- Parent/Subsidiary structures
-- Ownership percentages and validity
-- Advanced N-to-N relationship mapping
-- Relationship type configuration
-
-### 📋 Configuration
-- Dynamic field injection into DocTypes
-- Per-party-type uniqueness rules
-- Validation rules and mandatory fields
-- Field synchronization settings
-
----
-
-## Architecture
-
-UPH is built as a non-intrusive extension to ERPNext:
-
-### Core Components
-
-```mermaid
-graph TD
-    PM[Party Master] -->|Links| PMP[Party Master Parties]
-    PMP -->|Maps to| C[Customer]
-    PMP -->|Maps to| S[Supplier]
-    PMP -->|Maps to| E[Employee]
-    
-    PM -->|Parent| PM_Group[Party Group]
-    
-    PM -->|Configured by| PMS[Party Master Settings]
-    
-    subgraph "Financials"
-    C -.->|GL Entry| GL[General Ledger]
-    S -.->|GL Entry| GL
-    GL -->|Consolidated| Report[Party Master Ledger]
-    end
-    
-    subgraph "Party Analytic Accounting"
-    PAA[Party Analytic Accounting] -->|Tags| TRANS[Transactions]
-    PAA -->|Segments| Report
-    end
-    
-    subgraph "Data Quality"
-    DQ[Data Quality Dashboard] -->|Monitors| PM
-    DQ -->|Detects| Duplicates[Potential Duplicates]
-    end
-```
-
-### Key Implementation Details
-
-1. **Hooks & Events**: Intercepts `validate`, `on_update`, and `on_trash` events for data integrity
-2. **Dynamic Field Injection**: Uses `Party Master Settings` to inject Link fields without schema modifications
-3. **Override Methods**: Extends `erpnext.accounts.party.get_party_details` for unified data retrieval
-4. **Smart Validation**: Optimized hooks with early-exit for performance
-
-### Supported Transactional Documents
-
-UPH automatically injects Party Master into these documents:
-- Sales Invoice / Sales Invoice Item
-- Purchase Invoice / Purchase Invoice Item
-- Journal Entry / Journal Entry Account
-- Payment Entry
-- Sales Order / Sales Order Item
-- Purchase Order / Purchase Order Item
-- Delivery Note / Delivery Note Item
-- Purchase Receipt / Purchase Receipt Item
-- Expense Claim
-
----
-
-## API Reference
-
-### Backend Controllers
-
-| Function | Path | Description |
-|----------|------|-------------|
-| `validate_party_master_on_document_types_smart` | [`uph.party.controllers.party`](uph/party/controllers/party.py) | Smart validation with early-exit optimization |
-| `validate_party_master_on_target_party_type_smart` | [`uph.party.controllers.party`](uph/party/controllers/party.py) | Validates Customer/Supplier/Employee |
-| `get_party_details` | [`uph.party.controllers.party`](uph/party/controllers/party.py) | Overrides ERPNext party details API |
-| `normalize_text` | [`uph.party.controllers.normalization`](uph/party/controllers/normalization.py) | Text normalization for fuzzy matching |
-| `validate_document_quality` | [`uph.party.controllers.mdm`](uph/party/controllers/mdm.py) | Data quality validation |
-| `party_master_link_query` | [`uph.party.controllers.queries`](uph/party/controllers/queries.py) | Optimized link query with ranking |
-
----
-
-## Compatibility
-
-| Component | Version |
-|-----------|---------|
-| Framework | Frappe Framework v15+ |
-| ERP | ERPNext v15+ |
-| Database | MariaDB / PostgreSQL |
-| Python | 3.10+ |
-
----
-
-## Use Cases
-
-1. **Conglomerates**: Manage inter-company transactions where a subsidiary is both a vendor and a client
-2. **Multi-National Trade**: Handle single customers paying in multiple currencies without cluttering the Customer master
-3. **Governance Compliance**: Enforce strict Tax ID validation and prevent duplicate customer creation
-4. **Branch Accounting**: Track financial performance by branch/site without creating separate Customer/Supplier records
-5. **Relationship Mapping**: Define complex corporate hierarchies and ownership structures
+- `Detected` → `Open`
+- `Dismissed` → `Ignored`
+- `Merged` → `Resolved`
 
 ---
 
 ## Installation
 
-### Via Bench (Recommended)
-
 ```bash
-bench get-app https://github.com/Sendipad/uph.git
-bench install-app uph
-bench migrate
+bench get-app https://github.com/Sendipad/uph
+bench --site {your-site} install-app uph
+bench --site {your-site} migrate
 ```
 
-### Manual Installation
+After install/migrate:
 
-1. Clone the repository into your apps directory:
-   ```bash
-   cd ~/frappe-bench/apps
-   git clone https://github.com/Sendipad/uph.git
-   ```
-
-2. Install the app:
-   ```bash
-   bench install-app uph
-   bench migrate
-   ```
-
-3. Clear cache:
-   ```bash
-   bench clear-cache
-   ```
+1. Login as Administrator/System Manager.
+2. Complete **UPH Setup Wizard**.
+3. Open **Data Quality Dashboard** to run first scans.
 
 ---
 
-## Documentation
+## Core Modules
 
-Full documentation is available at: [https://sendipad.github.io/uph/](https://sendipad.github.io/uph/)
+### Core DocTypes
 
-### Quick Start Guide
+- `Party Master`
+- `Party Master Settings`
+- `Party Issue`
+- `Party Relationship`
+- `Party Analytic Accounting` (+ child doctypes)
 
-1. **Configure Party Master Settings**: Set up which party types to manage
-2. **Create Party Master Hierarchy**: Build your organizational structure
-3. **Link Existing Parties**: Use Smart Linking to associate existing customers/suppliers
-4. **Configure PAA**: Set up Party Analytic Accounting dimensions
-5. **Verify Reports**: Run Party Master Ledger to confirm consolidated data
+### Pages
+
+- `uph-setup-wizard`
+- `data-quality-dashboard`
+
+### Controllers / Services
+
+- `duplicate_scanner.py`
+- `unlinked_resolver.py`
+- `transaction_health.py`
+- `party_merge_service.py`
+
+---
+
+## Operational Model
+
+### Scheduled jobs
+
+- **Hourly**
+  - dashboard stats refresh
+  - unlinked issue scan enqueue
+  - transaction policy scan enqueue
+- **Daily**
+  - duplicate scan enqueue
+
+### Caching
+
+Dashboard stats and health summaries are cache-backed (Redis via `frappe.cache`) to reduce expensive live aggregation during requests.
+
+---
+
+## Testing
+
+Representative tests exist for:
+
+- merge behavior
+- dashboard data quality responses
+- cache behavior
+- query helpers
+- normalization
+- API endpoints
+- party master validations
+
+Run project tests with your bench/site test pipeline as appropriate for your environment.
 
 ---
 
 ## License
 
-This project is licensed under the GPL-3.0 License - see the [LICENSE](license.txt) file for details.
-
----
-
-## Support
-
-- **GitHub Issues**: Report bugs and request features
-- **Documentation**: [https://sendipad.github.io/uph/](https://sendipad.github.io/uph/)
-- **ERPNext Community**: [https://discuss.erpnext.com](https://discuss.erpnext.com)
-
----
-
-<div align="center">
-  <sub>Built with ❤️ for the ERPNext Community</sub>
-</div>
+GPL-3.0
