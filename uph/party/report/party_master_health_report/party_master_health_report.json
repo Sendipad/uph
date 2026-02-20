@@ -26,6 +26,9 @@
   },
   {
    "role": "Administrator"
+  },
+  {
+   "role": "Party Manager"
   }
  ],
  "timeout": 0

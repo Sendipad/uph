@@ -138,11 +138,11 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-11-20 17:28:51.230685",
+ "modified": "2026-02-21 00:45:28.282955",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party Analytic Accounting",
- "naming_rule": "Expression",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
@@ -154,6 +154,18 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Party Manager",
    "share": 1,
    "write": 1
   }

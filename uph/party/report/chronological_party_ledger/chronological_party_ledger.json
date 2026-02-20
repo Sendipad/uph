@@ -29,6 +29,9 @@
   },
   {
    "role": "Auditor"
+  },
+  {
+   "role": "Party Manager"
   }
  ],
  "timeout": 0

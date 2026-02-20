@@ -17,6 +17,7 @@ class DataQualityDashboard {
         this.limit = 20;
         this.min_score = 70;
         this.active_tab = 'duplicates';
+        this.party_master_filter = null;
 
         // Unlinked tab state
         this.unlinked_offset = 0;
@@ -35,9 +36,28 @@ class DataQualityDashboard {
 
     init() {
         this.setup_page_actions();
+        this.setup_filters();
         this.render_layout();
         this.load_stats();
         this.load_tab_content();
+    }
+
+    setup_filters() {
+        this.party_master_field = this.page.add_field({
+            label: __('Party Master'),
+            fieldtype: 'Link',
+            fieldname: 'party_master',
+            options: 'Party Master',
+            change: () => {
+                this.party_master_filter = this.party_master_field.get_value() || null;
+                this.current_offset = 0;
+                this.unlinked_offset = 0;
+                this.unlinked_vouchers_offset = 0;
+                this.health_offset = 0;
+                this.load_stats();
+                this.load_tab_content();
+            }
+        });
     }
 
     setup_page_actions() {
@@ -67,31 +87,27 @@ class DataQualityDashboard {
     render_layout() {
         this.wrapper.html(`
             <div class="data-quality-container">
-                <!-- Stats Cards -->
+                <!-- Stats Cards - Frappe Number Card Style -->
                 <div class="stats-row" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-                    <div class="stat-card" id="stat-total-parties" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
-                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600;">-</div>
-                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Total Parties')}</div>
+                    <div class="stat-card" id="stat-total-parties" data-route="" style="flex: 1; min-width: 140px; padding: 1rem 1rem 1rem 1.25rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm); border-left: 4px solid var(--blue-500); cursor: default;">
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem;">${__('Total Parties')}</div>
+                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 700;">-</div>
                     </div>
-                    <div class="stat-card" id="stat-duplicate-issues" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
-                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--orange-500);">-</div>
-                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Duplicate Issues')}</div>
+                    <div class="stat-card stat-clickable" id="stat-duplicate-issues" data-issue-type="Duplicate" style="flex: 1; min-width: 140px; padding: 1rem 1rem 1rem 1.25rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm); border-left: 4px solid var(--orange-500); cursor: pointer;">
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem;">${__('Duplicate Issues')}</div>
+                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: var(--orange-500);">-</div>
                     </div>
-                    <div class="stat-card" id="stat-unlinked" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
-                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--purple-500);">-</div>
-                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Unlinked Roles')}</div>
+                    <div class="stat-card stat-clickable" id="stat-unlinked" data-issue-type="Unlinked" style="flex: 1; min-width: 140px; padding: 1rem 1rem 1rem 1.25rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm); border-left: 4px solid var(--purple-500); cursor: pointer;">
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem;">${__('Unlinked Roles')}</div>
+                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: var(--purple-500);">-</div>
                     </div>
-                    <div class="stat-card" id="stat-drafts" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
-                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--yellow-500);">-</div>
-                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Draft Vouchers')}</div>
+                    <div class="stat-card stat-clickable" id="stat-drafts" data-issue-type="Transaction Policy" style="flex: 1; min-width: 140px; padding: 1rem 1rem 1rem 1.25rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm); border-left: 4px solid var(--yellow-500); cursor: pointer;">
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem;">${__('Transaction Policy')}</div>
+                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: var(--yellow-500);">-</div>
                     </div>
-                    <div class="stat-card" id="stat-unlinked-vouchers" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
-                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--red-500);">-</div>
-                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Unlinked Vouchers')}</div>
-                    </div>
-                    <div class="stat-card" id="stat-dismissed" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
-                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--green-500);">-</div>
-                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Ignored Issues')}</div>
+                    <div class="stat-card stat-clickable" id="stat-dismissed" data-status="Ignored" style="flex: 1; min-width: 140px; padding: 1rem 1rem 1rem 1.25rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm); border-left: 4px solid var(--green-500); cursor: pointer;">
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem;">${__('Ignored Issues')}</div>
+                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: var(--green-500);">-</div>
                     </div>
                 </div>
 
@@ -137,6 +153,22 @@ class DataQualityDashboard {
             const tab = $(e.currentTarget).data('tab');
             this.switch_tab(tab);
         });
+
+        // Bind stat card clicks → navigate to Party Issue list
+        this.wrapper.find('.stat-clickable').on('click', (e) => {
+            const $card = $(e.currentTarget).closest('.stat-card');
+            const issue_type = $card.data('issue-type');
+            const status = $card.data('status');
+            let filters = {};
+            if (issue_type) {
+                filters['issue_type'] = issue_type;
+                filters['status'] = ['in', ['Open', 'Under Review']];
+            }
+            if (status) {
+                filters['status'] = status;
+            }
+            frappe.set_route('List', 'Party Issue', filters);
+        });
     }
 
     switch_tab(tab) {
@@ -161,6 +193,7 @@ class DataQualityDashboard {
     load_stats() {
         frappe.call({
             method: 'uph.party.page.data_quality_dashboard.data_quality_dashboard.get_dashboard_stats',
+            args: { party_master: this.party_master_filter || '' },
             callback: (r) => {
                 if (r.message) {
                     this.update_stats(r.message);
@@ -173,7 +206,6 @@ class DataQualityDashboard {
         $('#stat-total-parties .stat-value').text(stats.total_parties || 0);
         $('#stat-duplicate-issues .stat-value').text(stats.duplicate_issues || 0);
         $('#stat-unlinked .stat-value').text(stats.unlinked_count || 0);
-        $('#stat-unlinked-vouchers .stat-value').text(stats.unlinked_transaction_count || 0);
         $('#stat-drafts .stat-value').text(stats.draft_voucher_count || 0);
         $('#stat-dismissed .stat-value').text(stats.total_dismissed || 0);
 
@@ -187,12 +219,6 @@ class DataQualityDashboard {
             $('#tab-badge-unlinked').text(stats.unlinked_count).show();
         } else {
             $('#tab-badge-unlinked').hide();
-        }
-
-        if (stats.unlinked_transaction_count) {
-            $('#tab-badge-unlinked-vouchers').text(stats.unlinked_transaction_count).show();
-        } else {
-            $('#tab-badge-unlinked-vouchers').hide();
         }
 
         const health_total = (stats.draft_voucher_count || 0) + (stats.cancelled_unamended_count || 0);
@@ -216,7 +242,8 @@ class DataQualityDashboard {
             args: {
                 limit: this.limit,
                 offset: this.current_offset,
-                min_score: this.min_score
+                min_score: this.min_score,
+                party_master: this.party_master_filter || '',
             },
             callback: (r) => {
                 if (r.message) {
@@ -405,6 +432,7 @@ class DataQualityDashboard {
             args: {
                 limit: this.unlinked_limit,
                 offset: this.unlinked_offset,
+                party_master: this.party_master_filter || '',
             },
             callback: (r) => {
                 if (r.message) {
@@ -530,7 +558,7 @@ class DataQualityDashboard {
                             <div class="suggestion-row" style="display: flex; align-items: center; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 0.5rem; cursor: pointer;" data-pm="${s.party_master}">
                                 <div style="flex: 2;">
                                     <div style="font-weight: 500;">${s.party_name}</div>
-                                    <div class="text-muted small">${s.party_master} | ${s.party_type || ''}</div>
+                                    <div class="text-muted small">${s.party_master} | ${__(s.party_type) || ''}</div>
                                 </div>
                                 <div style="flex: 1; text-align: right;">
                                     <span style="background: ${s.score >= 80 ? 'var(--green-100)' : 'var(--yellow-100)'}; color: ${s.score >= 80 ? 'var(--green-700)' : 'var(--yellow-700)'}; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.8rem; font-weight: 600;">
@@ -605,10 +633,11 @@ class DataQualityDashboard {
         content.html(`<div class="text-muted">${__('Loading unlinked vouchers...')}</div>`);
 
         frappe.call({
-            method: 'uph.party.controllers.unlinked_resolver.get_unlinked_transactions',
+            method: 'uph.party.page.data_quality_dashboard.data_quality_dashboard.get_unlinked_voucher_issues',
             args: {
                 limit: this.unlinked_vouchers_limit,
                 offset: this.unlinked_vouchers_offset,
+                party_master: this.party_master_filter || '',
             },
             callback: (r) => {
                 if (r.message) {
@@ -623,7 +652,7 @@ class DataQualityDashboard {
         content.empty();
 
         if (!data.unlinked || data.unlinked.length === 0) {
-            content.html(`<div class="text-muted text-center" style="padding: 2rem;">${__('All transactions are linked to a Party Master')}</div>`);
+            content.html(`<div class="text-muted text-center" style="padding: 2rem;">${__('No unlinked voucher issues found')}</div>`);
             this.render_pagination(0, 'unlinked_vouchers');
             return;
         }
@@ -643,16 +672,16 @@ class DataQualityDashboard {
                 <div class="unlinked-row" style="display: flex; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); background: var(--card-bg);">
                     <div style="flex: 2;">
                         <div style="font-weight: 500;">
-                            <a href="/app/${frappe.router.slug(item.role_doctype)}/${item.role_name}" target="_blank">${item.role_name}</a>
+                            <a href="/app/${frappe.router.slug(item.role_doctype)}/${item.role_name}" target="_blank">${item.display_name}</a>
                         </div>
-                        <div class="text-muted small">${__('By')} ${item.owner}</div>
+                        <div class="text-muted small">${item.owner ? __('By') + ' ' + item.owner : item.role_name}</div>
                     </div>
                     <div style="flex: 1;">
-                        <span class="indicator-pill" style="font-size: 0.8rem;">${item.role_doctype}</span>
+                        <span class="indicator-pill" style="font-size: 0.8rem;">${__(item.role_doctype)}</span>
                     </div>
-                    <div style="flex: 1;">${frappe.datetime.global_date_format(item.creation)}</div>
+                    <div style="flex: 1;">${item.creation ? frappe.datetime.global_date_format(item.creation) : '-'}</div>
                     <div style="flex: 1; text-align: right;">
-                        <button class="btn btn-default btn-xs btn-suggest" data-doctype="${item.role_doctype}" data-name="${item.role_name}" data-display="${item.role_name}">
+                        <button class="btn btn-default btn-xs btn-suggest" data-doctype="${item.role_doctype}" data-name="${item.role_name}" data-display="${item.display_name}">
                             ${__('Link')}
                         </button>
                     </div>
@@ -679,6 +708,7 @@ class DataQualityDashboard {
             args: {
                 limit: this.health_limit,
                 offset: this.health_offset,
+                party_master: this.party_master_filter || '',
             },
             callback: (r) => {
                 if (r.message) {
@@ -702,6 +732,7 @@ class DataQualityDashboard {
         content.append(`
             <div style="display: flex; padding: 0.5rem 1rem; font-weight: 600; color: var(--text-muted); font-size: 0.85rem; border-bottom: 1px solid var(--border-color);">
                 <div style="flex: 2;">${__('Party Master')}</div>
+                <div style="flex: 1;">${__('DocType')}</div>
                 <div style="flex: 1; text-align: center;">${__('Drafts')}</div>
                 <div style="flex: 1; text-align: center;">${__('Cancelled')}</div>
                 <div style="flex: 1; text-align: center;">${__('Severity')}</div>
@@ -717,7 +748,10 @@ class DataQualityDashboard {
                         <div style="font-weight: 500;">
                             <a href="/app/party-master/${p.party_master}" target="_blank">${p.party_name}</a>
                         </div>
-                        <div class="text-muted small">${p.party_number || '-'} | ${p.party_type || ''}</div>
+                        <div class="text-muted small">${p.party_number || '-'} | ${__(p.party_type) || ''}</div>
+                    </div>
+                    <div style="flex: 1;">
+                        <span class="indicator-pill" style="font-size: 0.75rem;">${__(p.reference_doctype) || '-'}</span>
                     </div>
                     <div style="flex: 1; text-align: center;">
                         <span style="font-weight: 600; color: ${p.draft_count > 0 ? 'var(--yellow-600)' : 'var(--text-muted)'};">${p.draft_count}</span>
@@ -726,7 +760,7 @@ class DataQualityDashboard {
                         <span style="font-weight: 600; color: ${p.cancelled_unamended_count > 0 ? 'var(--red-500)' : 'var(--text-muted)'};">${p.cancelled_unamended_count}</span>
                     </div>
                     <div style="flex: 1; text-align: center;">
-                        <span style="color: ${severity_color}; font-weight: 600; font-size: 0.85rem;">${p.severity}</span>
+                        <span style="color: ${severity_color}; font-weight: 600; font-size: 0.85rem;">${__(p.severity)}</span>
                     </div>
                     <div style="flex: 1; text-align: right;">
                         <button class="btn btn-default btn-xs btn-detail" data-pm="${p.party_master}">

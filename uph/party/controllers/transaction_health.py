@@ -23,52 +23,66 @@ from uph.party.controllers.cache_utils import (
 
 
 @frappe.whitelist()
-def get_transaction_health(limit: int = 20, offset: int = 0):
+def get_transaction_health(limit: int = 20, offset: int = 0, party_master: str = None):
     """
     Find Party Masters with open Transaction Policy issues.
-    Returns paginated list of parties with problem counts.
+    Returns paginated list aggregated by (party, reference_doctype), sorted by doctype.
+    Severity is determined by per-doctype warn_not_submitted_document setting.
     """
     limit = cint(limit) or 20
     offset = cint(offset) or 0
 
-    issues = frappe.get_all(
-        "Party Issue",
-        filters={
-            "issue_type": "Transaction Policy",
-            "status": ["in", ["Open", "Under Review"]],
-        },
-        fields=["party", "details_json"],
-        limit_page_length=0,
+    # Read per-doctype warn_not_submitted_document from settings child table
+    warn_doctypes = set()
+    try:
+        settings = frappe.get_cached_doc("Party Master Settings")
+        for d in settings.document_types or []:
+            if getattr(d, "warn_not_submitted_document", 0):
+                dt = d.get("document_type")
+                parent_dt = d.get("parent_doctype") or dt
+                warn_doctypes.add(dt)
+                warn_doctypes.add(parent_dt)
+    except Exception as e:
+        frappe.log_error(
+            title="Transaction Health: Failed to load warn_not_submitted_document settings",
+            message=str(e),
+        )
+
+    # ── SQL aggregation: GROUP BY party, reference_doctype ──
+    # Use JSON_EXTRACT to classify each issue by its sub-type directly
+    # in SQL, drastically reducing Python-side work.
+    party_filter = ""
+    params = {}
+    if party_master:
+        party_filter = "AND pi.party = %(party_master)s"
+        params["party_master"] = party_master
+
+    agg_rows = frappe.db.sql(
+        f"""
+        SELECT
+            pi.party,
+            pi.reference_doctype,
+            SUM(CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(pi.details_json, '$.issue')) = 'draft_overdue' THEN 1 ELSE 0 END) AS draft_count,
+            SUM(CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(pi.details_json, '$.issue')) = 'cancelled_referenced' THEN 1 ELSE 0 END) AS cancelled_unamended_count,
+            SUM(CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(pi.details_json, '$.issue')) = 'party_master_mismatch' THEN 1 ELSE 0 END) AS mismatch_count,
+            COUNT(*) AS total_issues
+        FROM `tabParty Issue` pi
+        WHERE pi.issue_type = 'Transaction Policy'
+          AND pi.status IN ('Open', 'Under Review')
+          AND pi.party IS NOT NULL
+          AND pi.party != ''
+          {party_filter}
+        GROUP BY pi.party, pi.reference_doctype
+        """,
+        params,
+        as_dict=True,
     )
 
-    if not issues:
+    if not agg_rows:
         return {"parties": [], "total": 0}
 
-    party_problems = {}
-    for issue in issues:
-        pm = issue.party
-        if not pm:
-            continue
-        party_problems.setdefault(
-            pm,
-            {"draft_count": 0, "cancelled_unamended_count": 0, "mismatch_count": 0},
-        )
-        if issue.details_json:
-            try:
-                details = json.loads(issue.details_json)
-            except Exception:
-                details = {}
-        else:
-            details = {}
-        code = details.get("issue")
-        if code == "draft_overdue":
-            party_problems[pm]["draft_count"] += 1
-        elif code == "cancelled_referenced":
-            party_problems[pm]["cancelled_unamended_count"] += 1
-        elif code == "party_master_mismatch":
-            party_problems[pm]["mismatch_count"] += 1
-
-    pm_names = list(party_problems.keys())
+    # Bulk-fetch party details
+    pm_names = list(set(r.party for r in agg_rows))
     pm_details = {}
     for pm in frappe.get_all(
         "Party Master",
@@ -78,35 +92,45 @@ def get_transaction_health(limit: int = 20, offset: int = 0):
         pm_details[pm.name] = pm
 
     results = []
-    for pm_name, counts in party_problems.items():
-        detail = pm_details.get(pm_name, {})
-        total_issues = (
-            counts["draft_count"]
-            + counts["cancelled_unamended_count"]
-            + counts["mismatch_count"]
-        )
+    for row in agg_rows:
+        detail = pm_details.get(row.party, {})
+        ref_dt = row.reference_doctype or ""
+        total = cint(row.total_issues)
+
+        # Per-doctype severity: if warn_not_submitted_document is checked
+        # for this doctype, severity is always High
+        if ref_dt in warn_doctypes:
+            severity = "High"
+        else:
+            severity = "High" if total >= 10 else ("Medium" if total >= 3 else "Low")
+
         results.append(
             {
-                "party_master": pm_name,
-                "party_name": detail.get("party_name", pm_name),
+                "party_master": row.party,
+                "party_name": detail.get("party_name", row.party),
                 "party_type": detail.get("party_type", ""),
                 "party_number": detail.get("party_number", ""),
-                "draft_count": counts["draft_count"],
-                "cancelled_unamended_count": counts["cancelled_unamended_count"],
-                "total_issues": total_issues,
-                "severity": (
-                    "High"
-                    if total_issues >= 10
-                    else ("Medium" if total_issues >= 3 else "Low")
-                ),
+                "reference_doctype": ref_dt,
+                "draft_count": cint(row.draft_count),
+                "cancelled_unamended_count": cint(row.cancelled_unamended_count),
+                "total_issues": total,
+                "severity": severity,
             }
         )
 
-    results.sort(key=lambda x: x["total_issues"], reverse=True)
-    total = len(results)
+    # Sort: High severity first, then by reference_doctype, then total_issues desc
+    severity_order = {"High": 0, "Medium": 1, "Low": 2}
+    results.sort(
+        key=lambda x: (
+            severity_order.get(x["severity"], 9),
+            x["reference_doctype"],
+            -x["total_issues"],
+        )
+    )
+    total_count = len(results)
     paginated = results[offset : offset + limit]
 
-    return {"parties": paginated, "total": total}
+    return {"parties": paginated, "total": total_count}
 
 
 @frappe.whitelist()

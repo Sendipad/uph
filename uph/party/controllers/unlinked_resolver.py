@@ -126,6 +126,8 @@ def get_unlinked_transactions(
     """
     Find ERPNext transactions where party_master is NULL or empty.
     Vouchers like Sales Invoice, Payment Entry, etc.
+    For child doctypes (e.g. Journal Entry Account), resolves the parent
+    document name so the UI links to the parent (e.g. Journal Entry).
     """
     limit = cint(limit) or 20
     offset = cint(offset) or 0
@@ -153,22 +155,39 @@ def get_unlinked_transactions(
         # Count
         total += frappe.db.count(dt, {"party_master": ["in", [None, ""]]})
 
-        owner_expr = "''"
-        if meta.has_field("owner"):
-            owner_expr = "COALESCE(`owner`, '')"
+        is_child = meta.istable
 
-        selects.append(
-            f"""
-            SELECT
-                {frappe.db.escape(dt)} AS role_doctype,
-                `name` AS role_name,
-                CONCAT({frappe.db.escape(dt)}, ': ', `name`) AS display_name,
-                {owner_expr} AS owner,
-                `creation` AS creation
-            FROM `tab{dt}`
-            WHERE (party_master IS NULL OR party_master = '')
-        """
-        )
+        if is_child:
+            # For child doctypes, return the parent document name and doctype
+            selects.append(
+                f"""
+                SELECT
+                    `parenttype` AS role_doctype,
+                    `parent` AS role_name,
+                    CONCAT(`parenttype`, ': ', `parent`) AS display_name,
+                    '' AS owner,
+                    `creation` AS creation
+                FROM `tab{dt}`
+                WHERE (party_master IS NULL OR party_master = '')
+            """
+            )
+        else:
+            owner_expr = "''"
+            if meta.has_field("owner"):
+                owner_expr = "COALESCE(`owner`, '')"
+
+            selects.append(
+                f"""
+                SELECT
+                    {frappe.db.escape(dt)} AS role_doctype,
+                    `name` AS role_name,
+                    CONCAT({frappe.db.escape(dt)}, ': ', `name`) AS display_name,
+                    {owner_expr} AS owner,
+                    `creation` AS creation
+                FROM `tab{dt}`
+                WHERE (party_master IS NULL OR party_master = '')
+            """
+            )
 
     if not selects:
         return {"unlinked": [], "total": total}
@@ -460,14 +479,18 @@ def _find_best_parent_group_for_role(role_doctype: str):
 
 
 @frappe.whitelist()
-def get_unlinked_issues(limit: int = 20, offset: int = 0):
+def get_unlinked_issues(limit: int = 20, offset: int = 0, party_master: str = None):
     """
     Fetch unlinked issues from Party Issue (governance registry).
+    For child doctypes, resolves the parent document name from the
+    child row's `parent` field so the UI can link to it correctly.
     """
     limit = cint(limit) or 20
     offset = cint(offset) or 0
 
     filters = {"issue_type": "Unlinked", "status": ["in", ["Open", "Under Review"]]}
+    if party_master:
+        filters["party"] = party_master
     issues = frappe.get_all(
         "Party Issue",
         filters=filters,
@@ -494,20 +517,27 @@ def get_unlinked_issues(limit: int = 20, offset: int = 0):
         if not frappe.has_permission(dt, "read"):
             continue
         meta = frappe.get_meta(dt)
+        is_child = meta.istable
+
         fields = ["name"]
-        name_field = None
-        for candidate in [
-            f"{dt.lower().replace(' ', '_')}_name",
-            "employee_name",
-            "customer_name",
-            "supplier_name",
-        ]:
-            if meta.has_field(candidate):
-                name_field = candidate
-                fields.append(candidate)
-                break
-        if meta.has_field("default_currency"):
-            fields.append("default_currency")
+        if is_child:
+            # For child tables, fetch parent and parenttype
+            fields.extend(["parent", "parenttype"])
+        else:
+            name_field = None
+            for candidate in [
+                f"{dt.lower().replace(' ', '_')}_name",
+                "employee_name",
+                "customer_name",
+                "supplier_name",
+            ]:
+                if meta.has_field(candidate):
+                    name_field = candidate
+                    fields.append(candidate)
+                    break
+            if meta.has_field("default_currency"):
+                fields.append("default_currency")
+
         rows = frappe.get_all(dt, filters={"name": ["in", names]}, fields=fields)
         for r in rows:
             records_map[(dt, r.name)] = r
@@ -519,22 +549,41 @@ def get_unlinked_issues(limit: int = 20, offset: int = 0):
         record = records_map.get((dt, name))
         if not record:
             continue
-        display = record.get(
-            f"{dt.lower().replace(' ', '_')}_name",
-            record.get("customer_name")
-            or record.get("supplier_name")
-            or record.get("employee_name")
-            or record.name,
-        )
-        result.append(
-            {
-                "role_doctype": dt,
-                "role_name": name,
-                "display_name": display,
-                "currency": record.get("default_currency", ""),
-                "issue": issue.name,
-            }
-        )
+
+        meta = frappe.get_meta(dt)
+        is_child = meta.istable
+
+        if is_child:
+            # Use parent document name and doctype for display/linking
+            parent_name = record.get("parent", name)
+            parent_doctype = record.get("parenttype", dt)
+            display = f"{parent_doctype}: {parent_name}"
+            result.append(
+                {
+                    "role_doctype": parent_doctype,
+                    "role_name": parent_name,
+                    "display_name": display,
+                    "currency": "",
+                    "issue": issue.name,
+                }
+            )
+        else:
+            display = record.get(
+                f"{dt.lower().replace(' ', '_')}_name",
+                record.get("customer_name")
+                or record.get("supplier_name")
+                or record.get("employee_name")
+                or record.name,
+            )
+            result.append(
+                {
+                    "role_doctype": dt,
+                    "role_name": name,
+                    "display_name": display,
+                    "currency": record.get("default_currency", ""),
+                    "issue": issue.name,
+                }
+            )
 
     total = frappe.db.count("Party Issue", filters)
     return {"unlinked": result, "total": total}

@@ -8,7 +8,9 @@ import json
 
 
 @frappe.whitelist()
-def get_duplicate_issues(limit: int = 50, offset: int = 0, min_score: float = 0):
+def get_duplicate_issues(
+    limit: int = 50, offset: int = 0, min_score: float = 0, party_master: str = None
+):
     """
     Get duplicate Party Issues from the governance registry.
     """
@@ -21,6 +23,8 @@ def get_duplicate_issues(limit: int = 50, offset: int = 0, min_score: float = 0)
     filters = {"issue_type": "Duplicate", "status": ["in", ["Open", "Under Review"]]}
     if float(min_score) > 0:
         filters["score"] = [">=", float(min_score)]
+    if party_master:
+        filters["party"] = party_master
 
     duplicates = frappe.get_all(
         "Party Issue",
@@ -63,63 +67,146 @@ def get_duplicate_issues(limit: int = 50, offset: int = 0, min_score: float = 0)
 
 
 @frappe.whitelist()
-def get_dashboard_stats():
+def get_dashboard_stats(party_master: str = None):
     """
-    Get summary statistics. Delegates to canonical modules for health and unlinked
-    counts to avoid duplicating logic from transaction_health.py and unlinked_resolver.py.
+    Get summary statistics sourced entirely from the Party Issue doctype.
+    Uses a single aggregation query for all issue counts.
+    Optionally filters by party_master.
     """
+    party_filter = ""
+    params = {}
+    if party_master:
+        party_filter = "WHERE party = %(party_master)s"
+        params["party_master"] = party_master
 
-    def _cached_int(key, fallback):
-        val = frappe.cache.get_value(key)
-        if val is None:
-            return fallback
-        try:
-            return int(val)
-        except Exception:
-            return fallback
+    # Single aggregation query on Party Issue
+    issue_counts = frappe.db.sql(
+        f"""
+        SELECT issue_type, status, COUNT(*) as cnt
+        FROM `tabParty Issue`
+        {party_filter}
+        GROUP BY issue_type, status
+        """,
+        params,
+        as_dict=True,
+    )
+
+    # Build a lookup: (issue_type, status) -> count
+    count_map = {}
+    for row in issue_counts:
+        count_map[(row.issue_type, row.status)] = row.cnt
+
+    def _open_count(issue_type):
+        return count_map.get((issue_type, "Open"), 0) + count_map.get(
+            (issue_type, "Under Review"), 0
+        )
+
+    # All ignored/resolved counts (across all issue types)
+    total_ignored = sum(v for (k, s), v in count_map.items() if s == "Ignored")
 
     stats = {
-        "total_parties": _cached_int(
-            "uph:stats:total_parties",
-            frappe.db.count("Party Master", {"is_group": 0}),
-        ),
-        "total_groups": _cached_int(
-            "uph:stats:total_groups",
-            frappe.db.count("Party Master", {"is_group": 1}),
-        ),
-        "duplicate_issues": _cached_int(
-            "uph:stats:duplicate_open",
-            frappe.db.count(
-                "Party Issue",
-                {"issue_type": "Duplicate", "status": ["in", ["Open", "Under Review"]]},
-            ),
-        ),
-        "total_dismissed": _cached_int(
-            "uph:stats:duplicate_ignored",
-            frappe.db.count(
-                "Party Issue", {"issue_type": "Duplicate", "status": "Ignored"}
-            ),
-        ),
-        "total_merged": _cached_int(
-            "uph:stats:duplicate_resolved",
-            frappe.db.count(
-                "Party Issue", {"issue_type": "Duplicate", "status": "Resolved"}
-            ),
-        ),
-        "unlinked_count": _cached_int(
-            "uph:stats:unlinked_open",
-            frappe.db.count(
-                "Party Issue",
-                {"issue_type": "Unlinked", "status": ["in", ["Open", "Under Review"]]},
-            ),
-        ),
-        "draft_voucher_count": _cached_int("uph:stats:policy_draft", 0),
-        "cancelled_unamended_count": _cached_int("uph:stats:policy_cancelled", 0),
-        "unlinked_transaction_count": _cached_int("uph:stats:policy_mismatch", 0),
-        "incomplete_parties": _cached_int("uph:stats:incomplete_count", 0),
-        "last_updated": frappe.cache.get_value("uph:stats:last_updated"),
+        "total_parties": frappe.db.count("Party Master", {"is_group": 0}),
+        "total_groups": frappe.db.count("Party Master", {"is_group": 1}),
+        # Duplicates
+        "duplicate_issues": _open_count("Duplicate"),
+        "total_dismissed": total_ignored,
+        "total_merged": count_map.get(("Duplicate", "Resolved"), 0),
+        # Unlinked roles
+        "unlinked_count": _open_count("Unlinked"),
+        # Transaction policy / health
+        "draft_voucher_count": _open_count("Transaction Policy"),
+        "cancelled_unamended_count": count_map.get(("Health", "Open"), 0)
+        + count_map.get(("Health", "Under Review"), 0),
+        "unlinked_transaction_count": _open_count("Unlinked"),
+        "incomplete_parties": count_map.get(("Health", "Open"), 0),
+        "last_updated": frappe.utils.now_datetime(),
     }
     return stats
+
+
+@frappe.whitelist()
+def get_unlinked_voucher_issues(
+    limit: int = 20, offset: int = 0, party_master: str = None
+):
+    """
+    Get unlinked vouchers by querying transaction tables directly.
+    Finds vouchers where party_master is NULL or empty.
+    Optionally filters by a specific party_master (for linked party checks).
+    """
+    limit = cint(limit) or 20
+    offset = cint(offset) or 0
+
+    from uph.party.controllers.transaction_health import _get_transaction_doctypes
+
+    tx_doctypes = _get_transaction_doctypes()
+    if not tx_doctypes:
+        return {"unlinked": [], "total": 0}
+
+    total = 0
+    selects = []
+
+    for dt_info in tx_doctypes:
+        dt = dt_info.get("document_type")
+        parent_dt = dt_info.get("parent_doctype") or dt
+        if not dt or not frappe.db.exists("DocType", dt):
+            continue
+
+        meta = frappe.get_meta(dt)
+        if not meta.has_field("party_master"):
+            continue
+
+        # Build the WHERE clause
+        where_clause = "(party_master IS NULL OR party_master = '')"
+
+        # Count
+        total += frappe.db.count(dt, {"party_master": ["is", "not set"]})
+
+        is_child = meta.istable
+
+        if is_child:
+            selects.append(
+                f"""
+                SELECT
+                    `parenttype` AS role_doctype,
+                    `parent` AS role_name,
+                    CONCAT(`parenttype`, ': ', `parent`) AS display_name,
+                    '' AS owner,
+                    `creation` AS creation
+                FROM `tab{dt}`
+                WHERE {where_clause}
+            """
+            )
+        else:
+            owner_expr = "''"
+            if meta.has_field("owner"):
+                owner_expr = "COALESCE(`owner`, '')"
+
+            selects.append(
+                f"""
+                SELECT
+                    {frappe.db.escape(dt)} AS role_doctype,
+                    `name` AS role_name,
+                    CONCAT({frappe.db.escape(dt)}, ': ', `name`) AS display_name,
+                    {owner_expr} AS owner,
+                    `creation` AS creation
+                FROM `tab{dt}`
+                WHERE {where_clause}
+            """
+            )
+
+    if not selects:
+        return {"unlinked": [], "total": 0}
+
+    union_query = " UNION ALL ".join(selects)
+    final_query = f"""
+        SELECT * FROM ({union_query}) AS combined
+        ORDER BY creation DESC
+        LIMIT {limit} OFFSET {offset}
+    """
+
+    rows = frappe.db.sql(final_query, as_dict=True)
+
+    return {"unlinked": rows, "total": total}
 
 
 @frappe.whitelist()
