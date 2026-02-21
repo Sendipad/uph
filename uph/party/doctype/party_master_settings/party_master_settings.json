@@ -268,7 +268,7 @@
         },
         {
             "default": "Prefix for All Role",
-            "depends_on": "eval:doc.sync_erp_party_naming == 1",
+            "depends_on": "sync_erp_party_naming",
             "description": "Applies a 2-letter abbreviation of the Party Type (e.g. 'Cu' for Customer, 'Su' for Supplier) as a prefix/suffix to the party name.",
             "fieldname": "role_prefix_mode",
             "fieldtype": "Select",
