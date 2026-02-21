@@ -14,67 +14,93 @@ class DataQualityDashboard {
         this.page = page;
         this.wrapper = $(page.main);
         this.current_offset = 0;
-        this.limit = 20;
+        this.limit = 50;
         this.min_score = 70;
         this.active_tab = 'duplicates';
         this.party_master_filter = null;
 
         // Unlinked tab state
         this.unlinked_offset = 0;
-        this.unlinked_limit = 20;
+        this.unlinked_limit = 50;
 
         // Health tab state
         this.health_offset = 0;
-        this.health_limit = 20;
+        this.health_limit = 50;
 
         // Unlinked Vouchers tab state
         this.unlinked_vouchers_offset = 0;
-        this.unlinked_vouchers_limit = 20;
+        this.unlinked_vouchers_limit = 50;
 
         this.init();
     }
 
     init() {
         this.setup_page_actions();
-        this.setup_filters();
         this.render_layout();
+        this.setup_filters();
         this.load_stats();
         this.load_tab_content();
     }
 
     setup_filters() {
-        this.party_master_field = this.page.add_field({
-            label: __('Party Master'),
-            fieldtype: 'Link',
-            fieldname: 'party_master',
-            options: 'Party Master',
-            change: () => {
-                this.party_master_filter = this.party_master_field.get_value() || null;
-                this.current_offset = 0;
-                this.unlinked_offset = 0;
-                this.unlinked_vouchers_offset = 0;
-                this.health_offset = 0;
-                this.load_stats();
-                this.load_tab_content();
-            }
+        const filter_row = this.wrapper.find('.dashboard-filters');
+
+        // Clear containers
+        const pm_container = filter_row.find('.pm-filter-container').empty();
+        const dt_container = filter_row.find('.dt-filter-container').empty();
+
+        this.party_master_field = frappe.ui.form.make_control({
+            df: {
+                label: '',
+                fieldtype: 'Link',
+                fieldname: 'party_master',
+                options: 'Party Master',
+                placeholder: __('Filter by Party Master'),
+                get_query: () => ({ filters: { is_group: 0, disabled: 0 } }),
+                change: () => {
+                    this.party_master_filter = this.party_master_field.get_value() || null;
+                    this.current_offset = 0;
+                    this.unlinked_offset = 0;
+                    this.unlinked_vouchers_offset = 0;
+                    this.health_offset = 0;
+                    this.load_stats();
+                    this.load_tab_content();
+                }
+            },
+            parent: pm_container,
+            render_input: true
         });
 
-        this.doctype_filter_field = this.page.add_field({
-            label: __('DocType'),
-            fieldtype: 'Link',
-            fieldname: 'reference_doctype',
-            options: 'DocType',
-            get_query: () => ({ filters: { istitle: 0, issingle: 0 } }),
-            change: () => {
-                this.doctype_filter = this.doctype_filter_field.get_value() || null;
-                this.unlinked_vouchers_offset = 0;
-                this.health_offset = 0;
-                this.load_tab_content();
-            }
+        this.doctype_filter_field = frappe.ui.form.make_control({
+            df: {
+                label: '',
+                fieldtype: 'Link',
+                fieldname: 'reference_doctype',
+                options: 'DocType',
+                placeholder: __('Filter by DocType'),
+                get_query: () => {
+                    const tx_doctypes = (frappe.boot.party_master_on_doctypes_depend_field || [])
+                        .map(d => d[0]) // parent_doctype is at index 0
+                        .filter((v, i, a) => a.indexOf(v) === i); // unique
+
+                    if (tx_doctypes.length) {
+                        return { filters: { name: ['in', tx_doctypes] } };
+                    }
+                    return { filters: { istable: 0, issingle: 0 } };
+                },
+                change: () => {
+                    this.doctype_filter = this.doctype_filter_field.get_value() || null;
+                    this.unlinked_vouchers_offset = 0;
+                    this.health_offset = 0;
+                    this.load_tab_content();
+                }
+            },
+            parent: dt_container,
+            render_input: true
         });
 
         // Hide initially since default tab is Duplicates
-        $(this.doctype_filter_field.wrapper).closest('.frappe-control').hide();
+        dt_container.parent().hide();
     }
 
     setup_page_actions() {
@@ -103,7 +129,7 @@ class DataQualityDashboard {
 
     render_layout() {
         this.wrapper.html(`
-            <div class="data-quality-container">
+            <div class="data-quality-container" style="padding: 1rem;">
                 <!-- Stats Cards - Frappe Number Card Style -->
                 <div class="stats-row" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
                     <div class="stat-card" id="stat-total-parties" data-route="" style="flex: 1; min-width: 140px; padding: 1rem 1rem 1rem 1.25rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm); border-left: 4px solid var(--blue-500); cursor: default;">
@@ -118,17 +144,24 @@ class DataQualityDashboard {
                         <div class="stat-label" style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem;">${__('Unlinked Roles')}</div>
                         <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: var(--purple-500);">-</div>
                     </div>
-                    <div class="stat-card stat-clickable" id="stat-drafts" data-issue-type="Transaction Policy" style="flex: 1; min-width: 140px; padding: 1rem 1rem 1rem 1.25rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm); border-left: 4px solid var(--yellow-500); cursor: pointer;">
-                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem;">${__('Transaction Policy')}</div>
-                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: var(--yellow-500);">-</div>
-                    </div>
-                    <div class="stat-card stat-clickable" id="stat-dismissed" data-status="Ignored" style="flex: 1; min-width: 140px; padding: 1rem 1rem 1rem 1.25rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm); border-left: 4px solid var(--green-500); cursor: pointer;">
-                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem;">${__('Ignored Issues')}</div>
-                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: var(--green-500);">-</div>
+                    <div class="stat-card stat-clickable" id="stat-policy-issues" data-issue-type="Transaction Policy" style="flex: 1; min-width: 140px; padding: 1rem 1rem 1rem 1.25rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm); border-left: 4px solid var(--red-500); cursor: pointer;">
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem;">${__('Transaction Health')}</div>
+                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: var(--red-500);">-</div>
                     </div>
                 </div>
 
-                <!-- Tabs -->
+                <!-- Filters Row (Moved below stats) -->
+                <div class="dashboard-filters" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: center; background: var(--card-bg); padding: 0.75rem 1rem; border-radius: 8px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);">
+                    <div style="flex: 1; min-width: 200px;">
+                        <div class="pm-filter-container"></div>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <div class="dt-filter-container"></div>
+                    </div>
+                    <div style="flex: 2;"></div>
+                </div>
+
+                <!-- Tab Links -->
                 <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 1rem;">
                     <li class="nav-item">
                         <a class="nav-link active" data-tab="duplicates" href="#" role="tab">
@@ -194,11 +227,11 @@ class DataQualityDashboard {
         this.wrapper.find(`.nav-link[data-tab="${tab}"]`).addClass('active');
 
         // Show/hide DocType filter based on tab
-        const dt_wrapper = $(this.doctype_filter_field.wrapper).closest('.frappe-control');
+        const dt_container = this.wrapper.find('.dt-filter-container').parent();
         if (tab === 'unlinked_vouchers' || tab === 'health') {
-            dt_wrapper.show();
+            dt_container.show();
         } else {
-            dt_wrapper.hide();
+            dt_container.hide();
         }
 
         this.load_tab_content();
@@ -868,7 +901,7 @@ class DataQualityDashboard {
                         <span style="color: ${severity_color}; font-weight: 600; font-size: 0.85rem;">${__(p.severity)}</span>
                     </div>
                     <div style="flex: 1; text-align: right;">
-                        <button class="btn btn-default btn-xs btn-detail" data-pm="${p.party_master}">
+                        <button class="btn btn-default btn-xs btn-detail" data-pm="${p.party_master}" data-dt="${p.reference_doctype}">
                             ${__('View Details')}
                         </button>
                     </div>
@@ -876,7 +909,8 @@ class DataQualityDashboard {
             `);
 
             row.find('.btn-detail').on('click', (e) => {
-                this.show_health_detail($(e.currentTarget).data('pm'));
+                const $btn = $(e.currentTarget);
+                this.show_health_detail($btn.data('pm'), $btn.data('dt'));
             });
 
             content.append(row);
@@ -885,9 +919,14 @@ class DataQualityDashboard {
         this.render_pagination(data.total, 'health');
     }
 
-    show_health_detail(party_master) {
+    show_health_detail(party_master, reference_doctype = null) {
+        let title = __('Transaction Policy Issues: {0}', [party_master]);
+        if (reference_doctype) {
+            title = __('Transaction Policy Issues: {0} ({1})', [party_master, reference_doctype]);
+        }
+
         const d = new frappe.ui.Dialog({
-            title: __('Transaction Policy Issues: {0}', [party_master]),
+            title: title,
             size: 'large',
             fields: [
                 {
@@ -904,7 +943,7 @@ class DataQualityDashboard {
 
         frappe.call({
             method: 'uph.party.controllers.transaction_health.get_party_health_detail',
-            args: { party_master },
+            args: { party_master, reference_doctype },
             callback: (r) => {
                 if (!r.message || !r.message.vouchers || !r.message.vouchers.length) {
                     d.fields_dict.issues_html.$wrapper.html(

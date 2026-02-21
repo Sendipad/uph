@@ -143,21 +143,25 @@ def get_transaction_health(
 
 
 @frappe.whitelist()
-def get_party_health_detail(party_master: str):
+def get_party_health_detail(party_master: str, reference_doctype: str = None):
     """
     Drill-down: list individual policy issues for a given Party Master.
     """
     if not frappe.db.exists("Party Master", party_master):
         frappe.throw(_("Party Master {0} does not exist").format(party_master))
 
+    filters = {
+        "issue_type": "Transaction Policy",
+        "status": ["in", ["Open", "Under Review"]],
+        "party": party_master,
+    }
+    if reference_doctype:
+        filters["reference_doctype"] = reference_doctype
+
     issues = frappe.get_all(
         "Party Issue",
-        filters={
-            "issue_type": "Transaction Policy",
-            "status": ["in", ["Open", "Under Review"]],
-            "party": party_master,
-        },
-        fields=["reference_doctype", "reference_name", "details_json"],
+        filters=filters,
+        fields=["name", "reference_doctype", "reference_name", "details_json"],
         limit_page_length=0,
     )
 
