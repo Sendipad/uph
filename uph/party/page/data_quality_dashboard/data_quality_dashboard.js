@@ -58,6 +58,23 @@ class DataQualityDashboard {
                 this.load_tab_content();
             }
         });
+
+        this.doctype_filter_field = this.page.add_field({
+            label: __('DocType'),
+            fieldtype: 'Link',
+            fieldname: 'reference_doctype',
+            options: 'DocType',
+            get_query: () => ({ filters: { istitle: 0, issingle: 0 } }),
+            change: () => {
+                this.doctype_filter = this.doctype_filter_field.get_value() || null;
+                this.unlinked_vouchers_offset = 0;
+                this.health_offset = 0;
+                this.load_tab_content();
+            }
+        });
+
+        // Hide initially since default tab is Duplicates
+        $(this.doctype_filter_field.wrapper).closest('.frappe-control').hide();
     }
 
     setup_page_actions() {
@@ -175,6 +192,15 @@ class DataQualityDashboard {
         this.active_tab = tab;
         this.wrapper.find('.nav-link').removeClass('active');
         this.wrapper.find(`.nav-link[data-tab="${tab}"]`).addClass('active');
+
+        // Show/hide DocType filter based on tab
+        const dt_wrapper = $(this.doctype_filter_field.wrapper).closest('.frappe-control');
+        if (tab === 'unlinked_vouchers' || tab === 'health') {
+            dt_wrapper.show();
+        } else {
+            dt_wrapper.hide();
+        }
+
         this.load_tab_content();
     }
 
@@ -638,6 +664,7 @@ class DataQualityDashboard {
                 limit: this.unlinked_vouchers_limit,
                 offset: this.unlinked_vouchers_offset,
                 party_master: this.party_master_filter || '',
+                reference_doctype: this.doctype_filter || '',
             },
             callback: (r) => {
                 if (r.message) {
@@ -690,13 +717,90 @@ class DataQualityDashboard {
 
             row.find('.btn-suggest').on('click', (e) => {
                 const $btn = $(e.currentTarget);
-                this.show_link_dialog($btn.data('doctype'), $btn.data('name'), $btn.data('display'));
+                this.show_voucher_link_dialog($btn.data('doctype'), $btn.data('name'), $btn.data('display'), $btn.data('role'));
             });
 
             content.append(row);
         });
 
         this.render_pagination(data.total, 'unlinked_vouchers');
+    }
+
+    show_voucher_link_dialog(voucher_doctype, voucher_name, voucher_display, role_name) {
+        // Find the mapped role doctype (e.g. Sales Invoice -> Customer)
+        frappe.db.get_value('Party Master Settings', null, 'document_types')
+            .then(() => {
+                // To keep it simple, we ask the server for the role doctype/name of this voucher
+                frappe.call({
+                    method: 'frappe.client.get',
+                    args: { doctype: voucher_doctype, name: voucher_name },
+                    callback: (r) => {
+                        if (r.message) {
+                            const doc = r.message;
+                            let role_doctype = '';
+                            let actual_role_name = '';
+
+                            // Guess the role field based on common patterns
+                            if (doc.customer) { role_doctype = 'Customer'; actual_role_name = doc.customer; }
+                            else if (doc.supplier) { role_doctype = 'Supplier'; actual_role_name = doc.supplier; }
+                            else if (doc.employee) { role_doctype = 'Employee'; actual_role_name = doc.employee; }
+                            else if (doc.party_type && doc.party) { role_doctype = doc.party_type; actual_role_name = doc.party; }
+
+                            if (!role_doctype || !actual_role_name) {
+                                frappe.msgprint(__('Could not determine the underlying party role (Customer/Supplier) for {0}', [voucher_display]));
+                                return;
+                            }
+
+                            this._render_voucher_link_dialog(voucher_doctype, voucher_name, voucher_display, role_doctype, actual_role_name);
+                        }
+                    }
+                });
+            });
+    }
+
+    _render_voucher_link_dialog(voucher_doctype, voucher_name, voucher_display, role_doctype, role_name) {
+        const d = new frappe.ui.Dialog({
+            title: __('Link {0} to Party Master', [voucher_display]),
+            fields: [
+                {
+                    fieldname: 'info',
+                    fieldtype: 'HTML',
+                    options: `
+                        <div class="alert alert-info">
+                            ${__('This voucher relies on the <b>{0}</b> record: <b>{1}</b>. By linking this {0} to a Party Master, this voucher (and all others using it) will be resolved.', [role_doctype, role_name])}
+                        </div>
+                    `
+                },
+                {
+                    fieldname: 'party_master',
+                    fieldtype: 'Link',
+                    label: __('Party Master'),
+                    options: 'Party Master',
+                    get_query: () => ({ filters: { is_group: 0, disabled: 0 } }),
+                    reqd: 1
+                }
+            ],
+            primary_action_label: __('Link to Party Master'),
+            primary_action: (values) => {
+                frappe.call({
+                    method: 'uph.party.controllers.unlinked_resolver.resolve_unlinked_voucher',
+                    args: {
+                        role_doctype: role_doctype,
+                        role_name: role_name,
+                        party_master: values.party_master,
+                    },
+                    callback: (r) => {
+                        if (r.message && r.message.success) {
+                            d.hide();
+                            frappe.show_alert({ message: r.message.message, indicator: 'green' });
+                            this.load_stats();
+                            this.load_unlinked_vouchers();
+                        }
+                    }
+                });
+            }
+        });
+        d.show();
     }
 
     load_health() {
@@ -709,6 +813,7 @@ class DataQualityDashboard {
                 limit: this.health_limit,
                 offset: this.health_offset,
                 party_master: this.party_master_filter || '',
+                reference_doctype: this.doctype_filter || '',
             },
             callback: (r) => {
                 if (r.message) {
@@ -781,35 +886,126 @@ class DataQualityDashboard {
     }
 
     show_health_detail(party_master) {
+        const d = new frappe.ui.Dialog({
+            title: __('Transaction Policy Issues: {0}', [party_master]),
+            size: 'large',
+            fields: [
+                {
+                    fieldname: 'issues_html',
+                    fieldtype: 'HTML'
+                }
+            ],
+            primary_action_label: __('Close'),
+            primary_action: () => d.hide()
+        });
+
+        d.fields_dict.issues_html.$wrapper.html(`<div class="text-muted text-center" style="padding: 2rem;">${__('Loading issues...')}</div>`);
+        d.show();
+
         frappe.call({
             method: 'uph.party.controllers.transaction_health.get_party_health_detail',
             args: { party_master },
             callback: (r) => {
                 if (!r.message || !r.message.vouchers || !r.message.vouchers.length) {
-                    frappe.msgprint(__('No problematic vouchers found for {0}', [party_master]));
+                    d.fields_dict.issues_html.$wrapper.html(
+                        `<div class="text-muted text-center" style="padding: 2rem;">${__('No problematic vouchers found for {0}', [party_master])}</div>`
+                    );
                     return;
                 }
 
-                let html = '<div class="frappe-list">';
+                let html = `
+                    <div style="display: flex; padding: 0.5rem 1rem; font-weight: 600; color: var(--text-muted); font-size: 0.85rem; border-bottom: 1px solid var(--border-color);">
+                        <div style="flex: 2;">${__('Document')}</div>
+                        <div style="flex: 1;">${__('Issue')}</div>
+                        <div style="flex: 1;">${__('Date')}</div>
+                        <div style="flex: 1.5; text-align: right;">${__('Actions')}</div>
+                    </div>
+                `;
+
                 r.message.vouchers.forEach(v => {
-                    const issue_color = v.issue_type === 'Draft' ? 'orange' : 'red';
+                    let issue_color = 'gray';
+                    if (v.issue_code === 'draft_overdue') issue_color = 'orange';
+                    if (v.issue_code === 'cancelled_referenced') issue_color = 'red';
+                    if (v.issue_code === 'party_master_mismatch') issue_color = 'blue';
+
+                    let actions_html = '';
+
+                    // Action logic based on docstatus and issue code
+                    if (v.docstatus === 0 && v.issue_code === 'draft_overdue') {
+                        actions_html += `
+                            <button class="btn btn-primary btn-xs btn-action" data-action="submit" data-issue="${v.issue_name}" title="${__('Submit Document')}">
+                                <i class="fa fa-check"></i> ${__('Submit')}
+                            </button>
+                            <button class="btn btn-default btn-xs btn-action" data-action="cancel" data-issue="${v.issue_name}" title="${__('Cancel Document')}">
+                                <i class="fa fa-ban"></i>
+                            </button>
+                        `;
+                    } else if (v.docstatus === 1 && v.issue_code === 'cancelled_referenced') {
+                        actions_html += `
+                            <button class="btn btn-danger btn-xs btn-action" data-action="cancel" data-issue="${v.issue_name}" title="${__('Cancel Document')}">
+                                <i class="fa fa-ban"></i> ${__('Cancel')}
+                            </button>
+                        `;
+                    }
+
+                    // Always allow explicit dismiss from the dashboard
+                    actions_html += `
+                        <button class="btn btn-default btn-xs btn-action" data-action="dismiss" data-issue="${v.issue_name}" title="${__('Ignore Issue')}" style="margin-left: 4px;">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    `;
+
                     html += `
-                        <div style="padding: 0.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between;">
-                            <div>
-                                <a href="/app/${frappe.router.slug(v.doctype)}/${v.name}" target="_blank">${v.doctype}: ${v.name}</a>
+                        <div class="health-issue-row" style="display: flex; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color);">
+                            <div style="flex: 2;">
+                                <div style="font-weight: 500;">
+                                    <a href="/app/${frappe.router.slug(v.doctype)}/${v.name}" target="_blank">${v.doctype}: ${v.name}</a>
+                                </div>
+                                <div class="text-muted small">${v.docstatus === 0 ? 'Draft' : (v.docstatus === 1 ? 'Submitted' : 'Cancelled')}</div>
                             </div>
-                            <div>
+                            <div style="flex: 1;">
                                 <span class="indicator-pill ${issue_color}">${v.issue_type}</span>
+                            </div>
+                            <div style="flex: 1; font-size: 0.85rem;" class="text-muted">
+                                ${v.creation ? frappe.datetime.global_date_format(v.creation) : '-'}
+                            </div>
+                            <div style="flex: 1.5; text-align: right;">
+                                ${actions_html}
                             </div>
                         </div>
                     `;
                 });
-                html += '</div>';
 
-                frappe.msgprint({
-                    title: __('Voucher Issues — {0}', [party_master]),
-                    message: html,
-                    wide: true,
+                d.fields_dict.issues_html.$wrapper.html(html);
+
+                // Bind actions
+                d.fields_dict.issues_html.$wrapper.find('.btn-action').on('click', (e) => {
+                    const $btn = $(e.currentTarget);
+                    const action = $btn.data('action');
+                    const issue = $btn.data('issue');
+
+                    let confirm_msg = '';
+                    if (action === 'submit') confirm_msg = __('Are you sure you want to permanently Submit this document?');
+                    if (action === 'cancel') confirm_msg = __('Are you sure you want to permanently Cancel this document?');
+                    if (action === 'dismiss') confirm_msg = __('Ignore this issue? It won\'t show up again until re-scanned.');
+
+                    frappe.confirm(confirm_msg, () => {
+                        $btn.prop('disabled', true);
+                        frappe.call({
+                            method: 'uph.party.controllers.transaction_health.resolve_health_issue',
+                            args: { issue_name: issue, action: action },
+                            callback: (res) => {
+                                if (res.message && res.message.success) {
+                                    $btn.closest('.health-issue-row').fadeOut(300, function () { $(this).remove(); });
+                                    frappe.show_alert({ message: res.message.message, indicator: 'green' });
+                                    this.load_stats();
+                                    this.load_health();
+                                } else {
+                                    $btn.prop('disabled', false);
+                                }
+                            }
+                        });
+                    });
                 });
             }
         });

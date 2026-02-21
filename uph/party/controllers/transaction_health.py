@@ -23,7 +23,12 @@ from uph.party.controllers.cache_utils import (
 
 
 @frappe.whitelist()
-def get_transaction_health(limit: int = 20, offset: int = 0, party_master: str = None):
+def get_transaction_health(
+    limit: int = 20,
+    offset: int = 0,
+    party_master: str = None,
+    reference_doctype: str = None,
+):
     """
     Find Party Masters with open Transaction Policy issues.
     Returns paginated list aggregated by (party, reference_doctype), sorted by doctype.
@@ -54,8 +59,12 @@ def get_transaction_health(limit: int = 20, offset: int = 0, party_master: str =
     party_filter = ""
     params = {}
     if party_master:
-        party_filter = "AND pi.party = %(party_master)s"
+        party_filter += " AND pi.party = %(party_master)s"
         params["party_master"] = party_master
+
+    if reference_doctype:
+        party_filter += " AND pi.reference_doctype = %(reference_doctype)s"
+        params["reference_doctype"] = reference_doctype
 
     agg_rows = frappe.db.sql(
         f"""
@@ -173,10 +182,98 @@ def get_party_health_detail(party_master: str):
                 "doctype": issue.reference_doctype,
                 "name": issue.reference_name,
                 "issue_type": issue_type,
+                "issue_code": code,
+                "issue_name": issue.name,
+                "docstatus": (
+                    frappe.db.get_value(
+                        issue.reference_doctype, issue.reference_name, "docstatus"
+                    )
+                    if frappe.db.exists(issue.reference_doctype, issue.reference_name)
+                    else None
+                ),
+                "creation": (
+                    frappe.db.get_value(
+                        issue.reference_doctype, issue.reference_name, "creation"
+                    )
+                    if frappe.db.exists(issue.reference_doctype, issue.reference_name)
+                    else None
+                ),
             }
         )
 
     return {"vouchers": vouchers, "total": len(vouchers)}
+
+
+@frappe.whitelist()
+def resolve_health_issue(issue_name: str, action: str):
+    """
+    Resolve a specific transaction health issue (e.g. submit draft, cancel).
+    Action can be 'submit', 'cancel', or 'dismiss'.
+    """
+    if not frappe.has_permission("Party Issue", "write"):
+        frappe.throw(_("Not permitted to write Party Issue"))
+
+    issue = frappe.get_doc("Party Issue", issue_name)
+    if not issue or issue.issue_type != "Transaction Policy":
+        frappe.throw(_("Invalid Party Issue"))
+
+    dt = issue.reference_doctype
+    dn = issue.reference_name
+    now = now_datetime()
+
+    try:
+        if action == "submit":
+            if not frappe.db.exists(dt, dn):
+                frappe.throw(_("{0} {1} no longer exists").format(dt, dn))
+            doc = frappe.get_doc(dt, dn)
+            if doc.docstatus == 0:
+                doc.submit()
+            issue.status = "Resolved"
+            issue.resolved_on = now
+            issue.resolved_by = frappe.session.user
+            issue.save(ignore_permissions=True)
+            return {
+                "success": True,
+                "message": _("{0} submitted successfully").format(dn),
+            }
+
+        elif action == "cancel":
+            if not frappe.db.exists(dt, dn):
+                frappe.throw(_("{0} {1} no longer exists").format(dt, dn))
+            doc = frappe.get_doc(dt, dn)
+            if doc.docstatus == 1:
+                doc.cancel()
+            issue.status = "Resolved"
+            issue.resolved_on = now
+            issue.resolved_by = frappe.session.user
+            issue.save(ignore_permissions=True)
+            return {
+                "success": True,
+                "message": _("{0} cancelled successfully").format(dn),
+            }
+
+        elif action == "dismiss":
+            issue.status = "Ignored"
+            issue.resolved_on = now
+            issue.resolved_by = frappe.session.user
+
+            details = {}
+            if issue.details_json:
+                try:
+                    details = json.loads(issue.details_json)
+                except:
+                    pass
+            details["dismiss_reason"] = "Dismissed from Dashboard"
+            issue.details_json = json.dumps(details)
+            issue.save(ignore_permissions=True)
+            return {"success": True, "message": _("Issue dismissed")}
+
+        else:
+            frappe.throw(_("Unknown action {0}").format(action))
+
+    except Exception as e:
+        frappe.log_error(title="Failed to resolve health issue", message=str(e))
+        return {"success": False, "message": str(e)}
 
 
 def enqueue_transaction_policy_scan():

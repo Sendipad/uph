@@ -126,12 +126,16 @@ def get_dashboard_stats(party_master: str = None):
 
 @frappe.whitelist()
 def get_unlinked_voucher_issues(
-    limit: int = 20, offset: int = 0, party_master: str = None
+    limit: int = 20,
+    offset: int = 0,
+    party_master: str = None,
+    reference_doctype: str = None,
 ):
     """
     Get unlinked vouchers by querying transaction tables directly.
     Finds vouchers where party_master is NULL or empty.
     Optionally filters by a specific party_master (for linked party checks).
+    Optionally filters by specific reference_doctype.
     """
     limit = cint(limit) or 20
     offset = cint(offset) or 0
@@ -149,6 +153,14 @@ def get_unlinked_voucher_issues(
         dt = dt_info.get("document_type")
         parent_dt = dt_info.get("parent_doctype") or dt
         if not dt or not frappe.db.exists("DocType", dt):
+            continue
+
+        # Apply doctype filter
+        if (
+            reference_doctype
+            and dt != reference_doctype
+            and parent_dt != reference_doctype
+        ):
             continue
 
         meta = frappe.get_meta(dt)

@@ -602,6 +602,77 @@ def enqueue_unlinked_issue_scan():
     )
 
 
+@frappe.whitelist()
+def resolve_unlinked_voucher(role_doctype: str, role_name: str, party_master: str):
+    """
+    Called from the Dashboard's Unlinked Vouchers tab.
+    Links the underlying role (e.g. Customer, Supplier) to a Party Master.
+    This naturally cascades to the historical voucher and resolves the issue.
+    """
+    if not frappe.has_permission(role_doctype, "write"):
+        frappe.throw(_("Not permitted to write to {0}").format(role_doctype))
+    if not frappe.has_permission("Party Master", "read"):
+        frappe.throw(_("Not permitted to read Party Master"))
+
+    # Link the underlying role using the existing robust method
+    result = link_to_party_master(role_doctype, role_name, party_master)
+
+    # Additionally, resolve any open Unlinked Voucher issues for this specific transaction
+    # (Though technically, the next scan or patch would auto-resolve it, doing it here is instant UI feedback)
+    issues = frappe.get_all(
+        "Party Issue",
+        filters={
+            "issue_type": "Unlinked",
+            "status": ["in", ["Open", "Under Review"]],
+        },
+        fields=["name", "reference_doctype", "reference_name"],
+    )
+
+    now = now_datetime()
+    for issue in issues:
+        dt = issue.reference_doctype
+        name = issue.reference_name
+        if not dt or not name:
+            continue
+
+        # Check if this voucher references the role we just linked
+        # e.g. Sales Invoice has customer = role_name
+        meta = frappe.get_meta(dt)
+        role_fieldname = None
+        for candidate in [
+            f"{role_doctype.lower().replace(' ', '_')}",
+            f"{role_doctype.lower().replace(' ', '_')}_name",
+            "party",
+        ]:
+            if meta.has_field(candidate):
+                role_fieldname = candidate
+                break
+
+        if role_fieldname:
+            voucher_role = frappe.db.get_value(dt, name, role_fieldname)
+            if voucher_role == role_name:
+                # Update the voucher's party_master instantly
+                frappe.db.set_value(
+                    dt, name, "party_master", party_master, update_modified=False
+                )
+                # Resolve the issue
+                frappe.db.set_value(
+                    "Party Issue",
+                    issue.name,
+                    {
+                        "status": "Resolved",
+                        "resolved_on": now,
+                        "resolved_by": frappe.session.user,
+                    },
+                    update_modified=False,
+                )
+
+    return {
+        "success": True,
+        "message": _("{0} has been linked to {1}").format(role_name, party_master),
+    }
+
+
 def run_unlinked_issue_scan():
     """
     Scan for unlinked role records and create Party Issue entries.
