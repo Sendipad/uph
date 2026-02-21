@@ -34,12 +34,11 @@ class PartyMasterSettings(Document):
         enforce_strict_currency: DF.Check
         group_digits: DF.Int
         hide_balance: DF.Check
-        language: DF.Link | None
         numbering_format: DF.Literal["Concatenated", "Dash-Separated"]
         override_party_details_api: DF.Check
         party_master_fields: DF.Table[PartyMasterSettingsDocField]
         party_types: DF.Table[PartyMasterSettingsPartyType]
-        role_prefix_mode: DF.Literal["Prefix", "Suffix"]
+        role_prefix_mode: DF.Literal["Prefix for All Role", "Prefix for Secondary Role", "Suffix for All Role", "Suffix Secondary Roles"]
         role_to_bypass_duplicate_voucher: DF.Link | None
         setup_finished: DF.Check
         sync_erp_party_naming: DF.Check

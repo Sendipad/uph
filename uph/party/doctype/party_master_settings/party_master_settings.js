@@ -40,16 +40,25 @@ frappe.ui.form.on("Party Master Settings", {
             if (!wrapper.find('.custom-table-description').length) {
                 wrapper.append(`
                     <div class="custom-table-description" 
-                        style="margin-top: 15px; padding: 15px; background-color: #f8f9fa; 
-                               border-radius: 3px; border: 1px solid #dfe3e6;">
-                        <h5 style="margin-bottom: 10px; color: #2e3b4a;">
-                            ${__('Configuration Rules')}
+                        style="margin-top: 15px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid var(--blue-500);
+                               border-radius: 3px; border-top: 1px solid #dfe3e6; border-right: 1px solid #dfe3e6; border-bottom: 1px solid #dfe3e6;">
+                        <h5 style="margin-bottom: 5px; color: #2e3b4a; font-weight: 600;">
+                            <i class="fa fa-info-circle text-blue"></i> ${__('Understanding Document Types Configuration')}
                         </h5>
-                        <ul style="color: #4a5660; list-style: disc; padding-left: 25px;">
-                            <li>${__('Voucher Types must have a defined Party Master Field for validation')}</li>
-                            <li>${__('Child Document Types require explicit Parent Doctype configuration')}</li>
-                            <li>${__('System-generated Journal Entry Accounts bypass mandatory field checks')}</li>
-                            <li>${__('Parent Doctype fields auto-lock for non-child document types')}</li>
+                        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 10px;">
+                            ${__('This table defines which transactional DocTypes (like Sales Invoice or Journal Entry) the system will monitor to guarantee Data Quality and Party Master validation.')}
+                        </p>
+                        <h6 style="margin-bottom: 5px; color: #36414c; font-size: 13px; font-weight: 600;">${__('What you should set:')}</h6>
+                        <ul style="color: #4a5660; list-style: disc; padding-left: 25px; font-size: 12px; margin-bottom: 10px;">
+                            <li><b>${__('Document Type')}</b>: ${__('The exact voucher or child table to validate (e.g., Sales Invoice).')}</li>
+                            <li><b>${__('Parent Doctype')}</b>: ${__('If you add a Child Table (e.g., Journal Entry Account), select its Parent (e.g., Journal Entry).')}</li>
+                            <li><b>${__('Party Fieldname')}</b>: ${__('The field connecting to the Party (e.g., customer, party, supplier).')}</li>
+                            <li><b>${__('Party Type Fieldname')}</b>: ${__('Required if the Party Field is dynamic (e.g., party_type).')}</li>
+                        </ul>
+                        <h6 style="margin-bottom: 5px; color: #36414c; font-size: 13px; font-weight: 600;">${__('How it affects the system:')}</h6>
+                        <ul style="color: #4a5660; list-style: disc; padding-left: 25px; font-size: 12px; margin-bottom: 0;">
+                            <li>${__('<b>Data Quality Dashboard</b>: Documents configured here will be scanned for Missing Party Masters and Transaction Policy issues.')}</li>
+                            <li>${__('<b>Validation</b>: The system will automatically link the Party Master upon saving, or block transactions if the Party is invalid or missing.')}</li>
                         </ul>
                     </div>
                 `);

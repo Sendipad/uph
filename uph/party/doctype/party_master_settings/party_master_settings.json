@@ -35,7 +35,6 @@
         "setup_section",
         "setup_finished",
         "column_break_gov3",
-        "language",
         "party_master_tab",
         "tree_view_section",
         "auto_expand_levels",
@@ -224,10 +223,10 @@
         },
         {
             "default": "30",
+            "description": "Create a Party Issue when a draft voucher is older than this many days.",
             "fieldname": "transaction_policy_draft_days",
             "fieldtype": "Int",
             "label": "Draft Issue Threshold (Days)",
-            "description": "Create a Party Issue when a draft voucher is older than this many days.",
             "non_negative": 1
         },
         {
@@ -236,10 +235,10 @@
         },
         {
             "default": "0",
+            "description": "Grace period before flagging cancelled vouchers still referenced in financial flow. 0 = no grace.",
             "fieldname": "transaction_policy_cancelled_reference_days",
             "fieldtype": "Int",
             "label": "Cancelled Reference Grace (Days)",
-            "description": "Grace period before flagging cancelled vouchers still referenced in financial flow. 0 = no grace.",
             "non_negative": 1
         },
         {
@@ -251,10 +250,10 @@
         },
         {
             "default": "0",
-            "description": "Prevent the same party (e.g. same Customer) from being linked to multiple Party Masters.",
+            "description": "Enforce unique naming across all Party Types (e.g. cannot have a Customer and Supplier with the exact same Name).",
             "fieldname": "enforce_cross_type_uniqueness",
             "fieldtype": "Check",
-            "label": "Enforce Cross-Type Uniqueness"
+            "label": "Enforce Cross-Type Naming Uniqueness"
         },
         {
             "fieldname": "column_break_gov2",
@@ -270,7 +269,7 @@
         {
             "default": "Prefix for All Role",
             "depends_on": "sync_erp_party_naming",
-            "description": "How to incorporate the role type into the party name.",
+            "description": "Applies a 2-letter abbreviation of the Party Type (e.g. 'Cu' for Customer, 'Su' for Supplier) as a prefix/suffix to the party name.",
             "fieldname": "role_prefix_mode",
             "fieldtype": "Select",
             "label": "Role Prefix Mode",
@@ -298,7 +297,7 @@
     "index_web_pages_for_search": 1,
     "issingle": 1,
     "links": [],
-    "modified": "2026-02-16 16:11:59.652289",
+    "modified": "2026-02-21 00:43:09.276049",
     "modified_by": "Administrator",
     "module": "Party",
     "name": "Party Master Settings",
@@ -311,6 +310,16 @@
             "print": 1,
             "read": 1,
             "role": "System Manager",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "print": 1,
+            "read": 1,
+            "role": "Party Manager",
             "share": 1,
             "write": 1
         }

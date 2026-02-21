@@ -694,7 +694,7 @@
  "is_calendar_and_gantt": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2026-02-14 16:41:33.661915",
+ "modified": "2026-02-21 00:44:39.898174",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party Master",
@@ -745,6 +745,18 @@
    "read": 1,
    "report": 1,
    "role": "Purchase Master Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Party Manager",
    "share": 1,
    "write": 1
   }

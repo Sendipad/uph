@@ -89,7 +89,7 @@
   }
  ],
  "links": [],
- "modified": "2026-02-07 17:27:46.357195",
+ "modified": "2026-02-21 00:44:16.409548",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party Relationship Type",
@@ -127,6 +127,18 @@
    "read": 1,
    "report": 1,
    "role": "All"
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Party Manager",
+   "share": 1,
+   "write": 1
   }
  ],
  "quick_entry": 1,

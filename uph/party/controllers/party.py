@@ -272,6 +272,21 @@ def validate_party_master_on_target_party_type(doc, method):
         # Sync Naming if enabled
         sync_party_name_from_party_master(doc)
 
+        # Enforce cross-type uniqueness
+        settings = frappe.get_cached_doc("Party Master Settings")
+        if settings.enforce_cross_type_uniqueness and doc.name:
+            from uph.party.controllers.cache_utils import get_configured_party_types
+
+            for pt in get_configured_party_types():
+                if pt == doc.doctype:
+                    continue
+                if frappe.db.exists(pt, doc.name):
+                    frappe.throw(
+                        _(
+                            "Party '{0}' already exists as a {1}. Cross-type uniqueness is enforced."
+                        ).format(doc.name, pt)
+                    )
+
     if method == "on_update":
         old_doc = doc.get_doc_before_save()
         old_party_master = old_doc.get("party_master") if old_doc else None
@@ -836,15 +851,18 @@ def sync_party_name_from_party_master(doc):
     # Determine if this is a secondary role
     is_primary = pm.party_type == party_type
 
+    # 2-letter abbreviation
+    abbr = party_type[:2].lower()
+
     if mode and "Prefix" in mode:
-        prefix = f"{party_type}-"
+        prefix = f"{abbr}-"
         if mode == "Prefix for All Role":
             new_name = f"{prefix}{pm.party_number}"
         elif mode == "Prefix for Secondary Role" and not is_primary:
             new_name = f"{prefix}{pm.party_number}"
 
     elif mode and "Suffix" in mode:
-        suffix = f"-{party_type}"
+        suffix = f"-{abbr}"
         if mode == "Suffix for All Role":
             new_name = f"{pm.party_number}{suffix}"
         elif mode == "Suffix Secondary Roles" and not is_primary:

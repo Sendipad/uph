@@ -20,6 +20,10 @@
  "ref_doctype": "GL Entry",
  "report_name": "Party Account Statement",
  "report_type": "Script Report",
- "roles": [],
+ "roles": [
+  {
+   "role": "Party Manager"
+  }
+ ],
  "timeout": 0
 }

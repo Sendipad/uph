@@ -46,13 +46,13 @@ jobs:
     name: v17
     needs: changes
     if: |
-      github.ref_name != 'hotfix' &&
-      github.event.pull_request.head.ref != 'hotfix' &&
-      (github.event_name == 'workflow_dispatch' ||
-       github.ref == 'refs/heads/develop' ||
-       needs.changes.outputs.python == 'true' ||
-       needs.changes.outputs.javascript == 'true' ||
-       needs.changes.outputs.config == 'true')
+      github.event_name == 'workflow_dispatch' ||
+      github.ref_name == 'hotfix' ||
+      github.event.pull_request.head.ref == 'hotfix' ||
+      github.ref == 'refs/heads/develop' ||
+      needs.changes.outputs.python == 'true' ||
+      needs.changes.outputs.javascript == 'true' ||
+      needs.changes.outputs.config == 'true'
     uses: ./.github/workflows/reusable_test.yml
     with:
       frappe_branch: "develop"
@@ -68,13 +68,13 @@ jobs:
     name: v16
     needs: changes
     if: |
-      github.ref_name != 'hotfix' &&
-      github.event.pull_request.head.ref != 'hotfix' &&
-      (github.event_name == 'workflow_dispatch' ||
-       github.ref == 'refs/heads/version-16' ||
-       needs.changes.outputs.python == 'true' ||
-       needs.changes.outputs.javascript == 'true' ||
-       needs.changes.outputs.config == 'true')
+      github.event_name == 'workflow_dispatch' ||
+      github.ref_name == 'hotfix' ||
+      github.event.pull_request.head.ref == 'hotfix' ||
+      github.ref == 'refs/heads/version-16' ||
+      needs.changes.outputs.python == 'true' ||
+      needs.changes.outputs.javascript == 'true' ||
+      needs.changes.outputs.config == 'true'
     uses: ./.github/workflows/reusable_test.yml
     with:
       frappe_branch: "version-16"
@@ -107,3 +107,19 @@ jobs:
       setuptools_version: "<70"
       run_python: ${{ needs.changes.outputs.python == 'true' || needs.changes.outputs.config == 'true' }}
       run_ui: ${{ needs.changes.outputs.javascript == 'true' || needs.changes.outputs.config == 'true' }}
+
+  tests_passed:
+    name: All Tests Passed
+    needs: [test_v15, test_v16, test_v17]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check test outcomes
+        run: |
+          if [ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]; then
+            echo "Tests failed!"
+            exit 1
+          else
+            echo "Tests passed or were intentionally skipped!"
+            exit 0
+          fi

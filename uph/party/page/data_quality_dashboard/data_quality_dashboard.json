@@ -16,6 +16,9 @@
         },
         {
             "role": "Accounts Manager"
+        },
+        {
+            "role": "Party Manager"
         }
     ],
     "standard": "Yes",

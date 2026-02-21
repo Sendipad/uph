@@ -195,7 +195,17 @@
     "parent_page": "",
     "public": 1,
     "quick_lists": [],
-    "roles": [],
+    "roles": [
+        {
+            "role": "Party Manager"
+        },
+        {
+            "role": "System Manager"
+        },
+        {
+            "role": "Accounts Manager"
+        }
+    ],
     "sequence_id": 9.0,
     "shortcuts": [
         {

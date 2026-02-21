@@ -14,21 +14,22 @@ class DataQualityDashboard {
         this.page = page;
         this.wrapper = $(page.main);
         this.current_offset = 0;
-        this.limit = 20;
+        this.limit = 50;
         this.min_score = 70;
         this.active_tab = 'duplicates';
+        this.party_master_filter = null;
 
         // Unlinked tab state
         this.unlinked_offset = 0;
-        this.unlinked_limit = 20;
+        this.unlinked_limit = 50;
 
         // Health tab state
         this.health_offset = 0;
-        this.health_limit = 20;
+        this.health_limit = 50;
 
         // Unlinked Vouchers tab state
         this.unlinked_vouchers_offset = 0;
-        this.unlinked_vouchers_limit = 20;
+        this.unlinked_vouchers_limit = 50;
 
         this.init();
     }
@@ -36,8 +37,70 @@ class DataQualityDashboard {
     init() {
         this.setup_page_actions();
         this.render_layout();
+        this.setup_filters();
         this.load_stats();
         this.load_tab_content();
+    }
+
+    setup_filters() {
+        const filter_row = this.wrapper.find('.dashboard-filters');
+
+        // Clear containers
+        const pm_container = filter_row.find('.pm-filter-container').empty();
+        const dt_container = filter_row.find('.dt-filter-container').empty();
+
+        this.party_master_field = frappe.ui.form.make_control({
+            df: {
+                label: '',
+                fieldtype: 'Link',
+                fieldname: 'party_master',
+                options: 'Party Master',
+                placeholder: __('Filter by Party Master'),
+                get_query: () => ({ filters: { is_group: 0, disabled: 0 } }),
+                change: () => {
+                    this.party_master_filter = this.party_master_field.get_value() || null;
+                    this.current_offset = 0;
+                    this.unlinked_offset = 0;
+                    this.unlinked_vouchers_offset = 0;
+                    this.health_offset = 0;
+                    this.load_stats();
+                    this.load_tab_content();
+                }
+            },
+            parent: pm_container,
+            render_input: true
+        });
+
+        this.doctype_filter_field = frappe.ui.form.make_control({
+            df: {
+                label: '',
+                fieldtype: 'Link',
+                fieldname: 'reference_doctype',
+                options: 'DocType',
+                placeholder: __('Filter by DocType'),
+                get_query: () => {
+                    const tx_doctypes = (frappe.boot.party_master_on_doctypes_depend_field || [])
+                        .map(d => d[0]) // parent_doctype is at index 0
+                        .filter((v, i, a) => a.indexOf(v) === i); // unique
+
+                    if (tx_doctypes.length) {
+                        return { filters: { name: ['in', tx_doctypes] } };
+                    }
+                    return { filters: { istable: 0, issingle: 0 } };
+                },
+                change: () => {
+                    this.doctype_filter = this.doctype_filter_field.get_value() || null;
+                    this.unlinked_vouchers_offset = 0;
+                    this.health_offset = 0;
+                    this.load_tab_content();
+                }
+            },
+            parent: dt_container,
+            render_input: true
+        });
+
+        // Hide initially since default tab is Duplicates
+        dt_container.parent().hide();
     }
 
     setup_page_actions() {
@@ -66,36 +129,39 @@ class DataQualityDashboard {
 
     render_layout() {
         this.wrapper.html(`
-            <div class="data-quality-container">
-                <!-- Stats Cards -->
+            <div class="data-quality-container" style="padding: 1rem;">
+                <!-- Stats Cards - Frappe Number Card Style -->
                 <div class="stats-row" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-                    <div class="stat-card" id="stat-total-parties" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
-                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600;">-</div>
-                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Total Parties')}</div>
+                    <div class="stat-card" id="stat-total-parties" data-route="" style="flex: 1; min-width: 140px; padding: 1rem 1rem 1rem 1.25rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm); border-left: 4px solid var(--blue-500); cursor: default;">
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem;">${__('Total Parties')}</div>
+                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 700;">-</div>
                     </div>
-                    <div class="stat-card" id="stat-duplicate-issues" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
-                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--orange-500);">-</div>
-                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Duplicate Issues')}</div>
+                    <div class="stat-card stat-clickable" id="stat-duplicate-issues" data-issue-type="Duplicate" style="flex: 1; min-width: 140px; padding: 1rem 1rem 1rem 1.25rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm); border-left: 4px solid var(--orange-500); cursor: pointer;">
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem;">${__('Duplicate Issues')}</div>
+                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: var(--orange-500);">-</div>
                     </div>
-                    <div class="stat-card" id="stat-unlinked" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
-                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--purple-500);">-</div>
-                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Unlinked Roles')}</div>
+                    <div class="stat-card stat-clickable" id="stat-unlinked" data-issue-type="Unlinked" style="flex: 1; min-width: 140px; padding: 1rem 1rem 1rem 1.25rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm); border-left: 4px solid var(--purple-500); cursor: pointer;">
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem;">${__('Unlinked Roles')}</div>
+                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: var(--purple-500);">-</div>
                     </div>
-                    <div class="stat-card" id="stat-drafts" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
-                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--yellow-500);">-</div>
-                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Draft Vouchers')}</div>
-                    </div>
-                    <div class="stat-card" id="stat-unlinked-vouchers" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
-                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--red-500);">-</div>
-                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Unlinked Vouchers')}</div>
-                    </div>
-                    <div class="stat-card" id="stat-dismissed" style="flex: 1; min-width: 120px; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm);">
-                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 600; color: var(--green-500);">-</div>
-                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.85rem;">${__('Ignored Issues')}</div>
+                    <div class="stat-card stat-clickable" id="stat-policy-issues" data-issue-type="Transaction Policy" style="flex: 1; min-width: 140px; padding: 1rem 1rem 1rem 1.25rem; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm); border-left: 4px solid var(--red-500); cursor: pointer;">
+                        <div class="stat-label" style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem;">${__('Transaction Health')}</div>
+                        <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: var(--red-500);">-</div>
                     </div>
                 </div>
 
-                <!-- Tabs -->
+                <!-- Filters Row (Moved below stats) -->
+                <div class="dashboard-filters" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: center; background: var(--card-bg); padding: 0.75rem 1rem; border-radius: 8px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);">
+                    <div style="flex: 1; min-width: 200px;">
+                        <div class="pm-filter-container"></div>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <div class="dt-filter-container"></div>
+                    </div>
+                    <div style="flex: 2;"></div>
+                </div>
+
+                <!-- Tab Links -->
                 <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 1rem;">
                     <li class="nav-item">
                         <a class="nav-link active" data-tab="duplicates" href="#" role="tab">
@@ -137,12 +203,37 @@ class DataQualityDashboard {
             const tab = $(e.currentTarget).data('tab');
             this.switch_tab(tab);
         });
+
+        // Bind stat card clicks → navigate to Party Issue list
+        this.wrapper.find('.stat-clickable').on('click', (e) => {
+            const $card = $(e.currentTarget).closest('.stat-card');
+            const issue_type = $card.data('issue-type');
+            const status = $card.data('status');
+            let filters = {};
+            if (issue_type) {
+                filters['issue_type'] = issue_type;
+                filters['status'] = ['in', ['Open', 'Under Review']];
+            }
+            if (status) {
+                filters['status'] = status;
+            }
+            frappe.set_route('List', 'Party Issue', filters);
+        });
     }
 
     switch_tab(tab) {
         this.active_tab = tab;
         this.wrapper.find('.nav-link').removeClass('active');
         this.wrapper.find(`.nav-link[data-tab="${tab}"]`).addClass('active');
+
+        // Show/hide DocType filter based on tab
+        const dt_container = this.wrapper.find('.dt-filter-container').parent();
+        if (tab === 'unlinked_vouchers' || tab === 'health') {
+            dt_container.show();
+        } else {
+            dt_container.hide();
+        }
+
         this.load_tab_content();
     }
 
@@ -161,6 +252,7 @@ class DataQualityDashboard {
     load_stats() {
         frappe.call({
             method: 'uph.party.page.data_quality_dashboard.data_quality_dashboard.get_dashboard_stats',
+            args: { party_master: this.party_master_filter || '' },
             callback: (r) => {
                 if (r.message) {
                     this.update_stats(r.message);
@@ -173,7 +265,6 @@ class DataQualityDashboard {
         $('#stat-total-parties .stat-value').text(stats.total_parties || 0);
         $('#stat-duplicate-issues .stat-value').text(stats.duplicate_issues || 0);
         $('#stat-unlinked .stat-value').text(stats.unlinked_count || 0);
-        $('#stat-unlinked-vouchers .stat-value').text(stats.unlinked_transaction_count || 0);
         $('#stat-drafts .stat-value').text(stats.draft_voucher_count || 0);
         $('#stat-dismissed .stat-value').text(stats.total_dismissed || 0);
 
@@ -187,12 +278,6 @@ class DataQualityDashboard {
             $('#tab-badge-unlinked').text(stats.unlinked_count).show();
         } else {
             $('#tab-badge-unlinked').hide();
-        }
-
-        if (stats.unlinked_transaction_count) {
-            $('#tab-badge-unlinked-vouchers').text(stats.unlinked_transaction_count).show();
-        } else {
-            $('#tab-badge-unlinked-vouchers').hide();
         }
 
         const health_total = (stats.draft_voucher_count || 0) + (stats.cancelled_unamended_count || 0);
@@ -216,7 +301,8 @@ class DataQualityDashboard {
             args: {
                 limit: this.limit,
                 offset: this.current_offset,
-                min_score: this.min_score
+                min_score: this.min_score,
+                party_master: this.party_master_filter || '',
             },
             callback: (r) => {
                 if (r.message) {
@@ -405,6 +491,7 @@ class DataQualityDashboard {
             args: {
                 limit: this.unlinked_limit,
                 offset: this.unlinked_offset,
+                party_master: this.party_master_filter || '',
             },
             callback: (r) => {
                 if (r.message) {
@@ -530,7 +617,7 @@ class DataQualityDashboard {
                             <div class="suggestion-row" style="display: flex; align-items: center; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 0.5rem; cursor: pointer;" data-pm="${s.party_master}">
                                 <div style="flex: 2;">
                                     <div style="font-weight: 500;">${s.party_name}</div>
-                                    <div class="text-muted small">${s.party_master} | ${s.party_type || ''}</div>
+                                    <div class="text-muted small">${s.party_master} | ${__(s.party_type) || ''}</div>
                                 </div>
                                 <div style="flex: 1; text-align: right;">
                                     <span style="background: ${s.score >= 80 ? 'var(--green-100)' : 'var(--yellow-100)'}; color: ${s.score >= 80 ? 'var(--green-700)' : 'var(--yellow-700)'}; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.8rem; font-weight: 600;">
@@ -605,10 +692,12 @@ class DataQualityDashboard {
         content.html(`<div class="text-muted">${__('Loading unlinked vouchers...')}</div>`);
 
         frappe.call({
-            method: 'uph.party.controllers.unlinked_resolver.get_unlinked_transactions',
+            method: 'uph.party.page.data_quality_dashboard.data_quality_dashboard.get_unlinked_voucher_issues',
             args: {
                 limit: this.unlinked_vouchers_limit,
                 offset: this.unlinked_vouchers_offset,
+                party_master: this.party_master_filter || '',
+                reference_doctype: this.doctype_filter || '',
             },
             callback: (r) => {
                 if (r.message) {
@@ -623,7 +712,7 @@ class DataQualityDashboard {
         content.empty();
 
         if (!data.unlinked || data.unlinked.length === 0) {
-            content.html(`<div class="text-muted text-center" style="padding: 2rem;">${__('All transactions are linked to a Party Master')}</div>`);
+            content.html(`<div class="text-muted text-center" style="padding: 2rem;">${__('No unlinked voucher issues found')}</div>`);
             this.render_pagination(0, 'unlinked_vouchers');
             return;
         }
@@ -643,16 +732,16 @@ class DataQualityDashboard {
                 <div class="unlinked-row" style="display: flex; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); background: var(--card-bg);">
                     <div style="flex: 2;">
                         <div style="font-weight: 500;">
-                            <a href="/app/${frappe.router.slug(item.role_doctype)}/${item.role_name}" target="_blank">${item.role_name}</a>
+                            <a href="/app/${frappe.router.slug(item.role_doctype)}/${item.role_name}" target="_blank">${item.display_name}</a>
                         </div>
-                        <div class="text-muted small">${__('By')} ${item.owner}</div>
+                        <div class="text-muted small">${item.owner ? __('By') + ' ' + item.owner : item.role_name}</div>
                     </div>
                     <div style="flex: 1;">
-                        <span class="indicator-pill" style="font-size: 0.8rem;">${item.role_doctype}</span>
+                        <span class="indicator-pill" style="font-size: 0.8rem;">${__(item.role_doctype)}</span>
                     </div>
-                    <div style="flex: 1;">${frappe.datetime.global_date_format(item.creation)}</div>
+                    <div style="flex: 1;">${item.creation ? frappe.datetime.global_date_format(item.creation) : '-'}</div>
                     <div style="flex: 1; text-align: right;">
-                        <button class="btn btn-default btn-xs btn-suggest" data-doctype="${item.role_doctype}" data-name="${item.role_name}" data-display="${item.role_name}">
+                        <button class="btn btn-default btn-xs btn-suggest" data-doctype="${item.role_doctype}" data-name="${item.role_name}" data-display="${item.display_name}">
                             ${__('Link')}
                         </button>
                     </div>
@@ -661,13 +750,90 @@ class DataQualityDashboard {
 
             row.find('.btn-suggest').on('click', (e) => {
                 const $btn = $(e.currentTarget);
-                this.show_link_dialog($btn.data('doctype'), $btn.data('name'), $btn.data('display'));
+                this.show_voucher_link_dialog($btn.data('doctype'), $btn.data('name'), $btn.data('display'), $btn.data('role'));
             });
 
             content.append(row);
         });
 
         this.render_pagination(data.total, 'unlinked_vouchers');
+    }
+
+    show_voucher_link_dialog(voucher_doctype, voucher_name, voucher_display, role_name) {
+        // Find the mapped role doctype (e.g. Sales Invoice -> Customer)
+        frappe.db.get_value('Party Master Settings', null, 'document_types')
+            .then(() => {
+                // To keep it simple, we ask the server for the role doctype/name of this voucher
+                frappe.call({
+                    method: 'frappe.client.get',
+                    args: { doctype: voucher_doctype, name: voucher_name },
+                    callback: (r) => {
+                        if (r.message) {
+                            const doc = r.message;
+                            let role_doctype = '';
+                            let actual_role_name = '';
+
+                            // Guess the role field based on common patterns
+                            if (doc.customer) { role_doctype = 'Customer'; actual_role_name = doc.customer; }
+                            else if (doc.supplier) { role_doctype = 'Supplier'; actual_role_name = doc.supplier; }
+                            else if (doc.employee) { role_doctype = 'Employee'; actual_role_name = doc.employee; }
+                            else if (doc.party_type && doc.party) { role_doctype = doc.party_type; actual_role_name = doc.party; }
+
+                            if (!role_doctype || !actual_role_name) {
+                                frappe.msgprint(__('Could not determine the underlying party role (Customer/Supplier) for {0}', [voucher_display]));
+                                return;
+                            }
+
+                            this._render_voucher_link_dialog(voucher_doctype, voucher_name, voucher_display, role_doctype, actual_role_name);
+                        }
+                    }
+                });
+            });
+    }
+
+    _render_voucher_link_dialog(voucher_doctype, voucher_name, voucher_display, role_doctype, role_name) {
+        const d = new frappe.ui.Dialog({
+            title: __('Link {0} to Party Master', [voucher_display]),
+            fields: [
+                {
+                    fieldname: 'info',
+                    fieldtype: 'HTML',
+                    options: `
+                        <div class="alert alert-info">
+                            ${__('This voucher relies on the <b>{0}</b> record: <b>{1}</b>. By linking this {0} to a Party Master, this voucher (and all others using it) will be resolved.', [role_doctype, role_name])}
+                        </div>
+                    `
+                },
+                {
+                    fieldname: 'party_master',
+                    fieldtype: 'Link',
+                    label: __('Party Master'),
+                    options: 'Party Master',
+                    get_query: () => ({ filters: { is_group: 0, disabled: 0 } }),
+                    reqd: 1
+                }
+            ],
+            primary_action_label: __('Link to Party Master'),
+            primary_action: (values) => {
+                frappe.call({
+                    method: 'uph.party.controllers.unlinked_resolver.resolve_unlinked_voucher',
+                    args: {
+                        role_doctype: role_doctype,
+                        role_name: role_name,
+                        party_master: values.party_master,
+                    },
+                    callback: (r) => {
+                        if (r.message && r.message.success) {
+                            d.hide();
+                            frappe.show_alert({ message: r.message.message, indicator: 'green' });
+                            this.load_stats();
+                            this.load_unlinked_vouchers();
+                        }
+                    }
+                });
+            }
+        });
+        d.show();
     }
 
     load_health() {
@@ -679,6 +845,8 @@ class DataQualityDashboard {
             args: {
                 limit: this.health_limit,
                 offset: this.health_offset,
+                party_master: this.party_master_filter || '',
+                reference_doctype: this.doctype_filter || '',
             },
             callback: (r) => {
                 if (r.message) {
@@ -702,6 +870,7 @@ class DataQualityDashboard {
         content.append(`
             <div style="display: flex; padding: 0.5rem 1rem; font-weight: 600; color: var(--text-muted); font-size: 0.85rem; border-bottom: 1px solid var(--border-color);">
                 <div style="flex: 2;">${__('Party Master')}</div>
+                <div style="flex: 1;">${__('DocType')}</div>
                 <div style="flex: 1; text-align: center;">${__('Drafts')}</div>
                 <div style="flex: 1; text-align: center;">${__('Cancelled')}</div>
                 <div style="flex: 1; text-align: center;">${__('Severity')}</div>
@@ -717,7 +886,10 @@ class DataQualityDashboard {
                         <div style="font-weight: 500;">
                             <a href="/app/party-master/${p.party_master}" target="_blank">${p.party_name}</a>
                         </div>
-                        <div class="text-muted small">${p.party_number || '-'} | ${p.party_type || ''}</div>
+                        <div class="text-muted small">${p.party_number || '-'} | ${__(p.party_type) || ''}</div>
+                    </div>
+                    <div style="flex: 1;">
+                        <span class="indicator-pill" style="font-size: 0.75rem;">${__(p.reference_doctype) || '-'}</span>
                     </div>
                     <div style="flex: 1; text-align: center;">
                         <span style="font-weight: 600; color: ${p.draft_count > 0 ? 'var(--yellow-600)' : 'var(--text-muted)'};">${p.draft_count}</span>
@@ -726,10 +898,10 @@ class DataQualityDashboard {
                         <span style="font-weight: 600; color: ${p.cancelled_unamended_count > 0 ? 'var(--red-500)' : 'var(--text-muted)'};">${p.cancelled_unamended_count}</span>
                     </div>
                     <div style="flex: 1; text-align: center;">
-                        <span style="color: ${severity_color}; font-weight: 600; font-size: 0.85rem;">${p.severity}</span>
+                        <span style="color: ${severity_color}; font-weight: 600; font-size: 0.85rem;">${__(p.severity)}</span>
                     </div>
                     <div style="flex: 1; text-align: right;">
-                        <button class="btn btn-default btn-xs btn-detail" data-pm="${p.party_master}">
+                        <button class="btn btn-default btn-xs btn-detail" data-pm="${p.party_master}" data-dt="${p.reference_doctype}">
                             ${__('View Details')}
                         </button>
                     </div>
@@ -737,7 +909,8 @@ class DataQualityDashboard {
             `);
 
             row.find('.btn-detail').on('click', (e) => {
-                this.show_health_detail($(e.currentTarget).data('pm'));
+                const $btn = $(e.currentTarget);
+                this.show_health_detail($btn.data('pm'), $btn.data('dt'));
             });
 
             content.append(row);
@@ -746,36 +919,132 @@ class DataQualityDashboard {
         this.render_pagination(data.total, 'health');
     }
 
-    show_health_detail(party_master) {
+    show_health_detail(party_master, reference_doctype = null) {
+        let title = __('Transaction Policy Issues: {0}', [party_master]);
+        if (reference_doctype) {
+            title = __('Transaction Policy Issues: {0} ({1})', [party_master, reference_doctype]);
+        }
+
+        const d = new frappe.ui.Dialog({
+            title: title,
+            size: 'large',
+            fields: [
+                {
+                    fieldname: 'issues_html',
+                    fieldtype: 'HTML'
+                }
+            ],
+            primary_action_label: __('Close'),
+            primary_action: () => d.hide()
+        });
+
+        d.fields_dict.issues_html.$wrapper.html(`<div class="text-muted text-center" style="padding: 2rem;">${__('Loading issues...')}</div>`);
+        d.show();
+
         frappe.call({
             method: 'uph.party.controllers.transaction_health.get_party_health_detail',
-            args: { party_master },
+            args: { party_master, reference_doctype },
             callback: (r) => {
                 if (!r.message || !r.message.vouchers || !r.message.vouchers.length) {
-                    frappe.msgprint(__('No problematic vouchers found for {0}', [party_master]));
+                    d.fields_dict.issues_html.$wrapper.html(
+                        `<div class="text-muted text-center" style="padding: 2rem;">${__('No problematic vouchers found for {0}', [party_master])}</div>`
+                    );
                     return;
                 }
 
-                let html = '<div class="frappe-list">';
+                let html = `
+                    <div style="display: flex; padding: 0.5rem 1rem; font-weight: 600; color: var(--text-muted); font-size: 0.85rem; border-bottom: 1px solid var(--border-color);">
+                        <div style="flex: 2;">${__('Document')}</div>
+                        <div style="flex: 1;">${__('Issue')}</div>
+                        <div style="flex: 1;">${__('Date')}</div>
+                        <div style="flex: 1.5; text-align: right;">${__('Actions')}</div>
+                    </div>
+                `;
+
                 r.message.vouchers.forEach(v => {
-                    const issue_color = v.issue_type === 'Draft' ? 'orange' : 'red';
+                    let issue_color = 'gray';
+                    if (v.issue_code === 'draft_overdue') issue_color = 'orange';
+                    if (v.issue_code === 'cancelled_referenced') issue_color = 'red';
+                    if (v.issue_code === 'party_master_mismatch') issue_color = 'blue';
+
+                    let actions_html = '';
+
+                    // Action logic based on docstatus and issue code
+                    if (v.docstatus === 0 && v.issue_code === 'draft_overdue') {
+                        actions_html += `
+                            <button class="btn btn-primary btn-xs btn-action" data-action="submit" data-issue="${v.issue_name}" title="${__('Submit Document')}">
+                                <i class="fa fa-check"></i> ${__('Submit')}
+                            </button>
+                            <button class="btn btn-default btn-xs btn-action" data-action="cancel" data-issue="${v.issue_name}" title="${__('Cancel Document')}">
+                                <i class="fa fa-ban"></i>
+                            </button>
+                        `;
+                    } else if (v.docstatus === 1 && v.issue_code === 'cancelled_referenced') {
+                        actions_html += `
+                            <button class="btn btn-danger btn-xs btn-action" data-action="cancel" data-issue="${v.issue_name}" title="${__('Cancel Document')}">
+                                <i class="fa fa-ban"></i> ${__('Cancel')}
+                            </button>
+                        `;
+                    }
+
+                    // Always allow explicit dismiss from the dashboard
+                    actions_html += `
+                        <button class="btn btn-default btn-xs btn-action" data-action="dismiss" data-issue="${v.issue_name}" title="${__('Ignore Issue')}" style="margin-left: 4px;">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    `;
+
                     html += `
-                        <div style="padding: 0.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between;">
-                            <div>
-                                <a href="/app/${frappe.router.slug(v.doctype)}/${v.name}" target="_blank">${v.doctype}: ${v.name}</a>
+                        <div class="health-issue-row" style="display: flex; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color);">
+                            <div style="flex: 2;">
+                                <div style="font-weight: 500;">
+                                    <a href="/app/${frappe.router.slug(v.doctype)}/${v.name}" target="_blank">${v.doctype}: ${v.name}</a>
+                                </div>
+                                <div class="text-muted small">${v.docstatus === 0 ? 'Draft' : (v.docstatus === 1 ? 'Submitted' : 'Cancelled')}</div>
                             </div>
-                            <div>
+                            <div style="flex: 1;">
                                 <span class="indicator-pill ${issue_color}">${v.issue_type}</span>
+                            </div>
+                            <div style="flex: 1; font-size: 0.85rem;" class="text-muted">
+                                ${v.creation ? frappe.datetime.global_date_format(v.creation) : '-'}
+                            </div>
+                            <div style="flex: 1.5; text-align: right;">
+                                ${actions_html}
                             </div>
                         </div>
                     `;
                 });
-                html += '</div>';
 
-                frappe.msgprint({
-                    title: __('Voucher Issues — {0}', [party_master]),
-                    message: html,
-                    wide: true,
+                d.fields_dict.issues_html.$wrapper.html(html);
+
+                // Bind actions
+                d.fields_dict.issues_html.$wrapper.find('.btn-action').on('click', (e) => {
+                    const $btn = $(e.currentTarget);
+                    const action = $btn.data('action');
+                    const issue = $btn.data('issue');
+
+                    let confirm_msg = '';
+                    if (action === 'submit') confirm_msg = __('Are you sure you want to permanently Submit this document?');
+                    if (action === 'cancel') confirm_msg = __('Are you sure you want to permanently Cancel this document?');
+                    if (action === 'dismiss') confirm_msg = __('Ignore this issue? It won\'t show up again until re-scanned.');
+
+                    frappe.confirm(confirm_msg, () => {
+                        $btn.prop('disabled', true);
+                        frappe.call({
+                            method: 'uph.party.controllers.transaction_health.resolve_health_issue',
+                            args: { issue_name: issue, action: action },
+                            callback: (res) => {
+                                if (res.message && res.message.success) {
+                                    $btn.closest('.health-issue-row').fadeOut(300, function () { $(this).remove(); });
+                                    frappe.show_alert({ message: res.message.message, indicator: 'green' });
+                                    this.load_stats();
+                                    this.load_health();
+                                } else {
+                                    $btn.prop('disabled', false);
+                                }
+                            }
+                        });
+                    });
                 });
             }
         });
