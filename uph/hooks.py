@@ -109,10 +109,10 @@ export_python_type_annotations = True
 scheduler_events = {
     "hourly": [
         "uph.tasks.refresh_dashboard_stats",
-        "uph.party.controllers.unlinked_resolver.enqueue_unlinked_issue_scan",
-        "uph.party.controllers.transaction_health.enqueue_transaction_policy_scan",
     ],
     "daily": [
+        "uph.party.controllers.unlinked_resolver.enqueue_unlinked_issue_scan",
+        "uph.party.controllers.transaction_health.enqueue_transaction_policy_scan",
         "uph.party.controllers.duplicate_scanner.enqueue_duplicate_scan",
     ],
 }

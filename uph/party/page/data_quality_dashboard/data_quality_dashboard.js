@@ -265,8 +265,10 @@ class DataQualityDashboard {
         $('#stat-total-parties .stat-value').text(stats.total_parties || 0);
         $('#stat-duplicate-issues .stat-value').text(stats.duplicate_issues || 0);
         $('#stat-unlinked .stat-value').text(stats.unlinked_count || 0);
-        $('#stat-drafts .stat-value').text(stats.draft_voucher_count || 0);
-        $('#stat-dismissed .stat-value').text(stats.total_dismissed || 0);
+
+        // Transaction Health stat card update (using ID from render_layout)
+        const health_total = (stats.draft_voucher_count || 0) + (stats.cancelled_unamended_count || 0);
+        $('#stat-policy-issues .stat-value').text(health_total);
 
         // Update tab badges
         if (stats.duplicate_issues) {
@@ -280,7 +282,6 @@ class DataQualityDashboard {
             $('#tab-badge-unlinked').hide();
         }
 
-        const health_total = (stats.draft_voucher_count || 0) + (stats.cancelled_unamended_count || 0);
         if (health_total) {
             $('#tab-badge-health').text(health_total).show();
         } else {
