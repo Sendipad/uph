@@ -499,6 +499,126 @@ def run_transaction_policy_scan():
                         },
                     )
 
+    # Sync and auto-resolve issues that are no longer valid
+    sync_transaction_health_issues()
+
+
+def sync_transaction_health_issues():
+    """
+    Auto-resolve issues that have been fixed outside the dashboard.
+    Also syncs severity with current settings.
+    """
+    open_issues = frappe.get_all(
+        "Party Issue",
+        filters={
+            "issue_type": "Transaction Policy",
+            "status": ["in", ["Open", "Under Review"]],
+        },
+        fields=[
+            "name",
+            "reference_doctype",
+            "reference_name",
+            "details_json",
+            "severity",
+        ],
+    )
+
+    if not open_issues:
+        return
+
+    # Cache settings to avoid redundant DB calls
+    severity_map = {
+        d["document_type"]: d["transaction_health_severity"]
+        for d in _get_transaction_doctypes()
+    }
+
+    now = now_datetime()
+    resolved_count = 0
+    updated_count = 0
+
+    for issue in open_issues:
+        dt = issue.reference_doctype
+        dn = issue.reference_name
+
+        # 1. Check if the document still exists
+        if not frappe.db.exists(dt, dn):
+            frappe.db.set_value(
+                "Party Issue",
+                issue.name,
+                {
+                    "status": "Resolved",
+                    "resolved_on": now,
+                    "resolved_by": "Administrator",
+                    "dismiss_reason": "Orphaned: Document no longer exists",
+                },
+            )
+            resolved_count += 1
+            continue
+
+        # 2. Check if the issue is still valid
+        details = {}
+        if issue.details_json:
+            try:
+                details = json.loads(issue.details_json)
+            except:
+                pass
+
+        code = details.get("issue")
+        is_resolved = False
+
+        doc = frappe.get_doc(dt, dn)
+
+        if code == "draft_overdue":
+            if doc.docstatus != 0:
+                is_resolved = True
+        elif code == "cancelled_referenced":
+            has_amended_from = False
+            if hasattr(doc, "amended_from") and doc.amended_from:
+                has_amended_from = True
+
+            if doc.docstatus != 2 or has_amended_from:
+                is_resolved = True
+        elif code == "party_master_mismatch":
+            # For mismatch, we need to re-verify the expected party_master
+            # Note: This logic depends on the specific mapping for the doctype
+            mappings = get_doctypes_functional_fields_mapping_as_dict()
+            map_conf = mappings.get(dt)
+            if map_conf and not map_conf.get("is_dynamic_party_type"):
+                party_fieldname = map_conf.get("party_fieldname")
+                party_type = map_conf.get("party_type")
+                if party_fieldname and party_type:
+                    current_pm = doc.get("party_master")
+                    party_record_pm = frappe.db.get_value(
+                        party_type, doc.get(party_fieldname), "party_master"
+                    )
+                    if current_pm == party_record_pm:
+                        is_resolved = True
+
+        if is_resolved:
+            frappe.db.set_value(
+                "Party Issue",
+                issue.name,
+                {
+                    "status": "Resolved",
+                    "resolved_on": now,
+                    "resolved_by": "Administrator",
+                },
+            )
+            resolved_count += 1
+        else:
+            # 3. If not resolved, sync severity
+            current_severity = severity_map.get(dt, "High")
+            if issue.severity != current_severity:
+                frappe.db.set_value(
+                    "Party Issue", issue.name, "severity", current_severity
+                )
+                updated_count += 1
+
+    if resolved_count or updated_count:
+        frappe.logger("uph").info(
+            f"Health Sync: Resolved {resolved_count} issues, updated severity for {updated_count} issues"
+        )
+
 
 def get_health_counts():
     """Get aggregate health counts for dashboard stats. Uses Redis cache."""
