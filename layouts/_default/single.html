@@ -24,4 +24,41 @@
     {{ end }}
   </nav>
 </article>
+
+<div class="mobile-doc-nav" data-mobile-doc-nav>
+  <button class="mobile-doc-nav__trigger" data-mobile-doc-nav-open aria-label="Open page navigation">Page Navigation</button>
+  <div class="mobile-doc-nav__sheet" data-mobile-doc-nav-sheet hidden>
+    <div class="mobile-doc-nav__header">
+      <strong>Navigate</strong>
+      <button data-mobile-doc-nav-close aria-label="Close page navigation">✕</button>
+    </div>
+    <div class="mobile-doc-nav__content">
+      {{ with .PrevInSection }}<a href="{{ .RelPermalink }}">← {{ .LinkTitle }}</a>{{ end }}
+      {{ with .NextInSection }}<a href="{{ .RelPermalink }}">{{ .LinkTitle }} →</a>{{ end }}
+      <a href="#" data-scroll-top>Back to top</a>
+      <a href="{{ "#TableOfContents" }}">Table of contents</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.querySelector('[data-mobile-doc-nav]');
+  if (!root) return;
+  const sheet = root.querySelector('[data-mobile-doc-nav-sheet]');
+  const openBtn = root.querySelector('[data-mobile-doc-nav-open]');
+  const closeBtn = root.querySelector('[data-mobile-doc-nav-close]');
+
+  const open = () => { sheet.hidden = false; root.classList.add('is-open'); };
+  const close = () => { sheet.hidden = true; root.classList.remove('is-open'); };
+
+  openBtn?.addEventListener('click', open);
+  closeBtn?.addEventListener('click', close);
+  sheet?.querySelector('[data-scroll-top]')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    close();
+  });
+})();
+</script>
 {{ end }}
