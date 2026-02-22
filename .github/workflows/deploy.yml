@@ -2,7 +2,8 @@ name: Build and Deploy Hugo Docs
 
 on:
   push:
-    branches: ["main", "docs", "work"]
+    branches:
+      - "**"
   workflow_dispatch:
 
 permissions:
@@ -12,7 +13,7 @@ permissions:
 
 concurrency:
   group: "pages"
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -24,6 +25,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Pages
+        id: pages
         uses: actions/configure-pages@v5
 
       - name: Setup Hugo
@@ -33,7 +35,7 @@ jobs:
           extended: true
 
       - name: Build site
-        run: hugo --minify
+        run: hugo --gc --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
