@@ -133,7 +133,7 @@ weight: 6
 - Trigger on docs-relevant branches.
 - Build Hugo static site.
 - Upload artifact.
-- Deploy by pushing compiled `public/` output to `gh-pages` (e.g., `peaceiris/actions-gh-pages`).
+- Deploy through `actions/deploy-pages`.
 
 (See `.github/workflows/deploy.yml` in this repo for concrete implementation.)
 
