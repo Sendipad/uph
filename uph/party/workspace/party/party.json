@@ -266,7 +266,10 @@
             "color": "Grey",
             "label": "Party Issue",
             "link_to": "Party Issue",
-            "type": "DocType"
+            "type": "DocType",
+            "doc_view": "List",
+            "format": "{} Open",
+            "stats_filter": "[[\"Party Issue\",\"status\",\"in\",[\"Open\",\"Under Review\"]]]"
         },
         {
             "color": "Blue",
