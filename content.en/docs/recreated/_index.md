@@ -23,3 +23,4 @@ This section was rebuilt from static analysis of the UPH Python bytecode and the
 2. [Architecture, Domain Model, and Workflows](./architecture-and-domain-model.md)
 3. [Installation, Setup, and Configuration](./installation-configuration-usage.md)
 4. [APIs, Hooks, Security, Extensibility, and Limitations](./api-hooks-security-extensibility.md)
+5. [UPH Documentation Modernization Blueprint](./uph-docs-modernization-blueprint.md)
