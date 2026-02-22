@@ -322,6 +322,11 @@ def run_transaction_policy_scan():
     for dt_info in tx_doctypes:
         dt = dt_info.get("document_type")
         parent_dt = dt_info.get("parent_doctype") or dt
+        track = dt_info.get("track_transaction_health", "Include")
+        configured_severity = dt_info.get("transaction_health_severity", "High")
+
+        if track == "Ignore":
+            continue
 
         if not dt or not frappe.db.exists("DocType", dt):
             continue
@@ -356,11 +361,10 @@ def run_transaction_policy_scan():
                 break
             for d in drafts:
                 age_days = max(1, (now_datetime() - d.creation).days)
-                severity = "Medium" if age_days <= draft_days * 2 else "High"
                 create_party_issue_if_missing(
                     party=d.party_master,
                     issue_type="Transaction Policy",
-                    severity=severity,
+                    severity=configured_severity,
                     status="Open",
                     source_engine="transaction_health",
                     reference_doctype=parent_dt,
@@ -413,7 +417,7 @@ def run_transaction_policy_scan():
                         create_party_issue_if_missing(
                             party=r.party_master,
                             issue_type="Transaction Policy",
-                            severity="High",
+                            severity=configured_severity,
                             status="Open",
                             source_engine="transaction_health",
                             reference_doctype=parent_dt,
@@ -446,7 +450,7 @@ def run_transaction_policy_scan():
                         create_party_issue_if_missing(
                             party=row.party_master,
                             issue_type="Transaction Policy",
-                            severity="High",
+                            severity=configured_severity,
                             status="Open",
                             source_engine="transaction_health",
                             reference_doctype=parent_dt,
@@ -484,7 +488,7 @@ def run_transaction_policy_scan():
                     create_party_issue_if_missing(
                         party=row.party_master,
                         issue_type="Transaction Policy",
-                        severity="High",
+                        severity=configured_severity,
                         status="Open",
                         source_engine="transaction_health",
                         reference_doctype=parent_dt,
@@ -590,7 +594,8 @@ def rebuild_health_cache():
 def _get_transaction_doctypes():
     """
     Get the list of transaction DocTypes configured in Party Master Settings.
-    Returns list of dicts with 'document_type' and 'parent_doctype' keys.
+    Returns list of dicts with 'document_type', 'parent_doctype', 'track_transaction_health',
+    and 'transaction_health_severity' keys.
     """
     try:
         settings = frappe.get_cached_doc("Party Master Settings")
@@ -598,23 +603,22 @@ def _get_transaction_doctypes():
         for d in settings.document_types or []:
             dt = d.get("document_type")
             parent_dt = d.get("parent_doctype") or dt
+            track = d.get("track_transaction_health", "Include")
+            severity = d.get("transaction_health_severity", "High")
+
             if dt and not frappe.get_meta(dt).issingle:
-                tx_doctypes.append({"document_type": dt, "parent_doctype": parent_dt})
+                tx_doctypes.append(
+                    {
+                        "document_type": dt,
+                        "parent_doctype": parent_dt,
+                        "track_transaction_health": track,
+                        "transaction_health_severity": severity,
+                    }
+                )
 
         # Fallback to sensible defaults when nothing is configured
         if not tx_doctypes:
-            return [
-                {"document_type": "Sales Invoice", "parent_doctype": "Sales Invoice"},
-                {
-                    "document_type": "Purchase Invoice",
-                    "parent_doctype": "Purchase Invoice",
-                },
-                {"document_type": "Payment Entry", "parent_doctype": "Payment Entry"},
-                {
-                    "document_type": "Journal Entry Account",
-                    "parent_doctype": "Journal Entry",
-                },
-            ]
+            return _get_fallback_transaction_doctypes()
 
         # Deduplicate by document_type
         seen = set()
@@ -626,12 +630,17 @@ def _get_transaction_doctypes():
         return unique
     except Exception:
         # Fallback
-        return [
-            {"document_type": "Sales Invoice", "parent_doctype": "Sales Invoice"},
-            {"document_type": "Purchase Invoice", "parent_doctype": "Purchase Invoice"},
-            {"document_type": "Payment Entry", "parent_doctype": "Payment Entry"},
-            {
-                "document_type": "Journal Entry Account",
-                "parent_doctype": "Journal Entry",
-            },
-        ]
+        return _get_fallback_transaction_doctypes()
+
+
+def _get_fallback_transaction_doctypes():
+    defaults = [
+        {"document_type": "Sales Invoice", "parent_doctype": "Sales Invoice"},
+        {"document_type": "Purchase Invoice", "parent_doctype": "Purchase Invoice"},
+        {"document_type": "Payment Entry", "parent_doctype": "Payment Entry"},
+        {"document_type": "Journal Entry Account", "parent_doctype": "Journal Entry"},
+    ]
+    for d in defaults:
+        d["track_transaction_health"] = "Include"
+        d["transaction_health_severity"] = "High"
+    return defaults
