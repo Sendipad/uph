@@ -3,19 +3,15 @@ name: Build and Deploy Hugo Docs
 on:
   push:
     branches:
+      - main
       - docs
-    paths:
-      - "**" # trigger on any change in docs branch (optional refine)
+  workflow_dispatch:
 
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: .
-
     steps:
-      - name: Checkout docs branch
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -29,10 +25,11 @@ jobs:
       - name: Build site
         run: hugo --minify
 
-      - name: Deploy to gh-pages
+      - name: Deploy static site to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: ./public
           keep_files: false
+          force_orphan: true
