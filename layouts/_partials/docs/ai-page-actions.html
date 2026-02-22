@@ -1,70 +1,96 @@
 {{- $title := .Title -}}
 {{- $url := .Permalink -}}
 {{- $summary := .Summary | plainify -}}
+{{- $editUrl := "" -}}
+{{- with .File -}}
+  {{- $editUrl = printf "%s/edit/docs/content.%s/%s" $.Site.Params.BookRepo $.Lang .Path -}}
+{{- end -}}
 
-<div class="doc-ai-actions" data-page-title="{{ $title | htmlEscape }}" data-page-url="{{ $url | safeURL }}" data-page-summary="{{ $summary | htmlEscape }}">
-  <a class="doc-ai-btn chatgpt" href="#" data-ai="chatgpt" rel="noopener noreferrer" target="_blank" aria-label="Ask ChatGPT">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a4.6 4.6 0 0 1 4.57 4.12 4.58 4.58 0 0 1 3.35 1.33 4.63 4.63 0 0 1-.09 6.56 4.59 4.59 0 0 1-.82 5.48 4.58 4.58 0 0 1-5.48.82A4.63 4.63 0 0 1 7 20.22a4.58 4.58 0 0 1-1.33-3.35A4.6 4.6 0 0 1 1.55 12a4.6 4.6 0 0 1 4.12-4.57A4.6 4.6 0 0 1 12 2m-.15 2.2a2.4 2.4 0 0 0-2.3 1.82l-.14.54-.55.03a2.4 2.4 0 0 0-1.35 4.3l.43.34-.17.52a2.4 2.4 0 0 0 3.11 3l.5-.2.37.38a2.4 2.4 0 0 0 4-2.14l.02-.55.52-.17a2.4 2.4 0 0 0-.72-4.71l-.55-.04-.14-.53a2.4 2.4 0 0 0-2.33-1.8Z"/></svg>
-    <span>Ask ChatGPT</span>
+<div class="doc-page-actions" data-page-title="{{ $title | htmlEscape }}" data-page-url="{{ $url | safeURL }}" data-page-summary="{{ $summary | htmlEscape }}">
+  {{ if $editUrl }}
+  <a class="doc-action-btn edit" href="{{ $editUrl | safeURL }}" rel="noopener noreferrer" target="_blank" aria-label="Edit this page on GitHub">
+    <span>Edit on GitHub</span>
   </a>
-
-  <a class="doc-ai-btn gemini" href="#" data-ai="gemini" rel="noopener noreferrer" target="_blank" aria-label="Ask Gemini">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2l2.1 5.8L20 10l-5.9 2.2L12 18l-2.1-5.8L4 10l5.9-2.2z"/></svg>
-    <span>Ask Gemini</span>
+  {{ end }}
+  <a class="doc-action-btn chatgpt" href="#" data-ai="chatgpt" rel="noopener noreferrer" target="_blank" aria-label="Open this page in ChatGPT">
+    <span>Open in ChatGPT</span>
   </a>
-
-  <a class="doc-ai-btn claude" href="#" data-ai="claude" rel="noopener noreferrer" target="_blank" aria-label="Ask Claude">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3c4.8 0 8.7 3.9 8.7 8.7 0 4.8-3.9 8.7-8.7 8.7-4.8 0-8.7-3.9-8.7-8.7C3.3 6.9 7.2 3 12 3m0 2.2a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13m-.2 2.2a1.1 1.1 0 0 1 1.1 1.1v2.5h2.5a1.1 1.1 0 1 1 0 2.2h-2.5v2.5a1.1 1.1 0 1 1-2.2 0v-2.5H8.2a1.1 1.1 0 0 1 0-2.2h2.5V8.5a1.1 1.1 0 0 1 1.1-1.1"/></svg>
-    <span>Ask Claude</span>
+  <a class="doc-action-btn claude" href="#" data-ai="claude" rel="noopener noreferrer" target="_blank" aria-label="Open this page in Claude">
+    <span>Open in Claude</span>
   </a>
 </div>
 
 <script>
 (function () {
-  const container = document.querySelector('.doc-ai-actions');
+  const container = document.querySelector('.doc-page-actions');
   if (!container) return;
 
+  const MAX_URL_LEN = 3500;
+  const SESSION_KEY = 'uph-doc-ai-prompt';
   const providers = {
     chatgpt: (prompt) => `https://chatgpt.com/?q=${encodeURIComponent(prompt)}`,
-    gemini: (prompt) => `https://gemini.google.com/app?prompt=${encodeURIComponent(prompt)}`,
-    claude: (prompt) => `https://claude.ai/new?q=${encodeURIComponent(prompt)}`
+    claude: (prompt) => `https://claude.ai/new?q=${encodeURIComponent(prompt)}`,
   };
 
-  function trimText(text, maxLen) {
-    if (!text) return '';
-    const cleaned = String(text).replace(/\s+/g, ' ').trim();
-    return cleaned.length > maxLen ? `${cleaned.slice(0, maxLen)}…` : cleaned;
-  }
+  const trim = (text, limit) => {
+    const val = String(text || '').replace(/\s+/g, ' ').trim();
+    return val.length > limit ? `${val.slice(0, limit)}…` : val;
+  };
 
   function buildPrompt() {
     const title = container.dataset.pageTitle || document.title;
     const pageUrl = container.dataset.pageUrl || window.location.href;
     const summary = container.dataset.pageSummary || '';
-    const pageText = document.querySelector('article.book-article')?.innerText || '';
-    const context = trimText(pageText || summary, 2200);
+    const body = document.querySelector('article.book-article')?.innerText || summary;
+    const context = trim(body, 4500);
 
     return [
-      'Help me with this documentation page.',
+      'Please improve this UPH documentation page.',
       `Title: ${title}`,
       `URL: ${pageUrl}`,
       '',
-      'Context:',
-      context,
+      'Tasks:',
+      '1) Rewrite for clarity and architecture accuracy.',
+      '2) Suggest missing implementation details and risks.',
+      '3) Keep examples practical for Frappe/ERPNext teams.',
       '',
-      'Please summarize key points and provide practical implementation guidance.'
+      'Page content:',
+      context,
     ].join('\n');
+  }
+
+  function safeOpen(providerName) {
+    const prompt = buildPrompt();
+    const provider = providers[providerName];
+    if (!provider) return;
+
+    const link = provider(prompt);
+    if (link.length <= MAX_URL_LEN) {
+      window.open(link, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    try {
+      sessionStorage.setItem(SESSION_KEY, prompt);
+      navigator.clipboard?.writeText(prompt).catch(() => {});
+    } catch (error) {
+      navigator.clipboard?.writeText(prompt).catch(() => {});
+    }
+
+    const shortPrompt = [
+      'I copied the full UPH docs page context to clipboard/sessionStorage.',
+      'Please ask me to paste it if not visible.',
+      `Page: ${container.dataset.pageTitle || document.title}`,
+      `URL: ${container.dataset.pageUrl || window.location.href}`
+    ].join('\n');
+
+    window.open(provider(shortPrompt), '_blank', 'noopener,noreferrer');
   }
 
   container.querySelectorAll('[data-ai]').forEach((button) => {
     button.addEventListener('click', (event) => {
       event.preventDefault();
-      const prompt = buildPrompt();
-      const provider = providers[button.dataset.ai];
-      if (!provider) return;
-      window.open(provider(prompt), '_blank', 'noopener,noreferrer');
-      if (button.dataset.ai === 'gemini' && navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(prompt).catch(() => {});
-      }
+      safeOpen(button.dataset.ai);
     });
   });
 })();

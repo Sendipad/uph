@@ -4,16 +4,11 @@ on:
   push:
     branches:
       - docs
-    paths:
-      - "**" # trigger on any change in docs branch (optional refine)
+  workflow_dispatch:
 
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: .
-
     steps:
       - name: Checkout docs branch
         uses: actions/checkout@v4
