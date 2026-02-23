@@ -1,0 +1,17 @@
+:root {
+  --md-primary-fg-color: #0f766e;
+  --md-accent-fg-color: #2563eb;
+}
+
+.md-header {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.md-typeset h1,
+.md-typeset h2 {
+  letter-spacing: -0.01em;
+}
+
+.md-sidebar--primary {
+  border-right: 1px solid rgba(15, 23, 42, 0.08);
+}
