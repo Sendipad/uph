@@ -11,9 +11,6 @@ class TestPartyNaming(FrappeTestCase):
         settings.role_prefix_mode = "Prefix for All Role"
         settings.save()
         frappe.clear_cache(doctype="Party Master Settings")
-        print(
-            f"DEBUG: sync_erp_party_naming = {frappe.get_cached_doc('Party Master Settings').sync_erp_party_naming}"
-        )
 
         # Setup multi-party rule for Customer
         rule = frappe.db.get_value(
@@ -48,7 +45,6 @@ class TestPartyNaming(FrappeTestCase):
 
         # Sync naming
         sync_party_name_from_party_master(customer)
-        print(f"DEBUG: customer.name after sync = {customer.name}")
 
         # Expected: cu-PM-999-USD
         # Prefix is 'cu-' (2 chars + -)

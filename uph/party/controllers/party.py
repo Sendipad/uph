@@ -877,7 +877,7 @@ def sync_party_name_from_party_master(doc):
 
     # If name is different, we need to rename or set name
     if doc.name != new_name:
-        if doc.is_new():
+        if not doc.name or doc.is_new():
             doc.name = new_name
         else:
             # Rename existing document
