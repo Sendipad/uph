@@ -73,10 +73,15 @@ def get_dashboard_stats(party_master: str = None):
     Uses a single aggregation query for all issue counts.
     Optionally filters by party_master.
     """
+    if not frappe.has_permission("Party Issue", "read"):
+        frappe.throw(_("Not permitted to read Party Issue"), frappe.PermissionError)
+
     party_filter = ""
     params = {}
     if party_master:
-        party_filter = "WHERE party = %(party_master)s"
+        party_filter = (
+            "WHERE (party = %(party_master)s OR party_secondary = %(party_master)s)"
+        )
         params["party_master"] = party_master
 
     # Single aggregation query on Party Issue
@@ -137,6 +142,9 @@ def get_unlinked_voucher_issues(
     Optionally filters by a specific party_master (for linked party checks).
     Optionally filters by specific reference_doctype.
     """
+    if not frappe.has_permission("Party Issue", "read"):
+        frappe.throw(_("Not permitted to read Party Issue"), frappe.PermissionError)
+
     limit = cint(limit) or 20
     offset = cint(offset) or 0
 
@@ -167,11 +175,15 @@ def get_unlinked_voucher_issues(
         if not meta.has_field("party_master"):
             continue
 
-        # Build the WHERE clause
+        # Build the WHERE clause and count filters
         where_clause = "(party_master IS NULL OR party_master = '')"
+        count_filters = {"party_master": ["in", [None, ""]]}
+        if party_master:
+            where_clause = "party_master = %(party_master)s"
+            count_filters = {"party_master": party_master}
 
         # Count
-        total += frappe.db.count(dt, {"party_master": ["is", "not set"]})
+        total += frappe.db.count(dt, count_filters)
 
         is_child = meta.istable
 
@@ -213,10 +225,14 @@ def get_unlinked_voucher_issues(
     final_query = f"""
         SELECT * FROM ({union_query}) AS combined
         ORDER BY creation DESC
-        LIMIT {limit} OFFSET {offset}
+        LIMIT %(limit)s OFFSET %(offset)s
     """
 
-    rows = frappe.db.sql(final_query, as_dict=True)
+    rows = frappe.db.sql(
+        final_query,
+        {"limit": limit, "offset": offset, "party_master": party_master},
+        as_dict=True,
+    )
 
     return {"unlinked": rows, "total": total}
 
@@ -277,7 +293,6 @@ def dismiss_duplicate(party_1: str, party_2: str, reason: str = None):
         updates["details_json"] = json.dumps(details)
 
     frappe.db.set_value("Party Issue", issue_name, updates)
-    frappe.db.commit()
 
     trigger_refresh()
     return {"success": True, "message": _("Duplicate issue has been ignored")}
