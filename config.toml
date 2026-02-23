@@ -147,9 +147,39 @@ defaultContentLanguageInSubdir = true
 
   [[menu.main]]
     name = "🛠️ API Reference"
-    pageRef = "/docs/Advanced/api-reference/"
+    pageRef = "/docs/api/"
     parent = "🧠 Advanced"
     weight = 4
+
+  [[menu.main]]
+    name = "🏗️ System Architecture"
+    pageRef = "/docs/architecture/overview/"
+    parent = "📘 Docs"
+    weight = 10
+
+  [[menu.main]]
+    name = "🧩 DocTypes"
+    pageRef = "/docs/doctypes/"
+    parent = "📘 Docs"
+    weight = 11
+
+  [[menu.main]]
+    name = "⚙️ Configuration & Governance"
+    pageRef = "/docs/configuration/overview/"
+    parent = "📘 Docs"
+    weight = 12
+
+  [[menu.main]]
+    name = "🛡️ Security & Compliance"
+    pageRef = "/docs/security/model/"
+    parent = "📘 Docs"
+    weight = 13
+
+  [[menu.main]]
+    name = "🔄 Migrations & History"
+    pageRef = "/docs/migrations/history/"
+    parent = "📘 Docs"
+    weight = 14
 
   [[menu.main]]
     name = "📚 Use Cases"
