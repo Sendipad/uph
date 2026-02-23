@@ -3,7 +3,7 @@ name: Build and Deploy Hugo Docs
 on:
   push:
     branches:
-      - "**"
+      - main
   workflow_dispatch:
 
 permissions:

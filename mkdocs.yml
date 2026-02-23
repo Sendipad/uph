@@ -1,0 +1,44 @@
+site_name: Unified Party Hub Docs
+site_description: Documentation for Unified Party Hub in ERPNext
+site_url: https://sendipad.github.io/uph/
+repo_url: https://github.com/Sendipad/uph
+repo_name: Sendipad/uph
+
+theme:
+  name: material
+  language: en
+  logo: static/uph-logo.png
+  favicon: static/uph-logo.png
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - toc.follow
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+  palette:
+    - scheme: default
+      primary: teal
+      accent: indigo
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Introduction:
+      - Quick Start: guide/quick-start.md
+      - Installation: guide/installation.md

@@ -1,0 +1,44 @@
+name: Docs Preview (PR)
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-preview:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: "0.152.2"
+          extended: true
+
+      - name: Build site
+        run: hugo --gc --minify
+
+      - name: Upload preview artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hugo-preview-site
+          path: public/
+          if-no-files-found: error
+
+      - name: Add job summary
+        run: |
+          echo "## Docs preview generated" >> $GITHUB_STEP_SUMMARY
+          echo "Download the **hugo-preview-site** artifact from this workflow run and open \`index.html\` from the extracted files via a local static server." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Example:" >> $GITHUB_STEP_SUMMARY
+          echo '\`python3 -m http.server 8000 --directory public\`' >> $GITHUB_STEP_SUMMARY
