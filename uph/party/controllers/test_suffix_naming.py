@@ -46,10 +46,10 @@ class TestPartyNaming(FrappeTestCase):
         # Sync naming
         sync_party_name_from_party_master(customer)
 
-        # Expected: cu-PM-999-USD
-        # Prefix is 'cu-' (2 chars + -)
+        # Expected: Cu-PM-999-USD
+        # Prefix is 'Cu-' (2 chars + -)
         # Suffix is '-USD'
-        self.assertEqual(customer.name, "cu-PM-999-USD")
+        self.assertEqual(customer.name, "Cu-PM-999-USD")
 
     def tearDown(self):
         frappe.db.rollback()

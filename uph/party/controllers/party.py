@@ -851,8 +851,8 @@ def sync_party_name_from_party_master(doc):
     # Determine if this is a secondary role
     is_primary = pm.party_type == party_type
 
-    # 2-letter abbreviation
-    abbr = party_type[:2].lower()
+    # 2-letter abbreviation (e.g., Cu, Su)
+    abbr = party_type[:2].capitalize()
 
     if mode and "Prefix" in mode:
         prefix = f"{abbr}-"
