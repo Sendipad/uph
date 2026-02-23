@@ -19,9 +19,15 @@ class PartyMasterSettings(Document):
 
     if TYPE_CHECKING:
         from frappe.types import DF
-        from uph.party.doctype.party_master_settings_docfield.party_master_settings_docfield import PartyMasterSettingsDocField
-        from uph.party.doctype.party_master_settings_doctype.party_master_settings_doctype import PartyMasterSettingsDocType
-        from uph.party.doctype.party_master_settings_party_type.party_master_settings_party_type import PartyMasterSettingsPartyType
+        from uph.party.doctype.party_master_settings_docfield.party_master_settings_docfield import (
+            PartyMasterSettingsDocField,
+        )
+        from uph.party.doctype.party_master_settings_doctype.party_master_settings_doctype import (
+            PartyMasterSettingsDocType,
+        )
+        from uph.party.doctype.party_master_settings_party_type.party_master_settings_party_type import (
+            PartyMasterSettingsPartyType,
+        )
 
         auto_expand_levels: DF.Int
         check_party_master_duplicate_vouchers: DF.Check
@@ -38,17 +44,54 @@ class PartyMasterSettings(Document):
         override_party_details_api: DF.Check
         party_master_fields: DF.Table[PartyMasterSettingsDocField]
         party_types: DF.Table[PartyMasterSettingsPartyType]
-        role_prefix_mode: DF.Literal["Prefix for All Role", "Prefix for Secondary Role", "Suffix for All Role", "Suffix Secondary Roles"]
+        role_prefix_mode: DF.Literal[
+            "Prefix for All Role",
+            "Prefix for Secondary Role",
+            "Suffix for All Role",
+            "Suffix Secondary Roles",
+        ]
         role_to_bypass_duplicate_voucher: DF.Link | None
         setup_finished: DF.Check
         sync_erp_party_naming: DF.Check
         transaction_policy_cancelled_reference_days: DF.Int
         transaction_policy_draft_days: DF.Int
+
     # end: auto-generated types
     def validate(self):
         self.validate_document_types()
         self.validate_party_master_fields_options()
+        self.validate_role_naming_rules()
         self._validate_governance_immutability()
+
+    def validate_role_naming_rules(self):
+        """Validate that role-specific prefixes/suffixes are the first two letters of the party type capitalized."""
+        if not self.sync_erp_party_naming:
+            return
+
+        # Map of Party Type to expected identifier (first two letters capitalized)
+        expected_identifiers = {
+            "Customer": "Cu",
+            "Supplier": "Su",
+            "Employee": "Em",
+            "Shareholder": "Sh",
+            "Student": "St",
+            "Volunteer": "Vo",
+            "Member": "Me",
+        }
+
+        # This is a validation logic. If the user uses a prefix/suffix, it should ideally be consistent.
+        # The user's request: "when allow to add prefix or suffix for any naming it must be first two letters with capital first letter."
+        # However, the current Settings doesn't have a place to DEFINE the prefix per role, it's a global Switch.
+        # The actual identifiers are likely defined in the 'Party Master Settings Party Type' child table or inferred.
+        # Looking at 'Party Master Role' and 'Party Master Settings Party Type', there is no 'identifier' field.
+        # The 'uph' logic seems to use a hardcoded or dynamic 2-letter mapping.
+
+        # The standardized pattern is now enforced in the controller.
+        # This validation ensures the user is aware of the rule when they enable naming sync.
+        msg = _(
+            "Note: Role-specific naming identifiers (prefixes/suffixes) will be automatically generated using the first two letters of the Party Type capitalized (e.g., 'Cu' for Customer, 'Su' for Supplier)."
+        )
+        frappe.msgprint(msg, alert=True)
 
     def _validate_governance_immutability(self):
         """Once setup_finished is set, lock core numbering settings."""

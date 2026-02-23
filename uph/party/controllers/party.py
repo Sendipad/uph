@@ -851,8 +851,8 @@ def sync_party_name_from_party_master(doc):
     # Determine if this is a secondary role
     is_primary = pm.party_type == party_type
 
-    # 2-letter abbreviation
-    abbr = party_type[:2].lower()
+    # 2-letter abbreviation (e.g., Cu, Su)
+    abbr = party_type[:2].capitalize()
 
     if mode and "Prefix" in mode:
         prefix = f"{abbr}-"
@@ -868,9 +868,16 @@ def sync_party_name_from_party_master(doc):
         elif mode == "Suffix Secondary Roles" and not is_primary:
             new_name = f"{pm.party_number}{suffix}"
 
+    # Multi-party uniqueness suffix: if multi-party is allowed, append the rule field value (e.g. Currency)
+    rule = get_party_type_validation_rule(party_type)
+    if rule and rule.get("allowed") and rule.get("rule_fieldname"):
+        suffix_val = doc.get(rule.get("rule_fieldname"))
+        if suffix_val:
+            new_name = f"{new_name}-{suffix_val}"
+
     # If name is different, we need to rename or set name
     if doc.name != new_name:
-        if doc.is_new():
+        if not doc.name or doc.is_new():
             doc.name = new_name
         else:
             # Rename existing document

@@ -29,13 +29,23 @@ class PartyMaster(NestedSet):
     from typing import TYPE_CHECKING
 
     if TYPE_CHECKING:
-        from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import AllowedToTransactWith
-        from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import CustomerCreditLimit
+        from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import (
+            AllowedToTransactWith,
+        )
+        from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import (
+            CustomerCreditLimit,
+        )
         from erpnext.utilities.doctype.portal_user.portal_user import PortalUser
         from frappe.types import DF
-        from uph.party.doctype.party_master_accounts.party_master_accounts import PartyMasterAccounts
-        from uph.party.doctype.party_master_parties.party_master_parties import PartyMasterParties
-        from uph.party.doctype.party_master_role.party_master_role import PartyMasterRole
+        from uph.party.doctype.party_master_accounts.party_master_accounts import (
+            PartyMasterAccounts,
+        )
+        from uph.party.doctype.party_master_parties.party_master_parties import (
+            PartyMasterParties,
+        )
+        from uph.party.doctype.party_master_role.party_master_role import (
+            PartyMasterRole,
+        )
 
         account_manager: DF.Link | None
         accounts: DF.Table[PartyMasterAccounts]
@@ -61,11 +71,24 @@ class PartyMaster(NestedSet):
         is_internal_party: DF.Check
         is_primary_role: DF.Check
         language: DF.Link | None
-        legal_entity_type: DF.Literal["", "Sole Proprietor", "Partnership", "Corporation", "LLC", "NGO", "Freelancer", "Government", "Individual", "Other"]
+        legal_entity_type: DF.Literal[
+            "",
+            "Sole Proprietor",
+            "Partnership",
+            "Corporation",
+            "LLC",
+            "NGO",
+            "Freelancer",
+            "Government",
+            "Individual",
+            "Other",
+        ]
         lft: DF.Int
         market_segment: DF.Link | None
         mobile_no: DF.ReadOnly | None
-        naming_series: DF.Literal["{party_number}", ".{parent_party_master}.", "PM-{party_name}"]
+        naming_series: DF.Literal[
+            "{party_number}", ".{parent_party_master}.", "PM-{party_name}"
+        ]
         national_id: DF.Data | None
         normalized_party_name: DF.Data | None
         old_parent: DF.Link | None
@@ -87,7 +110,21 @@ class PartyMaster(NestedSet):
         rgt: DF.Int
         roles: DF.TableMultiSelect[PartyMasterRole]
         salutation: DF.Link | None
-        status: DF.Literal["Active", "Disabled", "Closed", "Credit Hold", "Delinquent", "Disputed", "Dormant", "Write-Off", "Approved", "On Hold", "Under Review", "Terminated", "Suspended"]
+        status: DF.Literal[
+            "Active",
+            "Disabled",
+            "Closed",
+            "Credit Hold",
+            "Delinquent",
+            "Disputed",
+            "Dormant",
+            "Write-Off",
+            "Approved",
+            "On Hold",
+            "Under Review",
+            "Terminated",
+            "Suspended",
+        ]
         tax_category: DF.Link | None
         tax_id: DF.Data | None
         tax_withholding_category: DF.Link | None
@@ -1234,7 +1271,7 @@ def get_unset_parties_list(
 
 @frappe.whitelist()
 def create_party_from_party_master(
-    source_name, target_doctype, rule_field_value=None, save=False
+    source_name, target_doctype, rule_field_value=None, group=None, save=False
 ):
     import json
     from uph.party.utils import get_party_type_currency_field, get_party_type_name_field
@@ -1263,6 +1300,7 @@ def create_party_from_party_master(
     # For dynamic rules, we might need to rely on the fact that the JS logic in 'create_party_for_party_master_dialog_from_doc'
     # sets 'rule_field_value' to the selected currency or rule link.
     # If it is currency, we set it to the currency field.
+    # If it is currency, we set it to the currency field.
 
     currency_field = get_party_type_currency_field(target_doctype)
     if rule_field_value and currency_field:
@@ -1277,10 +1315,18 @@ def create_party_from_party_master(
         doc.set(currency_field, rule_field_value)
 
     # Map Group
-    if target_doctype == "Customer" and pm.party_type_group:
-        doc.customer_group = pm.party_type_group
-    elif target_doctype == "Supplier" and pm.party_type_group:
-        doc.supplier_group = pm.party_type_group
+    # Only sync group if target_doctype is the primary party_type of the Party Master
+    # or if a manual group is provided
+    if group:
+        if target_doctype == "Customer":
+            doc.customer_group = group
+        elif target_doctype == "Supplier":
+            doc.supplier_group = group
+    elif target_doctype == pm.party_type:
+        if target_doctype == "Customer" and pm.party_type_group:
+            doc.customer_group = pm.party_type_group
+        elif target_doctype == "Supplier" and pm.party_type_group:
+            doc.supplier_group = pm.party_type_group
 
     # Fallback for currency if not passed but exists in PM
     if pm.default_currency and not doc.get(currency_field):

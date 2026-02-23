@@ -7,25 +7,25 @@
     "engine": "InnoDB",
     "field_order": [
         "document_type",
-        "document_type",
         "parent_doctype",
-        "track_transaction_health",
-        "transaction_health_severity",
-        "is_system_generated",
         "document_categories",
         "enabled",
-        "client_script",
-        "column_break_brmi",
         "reqd",
+        "column_break_brmi",
+        "track_transaction_health",
+        "transaction_health_severity",
         "is_dynamic_party_type",
         "party_fieldname",
         "party_type",
         "party_type_fieldname",
         "party_master_custom_field",
-        "warn_not_submitted_document"
+        "warn_not_submitted_document",
+        "is_system_generated",
+        "client_script"
     ],
     "fields": [
         {
+            "description": "Select the ERP DocType to link with Party Master (e.g., Sales Invoice).",
             "fieldname": "document_type",
             "fieldtype": "Link",
             "in_list_view": 1,
@@ -36,6 +36,7 @@
             "search_index": 1
         },
         {
+            "description": "If this is a child DocType, select its parent (e.g., Sales Invoice Item).",
             "fieldname": "parent_doctype",
             "fieldtype": "Link",
             "label": "Parent DocType",
@@ -46,6 +47,7 @@
         },
         {
             "default": "Include",
+            "description": "Whether to include this DocType in Transaction Health monitoring.",
             "fieldname": "track_transaction_health",
             "fieldtype": "Select",
             "in_list_view": 1,
@@ -55,6 +57,7 @@
         {
             "default": "High",
             "depends_on": "eval:doc.track_transaction_health=='Include'",
+            "description": "The penalty severity for health issues related to this document.",
             "fieldname": "transaction_health_severity",
             "fieldtype": "Select",
             "label": "Severity",
@@ -62,6 +65,7 @@
         },
         {
             "default": "0",
+            "description": "Check if the Party Type is determined dynamically by another field.",
             "fieldname": "is_dynamic_party_type",
             "fieldtype": "Check",
             "in_list_view": 1,
@@ -69,6 +73,7 @@
             "read_only_depends_on": "doc.is_system_generated"
         },
         {
+            "description": "The fieldname in this DocType that stores the Party Name.",
             "fieldname": "party_fieldname",
             "fieldtype": "Select",
             "label": "Party FieldName",
@@ -77,7 +82,7 @@
         },
         {
             "depends_on": "eval:doc.is_dynamic_party_type===0",
-            "description": "If Party Type is constant Type for this Document Type",
+            "description": "The constant Party Type for this document (e.g., Customer).",
             "fieldname": "party_type",
             "fieldtype": "Link",
             "in_list_view": 1,
@@ -87,6 +92,7 @@
         },
         {
             "depends_on": "eval:doc.is_dynamic_party_type===1",
+            "description": "The fieldname that stores the Party Type dynamically.",
             "fieldname": "party_type_fieldname",
             "fieldtype": "Select",
             "label": "Party Type Fieldname",
@@ -94,6 +100,7 @@
         },
         {
             "default": "1",
+            "description": "If checked, the Party field is mandatory for submission.",
             "fieldname": "reqd",
             "fieldtype": "Check",
             "in_list_view": 1,
@@ -101,7 +108,7 @@
         },
         {
             "depends_on": "eval:!doc.enabled",
-            "description": "Copy Script above code to client script on your custom Doctype and Enabled it",
+            "description": "Reference script to apply logic to custom DocTypes.",
             "fieldname": "client_script",
             "fieldtype": "Link",
             "label": "Client Script",
@@ -116,6 +123,7 @@
             "read_only": 1
         },
         {
+            "description": "The functional category for this document type.",
             "fieldname": "document_categories",
             "fieldtype": "Select",
             "label": "Document Categories",
@@ -123,6 +131,7 @@
             "read_only_depends_on": "doc.is_system_generated"
         },
         {
+            "description": "A custom field in Party Master that correlates with this document type.",
             "fieldname": "party_master_custom_field",
             "fieldtype": "Link",
             "label": "Party Master Custom Field",
@@ -131,7 +140,7 @@
         },
         {
             "default": "1",
-            "description": "If unchecked there will be no default script applied to this Doctype or the custom client script",
+            "description": "Enable/Disable linking logic for this DocType.",
             "fieldname": "enabled",
             "fieldtype": "Check",
             "label": "Enabled",
@@ -143,7 +152,7 @@
         },
         {
             "default": "0",
-            "description": "Checked will show warn message if Draft or Cancelled(Not Edited) Document exists",
+            "description": "Show warnings if un-submitted versions of this document exist for the party.",
             "fieldname": "warn_not_submitted_document",
             "fieldtype": "Check",
             "label": "Warn If Un-Submitted Documents"
