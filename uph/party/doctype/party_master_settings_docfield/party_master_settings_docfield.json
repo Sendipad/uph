@@ -1,40 +1,41 @@
 {
- "actions": [],
- "allow_rename": 1,
- "creation": "2025-04-05 17:33:45.324712",
- "doctype": "DocType",
- "editable_grid": 1,
- "engine": "InnoDB",
- "field_order": [
-  "fieldname",
-  "options"
- ],
- "fields": [
-  {
-   "fieldname": "fieldname",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Fieldname"
-  },
-  {
-   "description": "Party Type : fieldname  , or Party Type: _ , to not map,\nEach Party Type with Fieldname in new Line. \nleave it empty if the same fieldname exists on party type Doctype",
-   "fieldname": "options",
-   "fieldtype": "Small Text",
-   "label": "Options"
-  }
- ],
- "grid_page_length": 50,
- "index_web_pages_for_search": 1,
- "istable": 1,
- "links": [],
- "modified": "2025-04-05 17:56:48.342085",
- "modified_by": "Administrator",
- "module": "Party",
- "name": "Party Master Settings DocField",
- "owner": "Administrator",
- "permissions": [],
- "row_format": "Dynamic",
- "sort_field": "modified",
- "sort_order": "DESC",
- "states": []
+    "actions": [],
+    "allow_rename": 1,
+    "creation": "2025-04-05 17:33:45.324712",
+    "doctype": "DocType",
+    "editable_grid": 1,
+    "engine": "InnoDB",
+    "field_order": [
+        "fieldname",
+        "options"
+    ],
+    "fields": [
+        {
+            "description": "Select the field from Party Master to sync.",
+            "fieldname": "fieldname",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Fieldname"
+        },
+        {
+            "description": "Specify mapping rules per Party Type. Format: 'Party Type : fieldname'. Use '_' to skip mapping for a type. One rule per line. Leave empty if fieldname exists on the target DocType.",
+            "fieldname": "options",
+            "fieldtype": "Small Text",
+            "label": "Options"
+        }
+    ],
+    "grid_page_length": 50,
+    "index_web_pages_for_search": 1,
+    "istable": 1,
+    "links": [],
+    "modified": "2025-04-05 17:56:48.342085",
+    "modified_by": "Administrator",
+    "module": "Party",
+    "name": "Party Master Settings DocField",
+    "owner": "Administrator",
+    "permissions": [],
+    "row_format": "Dynamic",
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": []
 }

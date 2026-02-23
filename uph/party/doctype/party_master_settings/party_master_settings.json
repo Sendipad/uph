@@ -6,10 +6,14 @@
     "documentation": "https://sendipad.github.io/uph/en/docs/introduction/Settings/",
     "engine": "InnoDB",
     "field_order": [
+        "configuration_tab",
         "general_configuration_section",
         "override_party_details_api",
-        "column_break_qzjp",
         "enforce_strict_currency",
+        "column_break_qzjp",
+        "setup_section",
+        "setup_finished",
+        "role_mapping_tab",
         "party_type_rules_section",
         "party_types",
         "doctype_fields_mapping_section",
@@ -17,32 +21,30 @@
         "party_master_to_party_sync_fields_section",
         "party_master_fields",
         "governance_tab",
+        "governance_rules_section",
+        "enforce_cross_type_uniqueness",
+        "sync_erp_party_naming",
+        "role_prefix_mode",
+        "column_break_gov2",
         "numbering_section",
         "numbering_format",
+        "enforce_parent_numbering",
         "column_break_gov1",
         "digits_count",
         "group_digits",
-        "governance_rules_section",
-        "enforce_parent_numbering",
-        "enforce_cross_type_uniqueness",
-        "column_break_gov2",
-        "sync_erp_party_naming",
-        "role_prefix_mode",
+        "transaction_policy_tab",
         "transaction_policy_section",
         "transaction_policy_draft_days",
         "column_break_policy",
         "transaction_policy_cancelled_reference_days",
-        "setup_section",
-        "setup_finished",
-        "column_break_gov3",
-        "party_master_tab",
+        "ui_settings_tab",
         "tree_view_section",
         "auto_expand_levels",
         "column_break_jote",
         "hide_balance",
         "paa_tab",
         "enable_party_analytic_accounting",
-        "duplicate_voucher_configuration_tab",
+        "duplicate_voucher_tab",
         "duplicate_check_section",
         "check_party_master_duplicate_vouchers",
         "duplicate_voucher_action",
@@ -50,106 +52,9 @@
     ],
     "fields": [
         {
-            "fieldname": "doctype_fields_mapping_section",
-            "fieldtype": "Section Break",
-            "label": "DocType Fields Mapping"
-        },
-        {
-            "fieldname": "document_types",
-            "fieldtype": "Table",
-            "label": "Document Types",
-            "options": "Party Master Settings DocType"
-        },
-        {
-            "fieldname": "duplicate_check_section",
-            "fieldtype": "Section Break",
-            "label": "Duplicate Voucher Configuration"
-        },
-        {
-            "default": "1",
-            "fieldname": "check_party_master_duplicate_vouchers",
-            "fieldtype": "Check",
-            "label": "Check Party Master Duplicate Vouchers"
-        },
-        {
-            "default": "Warn",
-            "depends_on": "check_party_master_duplicate_vouchers",
-            "fieldname": "duplicate_voucher_action",
-            "fieldtype": "Select",
-            "label": "Duplicate Voucher Action",
-            "options": "Warn\nStop"
-        },
-        {
-            "depends_on": "check_party_master_duplicate_vouchers",
-            "fieldname": "role_to_bypass_duplicate_voucher",
-            "fieldtype": "Link",
-            "label": "Role to Bypass Duplicate Voucher Check",
-            "options": "Role"
-        },
-        {
-            "fieldname": "party_master_to_party_sync_fields_section",
-            "fieldtype": "Section Break",
-            "label": "Party Master To Party Sync Fields"
-        },
-        {
-            "fieldname": "party_master_fields",
-            "fieldtype": "Table",
-            "label": "Party Master Fields",
-            "options": "Party Master Settings DocField"
-        },
-        {
-            "fieldname": "party_type_rules_section",
-            "fieldtype": "Section Break",
-            "label": "Party Type Rules"
-        },
-        {
-            "fieldname": "party_types",
-            "fieldtype": "Table",
-            "label": "Party Types",
-            "options": "Party Master Settings Party Type"
-        },
-        {
-            "fieldname": "party_master_tab",
+            "fieldname": "configuration_tab",
             "fieldtype": "Tab Break",
-            "label": "Party Master"
-        },
-        {
-            "default": "4",
-            "fieldname": "auto_expand_levels",
-            "fieldtype": "Int",
-            "label": "Party Master Tree View Expand Lvele"
-        },
-        {
-            "fieldname": "column_break_jote",
-            "fieldtype": "Column Break"
-        },
-        {
-            "fieldname": "tree_view_section",
-            "fieldtype": "Section Break",
-            "label": "Tree View"
-        },
-        {
-            "default": "1",
-            "fieldname": "hide_balance",
-            "fieldtype": "Check",
-            "label": "Hide Balance in Tree"
-        },
-        {
-            "default": "1",
-            "fieldname": "override_party_details_api",
-            "fieldtype": "Check",
-            "label": "Override Party Details API "
-        },
-        {
-            "fieldname": "column_break_qzjp",
-            "fieldtype": "Column Break"
-        },
-        {
-            "default": "1",
-            "description": "Enable to enforce strict currency mapping document's currency to accounts head currency.",
-            "fieldname": "enforce_strict_currency",
-            "fieldtype": "Check",
-            "label": "Enforce Strict Currency Accounting"
+            "label": "Configuration"
         },
         {
             "fieldname": "general_configuration_section",
@@ -158,20 +63,75 @@
         },
         {
             "default": "1",
-            "fieldname": "paa_tab",
-            "fieldtype": "Tab Break",
-            "label": "PAA"
+            "description": "If enabled, UPH will override the standard ERPNext party details API to bring in Party Master intelligence (like credit limits, terms, etc.) across all transactions.",
+            "fieldname": "override_party_details_api",
+            "fieldtype": "Check",
+            "label": "Override Party Details API"
+        },
+        {
+            "default": "1",
+            "description": "Enforce strict currency matching between document currency and account head currency to prevent cross-currency accounting errors.",
+            "fieldname": "enforce_strict_currency",
+            "fieldtype": "Check",
+            "label": "Enforce Strict Currency Accounting"
+        },
+        {
+            "fieldname": "column_break_qzjp",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "setup_section",
+            "fieldtype": "Section Break",
+            "label": "Setup Status"
         },
         {
             "default": "0",
-            "fieldname": "enable_party_analytic_accounting",
+            "description": "Once checked, core governance settings (Numbering Format, Digits Count) become read-only to prevent accidental changes in production after the system has been initialized.",
+            "fieldname": "setup_finished",
             "fieldtype": "Check",
-            "label": "Enable Party Analytic Accounting"
+            "label": "Setup Finished",
+            "read_only": 1
         },
         {
-            "fieldname": "duplicate_voucher_configuration_tab",
+            "fieldname": "role_mapping_tab",
             "fieldtype": "Tab Break",
-            "label": "Duplicate Voucher Configuration"
+            "label": "Role Mapping"
+        },
+        {
+            "fieldname": "party_type_rules_section",
+            "fieldtype": "Section Break",
+            "label": "Party Type Rules"
+        },
+        {
+            "description": "Define which ERP Party Types are linked to Party Master and their specific rules (e.g., multi-party suffix rules).",
+            "fieldname": "party_types",
+            "fieldtype": "Table",
+            "label": "Party Types",
+            "options": "Party Master Settings Party Type"
+        },
+        {
+            "fieldname": "doctype_fields_mapping_section",
+            "fieldtype": "Section Break",
+            "label": "DocType Field Mappings"
+        },
+        {
+            "description": "Configure which DocTypes are integrated with UPH and how Party fields are identified and validated.",
+            "fieldname": "document_types",
+            "fieldtype": "Table",
+            "label": "Document Types Mapping",
+            "options": "Party Master Settings DocType"
+        },
+        {
+            "fieldname": "party_master_to_party_sync_fields_section",
+            "fieldtype": "Section Break",
+            "label": "Field Synchronization"
+        },
+        {
+            "description": "Specify which fields should be automatically synced from Party Master to the linked ERP Party records (e.g., Address, Tax ID).",
+            "fieldname": "party_master_fields",
+            "fieldtype": "Table",
+            "label": "Sync Fields",
+            "options": "Party Master Settings DocField"
         },
         {
             "fieldname": "governance_tab",
@@ -179,17 +139,56 @@
             "label": "Governance"
         },
         {
+            "fieldname": "governance_rules_section",
+            "fieldtype": "Section Break",
+            "label": "Naming & Uniqueness"
+        },
+        {
+            "default": "0",
+            "description": "Enforce unique naming across all Party Types to prevent having a Customer and Supplier with the exact same name.",
+            "fieldname": "enforce_cross_type_uniqueness",
+            "fieldtype": "Check",
+            "label": "Enforce Cross-Type Naming Uniqueness"
+        },
+        {
+            "default": "0",
+            "description": "Sync ERPNext party record names with Party Master numbering. This ensures absolute consistency between Master and Roles.",
+            "fieldname": "sync_erp_party_naming",
+            "fieldtype": "Check",
+            "label": "Sync ERP Party Naming"
+        },
+        {
+            "default": "Prefix for All Role",
+            "depends_on": "sync_erp_party_naming",
+            "description": "When syncing names, select how to handle multi-role identifiers (e.g., adding 'Cu' or 'Su' to the name).",
+            "fieldname": "role_prefix_mode",
+            "fieldtype": "Select",
+            "label": "Role Naming Mode",
+            "options": "Prefix for All Role\nPrefix for Secondary Role\nSuffix for All Role\nSuffix Secondary Roles"
+        },
+        {
+            "fieldname": "column_break_gov2",
+            "fieldtype": "Column Break"
+        },
+        {
             "fieldname": "numbering_section",
             "fieldtype": "Section Break",
-            "label": "Numbering"
+            "label": "Numbering Rules"
         },
         {
             "default": "Concatenated",
-            "description": "Choose how party numbers are formatted. Concatenated: 1000000001. Dash-Separated: 1000-000001.",
+            "description": "Format for party numbers: Concatenated (1000000001) or Dash-Separated (1000-000001).",
             "fieldname": "numbering_format",
             "fieldtype": "Select",
             "label": "Numbering Format",
             "options": "Concatenated\nDash-Separated"
+        },
+        {
+            "default": "0",
+            "description": "Enforce that child party numbers MUST start with their parent group's number prefix.",
+            "fieldname": "enforce_parent_numbering",
+            "fieldtype": "Check",
+            "label": "Enforce Parent Numbering Prefix"
         },
         {
             "fieldname": "column_break_gov1",
@@ -197,7 +196,7 @@
         },
         {
             "default": "6",
-            "description": "Number of digits for the leaf party suffix (e.g. 6 means 000001\u2013999999 under each group).",
+            "description": "Number of digits for the leaf party suffix (e.g., 6 means 000001-999999).",
             "fieldname": "digits_count",
             "fieldtype": "Int",
             "label": "Leaf Digits Count",
@@ -205,25 +204,25 @@
         },
         {
             "default": "4",
-            "description": "Number of digits for group party nodes (e.g. 4 means 1000\u20139999).",
+            "description": "Number of digits for group party nodes (e.g., 4 means 1000-9999).",
             "fieldname": "group_digits",
             "fieldtype": "Int",
             "label": "Group Digits Count",
             "non_negative": 1
         },
         {
-            "fieldname": "governance_rules_section",
-            "fieldtype": "Section Break",
-            "label": "Governance Rules"
+            "fieldname": "transaction_policy_tab",
+            "fieldtype": "Tab Break",
+            "label": "Transaction Policy"
         },
         {
             "fieldname": "transaction_policy_section",
             "fieldtype": "Section Break",
-            "label": "Transaction Policy"
+            "label": "Policy Thresholds"
         },
         {
             "default": "30",
-            "description": "Create a Party Issue when a draft voucher is older than this many days.",
+            "description": "Flag a Party Issue if a draft voucher is older than this many days.",
             "fieldname": "transaction_policy_draft_days",
             "fieldtype": "Int",
             "label": "Draft Issue Threshold (Days)",
@@ -235,70 +234,93 @@
         },
         {
             "default": "0",
-            "description": "Grace period before flagging cancelled vouchers still referenced in financial flow. 0 = no grace.",
+            "description": "Grace period before flagging cancelled vouchers that are still referenced in financial flows.",
             "fieldname": "transaction_policy_cancelled_reference_days",
             "fieldtype": "Int",
             "label": "Cancelled Reference Grace (Days)",
             "non_negative": 1
         },
         {
-            "default": "0",
-            "description": "Enforce that child party numbers start with the parent group's prefix.",
-            "fieldname": "enforce_parent_numbering",
-            "fieldtype": "Check",
-            "label": "Enforce Parent Numbering Prefix"
+            "fieldname": "ui_settings_tab",
+            "fieldtype": "Tab Break",
+            "label": "UI & Analytics"
         },
         {
-            "default": "0",
-            "description": "Enforce unique naming across all Party Types (e.g. cannot have a Customer and Supplier with the exact same Name).",
-            "fieldname": "enforce_cross_type_uniqueness",
-            "fieldtype": "Check",
-            "label": "Enforce Cross-Type Naming Uniqueness"
-        },
-        {
-            "fieldname": "column_break_gov2",
-            "fieldtype": "Column Break"
-        },
-        {
-            "default": "0",
-            "description": "Sync ERPNext party record names with Party Master numbering.",
-            "fieldname": "sync_erp_party_naming",
-            "fieldtype": "Check",
-            "label": "Sync ERP Party Naming"
-        },
-        {
-            "default": "Prefix for All Role",
-            "depends_on": "sync_erp_party_naming",
-            "description": "Applies a 2-letter abbreviation of the Party Type (e.g. 'Cu' for Customer, 'Su' for Supplier) as a prefix/suffix to the party name.",
-            "fieldname": "role_prefix_mode",
-            "fieldtype": "Select",
-            "label": "Role Prefix Mode",
-            "options": "Prefix for All Role\nPrefix for Secondary Role\nSuffix for All Role\nSuffix Secondary Roles"
-        },
-        {
-            "fieldname": "setup_section",
+            "fieldname": "tree_view_section",
             "fieldtype": "Section Break",
-            "label": "Setup"
+            "label": "Tree View Configuration"
+        },
+        {
+            "default": "4",
+            "description": "Initial number of levels to expand in the Party Master Tree View.",
+            "fieldname": "auto_expand_levels",
+            "fieldtype": "Int",
+            "label": "Tree Auto-Expand Levels"
+        },
+        {
+            "fieldname": "column_break_jote",
+            "fieldtype": "Column Break"
+        },
+        {
+            "default": "1",
+            "description": "If enabled, balance amounts will be hidden in the Tree View for a cleaner lookup experience.",
+            "fieldname": "hide_balance",
+            "fieldtype": "Check",
+            "label": "Hide Balance in Tree"
+        },
+        {
+            "fieldname": "paa_tab",
+            "fieldtype": "Tab Break",
+            "label": "Analytic Accounting"
         },
         {
             "default": "0",
-            "description": "Once checked, core governance settings (Numbering Format, Digits Count) become read-only to prevent accidental changes in production.",
-            "fieldname": "setup_finished",
+            "description": "Enable Party Analytic Accounting (PAA) to allow deeper financial analysis per party.",
+            "fieldname": "enable_party_analytic_accounting",
             "fieldtype": "Check",
-            "label": "Setup Finished",
-            "read_only": 1
+            "label": "Enable Analytics"
         },
         {
-            "fieldname": "column_break_gov3",
-            "fieldtype": "Column Break"
+            "fieldname": "duplicate_voucher_tab",
+            "fieldtype": "Tab Break",
+            "label": "Duplicate Vouchers"
+        },
+        {
+            "fieldname": "duplicate_check_section",
+            "fieldtype": "Section Break",
+            "label": "Duplicate Prevention"
+        },
+        {
+            "default": "1",
+            "description": "Enable background checks for duplicate vouchers across the Party Master ecosystem.",
+            "fieldname": "check_party_master_duplicate_vouchers",
+            "fieldtype": "Check",
+            "label": "Check Duplicate Vouchers"
+        },
+        {
+            "default": "Warn",
+            "depends_on": "check_party_master_duplicate_vouchers",
+            "description": "Action to take when a duplicate is detected: Warn (allow save) or Stop (prevent save).",
+            "fieldname": "duplicate_voucher_action",
+            "fieldtype": "Select",
+            "label": "Duplicate Action",
+            "options": "Warn\nStop"
+        },
+        {
+            "depends_on": "check_party_master_duplicate_vouchers",
+            "description": "Users with this Role can bypass the duplicate check.",
+            "fieldname": "role_to_bypass_duplicate_voucher",
+            "fieldtype": "Link",
+            "label": "Bypass Role",
+            "options": "Role"
         }
     ],
     "grid_page_length": 50,
     "index_web_pages_for_search": 1,
     "issingle": 1,
     "links": [],
-    "modified": "2026-02-21 00:43:09.276049",
-    "modified_by": "Administrator",
+    "modified": "2026-02-23 21:46:54.727960",
+    "modified_by": "ruzaqi@gmail.com",
     "module": "Party",
     "name": "Party Master Settings",
     "owner": "Administrator",
