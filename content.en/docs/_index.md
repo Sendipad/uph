@@ -6,17 +6,20 @@ bookCollapseSection: false
 
 # UPH Technical Documentation
 
-This documentation is generated from the current implementation snapshot in this repository.
+This documentation is generated from the **current branch implementation**. Because this repository snapshot contains compiled Python bytecode (`.pyc`) instead of source `.py`, module behavior is documented from bytecode inspection (`marshal` + Python code object metadata), hooks values, and module symbols.
+
+## Scope
+
+- Frappe app hooks and lifecycle integration.
+- Party Master domain models and DocType controllers.
+- Whitelisted API endpoints and report executors.
+- Cache logic, query helpers, validation rules, and background/update routines.
+- GitHub Pages docs deployment.
 
 ## Sections
 
-- [Introduction]({{< relref "/docs/introduction/_index.md" >}})
-- [Features]({{< relref "/docs/features/_index.md" >}})
-- [Architecture]({{< relref "/docs/architecture/_index.md" >}})
-- [DocTypes]({{< relref "/docs/doctypes/_index.md" >}})
-- [Configuration]({{< relref "/docs/configuration/_index.md" >}})
-- [Security]({{< relref "/docs/security/_index.md" >}})
-- [API Reference]({{< relref "/docs/api/_index.md" >}})
-- [Advanced]({{< relref "/docs/Advanced/_index.md" >}})
-- [Use Cases]({{< relref "/docs/usecases/_index.md" >}})
-- [Migrations]({{< relref "/docs/migrations/_index.md" >}})
+- [Introduction](/en/docs/introduction/)
+- [Architecture](/en/docs/architecture/)
+- [Modules](/en/docs/modules/)
+- [API Reference](/en/docs/api/)
+- [Operations](/en/docs/operations/)
