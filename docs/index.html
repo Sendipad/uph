@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Unified Party Hub — Home</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin: 2.5rem; color: #111 }
+    header { margin-bottom: 1.5rem }
+    a.button { display:inline-block; margin: .4rem .25rem; padding: .5rem .9rem; background:#0366d6; color:#fff; text-decoration:none; border-radius:6px }
+    .muted { color:#666 }
+    pre { background:#f6f8fa; padding:1rem; border-radius:6px; overflow:auto }
+    footer { margin-top:2rem; color:#666; font-size:0.95rem }
+    h1,h2 { color:#0b3d91 }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Unified Party Hub (UPH)</h1>
+    <p class="muted">Documentation and resources for the UPH app for ERPNext.</p>
+    <p>
+      <a class="button" href="https://github.com/Sendipad/uph">Repository</a>
+      <a class="button" href="https://github.com/Sendipad/uph/issues">Issues</a>
+    </p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Overview</h2>
+      <p>Unified Party Hub centralizes the management of parties (customers, suppliers, contacts) in ERPNext, linking documents, accounts, and workflows.</p>
+    </section>
+
+    <section>
+      <h2>Key Features</h2>
+      <ul>
+        <li>Unified party record across multiple DocTypes.</li>
+        <li>Enhanced search and filters.</li>
+        <li>Quick links to related documents (invoices, purchase orders, contracts).</li>
+        <li>Customizable settings per company.</li>
+        <li>Automated workflows triggered by updates to parties.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Installation</h2>
+      <p>Clone the repository into your <code>apps</code> folder and install:</p>
+      <pre><code>bench get-app https://github.com/Sendipad/uph
+bench --site yoursite install-app unified_party_hub
+</code></pre>
+    </section>
+
+    <section>
+      <h2>Arabic Version</h2>
+      <p>The repository contains Arabic docs (docs/index_ar.md). The Arabic homepage is also included as <code>docs/index_ar.html</code> so visitors can switch languages.</p>
+      <p><a href="./index_ar.html" class="button">العربية</a></p>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>Generated from <code>docs/index.md</code> in the repository.</p>
+  </footer>
+</body>
+</html>
