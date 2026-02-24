@@ -18,8 +18,8 @@ This documentation is generated from the **current branch implementation**. Beca
 
 ## Sections
 
-- [Introduction](/uph/en/docs/introduction/)
-- [Architecture](/uph/en/docs/architecture/)
-- [Modules](/uph/en/docs/modules/)
-- [API Reference](/uph/en/docs/api/)
-- [Operations](/uph/en/docs/operations/)
+- [Introduction]({{< relref "/docs/introduction/_index.md" >}})
+- [Architecture]({{< relref "/docs/architecture/_index.md" >}})
+- [Modules]({{< relref "/docs/modules/_index.md" >}})
+- [API Reference]({{< relref "/docs/api/_index.md" >}})
+- [Operations]({{< relref "/docs/operations/_index.md" >}})

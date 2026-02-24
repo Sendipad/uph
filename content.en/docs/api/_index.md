@@ -8,4 +8,4 @@ bookCollapseSection: true
 Technical details for all whitelisted API endpoints in the UPH application.
 
 
-See also: [Verification Status (Current Branch vs Legacy API Docs)](/uph/en/docs/api/verification-status/).
+See also: [Verification Status (Current Branch vs Legacy API Docs)]({{< relref "/docs/api/verification-status.md" >}}).

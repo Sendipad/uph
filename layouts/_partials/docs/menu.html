@@ -19,8 +19,8 @@
   <div class="custom-links-wrapper">
     <ul class="custom-links">
       <li class="static-text">{{ i18n "learnSectionLabel" }}</li>
-      <li><a href="/uph/{{ .Lang }}/posts/">Learn by Use Cases</a></li>
-      <li><a href="/uph/{{ .Lang }}/showcases/">Showcases</a></li>
+      <li><a href="{{ "/posts/" | relLangURL }}">Learn by Use Cases</a></li>
+      <li><a href="{{ "/showcases/" | relLangURL }}">Showcases</a></li>
       <li><a href="https://github.com/Sendipad/uph/" target="_blank">GitHub</a></li>
     </ul>
   </div>

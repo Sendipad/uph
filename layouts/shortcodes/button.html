@@ -1,4 +1,7 @@
 {{- $href := .Get "href" -}}
+{{- if and $href (not ((urls.Parse $href).IsAbs)) (hasPrefix $href "/") -}}
+  {{- $href = $href | relLangURL -}}
+{{- end -}}
 {{- $isRemote := (urls.Parse $href).IsAbs -}}
 {{- $class := "book-btn" -}}
 {{- $target := "" -}}
