@@ -1,0 +1,52 @@
+name: Deploy Readiness Check (PR)
+
+on:
+  pull_request:
+    branches:
+      - main
+      - docs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-readiness:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: "0.152.2"
+          extended: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install frontend dependencies (if present)
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          elif [ -f package.json ]; then
+            npm install
+          else
+            echo "No package.json found; skipping npm install"
+          fi
+
+      - name: Build site (deploy parity)
+        run: hugo --gc --minify
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-readiness-site
+          path: public/
+          if-no-files-found: error
