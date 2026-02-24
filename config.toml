@@ -4,7 +4,7 @@
 
 baseURL = "https://sendipad.github.io/uph/"
 title = "Unified Party Hub"
-theme = "book"
+theme = "doks"
 languageCode = "en-us"
 disablePathToLower = true
 enableGitInfo = true
