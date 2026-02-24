@@ -18,8 +18,8 @@ This documentation is generated from the **current branch implementation**. Beca
 
 ## Sections
 
-- [Introduction](/en/docs/introduction/)
-- [Architecture](/en/docs/architecture/)
-- [Modules](/en/docs/modules/)
-- [API Reference](/en/docs/api/)
-- [Operations](/en/docs/operations/)
+- [Introduction](/uph/en/docs/introduction/)
+- [Architecture](/uph/en/docs/architecture/)
+- [Modules](/uph/en/docs/modules/)
+- [API Reference](/uph/en/docs/api/)
+- [Operations](/uph/en/docs/operations/)
