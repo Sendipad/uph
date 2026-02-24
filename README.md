@@ -1,6 +1,6 @@
 # Unified Party Hub Docs
 
-This repository uses Hugo (Book theme). A MkDocs scaffold also exists, but Hugo is the primary production generator.
+This repository uses Hugo (Doks theme). A MkDocs scaffold also exists, but Hugo is the primary production generator.
 
 ## Why pages may not open
 
