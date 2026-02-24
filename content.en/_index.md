@@ -1,6 +1,5 @@
 ---
 title: "Unified Party Hub"
-layout: landing
 ---
 
 <div class="uph-landing">

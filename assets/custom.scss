@@ -1,0 +1,25 @@
+/*
+  Hugo Book theme custom overrides.
+  This file is loaded by themes/book/assets/book.scss via @import "custom".
+  Keep landing icon dimensions constrained so homepage SVG icons do not inherit oversized defaults.
+*/
+
+.feature-icon,
+.doctype-icon,
+.usecase-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature-icon svg,
+.doctype-icon svg,
+.usecase-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  max-width: 1.5rem;
+  max-height: 1.5rem;
+  display: block;
+}
