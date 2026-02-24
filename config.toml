@@ -4,7 +4,7 @@
 
 baseURL = "https://sendipad.github.io/uph/"
 title = "Unified Party Hub"
-theme = "doks"
+theme = "github.com/h-enk/doks"
 languageCode = "en-us"
 disablePathToLower = true
 enableGitInfo = true
@@ -14,8 +14,6 @@ enableGitInfo = true
     extended = true
     min = "0.128.0"
 
-  [[module.imports]]
-    path = "github.com/h-enk/doks"
 
 # Enable multilingual structure: /en/ and /ar/
 defaultContentLanguage = "en"
