@@ -60,7 +60,7 @@ A Frappe/ERPNext extension for **centralized Party Master identity**, role-aware
 [{{< badge style="info" title="Version" value="1.0" >}}](https://github.com/Sendipad/uph/releases)
 [{{< badge style="default" title="License" value="MIT" >}}](https://github.com/Sendipad/uph/blob/main/LICENSE)
 
-{{< button href="/en/docs/" >}}Read Technical Docs{{< /button >}}
+{{< button href="/uph/en/docs/" >}}Read Technical Docs{{< /button >}}
 
   <section>
     <h2>Architecture & Modules</h2>
@@ -121,7 +121,7 @@ Then configure **Party Master Settings** to map target doctypes and party types.
 
 ## API Reference
 
-See [API Reference](/en/docs/api/) for whitelisted/search/report function entry points extracted from current implementation.
+See [API Reference](/uph/en/docs/api/) for whitelisted/search/report function entry points extracted from current implementation.
 
 ---
 
