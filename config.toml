@@ -58,7 +58,7 @@ defaultContentLanguageInSubdir = true
   # GitHub integration
   BookEdit = true
   BookRepo = "https://github.com/Sendipad/uph"
-  BookEditPath = "edit/docs/"
+  BookEditPath = "edit/develop/"
   BookLastChangeLink = '{{ .Site.Params.BookRepo }}/commit/{{ .GitInfo.Hash }}'
 
 # ===============================================
