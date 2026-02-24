@@ -1,3 +1,7 @@
+# ===============================================
+# Hugo Site Configuration
+# ===============================================
+
 baseURL = "https://sendipad.github.io/uph/"
 title = "Unified Party Hub"
 theme = "book"
@@ -5,6 +9,7 @@ languageCode = "en-us"
 disablePathToLower = true
 enableGitInfo = true
 
+# Enable multilingual structure: /en/ and /ar/
 defaultContentLanguage = "en"
 defaultContentLanguageInSubdir = true
 
@@ -20,78 +25,189 @@ defaultContentLanguageInSubdir = true
     contentDir = "content.ar"
     languageDirection = "rtl"
 
+# ===============================================
+# Markup Configuration
+# ===============================================
+
 [markup]
   [markup.goldmark.renderer]
     unsafe = true
+
   [markup.tableOfContents]
     startLevel = 1
+
   [markup.highlight]
     style = "base16-snazzy"
+
+# ===============================================
+# Theme Parameters
+# ===============================================
 
 [params]
   BookLogo = "uph-logo.png"
   BookTheme = "light"
   BookSearch = true
   BookSearchIndex = true
-  BookSection = "docs"
-  BookFlat = true
+
+  # Automatically include all sections (docs + posts)
+  BookSection = "docs"  
+  BookFlat = true            # Allows manual menu items to appear
   BookDateFormat = "January 2, 2006"
   customCSS = ["custom.css", "css/landing.css"]
+
+  # GitHub integration
   BookEdit = true
   BookRepo = "https://github.com/Sendipad/uph"
-  BookEditPath = "edit/main/"
+  BookEditPath = "edit/docs/"
   BookLastChangeLink = '{{ .Site.Params.BookRepo }}/commit/{{ .GitInfo.Hash }}'
 
-[menu]
-  [[menu.main]]
-    name = "🏠 Home"
-    pageRef = "/"
-    weight = 1
+# ===============================================
+# Sidebar & Top Menu Configuration
+# ===============================================
 
+[menu]
+
+  # ---- Documentation Root Section ----
   [[menu.main]]
-    name = "📘 Documentation"
-    pageRef = "/docs/"
-    weight = 2
+    name = "📘 Docs"
+    pageRef = "/docs/introduction/"
+    weight = 1
 
   [[menu.main]]
     name = "🚀 Introduction"
     pageRef = "/docs/introduction/"
-    parent = "📘 Documentation"
+    parent = "📘 Docs"
     weight = 1
 
   [[menu.main]]
-    name = "🏗️ Architecture"
-    pageRef = "/docs/architecture/"
-    parent = "📘 Documentation"
+    name = "✨ Key Features"
+    pageRef = "/docs/features/"
+    parent = "📘 Docs"
     weight = 2
 
   [[menu.main]]
-    name = "🧩 Modules"
-    pageRef = "/docs/modules/"
-    parent = "📘 Documentation"
+    name = "🧪 Data Quality Dashboard"
+    pageRef = "/docs/features/data-quality-dashboard/"
+    parent = "✨ Key Features"
+    weight = 1
+
+  [[menu.main]]
+    name = "⚙️ Configuration"
+    pageRef = "/docs/features/configuration/"
+    parent = "✨ Key Features"
+    weight = 2
+
+  [[menu.main]]
+    name = "🔢 Hierarchical Numbering"
+    pageRef = "/docs/features/hierarchical-numbering/"
+    parent = "✨ Key Features"
+    weight = 3
+
+  [[menu.main]]
+    name = "🔗 Relationship Management"
+    pageRef = "/docs/features/relationship-management/"
+    parent = "✨ Key Features"
+    weight = 4
+
+  [[menu.main]]
+    name = "🧩 Core DocTypes"
+    pageRef = "/docs/features/core-doctypes/"
+    parent = "✨ Key Features"
+    weight = 5
+
+  [[menu.main]]
+    name = "📊 Reports"
+    pageRef = "/docs/features/reports/"
+    parent = "✨ Key Features"
+    weight = 6
+
+  [[menu.main]]
+    name = "🧠 Advanced"
+    pageRef = "/docs/Advanced/"
+    parent = "📘 Docs"
+    weight = 3
+
+  [[menu.main]]
+    name = "🏗️ Architecture Deep-Dive"
+    pageRef = "/docs/Advanced/Architecture_Deep-Dive/"
+    parent = "🧠 Advanced"
+    weight = 1
+
+  [[menu.main]]
+    name = "🔄 Background Sync"
+    pageRef = "/docs/Advanced/background_sync_party_master_field_following_change_on_party/"
+    parent = "🧠 Advanced"
+    weight = 2
+
+  [[menu.main]]
+    name = "💡 Why We Built UPH"
+    pageRef = "/docs/Advanced/why_we_built_uph/"
+    parent = "🧠 Advanced"
     weight = 3
 
   [[menu.main]]
     name = "🛠️ API Reference"
     pageRef = "/docs/api/"
-    parent = "📘 Documentation"
+    parent = "🧠 Advanced"
     weight = 4
 
   [[menu.main]]
-    name = "⚙️ Operations"
-    pageRef = "/docs/operations/"
-    parent = "📘 Documentation"
-    weight = 5
+    name = "🏗️ System Architecture"
+    pageRef = "/docs/architecture/overview/"
+    parent = "📘 Docs"
+    weight = 10
 
+  [[menu.main]]
+    name = "🧩 DocTypes"
+    pageRef = "/docs/doctypes/"
+    parent = "📘 Docs"
+    weight = 11
+
+  [[menu.main]]
+    name = "⚙️ Configuration & Governance"
+    pageRef = "/docs/configuration/overview/"
+    parent = "📘 Docs"
+    weight = 12
+
+  [[menu.main]]
+    name = "🛡️ Security & Compliance"
+    pageRef = "/docs/security/model/"
+    parent = "📘 Docs"
+    weight = 13
+
+  [[menu.main]]
+    name = "🔄 Migrations & History"
+    pageRef = "/docs/migrations/history/"
+    parent = "📘 Docs"
+    weight = 14
+
+  [[menu.main]]
+    name = "📚 Use Cases"
+    pageRef = "/docs/usecases/"
+    parent = "📘 Docs"
+    weight = 4
+
+  # ---- Blog Section (Sidebar Link) ----
+  [[menu.main]]
+    name = "📰 Posts"
+    pageRef = "/posts/"
+    weight = 50
+
+  # ---- GitHub Quick Link ----
   [[menu.main]]
     name = "GitHub"
     url = "https://github.com/Sendipad/uph/"
     weight = 100
 
+  # Footer area
   [[menu.after]]
     name = "GitHub"
     url = "https://github.com/Sendipad/uph/"
     weight = 10
+
+# ===============================================
+# Taxonomies
+# ===============================================
 
 [taxonomies]
   tag = "tags"
