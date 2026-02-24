@@ -1,0 +1,50 @@
+<!--
+  Local override of book/docs/menu-hugo.
+  Ensures internal menu links respect baseURL subpaths (e.g. /uph/) via relLangURL.
+-->
+{{- if .Menu -}}
+  {{- template "book-menu-hugo" . -}}
+{{- end -}}
+
+{{ define "book-menu-hugo" }}
+<ul>
+{{- range .Menu -}}
+  {{- $class := slice -}}
+  {{- with .Params.class -}}
+    {{- $class = $class | append . -}}
+  {{- end -}}
+  {{- if $.Page.IsMenuCurrent .Menu . -}}
+    {{- $class = $class | append "active" -}}
+  {{- end -}}
+  <li>
+    {{- $isRemote := (urls.Parse .URL).IsAbs -}}
+    {{- $href := .URL -}}
+    {{- if and (not $isRemote) (hasPrefix .URL "/") -}}
+      {{- $href = .URL | relLangURL -}}
+    {{- end -}}
+    <a href="{{ $href }}"
+      {{- with $class }} class="{{ delimit . " " }}"{{- end -}}
+      {{- with .Title }} title="{{ . }}"{{- end -}}
+      {{- if $isRemote }} target="_blank" rel="noopener"{{- end -}}>
+      {{- .Pre -}}
+      {{- template "book-menu-title" . -}}
+      {{- .Post -}}
+    </a>
+    {{- with .Children -}}
+      {{- template "book-menu-hugo" (dict "Page" $.Page "Menu" .) -}}
+    {{- end -}}
+  </li>
+{{- end -}}
+</ul>
+{{ end }}
+
+{{ define "book-menu-title" }}
+{{- with .Params.BookIcon -}}
+  <img src="{{ partial "docs/icon" . }}" class="book-icon" alt="{{ partial "docs/text/i18n" . }}" />
+{{- end -}}
+{{- if .Name -}}
+  {{- .Name -}}
+{{- else if .Page -}}
+  {{- partial "docs/title" .Page -}}
+{{- end -}}
+{{ end }}

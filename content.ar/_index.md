@@ -12,7 +12,7 @@ title: "مركز الأطراف الموحد"
 [{{< badge style="info" title="الإصدار" value="1.0" >}}](https://github.com/sendipad/uph/releases)
 [{{< badge style="default" title="الترخيص" value="MIT" >}}](https://github.com/sendipad/uph/blob/main/LICENSE)
 
-{{< button href="/ar/docs/introduction/" >}}ابدأ الآن{{< /button >}}
+{{< button href="/uph/ar/docs/introduction/" >}}ابدأ الآن{{< /button >}}
 
 </div>
 
