@@ -1,304 +1,290 @@
 {
-    "charts": [
-        {
-            "chart_name": "Party Stats",
-            "label": "Party Stats"
-        },
-        {
-            "chart_name": "Party Status Distribution",
-            "label": "Party Status Distribution"
-        },
-        {
-            "chart_name": "Currency Exposure",
-            "label": "Currency Exposure"
-        }
-    ],
-    "content": "[{\"id\": \"hi_bi\", \"type\": \"header\", \"data\": {\"text\": \"Business Intelligence\", \"col\": 12}}, {\"id\": \"nc_tpm\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Total Party Masters\", \"col\": 4}}, {\"id\": \"nc_tr\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Total Receivables\", \"col\": 4}}, {\"id\": \"nc_tp\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Total Payables\", \"col\": 4}}, {\"id\": \"nc_uc\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Unlinked Customers\", \"col\": 6}}, {\"id\": \"nc_us\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Unlinked Suppliers\", \"col\": 6}}, {\"id\": \"ch_ps\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Party Stats\", \"col\": 12}}, {\"id\": \"ch_psd\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Party Status Distribution\", \"col\": 6}}, {\"id\": \"ch_ce\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Currency Exposure\", \"col\": 6}}, {\"id\": \"hi_sc\", \"type\": \"header\", \"data\": {\"text\": \"Shortcuts\", \"col\": 12}}, {\"id\": \"sc_pmt\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Party Master Tree\", \"col\": 3}}, {\"id\": \"sc_pas\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Party Account Statement\", \"col\": 3}}, {\"id\": \"sc_dqd\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Data Quality Dashboard\", \"col\": 3}}, {\"id\": \"sc_pi\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Party Issue\", \"col\": 3}}, {\"id\": \"sc_cpl\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Chronological Party Ledger\", \"col\": 3}}, {\"id\": \"sc_cu\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Customer\", \"col\": 3}}, {\"id\": \"sc_su\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Supplier\", \"col\": 3}}, {\"id\": \"sc_pr\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Party Relationship\", \"col\": 3}}, {\"id\": \"hi_dr\", \"type\": \"header\", \"data\": {\"text\": \"Data & Reports\", \"col\": 12}}, {\"id\": \"cd_pm\", \"type\": \"card\", \"data\": {\"card_name\": \"Party Masters\", \"col\": 4}}, {\"id\": \"cd_kr\", \"type\": \"card\", \"data\": {\"card_name\": \"Key Reports\", \"col\": 4}}, {\"id\": \"cd_st\", \"type\": \"card\", \"data\": {\"card_name\": \"Settings\", \"col\": 4}}]",
-    "creation": "2025-04-23 14:56:48.972543",
-    "custom_blocks": [],
-    "docstatus": 0,
-    "doctype": "Workspace",
-    "for_user": "",
-    "hide_custom": 0,
-    "icon": "users",
-    "idx": 0,
-    "indicator_color": "",
-    "is_hidden": 0,
-    "label": "Party",
-    "links": [
-        {
-            "hidden": 0,
-            "is_query_report": 0,
-            "label": "Party Masters",
-            "link_count": 6,
-            "link_type": "DocType",
-            "onboard": 0,
-            "type": "Card Break"
-        },
-        {
-            "hidden": 0,
-            "is_query_report": 0,
-            "label": "Party Relationship",
-            "link_to": "Party Relationship",
-            "link_type": "DocType",
-            "onboard": 0,
-            "type": "Link"
-        },
-        {
-            "hidden": 0,
-            "is_query_report": 0,
-            "label": "Party Relationship Type",
-            "link_to": "Party Relationship Type",
-            "link_type": "DocType",
-            "onboard": 0,
-            "type": "Link"
-        },
-        {
-            "hidden": 0,
-            "is_query_report": 0,
-            "label": "Party Master",
-            "link_count": 0,
-            "link_to": "Party Master",
-            "link_type": "DocType",
-            "onboard": 1,
-            "type": "Link"
-        },
-        {
-            "hidden": 0,
-            "is_query_report": 0,
-            "label": "Customer",
-            "link_count": 0,
-            "link_to": "Customer",
-            "link_type": "DocType",
-            "onboard": 1,
-            "type": "Link"
-        },
-        {
-            "hidden": 0,
-            "is_query_report": 0,
-            "label": "Supplier",
-            "link_count": 0,
-            "link_to": "Supplier",
-            "link_type": "DocType",
-            "onboard": 1,
-            "type": "Link"
-        },
-        {
-            "hidden": 0,
-            "is_query_report": 0,
-            "label": "Party Analytic Accounting",
-            "link_count": 0,
-            "link_to": "Party Analytic Accounting",
-            "link_type": "DocType",
-            "onboard": 0,
-            "type": "Link"
-        },
-        {
-            "hidden": 0,
-            "is_query_report": 0,
-            "label": "Key Reports",
-            "link_count": 5,
-            "link_type": "DocType",
-            "onboard": 0,
-            "type": "Card Break"
-        },
-        {
-            "hidden": 0,
-            "is_query_report": 1,
-            "label": "Party Master Health Report",
-            "link_count": 0,
-            "link_to": "Party Master Health Report",
-            "link_type": "Report",
-            "onboard": 1,
-            "type": "Link"
-        },
-        {
-            "hidden": 0,
-            "is_query_report": 1,
-            "label": "Party Account Statement",
-            "link_count": 0,
-            "link_to": "Party Account Statement",
-            "link_type": "Report",
-            "onboard": 1,
-            "type": "Link"
-        },
-        {
-            "hidden": 0,
-            "is_query_report": 1,
-            "label": "Party Account Balances",
-            "link_count": 0,
-            "link_to": "Party Account Balances",
-            "link_type": "Report",
-            "onboard": 1,
-            "type": "Link"
-        },
-        {
-            "hidden": 0,
-            "is_query_report": 1,
-            "label": "Party Ledger",
-            "link_count": 0,
-            "link_to": "Party Ledger",
-            "link_type": "Report",
-            "onboard": 0,
-            "type": "Link"
-        },
-        {
-            "hidden": 0,
-            "is_query_report": 1,
-            "label": "Chronological Party Ledger",
-            "link_count": 0,
-            "link_to": "Chronological Party Ledger",
-            "link_type": "Report",
-            "onboard": 0,
-            "type": "Link"
-        },
-        {
-            "hidden": 0,
-            "is_query_report": 0,
-            "label": "Settings",
-            "link_count": 2,
-            "link_type": "DocType",
-            "onboard": 0,
-            "type": "Card Break"
-        },
-        {
-            "hidden": 0,
-            "is_query_report": 0,
-            "label": "Party Issue",
-            "link_to": "Party Issue",
-            "link_type": "DocType",
-            "onboard": 0,
-            "type": "Link"
-        },
-        {
-            "hidden": 0,
-            "is_query_report": 0,
-            "label": "Party Master Settings",
-            "link_count": 0,
-            "link_to": "Party Master Settings",
-            "link_type": "DocType",
-            "onboard": 1,
-            "type": "Link"
-        }
-    ],
-    "modified": "2026-02-23 21:00:00.000000",
-    "modified_by": "Administrator",
-    "module": "Party",
-    "name": "Party",
-    "number_cards": [
-        {
-            "label": "Total Party Masters",
-            "number_card_name": "Total Party Masters"
-        },
-        {
-            "label": "Total Receivables",
-            "number_card_name": "Total Receivables"
-        },
-        {
-            "label": "Total Payables",
-            "number_card_name": "Total Payables"
-        },
-        {
-            "label": "Unlinked Customers",
-            "number_card_name": "Unlinked Customers"
-        },
-        {
-            "label": "Unlinked Suppliers",
-            "number_card_name": "Unlinked Suppliers"
-        }
-    ],
-    "owner": "Administrator",
-    "parent_page": "",
-    "public": 1,
-    "quick_lists": [],
-    "roles": [
-        {
-            "role": "Party Manager"
-        },
-        {
-            "role": "System Manager"
-        },
-        {
-            "role": "Accounts Manager"
-        }
-    ],
-    "sequence_id": 9.0,
-    "shortcuts": [
-        {
-            "color": "Grey",
-            "doc_view": "",
-            "label": "Party Dashboard",
-            "link_to": "Party",
-            "type": "Dashboard"
-        },
-        {
-            "color": "Blue",
-            "doc_view": "Tree",
-            "format": "{} Active",
-            "label": "Party Master Tree",
-            "link_to": "Party Master",
-            "stats_filter": "[[\"Party Master\",\"is_group\",\"=\",0],[\"Party Master\",\"disabled\",\"=\",0]]",
-            "type": "DocType"
-        },
-        {
-            "color": "Green",
-            "label": "Party Account Statement",
-            "link_to": "Party Account Statement",
-            "report_ref_doctype": "GL Entry",
-            "type": "Report"
-        },
-        {
-            "color": "Cyan",
-            "label": "Chronological Party Ledger",
-            "link_to": "Chronological Party Ledger",
-            "report_ref_doctype": "GL Entry",
-            "type": "Report"
-        },
-        {
-            "color": "Red",
-            "doc_view": "List",
-            "format": "{} Not Linked",
-            "label": "Customer",
-            "link_to": "Customer",
-            "stats_filter": "[[\"Customer\",\"party_master\",\"is\",\"not set\",false]]",
-            "type": "DocType"
-        },
-        {
-            "color": "Orange",
-            "doc_view": "List",
-            "format": "{} Not Linked",
-            "label": "Supplier",
-            "link_to": "Supplier",
-            "stats_filter": "[[\"Supplier\",\"party_master\",\"is\",\"not set\",false]]",
-            "type": "DocType"
-        },
-        {
-            "color": "Purple",
-            "label": "Data Quality Dashboard",
-            "link_to": "data-quality-dashboard",
-            "type": "Page"
-        },
-        {
-            "color": "Grey",
-            "label": "Party Issue",
-            "link_to": "Party Issue",
-            "type": "DocType",
-            "doc_view": "List",
-            "format": "{} Open",
-            "stats_filter": "[[\"Party Issue\",\"status\",\"in\",[\"Open\",\"Under Review\"]]]"
-        },
-        {
-            "color": "Blue",
-            "label": "Party Relationship",
-            "link_to": "Party Relationship",
-            "type": "DocType"
-        },
-        {
-            "color": "Green",
-            "label": "Party Relationship Type",
-            "link_to": "Party Relationship Type",
-            "type": "DocType"
-        }
-    ],
-    "title": "Party"
+ "charts": [
+  {
+   "chart_name": "Party Status Distribution",
+   "label": "Party Status Distribution"
+  },
+  {
+   "chart_name": "Currency Exposure",
+   "label": "Currency Exposure"
+  }
+ ],
+ "content": "[{\"id\":\"hi_bi\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Business Intelligence</span>\",\"col\":12}},{\"id\":\"nc_tpm\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Party Masters\",\"col\":4}},{\"id\":\"nc_tr\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Receivables\",\"col\":4}},{\"id\":\"nc_tp\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Payables\",\"col\":4}},{\"id\":\"ch_psd\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Party Status Distribution\",\"col\":6}},{\"id\":\"ch_ce\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Currency Exposure\",\"col\":6}},{\"id\":\"hi_sc\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Shortcuts</span>\",\"col\":12}},{\"id\":\"sc_pmt\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Master Tree\",\"col\":3}},{\"id\":\"sc_pas\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Account Statement\",\"col\":3}},{\"id\":\"sc_dqd\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Data Quality Dashboard\",\"col\":3}},{\"id\":\"sc_pi\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Issue\",\"col\":3}},{\"id\":\"sc_cpl\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Chronological Party Ledger\",\"col\":3}},{\"id\":\"sc_cu\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"id\":\"sc_su\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Supplier\",\"col\":3}},{\"id\":\"sc_pr\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Party Relationship\",\"col\":3}},{\"id\":\"hi_dr\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Data &amp; Reports</span>\",\"col\":12}},{\"id\":\"cd_pm\",\"type\":\"card\",\"data\":{\"card_name\":\"Party Masters\",\"col\":4}},{\"id\":\"cd_kr\",\"type\":\"card\",\"data\":{\"card_name\":\"Key Reports\",\"col\":4}},{\"id\":\"cd_st\",\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}},{\"id\":\"nc_us\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Unlinked Suppliers\",\"col\":6}},{\"id\":\"nc_uc\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Unlinked Customers\",\"col\":6}}]",
+ "creation": "2025-04-23 14:56:48.972543",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "users",
+ "idx": 0,
+ "indicator_color": "",
+ "is_hidden": 0,
+ "label": "Party",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Party Masters",
+   "link_count": 6,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Party Relationship",
+   "link_count": 0,
+   "link_to": "Party Relationship",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Party Relationship Type",
+   "link_count": 0,
+   "link_to": "Party Relationship Type",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Party Master",
+   "link_count": 0,
+   "link_to": "Party Master",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Customer",
+   "link_count": 0,
+   "link_to": "Customer",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Supplier",
+   "link_count": 0,
+   "link_to": "Supplier",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Party Analytic Accounting",
+   "link_count": 0,
+   "link_to": "Party Analytic Accounting",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Key Reports",
+   "link_count": 5,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Party Master Health Report",
+   "link_count": 0,
+   "link_to": "Party Master Health Report",
+   "link_type": "Report",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Party Account Statement",
+   "link_count": 0,
+   "link_to": "Party Account Statement",
+   "link_type": "Report",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Party Account Balances",
+   "link_count": 0,
+   "link_to": "Party Account Balances",
+   "link_type": "Report",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Party Ledger",
+   "link_count": 0,
+   "link_to": "Party Ledger",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Chronological Party Ledger",
+   "link_count": 0,
+   "link_to": "Chronological Party Ledger",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Settings",
+   "link_count": 2,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Party Issue",
+   "link_count": 0,
+   "link_to": "Party Issue",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Party Master Settings",
+   "link_count": 0,
+   "link_to": "Party Master Settings",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-02-25 02:19:51.700569",
+ "modified_by": "Administrator",
+ "module": "Party",
+ "name": "Party",
+ "number_cards": [
+  {
+   "label": "Total Party Masters",
+   "number_card_name": "Total Party Masters"
+  },
+  {
+   "label": "Total Receivables",
+   "number_card_name": "Total Receivables"
+  },
+  {
+   "label": "Total Payables",
+   "number_card_name": "Total Payables"
+  },
+  {
+   "label": "Unlinked Customers",
+   "number_card_name": "Unlinked Customers"
+  },
+  {
+   "label": "Unlinked Suppliers",
+   "number_card_name": "Unlinked Suppliers"
+  }
+ ],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "role": "Party Manager"
+  },
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Accounts Manager"
+  }
+ ],
+ "sequence_id": 9.0,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doc_view": "Tree",
+   "format": "{} Active",
+   "label": "Party Master Tree",
+   "link_to": "Party Master",
+   "stats_filter": "[[\"Party Master\",\"is_group\",\"=\",0],[\"Party Master\",\"disabled\",\"=\",0]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "label": "Party Account Statement",
+   "link_to": "Party Account Statement",
+   "report_ref_doctype": "GL Entry",
+   "type": "Report"
+  },
+  {
+   "color": "Cyan",
+   "label": "Chronological Party Ledger",
+   "link_to": "Chronological Party Ledger",
+   "report_ref_doctype": "GL Entry",
+   "type": "Report"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "format": "{} Not Linked",
+   "label": "Customer",
+   "link_to": "Customer",
+   "stats_filter": "[[\"Customer\",\"party_master\",\"is\",\"not set\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "format": "{} Not Linked",
+   "label": "Supplier",
+   "link_to": "Supplier",
+   "stats_filter": "[[\"Supplier\",\"party_master\",\"is\",\"not set\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Purple",
+   "label": "Data Quality Dashboard",
+   "link_to": "data-quality-dashboard",
+   "type": "Page"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "format": "{} Open",
+   "label": "Party Issue",
+   "link_to": "Party Issue",
+   "stats_filter": "[[\"Party Issue\",\"status\",\"in\",[\"Open\",\"Under Review\"]]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "label": "Party Relationship",
+   "link_to": "Party Relationship",
+   "type": "DocType"
+  }
+ ],
+ "title": "Party"
 }
