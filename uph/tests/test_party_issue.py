@@ -29,14 +29,14 @@ class TestPartyIssue(unittest.TestCase):
 
     def test_create_party_issue_idempotent(self):
         issue_1, created_1 = create_party_issue_if_missing(
-            party=self.party.name,
+            party_master=self.party.name,
             issue_type="Duplicate",
             severity="High",
             source_engine="test",
             party_secondary=self.party.name,
         )
         issue_2, created_2 = create_party_issue_if_missing(
-            party=self.party.name,
+            party_master=self.party.name,
             issue_type="Duplicate",
             severity="High",
             source_engine="test",
@@ -50,7 +50,7 @@ class TestPartyIssue(unittest.TestCase):
         doc = frappe.get_doc(
             {
                 "doctype": "Party Issue",
-                "party": self.party.name,
+                "party_master": self.party.name,
                 "issue_type": "Health",
                 "severity": "Low",
                 "status": "Open",

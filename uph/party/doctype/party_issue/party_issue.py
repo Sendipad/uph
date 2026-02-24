@@ -19,8 +19,7 @@ class PartyIssue(Document):
         detected_on: DF.Datetime | None
         dismiss_reason: DF.SmallText | None
         issue_type: DF.Literal["Duplicate", "Unlinked", "Health", "Transaction Policy"]
-        party: DF.Link
-        party_secondary: DF.Link | None
+        party_master: DF.Link
         reference_doctype: DF.Link | None
         reference_name: DF.DynamicLink | None
         resolved_by: DF.Link | None
@@ -52,7 +51,7 @@ def on_doctype_update():
     """Add composite indexes for better query performance"""
     # 1. Performance index for party-specific issue lookup
     frappe.db.add_index(
-        "Party Issue", ["party", "status", "issue_type"], "idx_party_status_type"
+        "Party Issue", ["party_master", "status", "issue_type"], "idx_party_status_type"
     )
 
     # 2. Performance index for reference-based lookup
