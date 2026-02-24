@@ -1,6 +1,5 @@
 ---
 title: "مركز الأطراف الموحد"
-layout: landing
 ---
 
 <div class="book-hero">
