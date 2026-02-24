@@ -59,7 +59,7 @@ def get_transaction_health(
     party_filter = ""
     params = {}
     if party_master:
-        party_filter += " AND pi.party = %(party_master)s"
+        party_filter += " AND pi.party_master = %(party_master)s"
         params["party_master"] = party_master
 
     if reference_doctype:
@@ -69,7 +69,7 @@ def get_transaction_health(
     agg_rows = frappe.db.sql(
         f"""
         SELECT
-            pi.party,
+            pi.party_master,
             pi.reference_doctype,
             SUM(CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(pi.details_json, '$.issue')) = 'draft_overdue' THEN 1 ELSE 0 END) AS draft_count,
             SUM(CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(pi.details_json, '$.issue')) = 'cancelled_referenced' THEN 1 ELSE 0 END) AS cancelled_unamended_count,
@@ -78,10 +78,10 @@ def get_transaction_health(
         FROM `tabParty Issue` pi
         WHERE pi.issue_type = 'Transaction Policy'
           AND pi.status IN ('Open', 'Under Review')
-          AND pi.party IS NOT NULL
-          AND pi.party != ''
+          AND pi.party_master IS NOT NULL
+          AND pi.party_master != ''
           {party_filter}
-        GROUP BY pi.party, pi.reference_doctype
+        GROUP BY pi.party_master, pi.reference_doctype
         """,
         params,
         as_dict=True,
@@ -91,7 +91,7 @@ def get_transaction_health(
         return {"parties": [], "total": 0}
 
     # Bulk-fetch party details
-    pm_names = list(set(r.party for r in agg_rows))
+    pm_names = list(set(r.party_master for r in agg_rows))
     pm_details = {}
     for pm in frappe.get_all(
         "Party Master",
@@ -102,7 +102,7 @@ def get_transaction_health(
 
     results = []
     for row in agg_rows:
-        detail = pm_details.get(row.party, {})
+        detail = pm_details.get(row.party_master, {})
         ref_dt = row.reference_doctype or ""
         total = cint(row.total_issues)
 
@@ -115,8 +115,8 @@ def get_transaction_health(
 
         results.append(
             {
-                "party_master": row.party,
-                "party_name": detail.get("party_name", row.party),
+                "party_master": row.party_master,
+                "party_name": detail.get("party_name", row.party_master),
                 "party_type": detail.get("party_type", ""),
                 "party_number": detail.get("party_number", ""),
                 "reference_doctype": ref_dt,
@@ -153,7 +153,7 @@ def get_party_health_detail(party_master: str, reference_doctype: str = None):
     filters = {
         "issue_type": "Transaction Policy",
         "status": ["in", ["Open", "Under Review"]],
-        "party": party_master,
+        "party_master": party_master,
     }
     if reference_doctype:
         filters["reference_doctype"] = reference_doctype
@@ -362,7 +362,7 @@ def run_transaction_policy_scan():
             for d in drafts:
                 age_days = max(1, (now_datetime() - d.creation).days)
                 create_party_issue_if_missing(
-                    party=d.party_master,
+                    party_master=d.party_master,
                     issue_type="Transaction Policy",
                     severity=configured_severity,
                     status="Open",
@@ -415,7 +415,7 @@ def run_transaction_policy_scan():
                             continue
 
                         create_party_issue_if_missing(
-                            party=r.party_master,
+                            party_master=r.party_master,
                             issue_type="Transaction Policy",
                             severity=configured_severity,
                             status="Open",
@@ -448,7 +448,7 @@ def run_transaction_policy_scan():
 
                     for row in cancelled:
                         create_party_issue_if_missing(
-                            party=row.party_master,
+                            party_master=row.party_master,
                             issue_type="Transaction Policy",
                             severity=configured_severity,
                             status="Open",
@@ -486,7 +486,7 @@ def run_transaction_policy_scan():
                 )
                 for row in rows or []:
                     create_party_issue_if_missing(
-                        party=row.party_master,
+                        party_master=row.party_master,
                         issue_type="Transaction Policy",
                         severity=configured_severity,
                         status="Open",

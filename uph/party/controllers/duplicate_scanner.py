@@ -23,6 +23,7 @@ from uph.party.controllers.party_issue_utils import (
 )
 from uph.party.controllers.cache_utils import invalidate_dashboard_stats
 
+
 def run_duplicate_scan(
     min_score: float = 80.0, block_len: int = 2, chunk_size: int = 250
 ):
@@ -44,6 +45,7 @@ def run_duplicate_scan(
         return
 
     from uph.party.controllers.normalization import NormalizationUtils
+
     frappe.publish_realtime(
         "duplicate_scan_progress",
         {"status": "started", "timestamp": str(now_datetime())},
@@ -110,8 +112,9 @@ def run_duplicate_scan(
                     pair_key = (party_1, party_2)
 
                     existing_issue = get_issue_status(
-                        party=party_1,
-                        party_secondary=party_2,
+                        party_master=party_1,
+                        reference_doctype="Party Master",
+                        reference_name=party_2,
                         issue_type="Duplicate",
                     )
                     if existing_issue:
@@ -125,16 +128,21 @@ def run_duplicate_scan(
                     severity = (
                         "Critical"
                         if score >= 95
-                        else ("High" if score >= 90 else ("Medium" if score >= 80 else "Low"))
+                        else (
+                            "High"
+                            if score >= 90
+                            else ("Medium" if score >= 80 else "Low")
+                        )
                     )
                     create_party_issue_if_missing(
-                        party=party_1,
-                        party_secondary=party_2,
+                        party_master=party_1,
                         issue_type="Duplicate",
                         severity=severity,
                         status="Open",
                         score=float(score),
                         source_engine="duplicate_scanner",
+                        reference_doctype="Party Master",
+                        reference_name=party_2,
                         details={
                             "blocking_key": prefix,
                             "normalized_name_1": p1_norm,

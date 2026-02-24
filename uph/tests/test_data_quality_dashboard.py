@@ -66,8 +66,9 @@ class TestDuplicateIssues(FrappeTestCase):
         issue = frappe.get_doc(
             {
                 "doctype": "Party Issue",
-                "party": party_1,
-                "party_secondary": party_2,
+                "party_master": party_1,
+                "reference_doctype": "Party Master",
+                "reference_name": party_2,
                 "issue_type": "Duplicate",
                 "severity": "Medium",
                 "status": "Open",

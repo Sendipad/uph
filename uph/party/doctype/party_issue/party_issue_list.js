@@ -24,12 +24,6 @@ frappe.listview_settings['Party Issue'] = {
                 return `<a href="/app/${frappe.router.slug(doc.reference_doctype)}/${val}" class="text-muted font-weight-bold">${val}</a>`;
             }
             return val;
-        },
-        party_secondary(val, df, doc) {
-            if (val) {
-                return `<a href="/app/party-master/${val}" class="text-muted font-weight-bold">${val}</a>`;
-            }
-            return val;
         }
     }
 };

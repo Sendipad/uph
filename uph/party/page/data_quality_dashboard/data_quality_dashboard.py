@@ -24,11 +24,17 @@ def get_duplicate_issues(
     if float(min_score) > 0:
         filters["score"] = [">=", float(min_score)]
     if party_master:
-        filters["party"] = party_master
+        filters["party_master"] = party_master
 
     duplicates = frappe.get_all(
         "Party Issue",
-        fields=["party", "party_secondary", "score", "status"],
+        fields=[
+            "party_master",
+            "reference_doctype",
+            "reference_name",
+            "score",
+            "status",
+        ],
         filters=filters,
         order_by="score desc",
         limit_start=offset,
@@ -39,9 +45,9 @@ def get_duplicate_issues(
     if duplicates:
         all_party_ids = set()
         for d in duplicates:
-            all_party_ids.add(d.party)
-            if d.party_secondary:
-                all_party_ids.add(d.party_secondary)
+            all_party_ids.add(d.party_master)
+            if d.reference_doctype == "Party Master" and d.reference_name:
+                all_party_ids.add(d.reference_name)
 
         party_names = {
             p.name: p.party_name
@@ -53,10 +59,12 @@ def get_duplicate_issues(
         }
 
         for d in duplicates:
-            d.party_1 = d.party
-            d.party_2 = d.party_secondary
+            d.party_1 = d.party_master
+            d.party_2 = (
+                d.reference_name if d.reference_doctype == "Party Master" else None
+            )
             d.party_1_name = party_names.get(d.party_1, d.party_1)
-            d.party_2_name = party_names.get(d.party_2, d.party_2)
+            d.party_2_name = party_names.get(d.party_2, d.party_2) if d.party_2 else ""
             d.normalized_name_1 = d.party_1_name
             d.normalized_name_2 = d.party_2_name
             d.similarity_score = d.score
@@ -80,7 +88,8 @@ def get_dashboard_stats(party_master: str = None):
     params = {}
     if party_master:
         party_filter = (
-            "WHERE (party = %(party_master)s OR party_secondary = %(party_master)s)"
+            "WHERE (party_master = %(party_master)s"
+            " OR (reference_doctype = 'Party Master' AND reference_name = %(party_master)s))"
         )
         params["party_master"] = party_master
 
@@ -260,8 +269,9 @@ def dismiss_duplicate(party_1: str, party_2: str, reason: str = None):
     issue_name = frappe.db.get_value(
         "Party Issue",
         {
-            "party": party_1,
-            "party_secondary": party_2,
+            "party_master": party_1,
+            "reference_doctype": "Party Master",
+            "reference_name": party_2,
             "issue_type": "Duplicate",
             "status": ["in", ["Open", "Under Review"]],
         },
@@ -330,8 +340,9 @@ def merge_parties(
         issue_name = frappe.db.get_value(
             "Party Issue",
             {
-                "party": party_1,
-                "party_secondary": party_2,
+                "party_master": party_1,
+                "reference_doctype": "Party Master",
+                "reference_name": party_2,
                 "issue_type": "Duplicate",
                 "status": ["in", ["Open", "Under Review"]],
             },

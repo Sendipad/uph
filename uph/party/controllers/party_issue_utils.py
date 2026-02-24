@@ -15,18 +15,15 @@ def normalize_party_pair(party_1, party_2):
 
 def get_issue_status(
     *,
-    party,
+    party_master,
     issue_type,
-    party_secondary=None,
     reference_doctype=None,
     reference_name=None,
 ):
     filters = {
-        "party": party,
+        "party_master": party_master,
         "issue_type": issue_type,
     }
-    if party_secondary:
-        filters["party_secondary"] = party_secondary
     if reference_doctype and reference_name:
         filters["reference_doctype"] = reference_doctype
         filters["reference_name"] = reference_name
@@ -41,7 +38,7 @@ def get_issue_status(
 
 def create_party_issue_if_missing(
     *,
-    party,
+    party_master,
     issue_type,
     severity,
     source_engine,
@@ -52,14 +49,24 @@ def create_party_issue_if_missing(
     reference_name=None,
     details=None,
 ):
+    """Create a Party Issue if one doesn't already exist for the given filters.
+
+    For Duplicate issues, pass the second party via
+    ``reference_doctype="Party Master"`` and ``reference_name=<party_2>``.
+    The legacy ``party_secondary`` kwarg is accepted for backwards
+    compatibility and is transparently mapped to reference fields.
+    """
+    # Legacy compat: map party_secondary → reference fields
+    if party_secondary and not reference_name:
+        reference_doctype = "Party Master"
+        reference_name = party_secondary
+
     filters = {
-        "party": party,
+        "party_master": party_master,
         "issue_type": issue_type,
         "status": ["in", list(OPEN_STATUSES)],
     }
 
-    if party_secondary:
-        filters["party_secondary"] = party_secondary
     if reference_doctype and reference_name:
         filters["reference_doctype"] = reference_doctype
         filters["reference_name"] = reference_name
@@ -71,15 +78,16 @@ def create_party_issue_if_missing(
     doc = frappe.get_doc(
         {
             "doctype": "Party Issue",
-            "party": party,
-            "party_secondary": party_secondary,
+            "party_master": party_master,
             "issue_type": issue_type,
             "severity": severity,
             "status": status,
             "score": score,
             "reference_doctype": reference_doctype,
             "reference_name": reference_name,
-            "details_json": json.dumps(details) if isinstance(details, (dict, list)) else details,
+            "details_json": (
+                json.dumps(details) if isinstance(details, (dict, list)) else details
+            ),
             "source_engine": source_engine,
             "detected_on": now_datetime(),
         }

@@ -490,7 +490,7 @@ def get_unlinked_issues(limit: int = 20, offset: int = 0, party_master: str = No
 
     filters = {"issue_type": "Unlinked", "status": ["in", ["Open", "Under Review"]]}
     if party_master:
-        filters["party"] = party_master
+        filters["party_master"] = party_master
     issues = frappe.get_all(
         "Party Issue",
         filters=filters,
@@ -706,7 +706,7 @@ def run_unlinked_issue_scan():
 
             for row in rows:
                 create_party_issue_if_missing(
-                    party=root_party,
+                    party_master=root_party,
                     issue_type="Unlinked",
                     severity="Medium",
                     status="Open",
