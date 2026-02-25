@@ -109,6 +109,8 @@ export_python_type_annotations = True
 scheduler_events = {
     "hourly": [
         "uph.tasks.refresh_dashboard_stats",
+        "uph.party.controllers.unlinked_resolver.sync_unlinked_issues",
+        "uph.party.controllers.duplicate_scanner.sync_duplicate_issues",
     ],
     "daily": [
         "uph.party.controllers.unlinked_resolver.enqueue_unlinked_issue_scan",

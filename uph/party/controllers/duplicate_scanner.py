@@ -179,6 +179,78 @@ def run_duplicate_scan(
         f"Duplicate scan completed: {total_found} candidates found across {total_blocks} blocks"
     )
 
+    # Sync and auto-resolve issues that are no longer valid
+    sync_duplicate_issues()
+
+
+def sync_duplicate_issues():
+    """
+    Auto-resolve Duplicate issues that have been fixed outside the dashboard
+    (e.g., merged directly via Python API or one party was deleted).
+    """
+    open_issues = frappe.get_all(
+        "Party Issue",
+        filters={
+            "issue_type": "Duplicate",
+            "status": ["in", ["Open", "Under Review"]],
+        },
+        fields=[
+            "name",
+            "party_master",
+            "reference_doctype",
+            "reference_name",
+        ],
+    )
+
+    if not open_issues:
+        return
+
+    now = frappe.utils.now_datetime()
+    resolved_count = 0
+
+    for issue in open_issues:
+        party_1 = issue.party_master
+        party_2 = issue.reference_name
+
+        if not party_1 or not party_2:
+            continue
+
+        p1_exists = frappe.db.exists("Party Master", party_1)
+        p2_exists = frappe.db.exists("Party Master", party_2)
+
+        # 1. Check if either document no longer exists
+        if not p1_exists or not p2_exists:
+            frappe.db.set_value(
+                "Party Issue",
+                issue.name,
+                {
+                    "status": "Resolved",
+                    "resolved_on": now,
+                    "resolved_by": "Administrator",
+                    "dismiss_reason": "Orphaned: One or both parties no longer exist",
+                },
+            )
+            resolved_count += 1
+            continue
+
+        # 2. Check if one is an alias of another (merged)
+        # Note: In ERPNext, merging usually renames one document to the other
+        # If they are merged, they become the same document name
+        if party_1 == party_2:
+            frappe.db.set_value(
+                "Party Issue",
+                issue.name,
+                {
+                    "status": "Resolved",
+                    "resolved_on": now,
+                    "resolved_by": "Administrator",
+                },
+            )
+            resolved_count += 1
+
+    if resolved_count:
+        frappe.logger("uph").info(f"Duplicate Sync: Resolved {resolved_count} issues")
+
 
 @frappe.whitelist()
 def enqueue_duplicate_scan(min_score: float = 80.0):

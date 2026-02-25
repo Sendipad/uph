@@ -721,6 +721,73 @@ def run_unlinked_issue_scan():
 
             start += page_len
 
+    # Sync and auto-resolve issues that are no longer valid
+    sync_unlinked_issues()
+
+
+def sync_unlinked_issues():
+    """
+    Auto-resolve Unlinked issues that have been fixed outside the dashboard
+    (e.g., linked directly in the standard ERPNext document).
+    """
+    open_issues = frappe.get_all(
+        "Party Issue",
+        filters={
+            "issue_type": "Unlinked",
+            "status": ["in", ["Open", "Under Review"]],
+        },
+        fields=[
+            "name",
+            "reference_doctype",
+            "reference_name",
+        ],
+    )
+
+    if not open_issues:
+        return
+
+    now = frappe.utils.now_datetime()
+    resolved_count = 0
+
+    for issue in open_issues:
+        dt = issue.reference_doctype
+        dn = issue.reference_name
+
+        if not dt or not dn:
+            continue
+
+        # 1. Check if the document still exists
+        if not frappe.db.exists(dt, dn):
+            frappe.db.set_value(
+                "Party Issue",
+                issue.name,
+                {
+                    "status": "Resolved",
+                    "resolved_on": now,
+                    "resolved_by": "Administrator",
+                    "dismiss_reason": "Orphaned: Document no longer exists",
+                },
+            )
+            resolved_count += 1
+            continue
+
+        # 2. Check if the document is now linked to a Party Master
+        current_pm = frappe.db.get_value(dt, dn, "party_master")
+        if current_pm:
+            frappe.db.set_value(
+                "Party Issue",
+                issue.name,
+                {
+                    "status": "Resolved",
+                    "resolved_on": now,
+                    "resolved_by": "Administrator",
+                },
+            )
+            resolved_count += 1
+
+    if resolved_count:
+        frappe.logger("uph").info(f"Unlinked Sync: Resolved {resolved_count} issues")
+
 
 def get_unlinked_count():
     """Get total count of unlinked role records. Used by dashboard stats."""

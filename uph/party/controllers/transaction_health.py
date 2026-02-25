@@ -209,7 +209,7 @@ def get_party_health_detail(party_master: str, reference_doctype: str = None):
 
 
 @frappe.whitelist()
-def resolve_health_issue(issue_name: str, action: str):
+def resolve_health_issue(issue_name: str, action: str, reason: str = None):
     """
     Resolve a specific transaction health issue (e.g. submit draft, cancel).
     Action can be 'submit', 'cancel', or 'dismiss'.
@@ -261,13 +261,16 @@ def resolve_health_issue(issue_name: str, action: str):
             issue.resolved_on = now
             issue.resolved_by = frappe.session.user
 
+            if reason:
+                issue.dismiss_reason = reason
+
             details = {}
             if issue.details_json:
                 try:
                     details = json.loads(issue.details_json)
                 except:
                     pass
-            details["dismiss_reason"] = "Dismissed from Dashboard"
+            details["dismiss_reason"] = reason or "Dismissed from Dashboard"
             issue.details_json = json.dumps(details)
             issue.save(ignore_permissions=True)
             return {"success": True, "message": _("Issue dismissed")}
@@ -341,6 +344,16 @@ def run_transaction_policy_scan():
         # For child table, we use 'parent' field as the reference name
         ref_field = "parent" if is_child else "name"
 
+        # Check if warn_not_submitted_document is enabled for this doctype
+        warn_drafts = False
+        if hasattr(settings, "document_types"):
+            for row in settings.document_types:
+                if row.document_type == dt and getattr(
+                    row, "warn_not_submitted_document", 0
+                ):
+                    warn_drafts = True
+                    break
+
         # Draft older than threshold
         start = 0
         page_len = 500
@@ -361,10 +374,15 @@ def run_transaction_policy_scan():
                 break
             for d in drafts:
                 age_days = max(1, (now_datetime() - d.creation).days)
+                draft_severity = (
+                    "High"
+                    if warn_drafts and configured_severity != "Critical"
+                    else configured_severity
+                )
                 create_party_issue_if_missing(
                     party_master=d.party_master,
                     issue_type="Transaction Policy",
-                    severity=configured_severity,
+                    severity=draft_severity,
                     status="Open",
                     source_engine="transaction_health",
                     reference_doctype=parent_dt,
