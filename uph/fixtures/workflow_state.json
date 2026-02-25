@@ -1,38 +1,38 @@
 [
-  {
-    "docstatus": 0,
-    "doctype": "Workflow State",
-    "icon": "",
-    "modified": "2026-02-17 10:00:00.000000",
-    "name": "Open",
-    "style": "",
-    "workflow_state_name": "Open"
-  },
-  {
-    "docstatus": 0,
-    "doctype": "Workflow State",
-    "icon": "",
-    "modified": "2026-02-17 10:00:00.000000",
-    "name": "Under Review",
-    "style": "",
-    "workflow_state_name": "Under Review"
-  },
-  {
-    "docstatus": 0,
-    "doctype": "Workflow State",
-    "icon": "",
-    "modified": "2026-02-17 10:00:00.000000",
-    "name": "Resolved",
-    "style": "",
-    "workflow_state_name": "Resolved"
-  },
-  {
-    "docstatus": 0,
-    "doctype": "Workflow State",
-    "icon": "",
-    "modified": "2026-02-17 10:00:00.000000",
-    "name": "Ignored",
-    "style": "",
-    "workflow_state_name": "Ignored"
-  }
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-02-17 10:00:00",
+  "name": "Open",
+  "style": "",
+  "workflow_state_name": "Open"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-02-17 10:00:00",
+  "name": "Under Review",
+  "style": "",
+  "workflow_state_name": "Under Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-02-17 10:00:00",
+  "name": "Resolved",
+  "style": "",
+  "workflow_state_name": "Resolved"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-02-17 10:00:00",
+  "name": "Ignored",
+  "style": "",
+  "workflow_state_name": "Ignored"
+ }
 ]

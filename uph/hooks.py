@@ -132,7 +132,7 @@ fixtures = [
                 "workflow_state_name",
                 "in",
                 ["Open", "Under Review", "Resolved", "Ignored"],
-            ]
+            ],
         ],
     },
 ]
