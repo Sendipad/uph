@@ -117,6 +117,9 @@ def get_timeline_chart_by_currency(data, from_date=None):
         currency_month_map[currency][month] += change
 
     sorted_months = sorted(all_months)
+    if len(sorted_months) < 2:
+        return None
+
     labels = sorted_months
 
     datasets = []
@@ -284,6 +287,24 @@ def get_data(filters, party_master):
     for vc in gl_voucher_counts:
         unposted_voucher.setdefault(vc.get("party_master"), []).append(vc)
 
+    pm_issues = defaultdict(list)
+    hide_warning = "Hide Warnings Message" in (filters.get("display_options") or [])
+    if not hide_warning:
+        pm_list = list(
+            {p.get("party_master") for p in partylist if p.get("party_master")}
+        )
+        if pm_list:
+            issues = frappe.get_all(
+                "Party Issue",
+                filters={
+                    "party_master": ("in", pm_list),
+                    "status": ("in", ["Open", "Under Review"]),
+                },
+                fields=["party_master", "issue_type", "severity"],
+            )
+            for iss in issues:
+                pm_issues[iss.party_master].append(iss)
+
     last_pm = None
     cached_warning_row = None
 
@@ -357,6 +378,10 @@ def get_data(filters, party_master):
         # Cache warning for this party_master if it changed
         if current_pm != last_pm and not hide_warning:
             raw_warnings = unposted_voucher.get(current_pm, [])
+            msg = ""
+            on_hold_msg = ""
+            has_msg = False
+
             if raw_warnings:
                 # Aggregate by doctype
                 aggr = defaultdict(lambda: {"draft": 0, "cancelled": 0})
@@ -366,24 +391,62 @@ def get_data(filters, party_master):
                     elif rw.get("docstatus") == 2:
                         aggr[rw.get("doctype")]["cancelled"] += 1
 
-                msg = _("On Hold Vouchers:")
-                has_msg = False
+                on_hold_msg += _("On Hold Vouchers:")
                 for dt_name, counts in aggr.items():
                     if counts["draft"] or counts["cancelled"]:
                         has_msg = True
-                        msg += f" {_(dt_name)}: "
+                        on_hold_msg += f" {_(dt_name)}: "
                         if counts["draft"]:
-                            msg += f'{counts["draft"]} {_("Draft")} '
+                            on_hold_msg += f'{counts["draft"]} {_("Draft")} '
                         if counts["cancelled"]:
-                            msg += f'{counts["cancelled"]} {_("Cancelled")} '
+                            on_hold_msg += f'{counts["cancelled"]} {_("Cancelled")} '
+                msg = on_hold_msg
 
+            severity_levels = {"Low": 1, "Medium": 2, "High": 3, "Critical": 4}
+            min_sev = severity_levels.get(filters.get("issue_severity", "Medium"), 2)
+
+            issues_for_pm = pm_issues.get(current_pm, [])
+            valid_issues = [
+                iss
+                for iss in issues_for_pm
+                if severity_levels.get(iss.severity, 0) >= min_sev
+            ]
+
+            issue_groups_list = []
+            if valid_issues:
+                issue_counts = defaultdict(int)
+                for iss in valid_issues:
+                    issue_counts[(iss.issue_type, iss.severity)] += 1
+
+                issue_msg_parts = []
+                for (itype, sev), count in issue_counts.items():
+                    issue_groups_list.append(
+                        {
+                            "issue_type": itype,
+                            "severity": sev,
+                            "count": count,
+                            "itype_translated": _(itype),
+                            "sev_translated": _(sev),
+                        }
+                    )
+                    issue_msg_parts.append(f"{count} {_(itype)} ({_(sev)})")
+
+                issue_msg = ", ".join(issue_msg_parts)
                 if has_msg:
-                    cached_warning_row = {
-                        "party_name": party.get("party_name"),
-                        "party_master": current_pm,
-                        "remarks": msg.strip(),
-                        "warning": 1,
-                    }
+                    msg += " | " + _("Active Issues:") + " " + issue_msg
+                else:
+                    msg = _("Active Issues:") + " " + issue_msg
+                    has_msg = True
+
+            if has_msg:
+                cached_warning_row = {
+                    "party_name": party.get("party_name"),
+                    "party_master": current_pm,
+                    "remarks": msg.strip(),
+                    "on_hold_msg": on_hold_msg.strip() if on_hold_msg else "",
+                    "issue_groups": issue_groups_list,
+                    "warning": 1,
+                }
 
         last_pm = current_pm
 

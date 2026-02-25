@@ -1,120 +1,148 @@
 [
-  {
-    "docstatus": 0,
-    "doctype": "Workflow",
-    "document_type": "Party Issue",
-    "is_active": 1,
-    "modified": "2026-02-17 10:00:00.000000",
-    "workflow_name": "Party Issue Workflow",
-    "name": "Party Issue Workflow",
-    "override_status": 0,
-    "send_email_alert": 0,
-    "workflow_state_field": "status",
-    "states": [
-      {
-        "allow_edit": "All",
-        "avoid_status_override": 0,
-        "doc_status": "0",
-        "is_optional_state": 0,
-        "message": null,
-        "next_action_email_template": null,
-        "send_email": 0,
-        "state": "Open",
-        "update_field": null,
-        "update_value": null,
-        "workflow_builder_id": "1"
-      },
-      {
-        "allow_edit": "All",
-        "avoid_status_override": 0,
-        "doc_status": "0",
-        "is_optional_state": 0,
-        "message": null,
-        "next_action_email_template": null,
-        "send_email": 0,
-        "state": "Under Review",
-        "update_field": null,
-        "update_value": null,
-        "workflow_builder_id": "2"
-      },
-      {
-        "allow_edit": "All",
-        "avoid_status_override": 0,
-        "doc_status": "0",
-        "is_optional_state": 0,
-        "message": null,
-        "next_action_email_template": null,
-        "send_email": 0,
-        "state": "Resolved",
-        "update_field": null,
-        "update_value": null,
-        "workflow_builder_id": "3"
-      },
-      {
-        "allow_edit": "All",
-        "avoid_status_override": 0,
-        "doc_status": "0",
-        "is_optional_state": 0,
-        "message": null,
-        "next_action_email_template": null,
-        "send_email": 0,
-        "state": "Ignored",
-        "update_field": null,
-        "update_value": null,
-        "workflow_builder_id": "4"
-      }
-    ],
-    "transitions": [
-      {
-        "action": "Review",
-        "allow_self_approval": 1,
-        "allowed": "All",
-        "condition": null,
-        "next_state": "Under Review",
-        "send_email_to_creator": 0,
-        "state": "Open",
-        "workflow_builder_id": "action-1"
-      },
-      {
-        "action": "Resolve",
-        "allow_self_approval": 1,
-        "allowed": "All",
-        "condition": null,
-        "next_state": "Resolved",
-        "send_email_to_creator": 0,
-        "state": "Under Review",
-        "workflow_builder_id": "action-2"
-      },
-      {
-        "action": "Ignore",
-        "allow_self_approval": 1,
-        "allowed": "All",
-        "condition": null,
-        "next_state": "Ignored",
-        "send_email_to_creator": 0,
-        "state": "Under Review",
-        "workflow_builder_id": "action-3"
-      },
-      {
-        "action": "Reopen",
-        "allow_self_approval": 1,
-        "allowed": "All",
-        "condition": null,
-        "next_state": "Open",
-        "send_email_to_creator": 0,
-        "state": "Resolved",
-        "workflow_builder_id": "action-4"
-      },
-      {
-        "action": "Reopen",
-        "allow_self_approval": 1,
-        "allowed": "All",
-        "condition": null,
-        "next_state": "Open",
-        "send_email_to_creator": 0,
-        "state": "Ignored",
-        "workflow_builder_id": "action-5"
-      }
-    ]
-  }
+ {
+  "docstatus": 0,
+  "doctype": "Workflow",
+  "document_type": "Party Issue",
+  "is_active": 1,
+  "modified": "2026-02-17 10:00:00",
+  "name": "Party Issue Workflow",
+  "override_status": 0,
+  "send_email_alert": 0,
+  "states": [
+   {
+    "allow_edit": "All",
+    "avoid_status_override": 0,
+    "doc_status": "0",
+    "is_optional_state": 0,
+    "message": null,
+    "next_action_email_template": null,
+    "parent": "Party Issue Workflow",
+    "parentfield": "states",
+    "parenttype": "Workflow",
+    "send_email": 0,
+    "state": "Open",
+    "update_field": null,
+    "update_value": null,
+    "workflow_builder_id": "1"
+   },
+   {
+    "allow_edit": "All",
+    "avoid_status_override": 0,
+    "doc_status": "0",
+    "is_optional_state": 0,
+    "message": null,
+    "next_action_email_template": null,
+    "parent": "Party Issue Workflow",
+    "parentfield": "states",
+    "parenttype": "Workflow",
+    "send_email": 0,
+    "state": "Under Review",
+    "update_field": null,
+    "update_value": null,
+    "workflow_builder_id": "2"
+   },
+   {
+    "allow_edit": "All",
+    "avoid_status_override": 0,
+    "doc_status": "0",
+    "is_optional_state": 0,
+    "message": null,
+    "next_action_email_template": null,
+    "parent": "Party Issue Workflow",
+    "parentfield": "states",
+    "parenttype": "Workflow",
+    "send_email": 0,
+    "state": "Resolved",
+    "update_field": null,
+    "update_value": null,
+    "workflow_builder_id": "3"
+   },
+   {
+    "allow_edit": "All",
+    "avoid_status_override": 0,
+    "doc_status": "0",
+    "is_optional_state": 0,
+    "message": null,
+    "next_action_email_template": null,
+    "parent": "Party Issue Workflow",
+    "parentfield": "states",
+    "parenttype": "Workflow",
+    "send_email": 0,
+    "state": "Ignored",
+    "update_field": null,
+    "update_value": null,
+    "workflow_builder_id": "4"
+   }
+  ],
+  "transitions": [
+   {
+    "action": "Review",
+    "allow_self_approval": 1,
+    "allowed": "All",
+    "condition": null,
+    "next_state": "Under Review",
+    "parent": "Party Issue Workflow",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "send_email_to_creator": 0,
+    "state": "Open",
+    "workflow_builder_id": "action-1"
+   },
+   {
+    "action": "Resolve",
+    "allow_self_approval": 1,
+    "allowed": "All",
+    "condition": null,
+    "next_state": "Resolved",
+    "parent": "Party Issue Workflow",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "send_email_to_creator": 0,
+    "state": "Under Review",
+    "workflow_builder_id": "action-2"
+   },
+   {
+    "action": "Ignore",
+    "allow_self_approval": 1,
+    "allowed": "All",
+    "condition": null,
+    "next_state": "Ignored",
+    "parent": "Party Issue Workflow",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "send_email_to_creator": 0,
+    "state": "Under Review",
+    "workflow_builder_id": "action-3"
+   },
+   {
+    "action": "Reopen",
+    "allow_self_approval": 1,
+    "allowed": "All",
+    "condition": null,
+    "next_state": "Open",
+    "parent": "Party Issue Workflow",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "send_email_to_creator": 0,
+    "state": "Resolved",
+    "workflow_builder_id": "action-4"
+   },
+   {
+    "action": "Reopen",
+    "allow_self_approval": 1,
+    "allowed": "All",
+    "condition": null,
+    "next_state": "Open",
+    "parent": "Party Issue Workflow",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "send_email_to_creator": 0,
+    "state": "Ignored",
+    "workflow_builder_id": "action-5"
+   }
+  ],
+  "workflow_data": null,
+  "workflow_name": "Party Issue Workflow",
+  "workflow_state_field": "status"
+ }
 ]
