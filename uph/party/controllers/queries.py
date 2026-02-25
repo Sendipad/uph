@@ -485,6 +485,14 @@ def get_party_master_parties_db(party_master, all_roles=True, roles=None):
         if not pm_roles_to_fetch:
             return []
 
+        pm_names = list(set(party_master))
+        pm_data = frappe.get_all(
+            "Party Master",
+            filters={"name": ["in", pm_names]},
+            fields=["name", "party_name"],
+        )
+        pm_name_map = {d.name: d.party_name for d in pm_data}
+
         all_parties = []
         from uph.party.utils import get_party_type_currency_field
 
@@ -509,6 +517,7 @@ def get_party_master_parties_db(party_master, all_roles=True, roles=None):
                 )
                 for p in found:
                     p["party_type"] = role_doctype
+                    p["party_name"] = pm_name_map.get(p.party_master)
                 all_parties.extend(found)
             except Exception:
                 frappe.log_error(
@@ -531,6 +540,16 @@ def get_party_master_parties_db(party_master, all_roles=True, roles=None):
 
     if not pm_roles:
         return []
+
+    if fetch_all:
+        pm_data = frappe.get_all("Party Master", fields=["name", "party_name"])
+    else:
+        pm_data = frappe.get_all(
+            "Party Master",
+            filters={"name": party_master},
+            fields=["name", "party_name"],
+        )
+    pm_name_map = {d.name: d.party_name for d in pm_data}
 
     parties = []
     from uph.party.utils import get_party_type_currency_field
@@ -559,6 +578,7 @@ def get_party_master_parties_db(party_master, all_roles=True, roles=None):
             )
             for p in found:
                 p["party_type"] = role_doctype
+                p["party_name"] = pm_name_map.get(p.party_master)
                 parties.append(p)
         except Exception:
             frappe.log_error(
