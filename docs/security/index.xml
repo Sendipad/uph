@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Security on Unified Party Hub</title><link>https://sendipad.github.io/uph/docs/security/</link><description>Recent content in Security on Unified Party Hub</description><generator>Hugo</generator><language>en</language><atom:link href="https://sendipad.github.io/uph/docs/security/index.xml" rel="self" type="application/rss+xml"/><item><title>Security Model</title><link>https://sendipad.github.io/uph/docs/security/model/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sendipad.github.io/uph/docs/security/model/</guid><description>&lt;h1 id="security--compliance"&gt;Security &amp;amp; Compliance&lt;a class="anchor" href="#security--compliance"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;h2 id="permission-model"&gt;Permission Model&lt;a class="anchor" href="#permission-model"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;UPH leverages Frappe&amp;rsquo;s robust Role-Based Access Control (RBAC). Core roles include:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;System Manager&lt;/strong&gt;: Full access to settings and MDM configuration.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Party Manager&lt;/strong&gt;: Management of Party Master records and daily operations.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Accounts Manager&lt;/strong&gt;: Financial visibility and analytic accounting configuration.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="risk-assessment"&gt;Risk Assessment&lt;a class="anchor" href="#risk-assessment"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;The following security considerations were identified during the architectural audit:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;API Security&lt;/strong&gt;: Whitelisted methods are being systematically audited to ensure &lt;code&gt;frappe.has_permission&lt;/code&gt; checks are consistently applied.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Data Governance&lt;/strong&gt;: The &lt;code&gt;Setup Finished&lt;/code&gt; flag locks core governance settings post-initialization to prevent unauthorized changes in production environments.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="data-protection"&gt;Data Protection&lt;a class="anchor" href="#data-protection"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;All party interactions are logged and audited via the &lt;code&gt;Party Issue&lt;/code&gt; system, providing a clear trail of data quality adjustments and links.&lt;/p&gt;</description></item></channel></rss>

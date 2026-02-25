@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Unified Party Hub</title><link>https://sendipad.github.io/uph/docs/Advanced/</link><description>Recent content on Unified Party Hub</description><generator>Hugo</generator><language>en</language><atom:link href="https://sendipad.github.io/uph/docs/Advanced/index.xml" rel="self" type="application/rss+xml"/><item><title>Architecture Deep-Dive</title><link>https://sendipad.github.io/uph/docs/Advanced/Architecture_Deep-Dive/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sendipad.github.io/uph/docs/Advanced/Architecture_Deep-Dive/</guid><description>&lt;ul&gt;
+&lt;li&gt;Architecture Deep-Dive * &lt;br&gt;
+** Entity Relationship ** \&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre class="mermaid"&gt;stateDiagram-v2
+ [*] --&amp;gt; PartyMaster_Created : &amp;#34;Create Party Master\n(is_group = 0)&amp;#34;
+ 
+ PartyMaster_Created --&amp;gt; Role_Decision : &amp;#34;User clicks\n&amp;#39;Create Party&amp;#39;&amp;#34;
+
+ state Role_Decision &amp;lt;&amp;lt;choice&amp;gt;&amp;gt;
+ Role_Decision --&amp;gt; Customer_EUR : &amp;#34;Choose Customer\n+ EUR&amp;#34;
+ Role_Decision --&amp;gt; Customer_USD : &amp;#34;Choose Customer\n+ USD&amp;#34;
+ Role_Decision --&amp;gt; Supplier_JPY : &amp;#34;Choose Supplier\n+ JPY&amp;#34;
+ Role_Decision --&amp;gt; Employee : &amp;#34;Choose Employee\n(any curr)&amp;#34;
+
+ state Customer_EUR {
+ [*] --&amp;gt; Validate_EUR
+ Validate_EUR --&amp;gt; Create_C_EUR : &amp;#34;No other Customer\nwith EUR ?&amp;#34;
+ Create_C_EUR --&amp;gt; [*]
+ Validate_EUR --&amp;gt; [*] : &amp;#34;Duplicate EUR\n→ Throw&amp;#34;
+ }
+
+ state Customer_USD {
+ [*] --&amp;gt; Validate_USD
+ Validate_USD --&amp;gt; Create_C_USD : &amp;#34;No other Customer\nwith USD ?&amp;#34;
+ Create_C_USD --&amp;gt; [*]
+ Validate_USD --&amp;gt; [*] : &amp;#34;Duplicate USD\n→ Throw&amp;#34;
+ }
+
+ state Supplier_JPY {
+ [*] --&amp;gt; Validate_JPY
+ Validate_JPY --&amp;gt; Create_S_JPY : &amp;#34;No other Supplier\nwith JPY ?&amp;#34;
+ Create_S_JPY --&amp;gt; [*]
+ Validate_JPY --&amp;gt; [*] : &amp;#34;Duplicate JPY\n→ Throw&amp;#34;
+ }
+
+ %% GL tagging happens automatically
+ Customer_EUR --&amp;gt; GL_Entry_EUR : &amp;#34;Sales Invoice\nsubmitted&amp;#34;
+ Customer_USD --&amp;gt; GL_Entry_USD : &amp;#34;Sales Invoice\nsubmitted&amp;#34;
+ Supplier_JPY --&amp;gt; GL_Entry_JPY : &amp;#34;Purchase Invoice\nsubmitted&amp;#34;
+
+ state GL_Entry_EUR {
+ [*] --&amp;gt; Tag_PM_EUR
+ Tag_PM_EUR --&amp;gt; [*]
+ }
+ state GL_Entry_USD {
+ [*] --&amp;gt; Tag_PM_USD
+ Tag_PM_USD --&amp;gt; [*]
+ }
+ state GL_Entry_JPY {
+ [*] --&amp;gt; Tag_PM_JPY
+ Tag_PM_JPY --&amp;gt; [*]
+ }
+
+ %% Final aggregated state
+ GL_Entry_EUR --&amp;gt; One_Statement : &amp;#34;Party Master\nStatement&amp;#34;
+ GL_Entry_USD --&amp;gt; One_Statement
+ GL_Entry_JPY --&amp;gt; One_Statement
+
+ One_Statement --&amp;gt; [*] : &amp;#34;Multi-currency\nnet exposure&amp;#34;&lt;/pre&gt;</description></item><item><title>Why we Built UPH</title><link>https://sendipad.github.io/uph/docs/Advanced/why_we_built_uph/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sendipad.github.io/uph/docs/Advanced/why_we_built_uph/</guid><description>&lt;p&gt;Unified Party Hub (UPH)
+One master record to rule Customers, Suppliers, Employees and every other party with all its variant like currencies,subsidary..etc.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;What is UPH?
+UPH is a single source of truth for every legal / commercial entity that ever transacts with your company.
+Instead of maintaining a separate master for Customer, Supplier, Employee, etc., you create one Party Master and link it to as many roles (Customer, Supplier, Employee, Shareholder …) as you need.&lt;/li&gt;
+&lt;li&gt;Why did we build it?&lt;/li&gt;
+&lt;/ul&gt;
+&lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Pain in vanilla ERPNext&lt;/th&gt;
+ &lt;th&gt;How UPH fixes it&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ &lt;tr&gt;
+ &lt;td&gt;One real-world company = 3 masters: Customer “ABC”-Currency USD, Customer “ABC”-Currency SAR,Customer “ABC”-Currency EUR&lt;/td&gt;
+ &lt;td&gt;One Party Master “ABC Corp.” linked to Customers,with all its currencies&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;One real-world company = 3 masters: Customer “ABC”, Supplier “ABC”, Employee “John”&lt;/td&gt;
+ &lt;td&gt;One Party Master “ABC Corp.” linked to Customer, Supplier, Employee roles&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;Changing address / tax-id must be done in N places&lt;/td&gt;
+ &lt;td&gt;Edit once in Party Master – changes cascade automatically&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;No tree view for parties&lt;/td&gt;
+ &lt;td&gt;Native Nested-Set (lft/rgt) tree – groups, divisions, subsidiaries&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;No easy way to see “all balances for one real party”&lt;/td&gt;
+ &lt;td&gt;Every GL entry is tagged with Party Master – one click statement&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;Duplicated custom fields on every party doctype&lt;/td&gt;
+ &lt;td&gt;Centralised field set, synced down to role doctypes&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>Background Sync Logic</title><link>https://sendipad.github.io/uph/docs/Advanced/background_sync_party_master_field_following_change_on_party/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sendipad.github.io/uph/docs/Advanced/background_sync_party_master_field_following_change_on_party/</guid><description>&lt;h1 id="background-sync--transactional-integrity"&gt;Background Sync &amp;amp; transactional integrity&lt;a class="anchor" href="#background-sync--transactional-integrity"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;One of the core promises of UPH is that every transactional document (Invoice, Order, Entry) is tagged with the correct &lt;code&gt;Party Master&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id="how-it-works"&gt;How it works&lt;a class="anchor" href="#how-it-works"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;When you link a Party Master to a Customer or Supplier, the system triggers a background synchronization process to ensure data consistency.&lt;/p&gt;
+&lt;h3 id="1-the-trigger"&gt;1. The Trigger&lt;a class="anchor" href="#1-the-trigger"&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;The sync is triggered in two main scenarios:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Linking&lt;/strong&gt;: When a &lt;code&gt;Customer&lt;/code&gt; is first linked to a &lt;code&gt;Party Master&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Merging&lt;/strong&gt;: When two &lt;code&gt;Party Masters&lt;/code&gt; are merged (via the Data Quality Dashboard).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="2-the-background-job"&gt;2. The Background Job&lt;a class="anchor" href="#2-the-background-job"&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;To prevent timeouts on large databases, the update happens via a queued background job (&lt;code&gt;uph.party.controllers.mdm._update_party_master_references&lt;/code&gt; or similar).&lt;/p&gt;</description></item><item><title>API Reference</title><link>https://sendipad.github.io/uph/docs/Advanced/api-reference/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sendipad.github.io/uph/docs/Advanced/api-reference/</guid><description>&lt;h1 id="api-reference"&gt;API Reference&lt;a class="anchor" href="#api-reference"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;UPH exposes several API endpoints and utility functions for integrations and customizations.&lt;/p&gt;
+&lt;h2 id="whitelisted-methods"&gt;Whitelisted Methods&lt;a class="anchor" href="#whitelisted-methods"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;h3 id="party-management"&gt;Party Management&lt;a class="anchor" href="#party-management"&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;h4 id="uphpartycontrollerspartyget_party_details"&gt;&lt;code&gt;uph.party.controllers.party.get_party_details&lt;/code&gt;&lt;a class="anchor" href="#uphpartycontrollerspartyget_party_details"&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;p&gt;Overrides standard ERPNext logic to inject Party Master data (Addresses, Contacts) into transactions.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#78787e"&gt;# Example usage in custom script&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;details &lt;span style="color:#ff6ac1"&gt;=&lt;/span&gt; frappe&lt;span style="color:#ff6ac1"&gt;.&lt;/span&gt;call(&lt;span style="color:#5af78e"&gt;&amp;#39;uph.party.controllers.party.get_party_details&amp;#39;&lt;/span&gt;, {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#5af78e"&gt;&amp;#39;party&amp;#39;&lt;/span&gt;: &lt;span style="color:#5af78e"&gt;&amp;#39;Customer001&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#5af78e"&gt;&amp;#39;party_type&amp;#39;&lt;/span&gt;: &lt;span style="color:#5af78e"&gt;&amp;#39;Customer&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#5af78e"&gt;&amp;#39;company&amp;#39;&lt;/span&gt;: &lt;span style="color:#5af78e"&gt;&amp;#39;My Company&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;})&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id="uphpartycontrollerspartyset_party_master"&gt;&lt;code&gt;uph.party.controllers.party.set_party_master&lt;/code&gt;&lt;a class="anchor" href="#uphpartycontrollerspartyset_party_master"&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;p&gt;Link selected parties to a Party Master.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;frappe&lt;span style="color:#ff6ac1"&gt;.&lt;/span&gt;call(&lt;span style="color:#5af78e"&gt;&amp;#39;uph.party.controllers.party.set_party_master&amp;#39;&lt;/span&gt;, {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#5af78e"&gt;&amp;#39;selection&amp;#39;&lt;/span&gt;: [
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {&lt;span style="color:#5af78e"&gt;&amp;#39;party_type&amp;#39;&lt;/span&gt;: &lt;span style="color:#5af78e"&gt;&amp;#39;Customer&amp;#39;&lt;/span&gt;, &lt;span style="color:#5af78e"&gt;&amp;#39;name&amp;#39;&lt;/span&gt;: &lt;span style="color:#5af78e"&gt;&amp;#39;Customer001&amp;#39;&lt;/span&gt;},
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {&lt;span style="color:#5af78e"&gt;&amp;#39;party_type&amp;#39;&lt;/span&gt;: &lt;span style="color:#5af78e"&gt;&amp;#39;Supplier&amp;#39;&lt;/span&gt;, &lt;span style="color:#5af78e"&gt;&amp;#39;name&amp;#39;&lt;/span&gt;: &lt;span style="color:#5af78e"&gt;&amp;#39;Supplier001&amp;#39;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; ],
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#5af78e"&gt;&amp;#39;party_master&amp;#39;&lt;/span&gt;: &lt;span style="color:#5af78e"&gt;&amp;#39;PM-001&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;})&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="data-quality--mdm"&gt;Data Quality &amp;amp; MDM&lt;a class="anchor" href="#data-quality--mdm"&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;h4 id="uphpartycontrollersmdmnormalize_text"&gt;&lt;code&gt;uph.party.controllers.mdm.normalize_text&lt;/code&gt;&lt;a class="anchor" href="#uphpartycontrollersmdmnormalize_text"&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;p&gt;Normalize text for fuzzy matching (removes diacritics, unifies characters).&lt;/p&gt;</description></item></channel></rss>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Customer on Unified Party Hub</title><link>https://sendipad.github.io/uph/categories/Customer/</link><description>Recent content in Customer on Unified Party Hub</description><generator>Hugo</generator><language>en</language><atom:link href="https://sendipad.github.io/uph/categories/Customer/index.xml" rel="self" type="application/rss+xml"/><item><title>Migrate 1,000+ Customers to Party Master (with Multi-Currency Support)</title><link>https://sendipad.github.io/uph/docs/usecases/integrate_party_master_on_production_site_with_more_than_1000_customers/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sendipad.github.io/uph/docs/usecases/integrate_party_master_on_production_site_with_more_than_1000_customers/</guid><description>&lt;blockquote class='book-hint note'&gt;
+&lt;p&gt;&lt;strong&gt;Case:&lt;/strong&gt; You operate a production site with &lt;strong&gt;1,000+ Customers&lt;/strong&gt;.&lt;br&gt;
+Many of them belong to the same commercial entity but use different &lt;strong&gt;default currencies&lt;/strong&gt;.&lt;br&gt;
+You want to migrate all customers into the new &lt;strong&gt;Party Master&lt;/strong&gt; structure quickly, accurately, and without data loss.&lt;/p&gt;&lt;/blockquote&gt;&lt;h2 id="goal"&gt;Goal&lt;a class="anchor" href="#goal"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Enable a smooth migration where:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Multiple customer records belonging to the same entity become a single &lt;strong&gt;Party Master&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;Currency-specific customer entries become &lt;strong&gt;Linked Parties&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;All invoices, GL Entries, and balances remain intact&lt;/li&gt;
+&lt;li&gt;The system becomes cleaner, consistent, and easier to maintain at scale&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="1-enable-multi-party-mode"&gt;1. Enable Multi-Party Mode&lt;a class="anchor" href="#1-enable-multi-party-mode"&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Go to &lt;strong&gt;Party Master Settings → Party Type (Table)&lt;/strong&gt;&lt;/p&gt;</description></item></channel></rss>

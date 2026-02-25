@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Docs on Unified Party Hub</title><link>https://sendipad.github.io/uph/ar/docs/</link><description>Recent content in Docs on Unified Party Hub</description><generator>Hugo</generator><language>ar</language><atom:link href="https://sendipad.github.io/uph/ar/docs/index.xml" rel="self" type="application/rss+xml"/><item><title>نبذة عن منصة توحيد الأطراف</title><link>https://sendipad.github.io/uph/ar/docs/introduction/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sendipad.github.io/uph/ar/docs/introduction/</guid><description>&lt;h1 id="منصة-توحيد-الأطراف-unified-party-hub"&gt;منصة توحيد الأطراف (Unified Party Hub)&lt;a class="anchor" href="#%d9%85%d9%86%d8%b5%d8%a9-%d8%aa%d9%88%d8%ad%d9%8a%d8%af-%d8%a7%d9%84%d8%a3%d8%b7%d8%b1%d8%a7%d9%81-unified-party-hub"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;h2 id="مقدمة"&gt;مقدمة&lt;a class="anchor" href="#%d9%85%d9%82%d8%af%d9%85%d8%a9"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;تواجه الشركات الصغيرة والمتوسطة تحديات متكرّرة عند إدارة بيانات العملاء والموردين والجهات الأخرى داخل أنظمة ERPNext.&lt;/p&gt;
+&lt;blockquote class="book-hint warning"&gt;
+
+
+&lt;p&gt;&lt;strong&gt;مشكلات واقعية تواجه الشركات:&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;الحاجة إلى &lt;strong&gt;دعم تعدد العملات بشكل كامل&lt;/strong&gt; في جميع التعاملات والتقارير.&lt;/li&gt;
+&lt;li&gt;صعوبة الحصول على &lt;strong&gt;تقارير مالية موحدة ودقيقة&lt;/strong&gt; تربط كل أنواع الأطراف.&lt;/li&gt;
+&lt;li&gt;تكرار بيانات الأطراف في أكثر من مكان داخل النظام.&lt;/li&gt;
+&lt;li&gt;عدم وجود &lt;strong&gt;بعد محاسبي مخصص&lt;/strong&gt; يمكن استخدامه لتحليل الأداء المالي للأطراف.&lt;/li&gt;
+&lt;li&gt;مشكلة &lt;strong&gt;تعدد الأدوار (Role Type)&lt;/strong&gt; للطرف الواحد (عميل + مورد + موظف).&lt;/li&gt;
+&lt;li&gt;ضعف المرونة لتطبيق نفس الفكرة في مجالات أخرى كالمستشفيات أو الجمعيات أو الشركاء التجاريين.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;h2 id="الحل"&gt;الحل&lt;a class="anchor" href="#%d8%a7%d9%84%d8%ad%d9%84"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;blockquote class="book-hint info"&gt;
+
+
+&lt;p&gt;تقدّم &lt;strong&gt;منصة توحيد الأطراف (Unified Party Hub)&lt;/strong&gt; إطاراً موحداً لإدارة جميع الأطراف في سجل رئيسي واحد يسمى &lt;strong&gt;Party Master&lt;/strong&gt;.&lt;/p&gt;</description></item><item><title>إعدادات الطرف الرئيسي</title><link>https://sendipad.github.io/uph/ar/docs/Settings/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sendipad.github.io/uph/ar/docs/Settings/</guid><description>&lt;blockquote class="book-hint info"&gt;
+
+&lt;strong&gt;عند تثبيت التطبيق&lt;/strong&gt;، ستكون معظم الإعدادات متاحة بشكل &lt;strong&gt;ديناميكي&lt;/strong&gt;. &lt;strong&gt;عليك فقط أن تتعلم المزيد&lt;/strong&gt; لضمان سير كل شيء بسلاسة.
+&lt;/blockquote&gt;
+&lt;h2 id="إعدادات-الطرف-الرئيسي-party-master-settings--جدول-أنواع-الأطراف-party-types"&gt;إعدادات الطرف الرئيسي (Party Master Settings) → جدول &lt;strong&gt;أنواع الأطراف&lt;/strong&gt; (Party Types)&lt;a class="anchor" href="#%d8%a5%d8%b9%d8%af%d8%a7%d8%af%d8%a7%d8%aa-%d8%a7%d9%84%d8%b7%d8%b1%d9%81-%d8%a7%d9%84%d8%b1%d8%a6%d9%8a%d8%b3%d9%8a-party-master-settings--%d8%ac%d8%af%d9%88%d9%84-%d8%a3%d9%86%d9%88%d8%a7%d8%b9-%d8%a7%d9%84%d8%a3%d8%b7%d8%b1%d8%a7%d9%81-party-types"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;سيتم تعيين جميع أنواع الأطراف من أنواع الأطراف في ERPNext هنا.&lt;/p&gt;
+&lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th style="text-align: left"&gt;العمود&lt;/th&gt;
+ &lt;th style="text-align: left"&gt;المعنى&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ &lt;tr&gt;
+ &lt;td style="text-align: left"&gt;&lt;strong&gt;إلزامي (Mandatory)&lt;/strong&gt;&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;يصبح &lt;strong&gt;الطرف الرئيسي&lt;/strong&gt; &lt;strong&gt;مطلوبًا&lt;/strong&gt; عند حفظ عميل/مورد/&amp;hellip;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td style="text-align: left"&gt;&lt;strong&gt;السماح بأطراف متعددة (Allow Multi Party)&lt;/strong&gt;&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;يمكن لأكثر من عميل (أو مورد) الإشارة إلى &lt;strong&gt;نفس الطرف الرئيسي&lt;/strong&gt; – يتم التمييز بينها بواسطة &lt;strong&gt;حقل القاعدة (Rule Field)&lt;/strong&gt; (على سبيل المثال: &lt;code&gt;default_currency&lt;/code&gt;)&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;hr&gt;
+&lt;h2 id="أنواع-مستندات-المعاملات-transaction-doctypes"&gt;أنواع مستندات المعاملات (Transaction doctypes)&lt;a class="anchor" href="#%d8%a3%d9%86%d9%88%d8%a7%d8%b9-%d9%85%d8%b3%d8%aa%d9%86%d8%af%d8%a7%d8%aa-%d8%a7%d9%84%d9%85%d8%b9%d8%a7%d9%85%d9%84%d8%a7%d8%aa-transaction-doctypes"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;إعدادات الطرف الرئيسي (Party Master Settings) → جدول &lt;strong&gt;أنواع المستندات&lt;/strong&gt; (Document Types)&lt;/p&gt;</description></item></channel></rss>

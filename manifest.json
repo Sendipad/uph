@@ -1,0 +1,15 @@
+{
+  "name": "Unified Party Hub",
+  "short_name": "Unified Party Hub",
+  "start_url": "/uph/",
+  "scope": "/uph/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/uph/favicon.svg",
+      "sizes": "512x512"
+    }
+  ]
+}

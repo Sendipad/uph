@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Multi-Currencies on Unified Party Hub</title><link>https://sendipad.github.io/uph/categories/Multi-Currencies/</link><description>Recent content in Multi-Currencies on Unified Party Hub</description><generator>Hugo</generator><language>en</language><atom:link href="https://sendipad.github.io/uph/categories/Multi-Currencies/index.xml" rel="self" type="application/rss+xml"/><item><title>Supplier invoice you in EUR, USD and AED</title><link>https://sendipad.github.io/uph/docs/usecases/supplier_multi_currency_invoices/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sendipad.github.io/uph/docs/usecases/supplier_multi_currency_invoices/</guid><description>&lt;blockquote class="book-hint danger"&gt;
+ 
+&lt;strong&gt;Case:&lt;/strong&gt; 
+Supplier (Alpha Export LLC) invoices you in &lt;strong&gt;EUR, USD&lt;/strong&gt; and &lt;strong&gt; AED &lt;/strong&gt; &lt;br&gt;
+This guide shows how to configure a multi-currency supplier and record transactions accurately.
+&lt;/blockquote&gt;
+&lt;div class="book-steps"&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;h2 id="enable-multi-party-mode"&gt;Enable Multi-Party Mode.&lt;a class="anchor" href="#enable-multi-party-mode"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Go to Party Master Settings → Party Type (Table)
+&lt;strong&gt;Supplier&lt;/strong&gt; → &lt;strong&gt;Allow Multi Party&lt;/strong&gt; = ✅, &lt;strong&gt;Rule Field&lt;/strong&gt; = &lt;code&gt;default_currency&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;h2 id="create-the-party-master-and-its-linked-parties-supplier"&gt;Create the Party Master and its Linked Parties( Supplier).&lt;a class="anchor" href="#create-the-party-master-and-its-linked-parties-supplier"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Create Alpha Export LLC Party Master,as Supplier and from action menu create Link and select Currency, with a single click you can create linked supplier with all enabled currencies in your system.&lt;/p&gt;</description></item><item><title>Migrate 1,000+ Customers to Party Master (with Multi-Currency Support)</title><link>https://sendipad.github.io/uph/docs/usecases/integrate_party_master_on_production_site_with_more_than_1000_customers/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sendipad.github.io/uph/docs/usecases/integrate_party_master_on_production_site_with_more_than_1000_customers/</guid><description>&lt;blockquote class='book-hint note'&gt;
+&lt;p&gt;&lt;strong&gt;Case:&lt;/strong&gt; You operate a production site with &lt;strong&gt;1,000+ Customers&lt;/strong&gt;.&lt;br&gt;
+Many of them belong to the same commercial entity but use different &lt;strong&gt;default currencies&lt;/strong&gt;.&lt;br&gt;
+You want to migrate all customers into the new &lt;strong&gt;Party Master&lt;/strong&gt; structure quickly, accurately, and without data loss.&lt;/p&gt;&lt;/blockquote&gt;&lt;h2 id="goal"&gt;Goal&lt;a class="anchor" href="#goal"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Enable a smooth migration where:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Multiple customer records belonging to the same entity become a single &lt;strong&gt;Party Master&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;Currency-specific customer entries become &lt;strong&gt;Linked Parties&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;All invoices, GL Entries, and balances remain intact&lt;/li&gt;
+&lt;li&gt;The system becomes cleaner, consistent, and easier to maintain at scale&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="1-enable-multi-party-mode"&gt;1. Enable Multi-Party Mode&lt;a class="anchor" href="#1-enable-multi-party-mode"&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Go to &lt;strong&gt;Party Master Settings → Party Type (Table)&lt;/strong&gt;&lt;/p&gt;</description></item></channel></rss>

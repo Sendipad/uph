@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Migrations on Unified Party Hub</title><link>https://sendipad.github.io/uph/docs/migrations/</link><description>Recent content in Migrations on Unified Party Hub</description><generator>Hugo</generator><language>en</language><atom:link href="https://sendipad.github.io/uph/docs/migrations/index.xml" rel="self" type="application/rss+xml"/><item><title>Migrations &amp; History</title><link>https://sendipad.github.io/uph/docs/migrations/history/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sendipad.github.io/uph/docs/migrations/history/</guid><description>&lt;h1 id="migrations--patches"&gt;Migrations &amp;amp; Patches&lt;a class="anchor" href="#migrations--patches"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;UPH follows a strict versioning and migration strategy to ensure production safety.&lt;/p&gt;
+&lt;h2 id="version-316"&gt;Version 3.1.6&lt;a class="anchor" href="#version-316"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Refined Group Sync&lt;/strong&gt;: Fixed issues with target group existence validation.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Standardized Naming&lt;/strong&gt;: Enforced 2-letter capitalized prefix/suffix rule.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Performance&lt;/strong&gt;: Optimized tree balance queries using Redis caching.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="migration-flow"&gt;Migration Flow&lt;a class="anchor" href="#migration-flow"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;After Migrate Hook&lt;/strong&gt;: &lt;code&gt;uph.setup.install.on_migrate&lt;/code&gt; handles schema updates and index verification.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Fixtures&lt;/strong&gt;: Core workflows and roles are managed via fixtures for deployment stability.&lt;/li&gt;
+&lt;/ul&gt;</description></item></channel></rss>

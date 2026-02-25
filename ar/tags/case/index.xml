@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Case on Unified Party Hub</title><link>https://sendipad.github.io/uph/ar/tags/case/</link><description>Recent content in Case on Unified Party Hub</description><generator>Hugo</generator><language>ar</language><lastBuildDate>Fri, 14 Nov 2025 05:46:16 +0300</lastBuildDate><atom:link href="https://sendipad.github.io/uph/ar/tags/case/index.xml" rel="self" type="application/rss+xml"/><item><title>المورّد يصدر لك فاتورة بعملات يورو و دولار و درهم</title><link>https://sendipad.github.io/uph/ar/posts/Supplier_multicurrency_invoices/</link><pubDate>Wed, 02 Apr 2025 00:00:00 +0000</pubDate><guid>https://sendipad.github.io/uph/ar/posts/Supplier_multicurrency_invoices/</guid><description>&lt;blockquote class="book-hint info"&gt;
+ 
+المورّد &lt;strong&gt;Alpha Export LLC&lt;/strong&gt; يصدر لك فواتير بعملتي &lt;strong&gt;EUR&lt;/strong&gt; و&lt;strong&gt;USD&lt;/strong&gt;.
+&lt;/blockquote&gt;
+&lt;div class="book-steps"&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;h2 id="إعدادات-سجل-الأطراف--نوع-الطرف-الجدول"&gt;إعدادات سجل الأطراف → نوع الطرف (الجدول)&lt;a class="anchor" href="#%d8%a5%d8%b9%d8%af%d8%a7%d8%af%d8%a7%d8%aa-%d8%b3%d8%ac%d9%84-%d8%a7%d9%84%d8%a3%d8%b7%d8%b1%d8%a7%d9%81--%d9%86%d9%88%d8%b9-%d8%a7%d9%84%d8%b7%d8%b1%d9%81-%d8%a7%d9%84%d8%ac%d8%af%d9%88%d9%84"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Supplier&lt;/strong&gt; → &lt;strong&gt;Allow Multi Party&lt;/strong&gt; = ✅، &lt;strong&gt;Rule Field&lt;/strong&gt; = &lt;code&gt;default_currency&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;h2 id="انتقل-إلى-party-master-سجل-alpha-export-llc"&gt;انتقل إلى Party Master، سجل Alpha Export LLC&lt;a class="anchor" href="#%d8%a7%d9%86%d8%aa%d9%82%d9%84-%d8%a5%d9%84%d9%89-party-master-%d8%b3%d8%ac%d9%84-alpha-export-llc"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;أنشئ طرفًا جديدًا (الافتراضي Supplier) → &lt;strong&gt;العملة&lt;/strong&gt; = &lt;strong&gt;EUR&lt;/strong&gt; → &lt;strong&gt;حفظ&lt;/strong&gt;.&lt;br&gt;
+أعد إنشاء طرف آخر لنفس المورّد → &lt;strong&gt;العملة&lt;/strong&gt; = &lt;strong&gt;USD&lt;/strong&gt; → &lt;strong&gt;حفظ&lt;/strong&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;h2 id="انتقل-إلى-فاتورة-الشراء-purchase-invoice"&gt;انتقل إلى فاتورة الشراء (Purchase Invoice)&lt;a class="anchor" href="#%d8%a7%d9%86%d8%aa%d9%82%d9%84-%d8%a5%d9%84%d9%89-%d9%81%d8%a7%d8%aa%d9%88%d8%b1%d8%a9-%d8%a7%d9%84%d8%b4%d8%b1%d8%a7%d8%a1-purchase-invoice"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;اختر &lt;strong&gt;Alpha Export USD&lt;/strong&gt; → &lt;strong&gt;العملة&lt;/strong&gt; = &lt;strong&gt;USD&lt;/strong&gt; → &lt;strong&gt;اعتماد&lt;/strong&gt;.&lt;/p&gt;</description></item></channel></rss>

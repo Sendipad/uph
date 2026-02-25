@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Configuration on Unified Party Hub</title><link>https://sendipad.github.io/uph/docs/configuration/</link><description>Recent content in Configuration on Unified Party Hub</description><generator>Hugo</generator><language>en</language><atom:link href="https://sendipad.github.io/uph/docs/configuration/index.xml" rel="self" type="application/rss+xml"/><item><title>Configuration</title><link>https://sendipad.github.io/uph/docs/configuration/overview/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sendipad.github.io/uph/docs/configuration/overview/</guid><description>&lt;h1 id="configuration--governance"&gt;Configuration &amp;amp; Governance&lt;a class="anchor" href="#configuration--governance"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;UPH provides a centralized settings DocType &lt;code&gt;Party Master Settings&lt;/code&gt; to manage global behavior.&lt;/p&gt;
+&lt;h2 id="core-settings"&gt;Core Settings&lt;a class="anchor" href="#core-settings"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Override Party Details API&lt;/strong&gt;: Injects UPH intelligence into standard ERPNext flows.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Enforce Strict Currency Counting&lt;/strong&gt;: Prevents cross-currency accounting errors.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Sync ERP Party Naming&lt;/strong&gt;: Standardizes party naming across all roles.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="naming-rules"&gt;Naming Rules&lt;a class="anchor" href="#naming-rules"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;UPH enforces a standardized two-letter capitalized prefix/suffix rule (e.g., &lt;code&gt;Cu&lt;/code&gt; for Customer, &lt;code&gt;Su&lt;/code&gt; for Supplier) to ensure consistency across the ecosystem.&lt;/p&gt;</description></item></channel></rss>

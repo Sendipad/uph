@@ -1,0 +1,239 @@
+@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap");
+
+html,
+body,
+* {
+  font-family: "Cairo", sans-serif !important;
+}
+.badge {
+  padding: 0.2em 0.5em;
+  border-radius: 0.3em;
+  font-size: 0.8em;
+  color: #fff;
+}
+.badge.success {
+  background-color: #4caf50;
+}
+.badge.warning {
+  background-color: #ff9800;
+}
+
+/* Make sidebar a flex container, vertical */
+.custom-sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Docs tree takes remaining space */
+.custom-sidebar-menu .docs-tree {
+    flex: 1 1 auto;
+    overflow-y: auto; /* scroll if too long */
+}
+
+/* Custom links stay at bottom */
+.custom-sidebar-menu .custom-links-wrapper {
+    flex-shrink: 0;
+}
+
+/* Your existing styling for links */
+.custom-sidebar-menu ul.custom-links {
+    margin-top: 20px;
+    padding-left: 0;
+    list-style: none;
+}
+
+.custom-sidebar-menu ul.custom-links li a {
+    display: block;
+    padding: 5px 10px;
+    color: #007acc;
+    text-decoration: none;
+}
+
+.custom-sidebar-menu ul.custom-links li a:hover {
+    text-decoration: underline;
+}
+
+.custom-sidebar-menu .custom-links .static-text {
+    font-weight: bold;
+    margin: 10px 0 5px 0;
+    display: block;
+    padding-left: 10px;
+    color: #555;
+}
+
+
+.doc-ai-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin: 0 0 1rem 0;
+  flex-wrap: wrap;
+}
+
+.doc-ai-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e4e4e7;
+  background: #fafafa;
+  color: #27272a;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.doc-ai-btn:hover {
+  border-color: #a1a1aa;
+  background: #ffffff;
+  color: #111827;
+  text-decoration: none;
+}
+
+.doc-ai-btn.chatgpt:hover { border-color: #10a37f; color: #0f766e; }
+.doc-ai-btn.gemini:hover { border-color: #2563eb; color: #1d4ed8; }
+.doc-ai-btn.claude:hover { border-color: #9333ea; color: #7e22ce; }
+
+@media (max-width: 768px) {
+  .doc-ai-actions { justify-content: flex-start; }
+}
+
+
+.doc-breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.86rem;
+  color: #71717a;
+  margin-bottom: 0.75rem;
+}
+
+.doc-breadcrumbs a {
+  color: #4f46e5;
+  text-decoration: none;
+}
+
+.doc-breadcrumbs a:hover {
+  text-decoration: underline;
+}
+
+.doc-page-title {
+  margin-top: 0.75rem;
+}
+
+.doc-prev-next {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.doc-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid #e4e4e7;
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.8rem;
+  text-decoration: none;
+  font-weight: 600;
+  color: #18181b;
+  background: #fafafa;
+}
+
+.doc-nav-link:hover {
+  border-color: #a1a1aa;
+  background: #fff;
+}
+
+.doc-ai-btn svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.doc-ai-btn.chatgpt {
+  border-color: #10a37f33;
+}
+
+.doc-ai-btn.gemini {
+  border-color: #2563eb33;
+}
+
+.doc-ai-btn.claude {
+  border-color: #9333ea33;
+}
+
+.doc-page-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.doc-action-btn {
+  border: 1px solid #e4e4e7;
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: #fff;
+  color: #18181b;
+}
+
+.doc-action-btn.chatgpt:hover { border-color: #10a37f; }
+.doc-action-btn.claude:hover { border-color: #9333ea; }
+.doc-action-btn.edit:hover { border-color: #2563eb; }
+
+.mobile-doc-nav { display: none; }
+
+@media (max-width: 900px) {
+  .mobile-doc-nav {
+    display: block;
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0.9rem;
+    z-index: 60;
+  }
+
+  .mobile-doc-nav__trigger {
+    border: none;
+    border-radius: 999px;
+    background: #111827;
+    color: #fff;
+    padding: 0.7rem 1rem;
+    font-weight: 700;
+    box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  }
+
+  .mobile-doc-nav__sheet {
+    position: fixed;
+    left: 1rem;
+    right: 1rem;
+    bottom: 4.2rem;
+    background: #fff;
+    border: 1px solid #e4e4e7;
+    border-radius: 1rem;
+    box-shadow: 0 20px 40px rgba(0,0,0,.18);
+    padding: 0.75rem;
+  }
+
+  .mobile-doc-nav__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.6rem;
+  }
+
+  .mobile-doc-nav__content a {
+    display: block;
+    padding: 0.45rem 0.25rem;
+    text-decoration: none;
+  }
+}

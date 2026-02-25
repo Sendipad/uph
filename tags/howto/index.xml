@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Howto on Unified Party Hub</title><link>https://sendipad.github.io/uph/tags/howto/</link><description>Recent content in Howto on Unified Party Hub</description><generator>Hugo</generator><language>en</language><lastBuildDate>Fri, 14 Nov 2025 17:30:14 +0300</lastBuildDate><atom:link href="https://sendipad.github.io/uph/tags/howto/index.xml" rel="self" type="application/rss+xml"/><item><title>Supplier invoice you with EUR, USD and AED</title><link>https://sendipad.github.io/uph/posts/Supplier_with_multi_currency_invoices/</link><pubDate>Wed, 02 Apr 2025 00:00:00 +0000</pubDate><guid>https://sendipad.github.io/uph/posts/Supplier_with_multi_currency_invoices/</guid><description>&lt;blockquote class="book-hint warning"&gt;
+ 
+&lt;strong&gt; Case:&lt;/strong&gt; Supplier (Alpha Export LLC) invoices you in&lt;strong&gt;EUR&lt;/strong&gt; and &lt;strong&gt;USD&lt;/strong&gt;.
+&lt;/blockquote&gt;
+&lt;div class="book-steps"&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;h2 id="enable-multi-party-mode"&gt;Enable Multi-Party Mode.&lt;a class="anchor" href="#enable-multi-party-mode"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Go to Party Master Settings → Party Type (Table)
+&lt;strong&gt;Supplier&lt;/strong&gt; → &lt;strong&gt;Allow Multi Party&lt;/strong&gt; = ✅, &lt;strong&gt;Rule Field&lt;/strong&gt; = &lt;code&gt;default_currency&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;h2 id="create-the-party-master-and-its-linked-parties-supplier"&gt;Create the Party Master and its Linked Parties( Supplier).&lt;a class="anchor" href="#create-the-party-master-and-its-linked-parties-supplier"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Create Alpha Export LLC Party Master,as Supplier and from action menu create Link and select Currency, with a single click you can create linked supplier with all enabled currency in your system.&lt;/p&gt;</description></item></channel></rss>

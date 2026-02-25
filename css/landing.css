@@ -1,0 +1,130 @@
+/* Landing page specific styles (scoped) */
+.uph-landing {
+  display: grid;
+  gap: 2rem;
+}
+
+.uph-hero {
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  color: #f8fafc;
+  border-radius: 16px;
+  padding: 2rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.25);
+}
+
+.uph-hero h1 {
+  margin-bottom: 0.75rem;
+}
+
+.uph-hero p {
+  margin: 0.75rem 0;
+}
+
+.uph-badges img {
+  margin-right: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.uph-cta {
+  display: inline-block;
+  text-decoration: none;
+  background: #2563eb;
+  color: #fff !important;
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.uph-cta.secondary {
+  background: #334155;
+}
+
+.uph-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.uph-card {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 14px;
+  padding: 1rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.uph-card h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .uph-card {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.88), rgba(15, 23, 42, 0.88));
+    color: #e2e8f0;
+  }
+}
+
+/* Enhanced landing page styles for layouts/index.html */
+.hero,
+.section {
+  position: relative;
+}
+
+.hero-content.container,
+.section .container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.features-grid,
+.doctypes-grid,
+.usecases-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.feature-card,
+.doctype-card,
+.usecase-card {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 14px;
+  padding: 1rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.feature-icon,
+.doctype-icon,
+.usecase-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  margin-bottom: 0.5rem;
+}
+
+.feature-icon svg,
+.doctype-icon svg,
+.usecase-icon svg {
+  width: 2rem;
+  height: 2rem;
+  max-width: 2rem;
+  max-height: 2rem;
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+
+  .feature-card,
+  .doctype-card,
+  .usecase-card {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.88), rgba(15, 23, 42, 0.88));
+    color: #e2e8f0;
+  }
+}
