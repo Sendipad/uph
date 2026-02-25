@@ -4,10 +4,10 @@ title: "Unified Party Hub"
 
 <div class="uph-landing">
   <section class="uph-hero">
-    <h1>Unified Party Hub (UPH)</h1>
+    <h1>Centralized Identity & Unified Master Data</h1>
     <p>
-      A Frappe/ERPNext extension for centralized Party Master identity, role-aware party mapping,
-      advanced reporting, and data quality governance.
+      Elevate your ERPNet experience with the Unified Party Hub (UPH). Centralize Customer, Supplier, and Employee data into
+      a highly governable, verifiable, and unified Party Master identity model with advanced hierarchical accounting.
     </p>
 
     <p class="uph-badges">

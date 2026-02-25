@@ -51,7 +51,7 @@
   border: 1px solid rgba(148, 163, 184, 0.25);
   border-radius: 14px;
   padding: 1rem;
-  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,250,252,0.95));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
 }
 
@@ -62,7 +62,7 @@
 
 @media (prefers-color-scheme: dark) {
   .uph-card {
-    background: linear-gradient(180deg, rgba(30,41,59,0.88), rgba(15,23,42,0.88));
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.88), rgba(15, 23, 42, 0.88));
     color: #e2e8f0;
   }
 }
@@ -93,7 +93,7 @@
   border: 1px solid rgba(148, 163, 184, 0.25);
   border-radius: 14px;
   padding: 1rem;
-  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,250,252,0.95));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
 }
 
@@ -112,18 +112,19 @@
 .feature-icon svg,
 .doctype-icon svg,
 .usecase-icon svg {
-  width: 1.5rem;
-  height: 1.5rem;
-  max-width: 1.5rem;
-  max-height: 1.5rem;
+  width: 2rem;
+  height: 2rem;
+  max-width: 2rem;
+  max-height: 2rem;
   display: block;
 }
 
 @media (prefers-color-scheme: dark) {
+
   .feature-card,
   .doctype-card,
   .usecase-card {
-    background: linear-gradient(180deg, rgba(30,41,59,0.88), rgba(15,23,42,0.88));
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.88), rgba(15, 23, 42, 0.88));
     color: #e2e8f0;
   }
 }
