@@ -346,7 +346,11 @@ class DataQualityDashboard {
                             <div class="text-muted small">${dup.party_2 || '-'}</div>
                         </div>
                     </div>
-                    <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: flex-end; align-items: center;">
+                        <a href="/app/party-issue/${dup.name}" target="_blank" class="btn btn-default btn-sm" title="${__('Open Issue')}">
+                            <i class="fa fa-external-link"></i>
+                        </a>
+                        <div style="flex: 1;"></div>
                         <button class="btn btn-default btn-sm btn-dismiss" data-party1="${dup.party_1}" data-party2="${dup.party_2}">
                             ${__('Not a Duplicate')}
                         </button>
@@ -381,9 +385,10 @@ class DataQualityDashboard {
 
     dismiss_duplicate(party1, party2) {
         frappe.prompt({
-            label: __('Reason (optional)'),
+            label: __('Reason'),
             fieldname: 'reason',
-            fieldtype: 'Small Text'
+            fieldtype: 'Small Text',
+            reqd: 1
         }, (values) => {
             frappe.call({
                 method: 'uph.party.page.data_quality_dashboard.data_quality_dashboard.dismiss_duplicate',
@@ -535,7 +540,10 @@ class DataQualityDashboard {
                         <span class="indicator-pill" style="font-size: 0.8rem;">${item.role_doctype}</span>
                     </div>
                     <div style="flex: 1;">${item.currency || '-'}</div>
-                    <div style="flex: 1; text-align: right;">
+                    <div style="flex: 1; text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        <a href="/app/party-issue/${item.issue}" target="_blank" class="btn btn-default btn-xs" title="${__('Open Issue')}">
+                            <i class="fa fa-external-link"></i>
+                        </a>
                         <button class="btn btn-default btn-xs btn-suggest" data-doctype="${item.role_doctype}" data-name="${item.role_name}" data-display="${item.display_name}">
                             ${__('Find & Link')}
                         </button>
@@ -741,7 +749,12 @@ class DataQualityDashboard {
                         <span class="indicator-pill" style="font-size: 0.8rem;">${__(item.role_doctype)}</span>
                     </div>
                     <div style="flex: 1;">${item.creation ? frappe.datetime.global_date_format(item.creation) : '-'}</div>
-                    <div style="flex: 1; text-align: right;">
+                    <div style="flex: 1; text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        ${item.issue_name ? `
+                            <a href="/app/party-issue/${item.issue_name}" target="_blank" class="btn btn-default btn-xs" title="${__('Open Issue')}">
+                                <i class="fa fa-external-link"></i>
+                            </a>
+                        ` : ''}
                         <button class="btn btn-default btn-xs btn-suggest" data-doctype="${item.role_doctype}" data-name="${item.role_name}" data-display="${item.display_name}">
                             ${__('Link')}
                         </button>
@@ -990,6 +1003,9 @@ class DataQualityDashboard {
 
                     // Always allow explicit dismiss from the dashboard
                     actions_html += `
+                        <a href="/app/party-issue/${v.issue_name}" target="_blank" class="btn btn-default btn-xs" title="${__('Open Issue')}" style="margin-left: 4px;">
+                            <i class="fa fa-external-link"></i>
+                        </a>
                         <button class="btn btn-default btn-xs btn-action" data-action="dismiss" data-issue="${v.issue_name}" title="${__('Ignore Issue')}" style="margin-left: 4px;">
                             <i class="fa fa-times"></i>
                         </button>
@@ -1024,16 +1040,11 @@ class DataQualityDashboard {
                     const action = $btn.data('action');
                     const issue = $btn.data('issue');
 
-                    let confirm_msg = '';
-                    if (action === 'submit') confirm_msg = __('Are you sure you want to permanently Submit this document?');
-                    if (action === 'cancel') confirm_msg = __('Are you sure you want to permanently Cancel this document?');
-                    if (action === 'dismiss') confirm_msg = __('Ignore this issue? It won\'t show up again until re-scanned.');
-
-                    frappe.confirm(confirm_msg, () => {
+                    const resolve = (reason = null) => {
                         $btn.prop('disabled', true);
                         frappe.call({
                             method: 'uph.party.controllers.transaction_health.resolve_health_issue',
-                            args: { issue_name: issue, action: action },
+                            args: { issue_name: issue, action: action, reason: reason },
                             callback: (res) => {
                                 if (res.message && res.message.success) {
                                     $btn.closest('.health-issue-row').fadeOut(300, function () { $(this).remove(); });
@@ -1045,7 +1056,26 @@ class DataQualityDashboard {
                                 }
                             }
                         });
-                    });
+                    };
+
+                    if (action === 'dismiss') {
+                        frappe.prompt({
+                            label: __('Reason for Ignoring'),
+                            fieldname: 'reason',
+                            fieldtype: 'Small Text',
+                            reqd: 1
+                        }, (values) => {
+                            resolve(values.reason);
+                        }, __('Ignore Issue'), __('Ignore'));
+                    } else {
+                        let confirm_msg = '';
+                        if (action === 'submit') confirm_msg = __('Are you sure you want to permanently Submit this document?');
+                        if (action === 'cancel') confirm_msg = __('Are you sure you want to permanently Cancel this document?');
+
+                        frappe.confirm(confirm_msg, () => {
+                            resolve();
+                        });
+                    }
                 });
             }
         });

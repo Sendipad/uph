@@ -71,9 +71,30 @@ def create_party_issue_if_missing(
         filters["reference_doctype"] = reference_doctype
         filters["reference_name"] = reference_name
 
-    existing = frappe.db.get_value("Party Issue", filters, "name")
-    if existing:
-        return existing, False
+    existing_doc = frappe.db.get_value(
+        "Party Issue",
+        filters,
+        ["name", "severity", "score", "details_json"],
+        as_dict=True,
+    )
+
+    new_details_json = (
+        json.dumps(details) if isinstance(details, (dict, list)) else details
+    )
+
+    if existing_doc:
+        updates = {}
+        if existing_doc.severity != severity:
+            updates["severity"] = severity
+        if score is not None and getattr(existing_doc, "score", None) != score:
+            updates["score"] = score
+        if existing_doc.details_json != new_details_json:
+            updates["details_json"] = new_details_json
+
+        if updates:
+            frappe.db.set_value("Party Issue", existing_doc.name, updates)
+
+        return existing_doc.name, False
 
     doc = frappe.get_doc(
         {
@@ -85,9 +106,7 @@ def create_party_issue_if_missing(
             "score": score,
             "reference_doctype": reference_doctype,
             "reference_name": reference_name,
-            "details_json": (
-                json.dumps(details) if isinstance(details, (dict, list)) else details
-            ),
+            "details_json": new_details_json,
             "source_engine": source_engine,
             "detected_on": now_datetime(),
         }

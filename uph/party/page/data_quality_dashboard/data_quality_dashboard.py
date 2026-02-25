@@ -29,6 +29,7 @@ def get_duplicate_issues(
     duplicates = frappe.get_all(
         "Party Issue",
         fields=[
+            "name",
             "party_master",
             "reference_doctype",
             "reference_name",
@@ -242,6 +243,23 @@ def get_unlinked_voucher_issues(
         {"limit": limit, "offset": offset, "party_master": party_master},
         as_dict=True,
     )
+
+    if rows:
+        # Bulk lookup Party Issues for these vouchers
+        vouchers = [(r.role_doctype, r.role_name) for r in rows]
+        issues = frappe.get_all(
+            "Party Issue",
+            filters={
+                "issue_type": "Unlinked",
+                "status": ["in", ["Open", "Under Review"]],
+                "reference_doctype": ["in", [v[0] for v in vouchers]],
+                "reference_name": ["in", [v[1] for v in vouchers]],
+            },
+            fields=["name", "reference_doctype", "reference_name"],
+        )
+        issue_map = {(i.reference_doctype, i.reference_name): i.name for i in issues}
+        for r in rows:
+            r.issue_name = issue_map.get((r.role_doctype, r.role_name))
 
     return {"unlinked": rows, "total": total}
 

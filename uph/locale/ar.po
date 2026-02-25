@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-23 23:09+0307\n"
+"POT-Creation-Date: 2026-02-25 22:37+0307\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -48,13 +48,18 @@ msgstr "<b>التحقق</b>: سيقوم النظام تلقائيًا بربط �
 
 #. Header text in the Party Workspace
 #: uph/party/workspace/party/party.json
-msgid "<span class=\"h4\"><b>اختصاراتك</b></span>"
-msgstr "<span class=\"h4\"><b>اختصاراتك</b></span>"
+msgid "<span class=\"h4\">Business Intelligence</span>"
+msgstr ""
 
 #. Header text in the Party Workspace
 #: uph/party/workspace/party/party.json
-msgid "<span class=\"h4\"><b>التقارير والبيانات الرئيسية</b></span>"
-msgstr "<span class=\"h4\"><b>التقارير والبيانات الرئيسية</b></span>"
+msgid "<span class=\"h4\">Data &amp; Reports</span>"
+msgstr ""
+
+#. Header text in the Party Workspace
+#: uph/party/workspace/party/party.json
+msgid "<span class=\"h4\">Shortcuts</span>"
+msgstr ""
 
 #: uph/public/js/utils/party_master_manager.js:52
 #: uph/public/js/utils/party_master_manager.js:121
@@ -143,10 +148,10 @@ msgstr "الإجراء الذي يجب اتخاذه عند اكتشاف تكرا
 
 #: uph/party/doctype/party_issue/party_issue.js:13
 #: uph/party/doctype/party_issue/party_issue.js:28
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:516
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:722
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:871
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:956
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:521
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:730
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:884
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:969
 #: uph/public/js/utils/utils.js:71 uph/public/js/utils/utils.js:158
 #: uph/public/js/utils/utils.js:198
 msgid "Actions"
@@ -228,7 +233,7 @@ msgstr "كل العملات"
 msgid "All related parties have already been added."
 msgstr "تمت إضافة جميع الأطراف ذات الصلة بالفعل."
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:510
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:515
 msgid "All role records are linked to a Party Master"
 msgstr "جميع سجلات الأدوار مرتبطة بطرف رئيسي"
 
@@ -280,7 +285,7 @@ msgstr "المشتريات السنوية: {0}"
 msgid "Annual Sales: {0}"
 msgstr "المبيعات السنوية: {0}"
 
-#: uph/party/doctype/party_master/party_master.py:154
+#: uph/party/doctype/party_master/party_master.py:191
 msgid "Any"
 msgstr "أي"
 
@@ -300,7 +305,7 @@ msgstr "ينطبق على الشركات"
 msgid "Applicable for ownership/investment relationships"
 msgstr "ينطبق على علاقات الملكية/الاستثمار"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1141
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1171
 msgid "Apply"
 msgstr "تطبيق"
 
@@ -315,19 +320,19 @@ msgstr "معتمد"
 msgid "Archived"
 msgstr "أرشفة"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:658
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:666
 msgid "Are you sure you want to create a new Party Master for {0}?"
 msgstr "هل أنت متأكد من رغبتك في إنشاء طرف رئيسي جديد لـ {0}؟"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:452
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:457
 msgid "Are you sure you want to merge {0} into {1}? This action cannot be undone."
 msgstr "هل أنت متأكد أنك تريد دمج {0} في {1}؟ لا يمكن التراجع عن هذا الإجراء."
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1029
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1073
 msgid "Are you sure you want to permanently Cancel this document?"
 msgstr "هل أنت متأكد من رغبتك في إلغاء هذا المستند بشكل نهائي؟"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1028
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1072
 msgid "Are you sure you want to permanently Submit this document?"
 msgstr "هل أنت متأكد من رغبتك في ترحيل هذا المستند بشكل نهائي؟"
 
@@ -403,7 +408,7 @@ msgstr "وحدة تجارية"
 msgid "Buying"
 msgstr "الشراء"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:732
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:740
 msgid "By"
 msgstr "بواسطة"
 
@@ -412,12 +417,12 @@ msgstr "بواسطة"
 msgid "Bypass Role"
 msgstr "دور التخطي"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:984
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:997
 #: uph/public/js/utils/party.js:1141
 msgid "Cancel"
 msgstr "ملغا"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:871
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:884
 msgid "Cancelled"
 msgstr "ملغي"
 
@@ -426,19 +431,19 @@ msgstr "ملغي"
 msgid "Cancelled Reference Grace (Days)"
 msgstr "فترة السماح للمراجع الملغاة (أيام)"
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:63
+#: uph/party/doctype/party_master_settings/party_master_settings.py:106
 msgid "Cannot change '{0}' after setup is finished. Uncheck 'Setup Finished' first."
 msgstr "لا يمكن تغيير '{0}' بعد انتهاء الإعداد. قم بإلغاء تحديد 'تم الإعداد' أولاً."
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:424
+#: uph/party/doctype/party_master_settings/party_master_settings.py:467
 msgid "Cannot create Party Master field in {0}"
 msgstr "لا يمكن انشاء حقل الطرف في"
 
-#: uph/party/doctype/party_master/party_master.py:696
+#: uph/party/doctype/party_master/party_master.py:733
 msgid "Cannot create a leaf Party Master without a parent group"
 msgstr "لا يمكن إنشاء طرف رئيسي فرعي بدون مجموعة أب"
 
-#: uph/party/doctype/party_master/party_master.py:355
+#: uph/party/doctype/party_master/party_master.py:392
 msgid "Cannot delete Party Master that is linked to other Parties"
 msgstr "لا يمكن حذف الطرف حيث انه مربوط باطراف محاسبية."
 
@@ -450,7 +455,7 @@ msgstr "لا يمكن الحذف لأن هذا البعد المحاسبي لل�
 msgid "Cannot merge a Party Master with itself"
 msgstr "لا يمكن دمج طرف رئيسي مع نفسه"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:412
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:417
 msgid "Cannot merge a party with itself."
 msgstr "لا يمكن دمج طرف مع نفسه."
 
@@ -540,7 +545,7 @@ msgstr "تم إنشاء النص البرمجي للعميل!"
 msgid "Client Script Generator"
 msgstr "مولد النصوص البرمجية للعميل"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:938
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:951
 #: uph/public/js/utils/party.js:1048
 msgid "Close"
 msgstr "إغلاق"
@@ -662,7 +667,7 @@ msgstr "التعاون"
 msgid "Cost Center"
 msgstr "مركز تكلفة"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:784
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:797
 msgid "Could not determine the underlying party role (Customer/Supplier) for {0}"
 msgstr "تعذر تحديد دور الطرف الأساسي (عميل/مورد) لـ {0}"
 
@@ -685,7 +690,7 @@ msgstr "دائن"
 msgid "Create & Save"
 msgstr "إنشاء وحفظ"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:645
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:653
 #: uph/public/js/utils/utils.js:106
 msgid "Create New Party Master"
 msgstr "إنشاء طرف رئيسي"
@@ -709,11 +714,11 @@ msgstr "إنشاء طرف للطرف الرئيسي"
 msgid "Create Party for Party Master {0}?"
 msgstr "هل تريد إنشاء طرف للطرف الرئيسي {0}؟"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:645
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:653
 msgid "Create a new Party Master for this record automatically"
 msgstr "إنشاء طرف رئيسي جديد لهذا السجل تلقائيًا"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:722
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:730
 msgid "Created On"
 msgstr "أنشئ في"
 
@@ -776,7 +781,7 @@ msgstr "حرج"
 #: uph/party/doctype/party_master/party_master.js:282
 #: uph/party/doctype/party_master_accounts/party_master_accounts.json
 #: uph/party/doctype/party_master_parties/party_master_parties.json
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:516
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:521
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.py:209
 #: uph/party/report/party_account_balances/party_account_balances.js:138
 #: uph/party/report/party_account_balances/party_account_balances.py:183
@@ -788,6 +793,11 @@ msgstr "حرج"
 #: uph/party/report/unlinked_parties/unlinked_parties.py:32
 msgid "Currency"
 msgstr "العملة"
+
+#. Label of a chart in the Party Workspace
+#: uph/party/workspace/party/party.json
+msgid "Currency Exposure"
+msgstr "التعرض للعملات"
 
 #: uph/party/report/party_account_statement/party_account_statement.py:333
 msgid "Current Period Total"
@@ -832,7 +842,7 @@ msgstr "مفصول بشرطة (مثال: 1100-10)"
 msgid "Dashboard"
 msgstr "لوحة"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1125
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1155
 msgid "Dashboard Settings"
 msgstr "إعدادات لوحة التحكم"
 
@@ -848,7 +858,7 @@ msgstr "لوحة تحكم جودة البيانات"
 
 #. Label of a Date field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:956
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:969
 #: uph/party/report/party_account_statement/party_account_statement.html:110
 msgid "Date"
 msgstr "تاريخ"
@@ -878,7 +888,7 @@ msgstr "مدينون"
 msgid "Default Currency"
 msgstr "العملة الإفتراضي"
 
-#: uph/party/doctype/party_master/party_master.py:216
+#: uph/party/doctype/party_master/party_master.py:253
 msgid "Default Party Type is Mandatory"
 msgstr "طرف افتراضي الزامي"
 
@@ -969,11 +979,11 @@ msgstr "أرقام"
 msgid "Disabled"
 msgstr "غير مفعل"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:403
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:408
 msgid "Dismiss"
 msgstr "تجاهل"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:403
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:408
 msgid "Dismiss Duplicate"
 msgstr "تجاهل التكرار"
 
@@ -1002,7 +1012,7 @@ msgstr "متنازع عليه"
 msgid "Disputed Reasons"
 msgstr "أسباب متنازع عليها"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:871
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:884
 #: uph/party/report/party_health/party_health.py:25
 msgid "DocType"
 msgstr "نوع المستند"
@@ -1010,11 +1020,11 @@ msgstr "نوع المستند"
 #. Label of a Section Break field in DocType 'Party Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "DocType Field Mappings"
-msgstr ""
+msgstr "تعيين حقول نوع المستند"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:956
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:969
 msgid "Document"
-msgstr ""
+msgstr "المستند"
 
 #. Label of a Select field in DocType 'Party Master Settings DocType'
 #: uph/party/doctype/party_master_settings_doctype/party_master_settings_doctype.json
@@ -1028,14 +1038,14 @@ msgstr "فئة المستندات"
 msgid "Document Type"
 msgstr "نوع المستند"
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:215
+#: uph/party/doctype/party_master_settings/party_master_settings.py:258
 msgid "Document Type and Parent Doctype are Required"
 msgstr "نوع السند والسند الأب مطلوب"
 
 #. Label of a Table field in DocType 'Party Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "Document Types Mapping"
-msgstr ""
+msgstr "تعيين أنواع المستندات"
 
 #. Option for the 'Status' (Select) field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
@@ -1060,7 +1070,7 @@ msgstr "دائن"
 msgid "Draft Issue Threshold (Days)"
 msgstr "حد إصدار المسودة (أيام)"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:871
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:884
 msgid "Drafts"
 msgstr "مسودات"
 
@@ -1072,13 +1082,13 @@ msgstr "تكرار"
 #. Label of a Select field in DocType 'Party Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "Duplicate Action"
-msgstr ""
+msgstr "إجراء التكرار"
 
 #: uph/party/controllers/mdm.py:227
 msgid "Duplicate Blocked"
 msgstr "تم حظر التكرار"
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:280
+#: uph/party/doctype/party_master_settings/party_master_settings.py:323
 msgid "Duplicate Document Type mapping found at row {0}"
 msgstr "تم العثور على تعيين نوع المستند المكرر في الصف {0}"
 
@@ -1101,39 +1111,39 @@ msgstr "مشاكل التكرار"
 #. Label of a Section Break field in DocType 'Party Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "Duplicate Prevention"
-msgstr ""
+msgstr "منع التكرار"
 
 #: uph/party/doctype/party_relationship/party_relationship.py:99
 msgid "Duplicate Relationship"
 msgstr "علاقة مكررة"
 
-#: uph/party/controllers/duplicate_scanner.py:39
+#: uph/party/controllers/duplicate_scanner.py:40
 msgid "Duplicate Scan Skipped"
 msgstr "تم تخطي فحص التكرار"
 
 #. Label of a Tab Break field in DocType 'Party Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "Duplicate Vouchers"
-msgstr ""
+msgstr "السندات المكررة"
 
 #: uph/party/controllers/mdm.py:229 uph/public/js/utils/party.js:1122
 #: uph/public/js/utils/party.js:1187
 msgid "Duplicate Warning"
 msgstr "تنبية التكرار"
 
-#: uph/party/doctype/party_master/party_master.py:152
+#: uph/party/doctype/party_master/party_master.py:189
 msgid "Duplicate account configuration for Company {0} and Currency {1}"
 msgstr "تكوين حساب مكرر للشركة {0} والعملة {1}"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:298
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:326
 msgid "Duplicate issue has been ignored"
 msgstr "تم تجاهل مشكلة التكرار"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:271
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:299
 msgid "Duplicate issue not found"
 msgstr "لم يتم العثور على مشكلة تكرار"
 
-#: uph/party/controllers/duplicate_scanner.py:196
+#: uph/party/controllers/duplicate_scanner.py:276
 msgid "Duplicate scan has been queued"
 msgstr "تم وضع فحص التكرار في قائمة الانتظار"
 
@@ -1200,7 +1210,7 @@ msgstr "الموظفين"
 #. Label of a Check field in DocType 'Party Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "Enable Analytics"
-msgstr ""
+msgstr "تمكين التحليلات"
 
 #. Label of a Check field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
@@ -1215,7 +1225,7 @@ msgstr "تفعيل الزر المخصص"
 #. Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "Enable Party Analytic Accounting (PAA) to allow deeper financial analysis per party."
-msgstr ""
+msgstr "تمكين البعد المحاسبي للأطراف (PAA) للسماح بتحليل مالي أعمق لكل طرف."
 
 #. Label of a Check field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
@@ -1226,13 +1236,13 @@ msgstr "تمكين البيع"
 #. 'Party Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "Enable background checks for duplicate vouchers across the Party Master ecosystem."
-msgstr ""
+msgstr "تمكين عمليات التحقق في الخلفية للسندات المكررة عبر نظام الأطراف الرئيسية."
 
 #. Description of the 'Enabled' (Check) field in DocType 'Party Master Settings
 #. DocType'
 #: uph/party/doctype/party_master_settings_doctype/party_master_settings_doctype.json
 msgid "Enable/Disable linking logic for this DocType."
-msgstr ""
+msgstr "تمكين/تعطيل منطق الربط لنوع المستند هذا."
 
 #. Label of a Check field in DocType 'Party Analytic Accounting'
 #. Label of a Check field in DocType 'Party Master Settings DocType'
@@ -1241,7 +1251,7 @@ msgstr ""
 #: uph/party/doctype/party_master_settings_doctype/party_master_settings_doctype.json
 #: uph/party/doctype/party_relationship_type/party_relationship_type.json
 msgid "Enabled"
-msgstr "تمكين"
+msgstr "ممكن"
 
 #. Label of a Date field in DocType 'Party Relationship'
 #: uph/party/doctype/party_relationship/party_relationship.json
@@ -1260,7 +1270,7 @@ msgstr "لا يمكن أن يكون تاريخ الانتهاء قبل تاري�
 #. Label of a Check field in DocType 'Party Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "Enforce Cross-Type Naming Uniqueness"
-msgstr ""
+msgstr "فرض تفرد التسمية عبر الأنواع"
 
 #: uph/party/page/uph_setup_wizard/uph_setup_wizard.js:84
 msgid "Enforce Cross-Type Uniqueness"
@@ -1285,19 +1295,19 @@ msgstr "فرض اختيار عملة الحسابات بشكل صارمة"
 #. DocType 'Party Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "Enforce strict currency matching between document currency and account head currency to prevent cross-currency accounting errors."
-msgstr ""
+msgstr "فرض مطابقة صارمة للعملة بين عملة المستند وعملة رأس الحساب لمنع أخطاء محاسبة العملات المتقاطعة."
 
 #. Description of the 'Enforce Parent Numbering Prefix' (Check) field in
 #. DocType 'Party Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "Enforce that child party numbers MUST start with their parent group's number prefix."
-msgstr ""
+msgstr "فرض أن أرقام الأطراف الفرعية يجب أن تبدأ ببادئة رقم مجموعة الأب الخاصة بهم."
 
 #. Description of the 'Enforce Cross-Type Naming Uniqueness' (Check) field in
 #. DocType 'Party Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "Enforce unique naming across all Party Types to prevent having a Customer and Supplier with the exact same name."
-msgstr ""
+msgstr "فرض تسمية فريدة عبر جميع أنواع الأطراف لمنع وجود عميل ومورد بنفس الاسم تمامًا."
 
 #: uph/public/js/utils/utils.js:189
 msgid "Error"
@@ -1348,7 +1358,7 @@ msgstr "جلب الأطراف ذات الصلة"
 #. Label of a Section Break field in DocType 'Party Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "Field Synchronization"
-msgstr ""
+msgstr "مزامنة الحقول"
 
 #. Label of a Select field in DocType 'Party Master Settings DocField'
 #: uph/party/doctype/party_master_settings_docfield/party_master_settings_docfield.json
@@ -1357,11 +1367,11 @@ msgstr "الحقل"
 
 #: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:80
 msgid "Filter by DocType"
-msgstr ""
+msgstr "تصفية حسب نوع المستند"
 
 #: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:58
 msgid "Filter by Party Master"
-msgstr ""
+msgstr "تصفية حسب الطرف الرئيسي"
 
 #: uph/setup/data/translations.py:19
 msgid "Financial & Banking"
@@ -1376,7 +1386,7 @@ msgstr "مالي ومخاطر"
 msgid "Financial Statements"
 msgstr "البيانات المالية"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:526
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:531
 msgid "Find & Link"
 msgstr "بحث وربط"
 
@@ -1388,7 +1398,7 @@ msgstr "إنهاء الإعداد"
 #. 'Party Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "Flag a Party Issue if a draft voucher is older than this many days."
-msgstr ""
+msgstr "وضع علامة على مشكلة طرف إذا كان السند المسودة أقدم من هذا العدد من الأيام."
 
 #: uph/party/report/party_account_balances/party_account_balances.js:143
 #: uph/party/report/party_account_statement/party_account_statement.js:220
@@ -1425,7 +1435,7 @@ msgstr "تنسيق"
 #. Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "Format for party numbers: Concatenated (1000000001) or Dash-Separated (1000-000001)."
-msgstr ""
+msgstr "تنسيق أرقام الأطراف: متسلسل (1000000001) أو مفصول بشرطة (1000-000001)."
 
 #: uph/public/js/utils/party.js:1083
 msgid "Found {0} existing document(s) with the same Party Master and posting date:"
@@ -1499,7 +1509,7 @@ msgstr "هوية حكومية للأفراد"
 #. 'Party Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "Grace period before flagging cancelled vouchers that are still referenced in financial flows."
-msgstr ""
+msgstr "فترة سماح قبل وضع علامة على السندات الملغاة التي لا تزال تتم الإشارة إليها في التدفقات المالية."
 
 #: uph/party/report/party_master_ledger/party_master_ledger.js:74
 msgid "Group By Voucher Consolidate"
@@ -1588,7 +1598,7 @@ msgstr "إحصائيات السجل لـ {0}"
 
 #: uph/party/doctype/party_master_settings/party_master_settings.js:41
 msgid "How it affects the system:"
-msgstr ""
+msgstr "كيف يؤثر على النظام:"
 
 #: uph/party/doctype/party_master/party_master_dashboard.py:36
 msgid "Human Resources"
@@ -1598,31 +1608,31 @@ msgstr "الموارد البشرية"
 #. Master Settings Party Type'
 #: uph/party/doctype/party_master_settings_party_type/party_master_settings_party_type.json
 msgid "If checked, multiple records of this Party Type can be linked to the same Party Master (e.g., multiple Customer records for one Master)."
-msgstr ""
+msgstr "إذا تم تحديده، يمكن ربط سجلات متعددة من نوع الطرف هذا بنفس الطرف الرئيسي (مثلاً، سجلات عملاء متعددة لطرف رئيسي واحد)."
 
 #. Description of the 'Mandatory' (Check) field in DocType 'Party Master
 #. Settings DocType'
 #: uph/party/doctype/party_master_settings_doctype/party_master_settings_doctype.json
 msgid "If checked, the Party field is mandatory for submission."
-msgstr ""
+msgstr "إذا تم تحديده، فسيكون حقل الطرف إلزاميًا للترحيل."
 
 #. Description of the 'Mandatory' (Check) field in DocType 'Party Master
 #. Settings Party Type'
 #: uph/party/doctype/party_master_settings_party_type/party_master_settings_party_type.json
 msgid "If checked, this Party Type must be present for a Party Master to be valid."
-msgstr ""
+msgstr "إذا تم تحديده، يجب أن يكون نوع الطرف هذا موجودًا حتى يكون الطرف الرئيسي صالحًا."
 
 #. Description of the 'Override Party Details API' (Check) field in DocType
 #. 'Party Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "If enabled, UPH will override the standard ERPNext party details API to bring in Party Master intelligence (like credit limits, terms, etc.) across all transactions."
-msgstr ""
+msgstr "إذا تم تمكينه، سيقوم UPH بتجاوز واجهة برمجة تطبيقات تفاصيل الطرف القياسية في ERPNext لجلب معلومات الطرف الرئيسي (مثل حدود الائتمان، والشروط، وما إلى ذلك) عبر جميع المعاملات."
 
 #. Description of the 'Hide Balance in Tree' (Check) field in DocType 'Party
 #. Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "If enabled, balance amounts will be hidden in the Tree View for a cleaner lookup experience."
-msgstr ""
+msgstr "إذا تم تمكينه، سيتم إخفاء مبالغ الأرصدة في عرض الشجرة لتوفير تجربة بحث أكثر نظافة."
 
 #. Description of the 'Is Symmetric' (Check) field in DocType 'Party
 #. Relationship Type'
@@ -1634,26 +1644,24 @@ msgstr "إذا تم التفعيل، سيتم إنشاء علاقة متبادل
 #. Settings DocType'
 #: uph/party/doctype/party_master_settings_doctype/party_master_settings_doctype.json
 msgid "If this is a child DocType, select its parent (e.g., Sales Invoice Item)."
-msgstr ""
+msgstr "إذا كان هذا نوع مستند فرعي، فحدد الأب الخاص به (مثلاً، صنف فاتورة المبيعات)."
 
 #: uph/party/doctype/party_master_settings/party_master_settings.js:41
 msgid "If you add a Child Table (e.g., Journal Entry Account), select its Parent (e.g., Journal Entry)."
-msgstr ""
+msgstr "إذا قمت بإضافة جدول فرعي (مثلاً، حساب قيد اليومية)، فحدد الأب الخاص به (مثلاً، قيد اليومية)."
 
 #. Option for the 'Track Transaction Health' (Select) field in DocType 'Party
 #. Master Settings DocType'
 #: uph/party/doctype/party_issue/party_issue.js:15
 #: uph/party/doctype/party_master_settings_doctype/party_master_settings_doctype.json
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1069
 msgid "Ignore"
-msgstr ""
+msgstr "تجاهل"
 
 #: uph/party/doctype/party_issue/party_issue.js:27
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1069
 msgid "Ignore Issue"
-msgstr ""
-
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1030
-msgid "Ignore this issue? It won't show up again until re-scanned."
-msgstr ""
+msgstr "تجاهل المشكلة"
 
 #. Option for the 'Status' (Select) field in DocType 'Party Issue'
 #: uph/party/doctype/party_issue/party_issue.json
@@ -1677,7 +1685,7 @@ msgstr "غير نشط"
 #. Master Settings DocType'
 #: uph/party/doctype/party_master_settings_doctype/party_master_settings_doctype.json
 msgid "Include"
-msgstr ""
+msgstr "تضمين"
 
 #: uph/party/report/party_master_health_report/party_master_health_report.js:19
 msgid "Include Disabled Parties"
@@ -1712,7 +1720,7 @@ msgstr "سيتم إنشاء شجرة الأطراف الأولية بهذه ال
 #. Master Settings'
 #: uph/party/doctype/party_master_settings/party_master_settings.json
 msgid "Initial number of levels to expand in the Party Master Tree View."
-msgstr ""
+msgstr "العدد الأولي للمستويات المراد توسيعها في عرض شجرة الطرف الرئيسي."
 
 #: uph/party/controllers/unlinked_resolver.py:313
 msgid "Insufficient permissions"
@@ -1720,9 +1728,9 @@ msgstr "صلاحيات غير كافية"
 
 #: uph/party/controllers/unlinked_resolver.py:377
 msgid "Insufficient permissions to create Party Master"
-msgstr ""
+msgstr "صلاحيات غير كافية لإنشاء الطرف الرئيسي"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:255
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:282
 msgid "Insufficient permissions to dismiss duplicates"
 msgstr "صلاحيات غير كافية لتجاهل التكرارات"
 
@@ -1730,7 +1738,7 @@ msgstr "صلاحيات غير كافية لتجاهل التكرارات"
 msgid "Insufficient permissions to merge parties"
 msgstr "صلاحيات غير كافية لدمج الأطراف"
 
-#: uph/party/controllers/duplicate_scanner.py:183
+#: uph/party/controllers/duplicate_scanner.py:263
 msgid "Insufficient permissions to run duplicate scan"
 msgstr "صلاحيات غير كافية لتشغيل فحص التكرارات"
 
@@ -1748,7 +1756,7 @@ msgstr "نطاق تاريخ غير صالح"
 
 #: uph/party/controllers/transaction_health.py:222
 msgid "Invalid Party Issue"
-msgstr ""
+msgstr "مشكلة طرف غير صالحة"
 
 #: uph/party/doctype/party_relationship/party_relationship.py:108
 msgid "Invalid Percentage"
@@ -1758,7 +1766,7 @@ msgstr "نسبة غير صالحة"
 msgid "Invalid Relationship"
 msgstr "علاقة غير صالحة"
 
-#: uph/party/doctype/party_master/party_master.py:975
+#: uph/party/doctype/party_master/party_master.py:1012
 msgid "Invalid data format for selection. Expected list of lists."
 msgstr "تنسيق بيانات غير صالح للاختيار. يتوقع قائمة من القوائم."
 
@@ -1823,9 +1831,9 @@ msgstr "متماثل"
 msgid "Is System generated"
 msgstr "هل منئشي بواسطه النظام"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:956
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:969
 msgid "Issue"
-msgstr ""
+msgstr "المشكلة"
 
 #. Label of a Select field in DocType 'Party Issue'
 #: uph/party/doctype/party_issue/party_issue.json
@@ -1833,9 +1841,9 @@ msgstr ""
 msgid "Issue Type"
 msgstr "نوع المشكلة"
 
-#: uph/party/controllers/transaction_health.py:273
+#: uph/party/controllers/transaction_health.py:276
 msgid "Issue dismissed"
-msgstr ""
+msgstr "تم تجاهل المشكلة"
 
 #: uph/public/js/utils/utils.js:300
 msgid "Job Name"
@@ -1850,7 +1858,7 @@ msgstr "نوع المهمة"
 msgid "Journal Entry"
 msgstr "قيد يومية"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:421
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:426
 msgid "Keep (Primary Party)"
 msgstr "الاحتفاظ بـ (الطرف الأساسي)"
 
@@ -1893,35 +1901,25 @@ msgstr "الهوية القانونية"
 msgid "Let's set up your Master Data Management system."
 msgstr "دعنا نقوم بإعداد نظام إدارة البيانات الرئيسية الخاص بك."
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:576
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:732
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:584
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:757
 #: uph/public/js/utils/utils.js:95
 msgid "Link"
 msgstr "ربط"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:817
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:830
 #: uph/public/js/utils/utils.js:77 uph/public/js/utils/utils.js:79
 msgid "Link to Party Master"
 msgstr "ربط ب طرف رئيسي"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:559
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:797
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:567
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:810
 msgid "Link {0} to Party Master"
 msgstr "ربط {0} بالطرف الرئيسي"
 
 #: uph/party/dashboard_chart_source/party_identity_governance/party_identity_governance.py:75
 msgid "Linked"
 msgstr "مرتبط"
-
-#. Label of a number card in the Party Workspace
-#: uph/party/workspace/party/party.json
-msgid "Linked Customers"
-msgstr "العملاء المرتبطون"
-
-#. Label of a number card in the Party Workspace
-#: uph/party/workspace/party/party.json
-msgid "Linked Suppliers"
-msgstr "الموردون المرتبطون"
 
 #: uph/public/js/utils/utils.js:127
 msgid "Linked new Party Master {0}"
@@ -1940,23 +1938,23 @@ msgstr "ربط {0} الحالي ({1})"
 msgid "Loading duplicates..."
 msgstr "جارٍ تحميل التكرارات..."
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:942
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:955
 msgid "Loading issues..."
-msgstr ""
+msgstr "جاري تحميل المشاكل..."
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:564
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:572
 msgid "Loading suggestions..."
 msgstr "جارٍ تحميل الاقتراحات..."
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:842
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:855
 msgid "Loading transaction health..."
 msgstr "جارٍ تحميل صحة المعاملات..."
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:488
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:493
 msgid "Loading unlinked roles..."
 msgstr "جارٍ تحميل الأدوار غير المرتبطة..."
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:693
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:701
 msgid "Loading unlinked vouchers..."
 msgstr "جاري تحميل السندات غير المرتبطة..."
 
@@ -2015,15 +2013,15 @@ msgid "Medium"
 msgstr "متوسط"
 
 #: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:327
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:446
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:451
 msgid "Merge"
 msgstr "دمج"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:434
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:439
 msgid "Merge (Secondary Party)"
 msgstr "دمج (الطرف الثانوي)"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:416
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:421
 msgid "Merge Parties"
 msgstr "دمج الأطراف"
 
@@ -2035,7 +2033,7 @@ msgstr "دمج/تحديث (تجاوز السجلات المتعارضة إن و�
 msgid "Merged Party Master {0} into this record. Merge completed by {1} at {2}"
 msgstr "تم دمج الطرف الرئيسي {0} في هذا السجل. اكتمل الدمج بواسطة {1} في {2}"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:471
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:476
 msgid "Merging parties..."
 msgstr "جارٍ دمج الأطراف..."
 
@@ -2048,11 +2046,11 @@ msgstr "البيانات الوصفية"
 msgid "Method"
 msgstr "الطريقة"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1130
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1160
 msgid "Minimum Similarity Score"
 msgstr "أدنى درجة تشابه"
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:414
+#: uph/party/doctype/party_master_settings/party_master_settings.py:457
 msgid "Missing document_type in docfield"
 msgstr "نوع المستند مفقود في حقل المستند"
 
@@ -2072,23 +2070,23 @@ msgstr "رقم الموبايل"
 msgid "More Details"
 msgstr "تفاصيل اكثر"
 
-#: uph/party/doctype/party_master/party_master.py:162
+#: uph/party/doctype/party_master/party_master.py:199
 msgid "Must Mention Reason to put This Party {0} as Disputed"
 msgstr "يجب ذكر سبب وضع هذا الطرف {0} كمتنازع عليه"
 
-#: uph/party/doctype/party_master/party_master.py:502
+#: uph/party/doctype/party_master/party_master.py:539
 msgid "Must Select at Least One Party"
 msgstr "يجب اختيار طرف واحد على الأقل"
 
-#: uph/party/doctype/party_master/party_master.py:400
+#: uph/party/doctype/party_master/party_master.py:437
 msgid "Must Select at least one Party"
 msgstr "يجب اختيار طرف واحد على الأقل"
 
-#: uph/party/doctype/party_master/party_master.py:922
+#: uph/party/doctype/party_master/party_master.py:959
 msgid "Must Set Party Master"
 msgstr "يجب وضع الطرف الرئيسي"
 
-#: uph/party/doctype/party_master/party_master.py:527
+#: uph/party/doctype/party_master/party_master.py:564
 msgid "Must Set at least One Secondary Role"
 msgstr "يجب تعيين دور ثانوي واحد على الأقل"
 
@@ -2125,7 +2123,7 @@ msgstr "صافي المديونية: {0}"
 msgid "New"
 msgstr "جديد"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1089
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1119
 #: uph/party/page/uph_setup_wizard/uph_setup_wizard.js:84
 #: uph/party/page/uph_setup_wizard/uph_setup_wizard.js:188
 msgid "Next"
@@ -2145,9 +2143,9 @@ msgstr "بدون خيار"
 
 #: uph/party/doctype/party_issue/party_issue.js:70
 msgid "No additional details available."
-msgstr ""
+msgstr "لا توجد تفاصيل إضافية متاحة."
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:639
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:647
 msgid "No close matches found. Use the selector below."
 msgstr "لم يتم العثور على تطابقات قريبة. استخدم أداة التحديد أدناه."
 
@@ -2159,7 +2157,7 @@ msgstr "لم يتم العثور على أطراف مرتبطة بهذا الط�
 msgid "No potential duplicates found"
 msgstr "لم يتم العثور على تكرارات محتملة"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:951
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:964
 msgid "No problematic vouchers found for {0}"
 msgstr "لم يتم العثور على سندات بها مشكلات لـ {0}"
 
@@ -2171,13 +2169,13 @@ msgstr "لم يتم العثور على أطراف ذات صلة."
 msgid "No relationships found"
 msgstr "لم يتم العثور على علاقات"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:865
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:878
 msgid "No transaction health issues found"
 msgstr "لم يتم العثور على مشكلات في صحة المعاملات"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:716
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:724
 msgid "No unlinked voucher issues found"
-msgstr ""
+msgstr "لم يتم العثور على أخطاء سندات غير مربوطة"
 
 #. Label of a Data field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
@@ -2188,25 +2186,25 @@ msgstr "اسم الطرف الموحد"
 msgid "Not a Duplicate"
 msgstr "ليس تكرارًا"
 
-#: uph/party/doctype/party_master/party_master.py:902
+#: uph/party/doctype/party_master/party_master.py:939
 msgid "Not permitted to create Party Master"
 msgstr "غير مسموح بإنشاء طرف رئيسي"
 
-#: uph/party/doctype/party_master/party_master.py:679
+#: uph/party/doctype/party_master/party_master.py:716
 msgid "Not permitted to read Company {0}"
 msgstr "غير مسموح بقراءة الشركة {0}"
 
-#: uph/party/doctype/party_master/party_master.py:676
+#: uph/party/doctype/party_master/party_master.py:713
 msgid "Not permitted to read GL Entry"
 msgstr "غير مسموح بقراءة قيود دفتر الأستاذ"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:77
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:146
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:86
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:156
 msgid "Not permitted to read Party Issue"
-msgstr ""
+msgstr "غير مسموح بقراءة مشكلة الطرف"
 
 #: uph/party/controllers/unlinked_resolver.py:615
-#: uph/party/doctype/party_master/party_master.py:674
+#: uph/party/doctype/party_master/party_master.py:711
 #: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:18
 msgid "Not permitted to read Party Master"
 msgstr "غير مسموح بقراءة الطرف الرئيسي"
@@ -2217,11 +2215,15 @@ msgstr "غير مسموح بقراءة {0}"
 
 #: uph/party/controllers/transaction_health.py:218
 msgid "Not permitted to write Party Issue"
-msgstr ""
+msgstr "غير مسموح بالكتابة على مشكلة الطرف"
 
 #: uph/party/controllers/unlinked_resolver.py:613
 msgid "Not permitted to write to {0}"
-msgstr ""
+msgstr "غير مسموح بالكتابة على {0}"
+
+#: uph/party/doctype/party_master_settings/party_master_settings.py:91
+msgid "Note: Role-specific naming identifiers (prefixes/suffixes) will be automatically generated using the first two letters of the Party Type capitalized (e.g., 'Cu' for Customer, 'Su' for Supplier)."
+msgstr "ملاحظة: سيتم إنشاء معرفات التسمية الخاصة بالأدوار (البادئات/اللاحقات) تلقائيًا باستخدام أول حرفين كبيرين من نوع الطرف (مثلاً، 'Cu' للعميل 'Customer'، و'Su' للمورد 'Supplier')."
 
 #. Label of a Small Text field in DocType 'Party Relationship'
 #: uph/party/doctype/party_relationship/party_relationship.json
@@ -2276,7 +2278,7 @@ msgstr "سندات قيد الانتظار:"
 msgid "Once checked, core governance settings (Numbering Format, Digits Count) become read-only to prevent accidental changes in production after the system has been initialized."
 msgstr "بمجرد التحديد، ستصبح إعدادات الحوكمة الأساسية (تنسيق الترقيم، عدد الخانات) للقراءة فقط لمنع التغييرات العرضية في بيئة الإنتاج بعد تهيئة النظام."
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:208
+#: uph/party/doctype/party_master_settings/party_master_settings.py:251
 msgid "Only System Managers are allowed to update this settings."
 msgstr "فقط مديري النظام مسموح لهم بتحديث هذه الإعدادات."
 
@@ -2287,7 +2289,7 @@ msgid ""
 "\n"
 msgstr "فقط الحسابات غير مجموعة هي التي يمكن ربطه بالاطراف المحاسبية"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1132
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1162
 msgid "Only show duplicates with similarity score above this threshold (0-100)"
 msgstr "إظهار التكرارات التي تزيد درجة تشابهها عن هذا الحد فقط (0-100)"
 
@@ -2343,7 +2345,7 @@ msgstr "نسبة الملكية"
 msgid "Ownership percentage must be between 0 and 100."
 msgstr "يجب أن تكون نسبة الملكية بين 0 و 100."
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1086
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1116
 msgid "Page {0} of {1}"
 msgstr "صفحة {0} من {1}"
 
@@ -2356,7 +2358,7 @@ msgstr "نوع السند الأب"
 msgid "Parent Doctype"
 msgstr "نوع المستند الأب"
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:224
+#: uph/party/doctype/party_master_settings/party_master_settings.py:267
 msgid "Parent Doctype is Required at row {0}"
 msgstr "مستند الأب مطلوب في الصف {0}"
 
@@ -2373,8 +2375,8 @@ msgstr "الطرف الرئيسي الأب غير محدد."
 msgid "Parent Party: {0}"
 msgstr "الطرف الأب: {0}"
 
-#: uph/party/doctype/party_master/party_master.py:719
-#: uph/party/doctype/party_master/party_master.py:737
+#: uph/party/doctype/party_master/party_master.py:756
+#: uph/party/doctype/party_master/party_master.py:774
 msgid "Parent {0} has no party number"
 msgstr "الأب {0} ليس له رقم طرف"
 
@@ -2403,12 +2405,10 @@ msgid "Partnership"
 msgstr "الشركا"
 
 #. Label of a Dynamic Link field in DocType 'Party Analytic Accounting Party'
-#. Label of a Link field in DocType 'Party Issue'
 #. Label of a Dynamic Link field in DocType 'Party Master Parties'
 #. Name of a Workspace
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.js:104
 #: uph/party/doctype/party_analytic_accounting_party/party_analytic_accounting_party.json
-#: uph/party/doctype/party_issue/party_issue.json
 #: uph/party/doctype/party_master/party_master.js:279
 #: uph/party/doctype/party_master_parties/party_master_parties.json
 #: uph/party/report/chronological_party_ledger/chronological_party_ledger.js:23
@@ -2479,11 +2479,6 @@ msgstr "البعد المحاسبي للأطراف {0} ينتمي للطرف ا�
 msgid "Party Created Successfully"
 msgstr "تم إنشاء الطرف ب نجاح"
 
-#. Label of a shortcut in the Party Workspace
-#: uph/party/workspace/party/party.json
-msgid "Party Dashboard"
-msgstr "لوحة تحكم الطرف"
-
 #. Label of a Text field in DocType 'Party Master'
 #: uph/party/doctype/party_master/party_master.json
 #: uph/party/report/party_account_balances/party_account_balances.py:217
@@ -2499,15 +2494,15 @@ msgstr "اسم حقل الطرف"
 msgid "Party Fieldname"
 msgstr "اسم حقل الطرف"
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:252
+#: uph/party/doctype/party_master_settings/party_master_settings.py:295
 msgid "Party Fieldname \"{0}\" does not exist in {1} (row {2})"
 msgstr "اسم حقل الطرف \"{0}\" غير موجود في {1} (الصف {2})"
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:260
+#: uph/party/doctype/party_master_settings/party_master_settings.py:303
 msgid "Party Fieldname at the target Document Type at row {0} must be either a Link or Dynamic Link"
 msgstr "يجب أن يكون اسم حقل الطرف في نوع المستند المستهدف في الصف {0} إما Link أو Dynamic Link"
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:244
+#: uph/party/doctype/party_master_settings/party_master_settings.py:287
 msgid "Party Fieldname is required at the target Document Type at row {0}"
 msgstr "اسم حقل الطرف مطلوب في نوع المستند المستهدف في الصف {0}"
 
@@ -2540,14 +2535,16 @@ msgid "Party Manager"
 msgstr "مدير الأطراف"
 
 #. Label of a Link field in DocType 'Party Analytic Accounting'
+#. Label of a Link field in DocType 'Party Issue'
 #. Name of a DocType
 #. Label of a Link in the Party Workspace
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
+#: uph/party/doctype/party_issue/party_issue.json
 #: uph/party/doctype/party_master/party_master.json
 #: uph/party/doctype/party_master/party_master_tree.js:266
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:570
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:811
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:871
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:578
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:824
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:884
 #: uph/party/report/party_account_balances/party_account_balances.py:152
 #: uph/party/report/party_account_statement/party_account_statement.py:596
 #: uph/party/report/party_accounting_ledger/party_accounting_ledger.py:672
@@ -2683,7 +2680,7 @@ msgstr "فشل دمج الأطراف"
 msgid "Party Name"
 msgstr "إسم الطرف"
 
-#: uph/party/doctype/party_master/party_master.py:172
+#: uph/party/doctype/party_master/party_master.py:209
 msgid "Party Name {0} already exists"
 msgstr "اسم الطرف {0} موجود بالفعل"
 
@@ -2717,7 +2714,6 @@ msgstr "علاقة الطرف"
 
 #. Name of a DocType
 #. Label of a Link in the Party Workspace
-#. Label of a shortcut in the Party Workspace
 #: uph/party/doctype/party_relationship_type/party_relationship_type.json
 #: uph/party/workspace/party/party.json
 msgid "Party Relationship Type"
@@ -2725,8 +2721,8 @@ msgstr "نوع علاقة الطرف"
 
 #. Label of a chart in the Party Workspace
 #: uph/party/workspace/party/party.json
-msgid "Party Stats"
-msgstr "حالة الطرف"
+msgid "Party Status Distribution"
+msgstr "توزيع حالة الأطراف"
 
 #. Label of a Link field in DocType 'Party Analytic Accounting Party'
 #. Label of a Link field in DocType 'Party Master'
@@ -2776,7 +2772,7 @@ msgstr "ادوار انواع الاطراف"
 msgid "Party Type Rules"
 msgstr "قواعد أنواع الأطراف"
 
-#: uph/party/doctype/party_master/party_master.py:185
+#: uph/party/doctype/party_master/party_master.py:222
 msgid "Party Type {0} can not be duplicate"
 msgstr "نوع الطرف {0} لا يمكن تكرارة"
 
@@ -2785,11 +2781,11 @@ msgstr "نوع الطرف {0} لا يمكن تكرارة"
 msgid "Party Types"
 msgstr "نوع الطرف"
 
-#: uph/party/doctype/party_master/party_master.py:684
+#: uph/party/doctype/party_master/party_master.py:721
 msgid "Party balance visibility is disabled in Accounts Settings"
 msgstr "رؤية رصيد الطرف معطلة في إعدادات الحسابات"
 
-#: uph/party/doctype/party_master/party_master.py:909
+#: uph/party/doctype/party_master/party_master.py:946
 msgid "Party with this name already exists"
 msgstr "يوجد طرف بهذا الاسم مسبقاً"
 
@@ -2810,7 +2806,7 @@ msgstr "سند صرف"
 msgid "Please select a Company first"
 msgstr "يرجاء اختيار شركة اولاً"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:579
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:587
 msgid "Please select a Party Master"
 msgstr "يرجى اختيار طرف رئيسي"
 
@@ -2869,7 +2865,7 @@ msgstr "منع التبعية الدائرية"
 msgid "Prevent circular chains (A->B->C->A). Essential for hierarchical types."
 msgstr "منع السلاسل الدائرية (A->B->C->A). ضروري للأنواع الهرمية."
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1083
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1113
 msgid "Previous"
 msgstr "السابق"
 
@@ -2957,19 +2953,20 @@ msgstr "مواد خام"
 msgid "Ready to Setup?"
 msgstr "جاهز للإعداد؟"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:384
-msgid "Reason (optional)"
-msgstr "السبب (اختياري)"
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:388
+msgid "Reason"
+msgstr "السبب"
 
 #: uph/party/doctype/party_issue/party_issue.js:18
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1063
 msgid "Reason for Ignoring"
-msgstr ""
+msgstr "سبب التجاهل"
 
 #. Description of the 'Dismiss Reason' (Small Text) field in DocType 'Party
 #. Issue'
 #: uph/party/doctype/party_issue/party_issue.json
 msgid "Reason of Ignoring"
-msgstr ""
+msgstr "سبب التجاهل"
 
 #: uph/party/doctype/party_master/party_master.js:90
 msgid "Reassign Linked Parties"
@@ -2988,7 +2985,7 @@ msgctxt "Voucher Type"
 msgid "Receive"
 msgstr "سند قبض"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:516
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:521
 msgid "Record"
 msgstr "سجل"
 
@@ -3011,7 +3008,7 @@ msgstr "اسم المرجع"
 #. Settings DocType'
 #: uph/party/doctype/party_master_settings_doctype/party_master_settings_doctype.json
 msgid "Reference script to apply logic to custom DocTypes."
-msgstr ""
+msgstr "نص مرجعي لتطبيق المنطق على أنواع المستندات المخصصة."
 
 #. Description of the 'Authority Document Ref' (Data) field in DocType 'Party
 #. Relationship'
@@ -3024,7 +3021,7 @@ msgstr "مرجع لعقد أو قرار."
 msgid "Refresh"
 msgstr "تحديث"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:246
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.py:273
 msgid "Refresh started in background"
 msgstr "بدأ التحديث في الخلفية"
 
@@ -3092,7 +3089,7 @@ msgstr "إعادة تعيين كافتراضي للطرف الرئيسي"
 
 #: uph/party/doctype/party_issue/party_issue.js:10
 msgid "Resolve"
-msgstr ""
+msgstr "حل المشكلة"
 
 #. Option for the 'Status' (Select) field in DocType 'Party Issue'
 #: uph/party/doctype/party_issue/party_issue.json
@@ -3115,7 +3112,7 @@ msgstr "حُل في"
 msgid "Restrict"
 msgstr "تقييد"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1137
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:1167
 msgid "Results Per Page"
 msgstr "نتائج لكل صفحة"
 
@@ -3217,11 +3214,6 @@ msgstr "اسم النص البرمجي"
 msgid "Script Settings"
 msgstr "إعدادات النص البرمجي"
 
-#. Label of a Link field in DocType 'Party Issue'
-#: uph/party/doctype/party_issue/party_issue.json
-msgid "Secondary Party"
-msgstr "طرف ثانوي"
-
 #: uph/party/controllers/party_merge_service.py:76
 msgid "Secondary Party Master {0} does not exist"
 msgstr "الطرف الرئيسي الثانوي {0} غير موجود"
@@ -3262,7 +3254,7 @@ msgstr "إختر طرف"
 msgid "Select a group node first."
 msgstr "اختر الاب اولاً"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:573
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:581
 msgid "Select manually or pick from suggestions above"
 msgstr "اختر يدويًا أو التقط من الاقتراحات أعلاه"
 
@@ -3333,7 +3325,7 @@ msgstr "اجعل الافتراضي ل {0}"
 msgid "Set Party"
 msgstr "ضع الطرف"
 
-#: uph/party/doctype/party_master/party_master.py:312
+#: uph/party/doctype/party_master/party_master.py:349
 msgid "Setting Primary role of same Party Type is Not Allowed"
 msgstr "لا يُسمح بتعيين الدور الأساسي لنفس نوع الطرف"
 
@@ -3379,7 +3371,7 @@ msgstr "الإعداد مكتمل بالفعل."
 #. Label of a Select field in DocType 'Party Master Settings DocType'
 #: uph/party/doctype/party_issue/party_issue.json
 #: uph/party/doctype/party_master_settings_doctype/party_master_settings_doctype.json
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:871
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:884
 msgid "Severity"
 msgstr "الخطورة"
 
@@ -3554,9 +3546,9 @@ msgid "Submission is not allowed for duplicate vouchers."
 msgstr "غير مسموح بترحيل السندات المكررة."
 
 #: uph/party/doctype/party_issue/party_issue.js:27
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:975
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:988
 msgid "Submit"
-msgstr ""
+msgstr "إرسال"
 
 #: uph/public/js/utils/party.js:154
 msgid "Successfully Set {0} as Default for {1}"
@@ -3574,7 +3566,7 @@ msgstr "إضافة لاحقة للأدوار الثانوية"
 msgid "Suffix for All Role"
 msgstr "إضافة لاحقة لجميع الأدوار"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:615
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:623
 msgid "Suggested Matches"
 msgstr "تطابقات مقترحة"
 
@@ -3695,7 +3687,7 @@ msgstr "الاقليم"
 msgid "The Balance"
 msgstr "الرصيد"
 
-#: uph/party/doctype/party_master_settings/party_master_settings.py:236
+#: uph/party/doctype/party_master_settings/party_master_settings.py:279
 msgid "The Parent Doctype at row {0} has no Child Table pointing to {1}"
 msgstr "مستند الأب في الصف {0} ليس لديه جدول فرعي يشير إلى {1}"
 
@@ -3743,7 +3735,7 @@ msgstr "العلاقة العكسية (مثلاً، إذا كان هذا 'شرك
 msgid "The penalty severity for health issues related to this document."
 msgstr "شدة العقوبة لمشكلات الصحة المتعلقة بهذا المستند."
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:441
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:446
 msgid "The secondary party will be merged into the primary party and deleted. All linked documents will be updated."
 msgstr "سيتم دمج الطرف الثانوي في الطرف الأساسي وحذفه. سيتم تحديث جميع المستندات المرتبطة."
 
@@ -3772,7 +3764,7 @@ msgstr "يعتمد هذا التقرير على تاريخ المعاملة (ا�
 msgid "This table defines which transactional DocTypes (like Sales Invoice or Journal Entry) the system will monitor to guarantee Data Quality and Party Master validation."
 msgstr "يحدد هذا الجدول أنواع مستندات المعاملات (مثل فاتورة المبيعات أو قيد اليومية) التي سيراقبها النظام لضمان جودة البيانات والتحقق من الطرف الرئيسي."
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:802
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:815
 msgid "This voucher relies on the <b>{0}</b> record: <b>{1}</b>. By linking this {0} to a Party Master, this voucher (and all others using it) will be resolved."
 msgstr "يعتمد هذا السند على سجل <b>{0}</b>: <b>{1}</b>. بربط هذا الـ {0} بطرف رئيسي، سيتم حل هذا السند (وجميع السندات الأخرى التي تستخدمه)."
 
@@ -3814,6 +3806,16 @@ msgstr "إجمالي الأطراف"
 msgid "Total Party Masters"
 msgstr "إجمالي الأطراف الرئيسية"
 
+#. Label of a number card in the Party Workspace
+#: uph/party/workspace/party/party.json
+msgid "Total Payables"
+msgstr "إجمالي المدفوعات"
+
+#. Label of a number card in the Party Workspace
+#: uph/party/workspace/party/party.json
+msgid "Total Receivables"
+msgstr "إجمالي المقبوضات"
+
 #: uph/party/doctype/party_master/party_master.js:405
 msgid "Total Unpaid Invoices: {0}"
 msgstr "إجمالي الفواتير غير المدفوعة: {0}"
@@ -3834,11 +3836,11 @@ msgstr "صحة المعاملات"
 msgid "Transaction Policy"
 msgstr "سياسة المعاملات"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:924
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:937
 msgid "Transaction Policy Issues: {0}"
 msgstr "مشكلات سياسة المعاملات: {0}"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:926
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:939
 msgid "Transaction Policy Issues: {0} ({1})"
 msgstr "مشكلات سياسة المعاملات: {0} ({1})"
 
@@ -3876,8 +3878,8 @@ msgstr "تفعيل في المستندات غير المحفوظة"
 #. Label of a Select field in DocType 'Party Master'
 #: uph/party/doctype/party_analytic_accounting/party_analytic_accounting.json
 #: uph/party/doctype/party_master/party_master.json
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:516
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:722
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:521
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:730
 msgid "Type"
 msgstr "نوع"
 
@@ -3902,7 +3904,7 @@ msgstr "إعداد UPH مطلوب. جارٍ التوجيه إلى معالج ا�
 msgid "UPH is now ready to use."
 msgstr "نظام UPH جاهز الآن للاستخدام."
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:408
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:413
 msgid "Unable to resolve the selected parties. Please refresh and try again."
 msgstr "تعذر حل الأطراف المختارة. يرجى التحديث والمحاولة مرة أخرى."
 
@@ -3926,7 +3928,7 @@ msgstr "فهم تهيئة أنواع المستندات"
 msgid "Uniqueness Suffix Rule (Field)"
 msgstr "قاعدة لاحقة التفرد (الحقل)"
 
-#: uph/party/controllers/transaction_health.py:276
+#: uph/party/controllers/transaction_health.py:279
 msgid "Unknown action {0}"
 msgstr "إجراء غير معروف {0}"
 
@@ -3940,6 +3942,11 @@ msgstr "طرف رئيسي غير مربوط"
 msgid "Unlinked"
 msgstr "غير مرتبط"
 
+#. Label of a number card in the Party Workspace
+#: uph/party/workspace/party/party.json
+msgid "Unlinked Customers"
+msgstr "عملاء غير مربوطين"
+
 #. Name of a report
 #: uph/party/report/unlinked_parties/unlinked_parties.json
 msgid "Unlinked Parties"
@@ -3948,6 +3955,11 @@ msgstr "أطراف غير مرتبطة"
 #: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:131
 msgid "Unlinked Roles"
 msgstr "أدوار غير مرتبطة"
+
+#. Label of a number card in the Party Workspace
+#: uph/party/workspace/party/party.json
+msgid "Unlinked Suppliers"
+msgstr "موردون غير مربوطين"
 
 #: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:131
 msgid "Unlinked Vouchers"
@@ -3985,7 +3997,7 @@ msgstr "قيمة"
 msgid "View"
 msgstr "عرض"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:884
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:897
 msgid "View Details"
 msgstr "عرض التفاصيل"
 
@@ -3997,7 +4009,7 @@ msgstr "عرض كشف تفصيلي"
 msgid "View List"
 msgstr "عرض قائمة"
 
-#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:722
+#: uph/party/page/data_quality_dashboard/data_quality_dashboard.js:730
 msgid "Voucher"
 msgstr "السند"
 
@@ -4088,11 +4100,11 @@ msgstr "سيتم عرض القيود الملغاه"
 msgid "Write-Off"
 msgstr "شطب"
 
-#: uph/party/doctype/party_master/party_master.py:257
+#: uph/party/doctype/party_master/party_master.py:294
 msgid "You are not allowed to Change Party Number"
 msgstr "غير مسموح لك بتغير رقم الطرف"
 
-#: uph/party/doctype/party_master/party_master.py:1090
+#: uph/party/doctype/party_master/party_master.py:1127
 msgid "You don't have permission to {0} {1} {2}"
 msgstr "ليس لديك صلاحية لـ {0} {1} {2}"
 
@@ -4138,7 +4150,7 @@ msgstr "سيتم عرض القيود المحاسبية لـ {0} فقط"
 msgid "only."
 msgstr "فقط."
 
-#: uph/party/controllers/duplicate_scanner.py:40
+#: uph/party/controllers/duplicate_scanner.py:41
 msgid "rapidfuzz is not installed. Install with: pip install rapidfuzz"
 msgstr "حزمة rapidfuzz غير مثبتة. قم بتثبيتها باستخدام: pip install rapidfuzz"
 
@@ -4161,7 +4173,7 @@ msgstr "{0} العدد: {1}"
 msgid "{0} Created Successfully"
 msgstr "تم إنشاء {0} بنجاح"
 
-#: uph/party/doctype/party_master/party_master.py:382
+#: uph/party/doctype/party_master/party_master.py:419
 msgid "{0} Named {1}'s details have been updated"
 msgstr "تم تحديث تفاصيل {0} المسمى {1}"
 
@@ -4182,7 +4194,7 @@ msgstr "تم ربط {0} بـ {1}"
 msgid "{0} has been merged into {1}"
 msgstr "تم دمج {0} في {1}"
 
-#: uph/party/doctype/party_master/party_master.py:409
+#: uph/party/doctype/party_master/party_master.py:446
 msgid "{0} has linked {1} {2}"
 msgstr "{0} قام بربط {1} {2}"
 
