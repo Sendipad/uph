@@ -4,6 +4,11 @@
   Keep landing icon dimensions constrained so homepage SVG icons do not inherit oversized defaults.
 */
 
+.book-icon {
+  width: 0.85em !important;
+  height: 0.85em !important;
+}
+
 .feature-icon,
 .doctype-icon,
 .usecase-icon {
