@@ -35,6 +35,36 @@
   <i>Advanced Tree Hierarchy providing consolidated financial visibility at every node.</i>
 </p>
 
+### Party Workspace
+<p align="center">
+  <img src="screenshots/workspace.png" alt="Party Workspace" width="800" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+  <br>
+  <i>Centralized Party Workspace for unified management and reporting.</i>
+</p>
+
+### Data Quality & Governance
+<div align="center">
+  <img src="screenshots/duplication_dashboard.png" alt="Duplicate Detection Dashboard" width="400" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 10px;"/>
+  <img src="screenshots/voucher_health_dashboard.png" alt="Transactional Health Dashboard" width="400" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 10px;"/>
+  <br>
+  <i>Real-time insights into data quality, duplicates, and transactional health.</i>
+</div>
+
+### Conflict Resolution
+<div align="center">
+  <img src="screenshots/resolve_duplication.png" alt="Resolving Duplicates" width="400" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 10px;"/>
+  <img src="screenshots/resolve_mdm.png" alt="Resolving MDM Issues" width="400" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 10px;"/>
+  <br>
+  <i>Intuitive conflict resolution screens for unlinked roles and duplicate exclusion.</i>
+</div>
+
+### Smart Linking
+<p align="center">
+  <img src="screenshots/selecting_linked_erp_party.png" alt="Smart Linking" width="800" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+  <br>
+  <i>Fuzzy matching and Smart Linking interface to easily assign ERPNext parties to their Master Entity.</i>
+</p>
+
 ---
 
 # Unified Party Hub (UPH)
