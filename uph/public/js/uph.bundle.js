@@ -2,7 +2,7 @@
 if (typeof frappe !== 'undefined') {
     frappe.provide("uph");
 }
-console.log("UPH Bundle Loading...");
+
 import "./utils/party.js";
 import "./utils/party_master_manager.js";
 import "./utils/utils.js";
