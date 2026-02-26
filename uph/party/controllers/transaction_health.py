@@ -392,18 +392,22 @@ def run_transaction_policy_scan():
             start += page_len
 
         # Cancelled voucher not amended
-        # For child records, we must check 'amended_from' on the PARENT
-        has_amended_from = False
+        # NOTE: In Frappe, amended_from is set on the NEW amended doc,
+        # NOT on the original cancelled one. So we must check whether
+        # any other doc has amended_from pointing to the cancelled doc's name.
+        has_amended_from_field = False
         if is_child:
-            has_amended_from = frappe.get_meta(parent_dt).has_field("amended_from")
+            has_amended_from_field = frappe.get_meta(parent_dt).has_field(
+                "amended_from"
+            )
         else:
-            has_amended_from = meta.has_field("amended_from")
+            has_amended_from_field = meta.has_field("amended_from")
 
-        if has_amended_from:
+        if has_amended_from_field:
             if is_child:
                 # Subquery/Join logic for child tables
-                # We want cancelled vouchers (docstatus=2) where parent's amended_from is null
-                # We use frappe.get_all but we need to fetch 'parent' to check against amended parents
+                # We want cancelled vouchers (docstatus=2) where NO other
+                # parent doc has amended_from pointing to this parent.
                 filters = [
                     ["docstatus", "=", 2],
                     ["party_master", "is", "set"],
@@ -419,13 +423,16 @@ def run_transaction_policy_scan():
 
                 if cancelled:
                     parent_names = list(set(r.parent for r in cancelled))
-                    amended_parents = frappe.get_all(
-                        parent_dt,
-                        filters={
-                            "name": ["in", parent_names],
-                            "amended_from": ["is", "set"],
-                        },
-                        pluck="name",
+                    # Find parents that HAVE BEEN amended:
+                    # i.e. another doc exists with amended_from = parent_name
+                    amended_parents = set(
+                        frappe.get_all(
+                            parent_dt,
+                            filters={
+                                "amended_from": ["in", parent_names],
+                            },
+                            pluck="amended_from",
+                        )
                     )
 
                     for r in cancelled:
@@ -446,7 +453,6 @@ def run_transaction_policy_scan():
                 filters = {
                     "docstatus": 2,
                     "party_master": ["is", "set"],
-                    "amended_from": ["in", [None, ""]],
                 }
                 if cutoff_cancelled:
                     filters["modified"] = ["<=", cutoff_cancelled]
@@ -464,7 +470,21 @@ def run_transaction_policy_scan():
                     if not cancelled:
                         break
 
+                    # Find which cancelled doc names have been amended:
+                    # i.e. another doc exists with amended_from = cancelled_name
+                    cancelled_names = [r.name for r in cancelled]
+                    amended_names = set(
+                        frappe.get_all(
+                            dt,
+                            filters={"amended_from": ["in", cancelled_names]},
+                            pluck="amended_from",
+                        )
+                    )
+
                     for row in cancelled:
+                        if row.name in amended_names:
+                            continue
+
                         create_party_issue_if_missing(
                             party_master=row.party_master,
                             issue_type="Transaction Policy",
@@ -590,11 +610,11 @@ def sync_transaction_health_issues():
             if doc.docstatus != 0:
                 is_resolved = True
         elif code == "cancelled_referenced":
-            has_amended_from = False
-            if hasattr(doc, "amended_from") and doc.amended_from:
-                has_amended_from = True
+            # In Frappe, amended_from is on the NEW doc, not the cancelled one.
+            # Check if any other doc has amended_from pointing to this doc.
+            has_been_amended = bool(frappe.db.exists(dt, {"amended_from": dn}))
 
-            if doc.docstatus != 2 or has_amended_from:
+            if doc.docstatus != 2 or has_been_amended:
                 is_resolved = True
         elif code == "party_master_mismatch":
             # For mismatch, we need to re-verify the expected party_master
@@ -680,8 +700,17 @@ def get_health_counts():
 
         if has_amended_from:
             table = frappe.qb.DocType(dt)
+            # In Frappe, amended_from is on the NEW doc, not the cancelled one.
+            # Use a NOT IN subquery to exclude cancelled docs that have been amended.
             if is_child:
                 parent_table = frappe.qb.DocType(parent_dt)
+                # Subquery: parent names that are referenced by amended_from
+                amended_sq = (
+                    frappe.qb.from_(parent_table)
+                    .select(parent_table.amended_from)
+                    .where(parent_table.amended_from.isnotnull())
+                    .where(parent_table.amended_from != "")
+                )
                 result = (
                     frappe.qb.from_(table)
                     .join(parent_table)
@@ -691,14 +720,19 @@ def get_health_counts():
                         (table.docstatus == 2)
                         & (table.party_master.isnotnull())
                         & (table.party_master != "")
-                        & (
-                            (parent_table.amended_from.isnull())
-                            | (parent_table.amended_from == "")
-                        )
+                        & (parent_table.name.notin(amended_sq))
                     )
                     .run(as_dict=True)
                 )
             else:
+                # Subquery: doc names that are referenced by another doc's amended_from
+                table2 = frappe.qb.DocType(dt)
+                amended_sq = (
+                    frappe.qb.from_(table2)
+                    .select(table2.amended_from)
+                    .where(table2.amended_from.isnotnull())
+                    .where(table2.amended_from != "")
+                )
                 result = (
                     frappe.qb.from_(table)
                     .select(frappe.query_builder.functions.Count("*").as_("cnt"))
@@ -706,7 +740,7 @@ def get_health_counts():
                         (table.docstatus == 2)
                         & (table.party_master.isnotnull())
                         & (table.party_master != "")
-                        & ((table.amended_from.isnull()) | (table.amended_from == ""))
+                        & (table.name.notin(amended_sq))
                     )
                     .run(as_dict=True)
                 )
