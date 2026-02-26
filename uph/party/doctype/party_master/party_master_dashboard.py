@@ -14,6 +14,7 @@ def get_data():
                     "Payment Entry",
                     "Journal Entry",
                     "Party Analytic Accounting",
+                    "Party Issue",
                 ],
             },
             {
@@ -45,6 +46,10 @@ def get_data():
                     {
                         "doctype": "Party Relationship",
                         "fieldname": "subject_party",
+                    },
+                    {
+                        "doctype": "Party Relationship",
+                        "fieldname": "object_party",
                     },
                 ],
             },

@@ -96,6 +96,7 @@ frappe.ui.form.on("Party Master", {
 		}
 
 		update_buttons(frm);
+		check_high_severity_issues(frm);
 
 		frm.set_query("default_customer", () => ({
 			filters: { party_master: frm.doc.name },
@@ -412,23 +413,23 @@ function set_party_master_dashboard_indicators(frm) {
 }
 
 function render_relationships(frm) {
-    if (frm.is_new()) return;
+	if (frm.is_new()) return;
 
-    frappe.call({
-        method: "uph.party.doctype.party_relationship.party_relationship.get_party_relationships",
-        args: {
-            party_master: frm.doc.name
-        },
-        callback: function(r) {
-            if (!r.message || r.message.length === 0) {
-                frm.fields_dict.relationships_html.$wrapper.html(
-                    '<div class="text-muted">' + __("No relationships found") + '</div>'
-                );
-                return;
-            }
+	frappe.call({
+		method: "uph.party.doctype.party_relationship.party_relationship.get_party_relationships",
+		args: {
+			party_master: frm.doc.name
+		},
+		callback: function (r) {
+			if (!r.message || r.message.length === 0) {
+				frm.fields_dict.relationships_html.$wrapper.html(
+					'<div class="text-muted">' + __("No relationships found") + '</div>'
+				);
+				return;
+			}
 
-            let relationships = r.message;
-            let html = `
+			let relationships = r.message;
+			let html = `
                 <table class="table table-bordered table-sm">
                     <thead>
                         <tr>
@@ -441,21 +442,21 @@ function render_relationships(frm) {
                     <tbody>
             `;
 
-            relationships.forEach(rel => {
-                let related_party = rel.subject_party === frm.doc.name ? rel.object_party : rel.subject_party;
-                let direction = rel.subject_party === frm.doc.name ? __("Is") : __("Has"); 
-                // e.g. Subject(Me) IS Parent of Object. OR Subject(Parent) HAS Subsidiary(Me).
-                // Actually, the relationship type name handles this better usually.
-                // But let's just show raw type and related party.
-                
-                let rel_label = rel.relationship_type;
-                if (rel.subject_party === frm.doc.name) {
-                     rel_label = `${rel_label} ->`;
-                } else {
-                     rel_label = `<- ${rel_label}`;
-                }
+			relationships.forEach(rel => {
+				let related_party = rel.subject_party === frm.doc.name ? rel.object_party : rel.subject_party;
+				let direction = rel.subject_party === frm.doc.name ? __("Is") : __("Has");
+				// e.g. Subject(Me) IS Parent of Object. OR Subject(Parent) HAS Subsidiary(Me).
+				// Actually, the relationship type name handles this better usually.
+				// But let's just show raw type and related party.
 
-                html += `
+				let rel_label = rel.relationship_type;
+				if (rel.subject_party === frm.doc.name) {
+					rel_label = `${rel_label} ->`;
+				} else {
+					rel_label = `<- ${rel_label}`;
+				}
+
+				html += `
                     <tr>
                         <td>
                             <a href="/app/party-relationship/${rel.name}" data-doctype="Party Relationship" data-name="${rel.name}">
@@ -471,12 +472,12 @@ function render_relationships(frm) {
                         <td>${rel.ownership_percentage ? rel.ownership_percentage + '%' : '-'}</td>
                     </tr>
                 `;
-            });
+			});
 
-            html += '</tbody></table>';
-            
-            // Add a button to create new relationship
-            html += `
+			html += '</tbody></table>';
+
+			// Add a button to create new relationship
+			html += `
                 <div class="mt-2">
                     <button class="btn btn-sm btn-default" onclick="frappe.new_doc('Party Relationship', {subject_party: '${frm.doc.name}'})">
                         ${__("Add Relationship")}
@@ -484,7 +485,31 @@ function render_relationships(frm) {
                 </div>
             `;
 
-            frm.fields_dict.relationships_html.$wrapper.html(html);
-        }
-    });
+			frm.fields_dict.relationships_html.$wrapper.html(html);
+		}
+	});
+}
+
+function check_high_severity_issues(frm) {
+	if (frm.is_new()) return;
+
+	frappe.call({
+		method: "frappe.client.get_count",
+		args: {
+			doctype: "Party Issue",
+			filters: {
+				party_master: frm.doc.name,
+				status: ["in", ["Open", "Under Review"]],
+				severity: ["in", ["High", "Critical"]],
+			},
+		},
+		callback: (r) => {
+			if (r.message && r.message > 0) {
+				frm.dashboard.set_headline(
+					__("This Party Master has {0} high severity issues that require attention.", [r.message]),
+					"red"
+				);
+			}
+		},
+	});
 }
