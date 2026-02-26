@@ -733,24 +733,54 @@ def get_party_analytic_accounting_filtered(
 def query_similar_name_or_number(party_name=None, party_number=None):
     """
     Check for existing Party Master with same or similar name/number.
-    Returns dict with exact matches found.
+    Returns dict with exact matches or best fuzzy matches found.
     """
-    from uph.party.utils import normalize_text
+    from uph.party.controllers.normalization import NormalizationUtils, normalize_text
 
     res = {}
     if party_name:
-        normalized = normalize_text(party_name)
-        # Check exact name (case-insensitive via DB or normalized field)
+        normalized_input = normalize_text(party_name)
+
+        # 1. Check exact name (case-insensitive via DB or normalized field)
         exact_name = frappe.db.get_value(
-            "Party Master", {"party_name": party_name}, "name"
+            "Party Master",
+            {"party_name": party_name},
+            ["name", "party_name"],
+            as_dict=True,
         )
         if not exact_name:
             exact_name = frappe.db.get_value(
-                "Party Master", {"normalized_party_name": normalized}, "name"
+                "Party Master",
+                {"normalized_party_name": normalized_input},
+                ["name", "party_name"],
+                as_dict=True,
             )
 
         if exact_name:
-            res["exact_name"] = exact_name
+            res["exact_name"] = exact_name.party_name
+        else:
+            # 2. Fuzzy search using rapidfuzz
+            # Fetch all active party masters to search against
+            all_parties = frappe.db.get_all(
+                "Party Master", fields=["party_name", "normalized_party_name"]
+            )
+
+            best_match = None
+            highest_score = 0
+
+            for pm in all_parties:
+                # Compare normalized versions
+                score = NormalizationUtils.get_similarity_score(
+                    normalized_input, pm.normalized_party_name or ""
+                )
+                if score > highest_score:
+                    highest_score = score
+                    best_match = pm.party_name
+
+            # Threshold for "similar" match (e.g., 85%)
+            if highest_score >= 85:
+                res["fuzzy_name"] = best_match
+                res["fuzzy_score"] = round(highest_score, 1)
 
     if party_number:
         exact_number = frappe.db.get_value(

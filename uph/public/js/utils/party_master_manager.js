@@ -50,22 +50,6 @@ frappe.ui.form.PartyMasterQuickEntryForm = class PartyMasterQuickEntryForm exten
 
 				case "party_name":
 					field.description = __("A Unique Party Name Must be filled");
-					field.onchange = () => {
-						const name = this.dialog.doc.party_name;
-						if (name) {
-							frappe.call({
-								method: "uph.party.controllers.queries.query_similar_name_or_number",
-								args: { party_name: name },
-								debounce: 2000,
-								callback: (r) => {
-									if (r.message?.exact_name) {
-										const msg = `<p style="color:red"> ${__("Exists: ")} ${name} </p>`;
-										this.dialog.fields_dict.party_name.df.description = msg;
-									}
-								},
-							});
-						}
-					};
 					break;
 
 				case "party_number":
@@ -103,28 +87,54 @@ frappe.ui.form.PartyMasterQuickEntryForm = class PartyMasterQuickEntryForm exten
 			}
 		});
 
-		// party_name duplicate check
-		if (d.fields_dict.party_name) {
-			d.fields_dict.party_name.df.onchange = () => {
-				const name = d.doc.party_name;
-				if (!name) return;
-				frappe.call({
-					method: "uph.party.controllers.queries.query_similar_name_or_number",
-					args: { party_name: name },
-					debounce: 2000,
-					callback: (r) => {
-						if (r.message?.exact_name) {
-							const msg = `<p style="color:red"> ${__("Exists: ")} ${name} </p>`;
-							d.fields_dict.party_name.df.description = msg;
-							d.get_field("party_name").refresh();
-						} else {
-							d.fields_dict.party_name.df.description = __("A Unique Party Name Must be filled");
-							d.get_field("party_name").refresh();
+		// party_name and party_number duplicate check
+		const check_duplicate = frappe.utils.debounce((fieldname, value) => {
+			if (!value) return;
+
+			frappe.call({
+				method: "uph.party.controllers.queries.query_similar_name_or_number",
+				args: { [fieldname]: value },
+				callback: (r) => {
+					const field = d.get_field(fieldname);
+					if (!field) return;
+
+					let desc = "";
+					const msg = r.message || {};
+
+					if (msg.exact_name || msg.exact_number) {
+						desc = `<span style="color:red; font-weight:bold;"> ${__("Exists: ")} ${msg.exact_name || msg.exact_number} </span>`;
+					} else if (msg.fuzzy_name) {
+						desc = `<span style="color:orange; font-weight:bold;"> ${__("Similar: ")} ${msg.fuzzy_name} (${msg.fuzzy_score}%) </span>`;
+					} else {
+						desc =
+							fieldname === "party_name"
+								? __("A Unique Party Name Must be filled")
+								: __("A Unique Party Number Must Be set or leave it");
+					}
+
+					field.set_description(desc);
+
+					if (field.$wrapper) {
+						field.$wrapper.find(".help-box").html(desc).show();
+					}
+
+					setTimeout(() => {
+						if (field.$wrapper) {
+							field.$wrapper.find(".help-box").html(desc).show();
 						}
-					},
+					}, 100);
+				},
+			});
+		}, 500);
+
+		["party_name", "party_number"].forEach((f) => {
+			const field = d.get_field(f);
+			if (field && field.$input) {
+				field.$input.on("input", () => {
+					check_duplicate(f, field.get_value());
 				});
-			};
-		}
+			}
+		});
 	}
 
 	insert() {
