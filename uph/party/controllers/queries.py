@@ -757,7 +757,7 @@ def query_similar_name_or_number(party_name=None, party_number=None):
             )
 
         if exact_name:
-            res["exact_name"] = exact_name.party_name
+            res["exact_name"] = exact_name.name
         else:
             # 2. Fuzzy search using rapidfuzz
             # Fetch all active party masters to search against

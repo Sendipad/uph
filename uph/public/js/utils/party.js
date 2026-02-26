@@ -203,7 +203,7 @@ uph.party = {
 	},
 
 	// ✅ REFACTORED: Dialog function that works with any Party Master doc
-	create_party_for_party_master_dialog_from_doc: function (doc) {
+	create_party_for_party_master_dialog_from_doc: function (doc, on_success) {
 		let party_types = [doc.party_type];
 
 		if (doc.roles?.length > 0) {
@@ -303,6 +303,7 @@ uph.party = {
 									message: __("{0} Created Successfully", [values.party_type]),
 									indicator: "green",
 								});
+								if (on_success) on_success(r.message);
 							} else {
 								const new_doc = r.message;
 								frappe.model.sync(new_doc);
@@ -320,7 +321,7 @@ uph.party = {
 
 	// ✅ KEEP: Your original form function as a wrapper
 	create_party_for_party_master_dialog: function (frm) {
-		uph.party.create_party_for_party_master_dialog_from_doc(frm.doc);
+		uph.party.create_party_for_party_master_dialog_from_doc(frm.doc, () => frm.reload_doc());
 	},
 
 	// Child table handler for party_master change
