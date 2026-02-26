@@ -18,12 +18,6 @@
         "is_group",
         "image",
         "column_break_sqyz",
-        "group_type",
-        "party_type_group",
-        "lft",
-        "rgt",
-        "old_parent",
-        "title",
         "details_tab",
         "naming_series",
         "type",
@@ -37,7 +31,6 @@
         "territory",
         "account_manager",
         "party_details",
-        "section_break_4hqz",
         "section_break_legal_identity",
         "column_break_legal_identity",
         "national_id",
@@ -72,17 +65,12 @@
         "section_break_eydo",
         "section_break_zygi",
         "column_break_hllf",
-        "tax_tab",
         "column_break_jsug",
         "settings_tab",
         "has_secondary_role_party",
         "roles",
         "is_primary_role",
         "primary_party_master",
-        "is_internal_party",
-        "represents_company",
-        "companies",
-        "portal_users_tab",
         "portal_users",
         "is_frozen",
         "disabled",
@@ -91,12 +79,21 @@
         "enable_selling",
         "enable_buying",
         "section_break_wnss",
+        "is_internal_party",
+        "represents_company",
+        "companies",
         "section_break_ulyl",
         "dashboard_tab",
         "relationships_html",
         "parties",
         "total_linked_party",
-        "normalized_party_name"
+        "normalized_party_name",
+        "lft",
+        "rgt",
+        "old_parent",
+        "title",
+        "group_type",
+        "party_type_group"
     ],
     "fields": [
         {
@@ -320,13 +317,13 @@
         {
             "fieldname": "section_break_ulyl",
             "fieldtype": "Section Break",
-            "label": "Defaults"
+            "label": "Other Metadata"
         },
         {
             "depends_on": "eval:!doc.is_group",
             "fieldname": "contacts_information_tab",
             "fieldtype": "Tab Break",
-            "label": "Contacts Information"
+            "label": "Contacts"
         },
         {
             "depends_on": "eval: !doc.__islocal",
@@ -340,7 +337,7 @@
             "description": "Select, to make the party searchable with these fields",
             "fieldname": "primary_address_and_contact_detail",
             "fieldtype": "Section Break",
-            "label": "Primary Address and Contact"
+            "label": "Primary Contact Info"
         },
         {
             "description": "Reselect, if the chosen contact is edited after save",
@@ -406,7 +403,7 @@
         {
             "fieldname": "tab_3_tab",
             "fieldtype": "Tab Break",
-            "label": "Accounting"
+            "label": "Accounting & Tax"
         },
         {
             "depends_on": "eval:!doc.is_group",
@@ -457,11 +454,6 @@
             "read_only": 1
         },
         {
-            "fieldname": "tax_tab",
-            "fieldtype": "Tab Break",
-            "label": "Tax"
-        },
-        {
             "fieldname": "tax_id",
             "fieldtype": "Data",
             "label": "Tax ID"
@@ -483,11 +475,6 @@
             "options": "Tax Withholding Category"
         },
         {
-            "fieldname": "portal_users_tab",
-            "fieldtype": "Tab Break",
-            "label": "Portal Users"
-        },
-        {
             "fieldname": "portal_users",
             "fieldtype": "Table",
             "label": "Party Portal Users",
@@ -496,7 +483,7 @@
         {
             "fieldname": "settings_tab",
             "fieldtype": "Tab Break",
-            "label": "Settings"
+            "label": "Roles & Settings"
         },
         {
             "default": "0",
@@ -561,7 +548,7 @@
         {
             "fieldname": "details_tab",
             "fieldtype": "Tab Break",
-            "label": "Details"
+            "label": "Identity"
         },
         {
             "depends_on": "eval:doc.party_type==\"Customer\"",
@@ -609,7 +596,7 @@
             "depends_on": "eval:!doc.is_group",
             "fieldname": "dashboard_tab",
             "fieldtype": "Tab Break",
-            "label": "Dashboard"
+            "label": "Connections"
         },
         {
             "description": "Relationship Details",
@@ -623,7 +610,7 @@
             "depends_on": "eval:!doc.is_group&&doc.type",
             "fieldname": "section_break_legal_identity",
             "fieldtype": "Section Break",
-            "label": "Legal Identity"
+            "label": "Legal Identity Info"
         },
         {
             "depends_on": "eval:doc.type == 'Individual'",
@@ -691,7 +678,7 @@
     "is_calendar_and_gantt": 1,
     "is_tree": 1,
     "links": [],
-    "modified": "2026-02-26 23:32:14.939657",
+    "modified": "2026-02-21 00:44:39.898174",
     "modified_by": "Administrator",
     "module": "Party",
     "name": "Party Master",
