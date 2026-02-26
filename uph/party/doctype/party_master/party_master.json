@@ -11,91 +11,98 @@
     "documentation": "https://sendipad.github.io/uph/en/docs/introduction/",
     "engine": "InnoDB",
     "field_order": [
-        "party_name",
-        "party_number",
-        "status",
-        "party_type",
-        "is_group",
-        "image",
-        "column_break_sqyz",
+        "dashboard_tab",
+        "relationships_html",
+        "parties",
         "details_tab",
+        "section_break_4hqz",
         "naming_series",
         "type",
-        "legal_entity_type",
         "salutation",
-        "gender",
-        "date_of_establishment",
-        "industry",
-        "market_segment",
+        "party_name",
         "parent_party_master",
-        "territory",
+        "party_number",
+        "lft",
+        "rgt",
+        "old_parent",
+        "mobile_no",
+        "total_linked_party",
         "account_manager",
-        "party_details",
+        "column_break_sqyz",
+        "is_group",
+        "party_type",
+        "group_type",
+        "party_type_group",
+        "has_secondary_role_party",
+        "primary_party_master",
+        "territory",
+        "title",
+        "image",
+        "gender",
+        "roles",
+        "normalized_party_name",
+        "section_break_ulyl",
+        "default_currency",
+        "is_internal_party",
+        "represents_company",
+        "companies",
+        "column_break_hllf",
+        "default_price_list",
         "section_break_legal_identity",
-        "column_break_legal_identity",
         "national_id",
         "passport_number",
         "business_registration_number",
+        "column_break_legal_identity",
+        "legal_entity_type",
+        "date_of_establishment",
         "section_break_nrbo",
         "disputed_reasons",
         "section_break_mnpu",
+        "party_details",
         "column_break_slaa",
+        "language",
+        "industry",
+        "market_segment",
         "contacts_information_tab",
+        "column_break_mzed",
+        "contact_html",
+        "column_break_14",
+        "address_html",
+        "primary_address_and_contact_detail",
         "party_primary_contact",
-        "mobile_no",
         "email_id",
+        "column_break_26",
         "party_primary_address",
         "primary_address",
-        "contact_html",
-        "address_html",
-        "column_break_mzed",
-        "column_break_14",
-        "column_break_26",
-        "primary_address_and_contact_detail",
         "tab_3_tab",
-        "accounts",
+        "section_break_eydo",
         "payment_terms",
         "credit_limits",
+        "section_break_zygi",
+        "accounts",
+        "tax_tab",
         "tax_id",
+        "column_break_jsug",
         "tax_category",
         "tax_withholding_category",
-        "default_currency",
-        "default_price_list",
-        "language",
-        "section_break_eydo",
-        "section_break_zygi",
-        "column_break_hllf",
-        "column_break_jsug",
-        "settings_tab",
-        "has_secondary_role_party",
-        "roles",
-        "is_primary_role",
-        "primary_party_master",
+        "portal_users_tab",
         "portal_users",
+        "settings_tab",
+        "is_primary_role",
         "is_frozen",
         "disabled",
-        "enforce_party_analaytic_accounting_selection",
+        "status",
         "column_break_ihcs",
         "enable_selling",
         "enable_buying",
         "section_break_wnss",
-        "is_internal_party",
-        "represents_company",
-        "companies",
-        "section_break_ulyl",
-        "dashboard_tab",
-        "relationships_html",
-        "parties",
-        "total_linked_party",
-        "normalized_party_name",
-        "lft",
-        "rgt",
-        "old_parent",
-        "title",
-        "group_type",
-        "party_type_group"
+        "enforce_party_analaytic_accounting_selection"
     ],
     "fields": [
+        {
+            "fieldname": "section_break_4hqz",
+            "fieldtype": "Section Break"
+        },
         {
             "fieldname": "lft",
             "fieldtype": "Int",
@@ -317,13 +324,13 @@
         {
             "fieldname": "section_break_ulyl",
             "fieldtype": "Section Break",
-            "label": "Other Metadata"
+            "label": "Defaults"
         },
         {
             "depends_on": "eval:!doc.is_group",
             "fieldname": "contacts_information_tab",
             "fieldtype": "Tab Break",
-            "label": "Contacts"
+            "label": "Contacts Information"
         },
         {
             "depends_on": "eval: !doc.__islocal",
@@ -337,7 +344,7 @@
             "description": "Select, to make the party searchable with these fields",
             "fieldname": "primary_address_and_contact_detail",
             "fieldtype": "Section Break",
-            "label": "Primary Contact Info"
+            "label": "Primary Address and Contact"
         },
         {
             "description": "Reselect, if the chosen contact is edited after save",
@@ -403,7 +410,7 @@
         {
             "fieldname": "tab_3_tab",
             "fieldtype": "Tab Break",
-            "label": "Accounting & Tax"
+            "label": "Accounting"
         },
         {
             "depends_on": "eval:!doc.is_group",
@@ -454,6 +461,11 @@
             "read_only": 1
         },
         {
+            "fieldname": "tax_tab",
+            "fieldtype": "Tab Break",
+            "label": "Tax"
+        },
+        {
             "fieldname": "tax_id",
             "fieldtype": "Data",
             "label": "Tax ID"
@@ -475,6 +487,11 @@
             "options": "Tax Withholding Category"
         },
         {
+            "fieldname": "portal_users_tab",
+            "fieldtype": "Tab Break",
+            "label": "Portal Users"
+        },
+        {
             "fieldname": "portal_users",
             "fieldtype": "Table",
             "label": "Party Portal Users",
@@ -483,7 +500,7 @@
         {
             "fieldname": "settings_tab",
             "fieldtype": "Tab Break",
-            "label": "Roles & Settings"
+            "label": "Settings"
         },
         {
             "default": "0",
@@ -548,7 +565,7 @@
         {
             "fieldname": "details_tab",
             "fieldtype": "Tab Break",
-            "label": "Identity"
+            "label": "Details"
         },
         {
             "depends_on": "eval:doc.party_type==\"Customer\"",
@@ -596,10 +613,9 @@
             "depends_on": "eval:!doc.is_group",
             "fieldname": "dashboard_tab",
             "fieldtype": "Tab Break",
-            "label": "Connections"
+            "label": "Dashboard"
         },
         {
-            "description": "Relationship Details",
             "fieldname": "relationships_html",
             "fieldtype": "HTML",
             "ignore_user_permissions": 1,
@@ -610,7 +626,7 @@
             "depends_on": "eval:!doc.is_group&&doc.type",
             "fieldname": "section_break_legal_identity",
             "fieldtype": "Section Break",
-            "label": "Legal Identity Info"
+            "label": "Legal Identity"
         },
         {
             "depends_on": "eval:doc.type == 'Individual'",
