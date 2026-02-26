@@ -11,11 +11,6 @@
  "documentation": "https://sendipad.github.io/uph/en/docs/introduction/",
  "engine": "InnoDB",
  "field_order": [
-  "dashboard_tab",
-  "relationships_html",
-  "parties",
-  "details_tab",
-  "section_break_4hqz",
   "naming_series",
   "type",
   "salutation",
@@ -41,6 +36,7 @@
   "gender",
   "roles",
   "normalized_party_name",
+  "details_tab",
   "section_break_ulyl",
   "default_currency",
   "is_internal_party",
@@ -96,13 +92,12 @@
   "enable_selling",
   "enable_buying",
   "section_break_wnss",
-  "enforce_party_analaytic_accounting_selection"
+  "enforce_party_analaytic_accounting_selection",
+  "dashboard_tab",
+  "relationships_html",
+  "parties"
  ],
  "fields": [
-  {
-   "fieldname": "section_break_4hqz",
-   "fieldtype": "Section Break"
-  },
   {
    "fieldname": "lft",
    "fieldtype": "Int",
@@ -616,6 +611,7 @@
    "label": "Dashboard"
   },
   {
+   "description": "Relationship Details",
    "fieldname": "relationships_html",
    "fieldtype": "HTML",
    "ignore_user_permissions": 1,
@@ -694,7 +690,7 @@
  "is_calendar_and_gantt": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2026-02-21 00:44:39.898174",
+ "modified": "2026-02-26 23:32:14.939657",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party Master",
