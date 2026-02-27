@@ -30,21 +30,25 @@
 ## 🖼️ Visual Insights
 
 <p align="center">
-  <img src="screenshots/party_master_tree.png" alt="Party Master Tree Hierarchy" width="800" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+  <img width="1211" height="295" alt="party_master_tree" src="https://github.com/user-attachments/assets/ddd6905b-af9b-480d-9e51-b3ce87c40210" />
+
   <br>
   <i>Advanced Tree Hierarchy providing consolidated financial visibility at every node.</i>
 </p>
 
 ### Party Workspace
 <p align="center">
-  <img src="screenshots/workspace.png" alt="Party Workspace" width="800" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+  <img width="1052" height="659" alt="workspace (1)" src="https://github.com/user-attachments/assets/3c4ec061-4270-4d7b-b3ba-ec623d7bbddc" />
+
   <br>
   <i>Centralized Party Workspace for unified management and reporting.</i>
 </p>
 
 ### Data Quality & Governance
 <div align="center">
-  <img src="screenshots/duplication_dashboard.png" alt="Duplicate Detection Dashboard" width="400" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 10px;"/>
+  <img width="1329" height="738" alt="voucher_health_dashboard (1)" src="https://github.com/user-attachments/assets/8476a6e6-5f7c-4598-8665-b5cd7df37545" />
+<img width="1329" height="738" alt="duplication_dashboard" src="https://github.com/user-attachments/assets/a83fe6d2-c1d3-477f-a388-970956f3149b" />
+
   <img src="screenshots/voucher_health_dashboard.png" alt="Transactional Health Dashboard" width="400" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 10px;"/>
   <br>
   <i>Real-time insights into data quality, duplicates, and transactional health.</i>
