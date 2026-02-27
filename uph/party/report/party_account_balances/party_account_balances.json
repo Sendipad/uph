@@ -7,11 +7,10 @@
  "docstatus": 0,
  "doctype": "Report",
  "filters": [],
- "idx": 0,
+ "idx": 3,
  "is_standard": "Yes",
- "letter_head": "1a without footer",
- "letterhead": null,
- "modified": "2025-04-29 22:32:53.968138",
+ "letter_head": null,
+ "modified": "2026-02-27 22:10:46.540796",
  "modified_by": "Administrator",
  "module": "Party",
  "name": "Party Account Balances",
@@ -23,6 +22,9 @@
  "roles": [
   {
    "role": "Party Manager"
+  },
+  {
+   "role": "System Manager"
   }
  ],
  "timeout": 0

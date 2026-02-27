@@ -35,6 +35,68 @@ frappe.query_reports["Party Account Balances"] = {
     },
 
     {
+      fieldname: "view_mode",
+      label: __("View Mode"),
+      fieldtype: "Select",
+      options: [
+        { label: __("Party Number"), value: "Party Number" },
+        { label: __("Active Accounts"), value: "Active Accounts" },
+        { label: __("Dormant Accounts"), value: "Dormant Accounts" },
+        { label: __("High Debit Balance"), value: "High Debit Balance" },
+        { label: __("Zero Balance Accounts"), value: "Zero Balance Accounts" },
+      ],
+      default: "Party Number",
+      on_change: function () {
+        let view_mode = frappe.query_report.get_filter_value("view_mode");
+
+        // Toggle from_date visibility
+        let from_date_filter = frappe.query_report.get_filter("from_date");
+        if (from_date_filter) {
+          if (
+            view_mode === "Active Accounts" ||
+            view_mode === "Dormant Accounts"
+          ) {
+            from_date_filter.df.hidden = 0;
+            from_date_filter.refresh();
+          } else {
+            from_date_filter.df.hidden = 1;
+            from_date_filter.refresh();
+          }
+        }
+
+        // Toggle debit_threshold visibility
+        let threshold_filter =
+          frappe.query_report.get_filter("debit_threshold");
+        if (threshold_filter) {
+          if (view_mode === "High Debit Balance") {
+            threshold_filter.df.hidden = 0;
+            threshold_filter.refresh();
+          } else {
+            threshold_filter.df.hidden = 1;
+            threshold_filter.refresh();
+          }
+        }
+
+        frappe.query_report.refresh();
+      },
+    },
+
+    {
+      fieldname: "from_date",
+      label: __("Activity From Date"),
+      fieldtype: "Date",
+      default: frappe.datetime.add_days(frappe.datetime.get_today(), -365),
+      hidden: 1,
+    },
+
+    {
+      fieldname: "debit_threshold",
+      label: __("Debit Threshold"),
+      fieldtype: "Currency",
+      hidden: 1,
+    },
+
+    {
       fieldname: "arrange_balances",
       label: __("Balances Arranged:"),
       fieldtype: "Select",
@@ -193,14 +255,18 @@ frappe.query_reports["Party Account Balances"] = {
     },
   ],
   formatter: function (value, row, column, data, default_formatter) {
-	let currency;
-	if (column.fieldtype==="Currency"){
-		let currency; 
-		if(frappe.query_report.get_filter_value("arrange_balances") !== "Horizontal" &&column.fieldname!=="balance_in_cc"){
-			currency=data.currency;
-		}else{
-      currency = column.options;
-	}
+    let currency;
+    if (column.fieldtype === "Currency") {
+      let currency;
+      if (
+        frappe.query_report.get_filter_value("arrange_balances") !==
+        "Horizontal" &&
+        column.fieldname !== "balance_in_cc"
+      ) {
+        currency = data.currency;
+      } else {
+        currency = column.options;
+      }
       const formatted = format_currency(value, currency);
 
       if (value > 0) {
@@ -212,13 +278,12 @@ frappe.query_reports["Party Account Balances"] = {
       }
     }
 
-    if (column.fieldname === "party_type" ||column.fieldname==="status") {
+    if (column.fieldname === "party_type" || column.fieldname === "status") {
       return __(value);
     }
-	return default_formatter(value, row, column, data);
-},
+    return default_formatter(value, row, column, data);
+  },
 
-  
   onload: function (report) {
     report.page.add_inner_button(
       __("Party Account Statement"),

@@ -91,6 +91,76 @@ class TestReportCoverage(FrappeTestCase, AccountsTestMixin):
         self.assertTrue(len(columns) > 0)
         self.assertTrue(len(data) > 0)
 
+    def test_party_account_balances_no_party_master(self):
+        """Party Account Balances should return results when party_master is empty."""
+        from uph.party.report.party_account_balances.party_account_balances import (
+            execute,
+        )
+
+        filters = {"company": self.company}
+        columns, data = execute(filters)
+        self.assertTrue(len(columns) > 0)
+        # Data should include the invoice we created in setUp
+        self.assertTrue(len(data) > 0)
+
+    def test_party_account_balances_view_mode_party_number(self):
+        from uph.party.report.party_account_balances.party_account_balances import (
+            execute,
+        )
+
+        filters = {
+            "company": self.company,
+            "party_master": self.party_master,
+            "view_mode": "Party Number",
+        }
+        columns, data = execute(filters)
+        self.assertTrue(len(columns) > 0)
+        self.assertTrue(len(data) > 0)
+
+    def test_party_account_balances_view_mode_active(self):
+        from uph.party.report.party_account_balances.party_account_balances import (
+            execute,
+        )
+
+        filters = {
+            "company": self.company,
+            "view_mode": "Active Accounts",
+            "from_date": frappe.utils.add_days(frappe.utils.today(), -365),
+        }
+        columns, data = execute(filters)
+        self.assertTrue(len(columns) > 0)
+        # Should have data since we created invoice today
+        self.assertTrue(len(data) > 0)
+
+    def test_party_account_balances_view_mode_high_debit(self):
+        from uph.party.report.party_account_balances.party_account_balances import (
+            execute,
+        )
+
+        filters = {
+            "company": self.company,
+            "view_mode": "High Debit Balance",
+            "to_date": frappe.utils.today(),
+        }
+        columns, data = execute(filters)
+        self.assertTrue(len(columns) > 0)
+
+    def test_party_account_balances_view_mode_zero_balance(self):
+        from uph.party.report.party_account_balances.party_account_balances import (
+            execute,
+        )
+
+        filters = {
+            "company": self.company,
+            "view_mode": "Zero Balance Accounts",
+        }
+        columns, data = execute(filters)
+        self.assertTrue(len(columns) > 0)
+        # All returned rows should have zero balance
+        for row in data:
+            balance = row.get("balance", 0)
+            self.assertEqual(balance, 0, f"Expected zero balance, got {balance}")
+
     def test_party_master_health_report(self):
         from uph.party.report.party_master_health_report.party_master_health_report import (
             execute,
