@@ -46,7 +46,9 @@
 
 ### Data Quality & Governance
 <div align="center">
-  
+  <img width="1329" height="738" alt="voucher_health_dashboard (1)" src="https://github.com/user-attachments/assets/8476a6e6-5f7c-4598-8665-b5cd7df37545" />
+<img width="1329" height="738" alt="duplication_dashboard" src="https://github.com/user-attachments/assets/a83fe6d2-c1d3-477f-a388-970956f3149b" />
+
   <img src="screenshots/voucher_health_dashboard.png" alt="Transactional Health Dashboard" width="400" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 10px;"/>
   <br>
   <i>Real-time insights into data quality, duplicates, and transactional health.</i>
