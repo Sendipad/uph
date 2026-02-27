@@ -30,6 +30,8 @@
 ## 🖼️ Visual Insights
 
 <p align="center">
+  <img width="1211" height="295" alt="party_master_tree" src="https://github.com/user-attachments/assets/ddd6905b-af9b-480d-9e51-b3ce87c40210" />
+
   <img src="screenshots/party_master_tree.png" alt="Party Master Tree Hierarchy" width="800" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
   <br>
   <i>Advanced Tree Hierarchy providing consolidated financial visibility at every node.</i>
