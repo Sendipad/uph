@@ -10,3 +10,4 @@ uph.patches.setup_pm_fields
 uph.patches.populate_normalized_party_name
 uph.patches.migrate_duplicate_exclusion_to_party_issue
 uph.patches.rescan_transaction_health_and_unlinked
+uph.patches.fix_voucher_party_master_after_linking
