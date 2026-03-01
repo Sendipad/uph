@@ -249,25 +249,31 @@ def validate_party_master_on_target_party_type(doc, method):
                 )
             )
         if doc.party_master:
-            filters = {
-                "party_master": ["=", doc.party_master],
-                "name": ["!=", doc.name],
-            }
             rule_fieldname = get_party_type_validation_rule(doc.doctype).get(
                 "rule_fieldname"
             )
-            if rule_fieldname:
-                filters.update({rule_fieldname: ["=", doc.get(rule_fieldname)]})
-            existing = frappe.get_value(doc.doctype, filters, "name")
-            if existing:
-                frappe.throw(
-                    title=_("Duplicate Exists"),
-                    msg=_("Party Master {0} has a Party {1} with {2}").format(
-                        doc.party_master,
-                        existing,
-                        doc.get(rule_fieldname) if rule_fieldname else "",
-                    ),
+            allowed = get_party_type_validation_rule(doc.doctype).get("allowed")
+
+            # Only check for duplicates if multiple records are not allowed,
+            # or if they are allowed but must be unique by a specific field (rule_fieldname).
+            if not allowed or (allowed and rule_fieldname):
+                filters = [["party_master", "=", doc.party_master]]
+                if rule_fieldname:
+                    filters.append([rule_fieldname, "=", doc.get(rule_fieldname)])
+
+                all_linked = frappe.db.get_all(
+                    doc.doctype, filters=filters, pluck="name"
                 )
+                existing = [n for n in all_linked if n != doc.name]
+
+                if existing:
+                    existing = existing[0]
+                    frappe.throw(
+                        title=_("Duplicate Exists"),
+                        msg=_(
+                            "Party Master {0} already has a Party {1} linked (we are {2})"
+                        ).format(doc.party_master, existing, doc.name),
+                    )
 
         # Sync Naming if enabled
         sync_party_name_from_party_master(doc)

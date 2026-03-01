@@ -42,7 +42,12 @@ class TestUnlinkedResolver(FrappeTestCase, AccountsTestMixin):
 
             clear_all_caches()
 
-        # Remove DB delete calls here to avoid breaking other tests
+        # Clean up only OUR test records to ensure a fresh start
+        frappe.db.delete(
+            "Customer", {"customer_name": ["like", "_Test Unlinked Customer %"]}
+        )
+        frappe.db.delete("Party Master", {"party_name": ["like", "_Test PM %"]})
+        frappe.db.commit()
 
     def _create_unlinked_customer(self):
         """Create a Customer WITHOUT a party_master (unlinked)."""
