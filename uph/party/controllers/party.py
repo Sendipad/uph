@@ -394,15 +394,22 @@ def on_change_party_master_update_transactional_document_types(
     if changes:
         content = ", ".join(changes)
 
-        party.add_comment(
-            "Comment", f"🎯 {content} Assigned to → {party_master or 'NULL'}"
-        )
-
-        if party_master:
-            doc_pm = frappe.get_doc("Party Master", party_master)
-            doc_pm.add_comment(
-                "Comment", f"{party.name} Assigned and Updated: {content}"
+        try:
+            party.add_comment(
+                "Comment", f"🎯 {content} Assigned to → {party_master or 'NULL'}"
             )
+
+            if party_master:
+                doc_pm = frappe.get_doc("Party Master", party_master)
+                doc_pm.add_comment(
+                    "Comment", f"{party.name} Assigned and Updated: {content}"
+                )
+        except Exception as e:
+            # Prevent QueryDeadlockError or other comment insertion failures from breaking the voucher sync loop
+            frappe.logger("uph").warning(
+                f"Failed to add comment to {party.name} during voucher sync: {e}"
+            )
+
     if not counts_only:
         frappe.db.commit()
 
