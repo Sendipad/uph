@@ -249,6 +249,7 @@ def create_custom_indices():
             f"SHOW INDEX FROM `{table}` WHERE Key_name = %s", (index_name,)
         ):
             try:
+                frappe.db.commit()  # Prevent ImplicitCommitError during DDL statement
                 frappe.db.sql(
                     f"CREATE INDEX `{index_name}` ON `{table}` ({', '.join(columns)})"
                 )
