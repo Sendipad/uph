@@ -9,6 +9,14 @@ class TestPartyRelationship(FrappeTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        # Clean up any existing test data to avoid ID collisions
+        test_parties = frappe.get_all(
+            "Party Master", filters={"party_name": ["like", "_Test%"]}, pluck="name"
+        )
+        for p in test_parties:
+            frappe.db.delete("Party Master", {"name": p})
+        frappe.db.commit()
+
         cls._create_test_relationship_types()
         cls._create_test_party_masters()
 
@@ -25,7 +33,7 @@ class TestPartyRelationship(FrappeTestCase):
                     "is_hierarchical": 1,
                     "is_enabled": 1,
                 }
-            ).insert(ignore_permissions=True)
+            ).insert(ignore_permissions=True, ignore_if_duplicate=True)
 
         # Subsidiary
         if not frappe.db.exists("Party Relationship Type", "Subsidiary"):
@@ -36,7 +44,7 @@ class TestPartyRelationship(FrappeTestCase):
                     "is_hierarchical": 1,
                     "is_enabled": 1,
                 }
-            ).insert(ignore_permissions=True)
+            ).insert(ignore_permissions=True, ignore_if_duplicate=True)
 
         # Partner
         if not frappe.db.exists("Party Relationship Type", "Partner"):
@@ -47,7 +55,7 @@ class TestPartyRelationship(FrappeTestCase):
                     "is_hierarchical": 0,
                     "is_enabled": 1,
                 }
-            ).insert(ignore_permissions=True)
+            ).insert(ignore_permissions=True, ignore_if_duplicate=True)
 
         # Now update the reverse relationships
         frappe.db.set_value(
@@ -79,7 +87,7 @@ class TestPartyRelationship(FrappeTestCase):
                     "is_group": 1,
                     "party_type": "Customer",
                 }
-            ).insert(ignore_permissions=True)
+            ).insert(ignore_permissions=True, ignore_if_duplicate=True)
 
         root_group = frappe.db.get_value(
             "Party Master", {"party_name": "Root Group"}, "name"
@@ -87,17 +95,14 @@ class TestPartyRelationship(FrappeTestCase):
 
         for name in ["_Test Company A", "_Test Company B", "_Test Company C"]:
             if not frappe.db.exists("Party Master", {"party_name": name}):
-                try:
-                    frappe.get_doc(
-                        {
-                            "doctype": "Party Master",
-                            "party_name": name,
-                            "party_type": "Customer",
-                            "parent_party_master": root_group,
-                        }
-                    ).insert(ignore_permissions=True)
-                except frappe.ValidationError:
-                    pass  # May already exist
+                frappe.get_doc(
+                    {
+                        "doctype": "Party Master",
+                        "party_name": name,
+                        "party_type": "Customer",
+                        "parent_party_master": root_group,
+                    }
+                ).insert(ignore_permissions=True, ignore_if_duplicate=True)
         frappe.db.commit()
 
     def tearDown(self):
