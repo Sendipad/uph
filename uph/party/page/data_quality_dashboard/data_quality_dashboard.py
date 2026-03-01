@@ -5,6 +5,9 @@ import frappe
 from frappe import _
 from frappe.utils import cint
 import json
+from uph.party.controllers.cache_utils import (
+    get_doctypes_functional_fields_mapping_as_dict,
+)
 
 
 @frappe.whitelist()
@@ -186,11 +189,38 @@ def get_unlinked_voucher_issues(
             continue
 
         # Build the WHERE clause and count filters
-        where_clause = "(party_master IS NULL OR party_master = '')"
+        # Only consider rows that actually have a party set in the designated field
+        party_fieldname = dt_info.get("party_fieldname")
+        if not party_fieldname:
+            mappings = get_doctypes_functional_fields_mapping_as_dict()
+            party_fieldname = mappings.get(dt, {}).get("party_fieldname")
+
+        extra_where = ""
+        if party_fieldname:
+            extra_where = (
+                f" AND (`{party_fieldname}` IS NOT NULL AND `{party_fieldname}` != '')"
+            )
+
+        # Exclude Internal Transfer Payment Entries
+        if dt == "Payment Entry" or parent_dt == "Payment Entry":
+            extra_where += " AND `payment_type` != 'Internal Transfer'"
+
+        where_clause = f"(party_master IS NULL OR party_master = ''){extra_where}"
+
+        # Build count filters for frappe.db.count
         count_filters = {"party_master": ["in", [None, ""]]}
+        if party_fieldname:
+            count_filters[party_fieldname] = ["is", "set"]
+        if dt == "Payment Entry" or parent_dt == "Payment Entry":
+            count_filters["payment_type"] = ["!=", "Internal Transfer"]
+
         if party_master:
-            where_clause = "party_master = %(party_master)s"
+            where_clause = f"party_master = %(party_master)s{extra_where}"
             count_filters = {"party_master": party_master}
+            if party_fieldname:
+                count_filters[party_fieldname] = ["is", "set"]
+            if dt == "Payment Entry" or parent_dt == "Payment Entry":
+                count_filters["payment_type"] = ["!=", "Internal Transfer"]
 
         # Count
         total += frappe.db.count(dt, count_filters)

@@ -152,8 +152,36 @@ def get_unlinked_transactions(
         if not meta.has_field("party_master"):
             continue
 
+        # Build the WHERE clause and count filters
+        from uph.party.controllers.cache_utils import (
+            get_doctypes_functional_fields_mapping_as_dict,
+        )
+
+        mappings = get_doctypes_functional_fields_mapping_as_dict()
+        map_conf = mappings.get(dt, {})
+        party_fieldname = map_conf.get("party_fieldname")
+        parent_dt = map_conf.get("parent_doctype") or dt
+
+        extra_where = ""
+        if party_fieldname:
+            extra_where = (
+                f" AND (`{party_fieldname}` IS NOT NULL AND `{party_fieldname}` != '')"
+            )
+
+        # Exclude Internal Transfer Payment Entries
+        if dt == "Payment Entry" or parent_dt == "Payment Entry":
+            extra_where += " AND `payment_type` != 'Internal Transfer'"
+
+        where_clause = f"(party_master IS NULL OR party_master = ''){extra_where}"
+
         # Count
-        total += frappe.db.count(dt, {"party_master": ["in", [None, ""]]})
+        count_filters = {"party_master": ["in", [None, ""]]}
+        if party_fieldname:
+            count_filters[party_fieldname] = ["is", "set"]
+        if dt == "Payment Entry" or parent_dt == "Payment Entry":
+            count_filters["payment_type"] = ["!=", "Internal Transfer"]
+
+        total += frappe.db.count(dt, count_filters)
 
         is_child = meta.istable
 
@@ -168,7 +196,7 @@ def get_unlinked_transactions(
                     '' AS owner,
                     `creation` AS creation
                 FROM `tab{dt}`
-                WHERE (party_master IS NULL OR party_master = '')
+                WHERE {where_clause}
             """
             )
         else:
@@ -185,7 +213,7 @@ def get_unlinked_transactions(
                     {owner_expr} AS owner,
                     `creation` AS creation
                 FROM `tab{dt}`
-                WHERE (party_master IS NULL OR party_master = '')
+                WHERE {where_clause}
             """
             )
 
@@ -862,7 +890,23 @@ def get_unlinked_transaction_count():
         if not meta.has_field("party_master"):
             continue
 
-        total += frappe.db.count(dt, {"party_master": ["in", [None, ""]]})
+        from uph.party.controllers.cache_utils import (
+            get_doctypes_functional_fields_mapping_as_dict,
+        )
+
+        mappings = get_doctypes_functional_fields_mapping_as_dict()
+        map_conf = mappings.get(dt, {})
+        party_fieldname = map_conf.get("party_fieldname")
+        parent_dt = map_conf.get("parent_doctype") or dt
+
+        filters = {"party_master": ["in", [None, ""]]}
+        if party_fieldname:
+            filters[party_fieldname] = ["is", "set"]
+
+        if dt == "Payment Entry" or parent_dt == "Payment Entry":
+            filters["payment_type"] = ["!=", "Internal Transfer"]
+
+        total += frappe.db.count(dt, filters)
 
     frappe.cache.set_value(cache_key, total, expires_in_sec=300)
     return total

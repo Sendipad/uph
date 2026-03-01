@@ -893,7 +893,7 @@ class DataQualityDashboard {
         `);
 
         data.parties.forEach(p => {
-            const severity_color = p.severity === 'High' ? 'var(--red-500)' : (p.severity === 'Medium' ? 'var(--orange-500)' : 'var(--yellow-600)');
+            const severity_color = p.severity === 'Critical' ? 'var(--red-700)' : (p.severity === 'High' ? 'var(--red-500)' : (p.severity === 'Medium' ? 'var(--orange-500)' : 'var(--yellow-600)'));
             const row = $(`
                 <div class="health-row" style="display: flex; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); background: var(--card-bg);">
                     <div style="flex: 2;">

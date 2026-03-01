@@ -74,7 +74,14 @@ def get_transaction_health(
             SUM(CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(pi.details_json, '$.issue')) = 'draft_overdue' THEN 1 ELSE 0 END) AS draft_count,
             SUM(CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(pi.details_json, '$.issue')) = 'cancelled_referenced' THEN 1 ELSE 0 END) AS cancelled_unamended_count,
             SUM(CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(pi.details_json, '$.issue')) = 'party_master_mismatch' THEN 1 ELSE 0 END) AS mismatch_count,
-            COUNT(*) AS total_issues
+            COUNT(*) AS total_issues,
+            MIN(CASE severity
+                WHEN 'Critical' THEN 0
+                WHEN 'High' THEN 1
+                WHEN 'Medium' THEN 2
+                WHEN 'Low' THEN 3
+                ELSE 4
+            END) AS severity_rank
         FROM `tabParty Issue` pi
         WHERE pi.issue_type = 'Transaction Policy'
           AND pi.status IN ('Open', 'Under Review')
@@ -106,12 +113,15 @@ def get_transaction_health(
         ref_dt = row.reference_doctype or ""
         total = cint(row.total_issues)
 
-        # Per-doctype severity: if warn_not_submitted_document is checked
-        # for this doctype, severity is always High
-        if ref_dt in warn_doctypes:
+        # Per-doctype severity: if warn_not_submitted_document is enabled
+        # for this doctype, severity is at least High
+        severity_map_rev = {0: "Critical", 1: "High", 2: "Medium", 3: "Low", 4: "Low"}
+        base_severity = severity_map_rev.get(row.severity_rank, "Low")
+
+        if ref_dt in warn_doctypes and row.severity_rank > 1:
             severity = "High"
         else:
-            severity = "High" if total >= 10 else ("Medium" if total >= 3 else "Low")
+            severity = base_severity
 
         results.append(
             {
@@ -127,8 +137,8 @@ def get_transaction_health(
             }
         )
 
-    # Sort: High severity first, then by reference_doctype, then total_issues desc
-    severity_order = {"High": 0, "Medium": 1, "Low": 2}
+    # Sort: Critical -> High -> Medium -> Low, then by reference_doctype, then total_issues desc
+    severity_order = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
     results.sort(
         key=lambda x: (
             severity_order.get(x["severity"], 9),
