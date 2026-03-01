@@ -328,10 +328,15 @@ def link_to_party_master(role_doctype: str, role_name: str, party_master: str):
             ).format(party_master, role_doctype)
         )
 
-    # Update the role record
+    # Update the role record — save() triggers on_update hooks which enqueue
+    # the background job to update party_master on existing vouchers
     doc = frappe.get_doc(role_doctype, role_name)
+    old_party_master = doc.get("party_master")
     doc.party_master = party_master
     doc.save()
+
+    # Safety net: explicitly enqueue voucher update in case hooks were skipped
+    _ensure_voucher_update(doc, old_party_master)
 
     # Invalidate cache
     invalidate_dashboard_stats()
@@ -432,8 +437,13 @@ def create_party_master_from_unlinked_role(role_doctype: str, role_name: str):
 
     pm.insert()
 
-    # Link the role record
-    role_doc.db_set("party_master", pm.name)
+    # Link the role record — use save() so on_update hooks fire
+    # and the background job to update vouchers is enqueued
+    role_doc.party_master = pm.name
+    role_doc.save()
+
+    # Safety net: explicitly enqueue voucher update in case hooks were skipped
+    _ensure_voucher_update(role_doc, old_party_master=None)
 
     # Invalidate cache
     invalidate_dashboard_stats()
@@ -445,6 +455,31 @@ def create_party_master_from_unlinked_role(role_doctype: str, role_name: str):
             pm.name, role_name
         ),
     }
+
+
+def _ensure_voucher_update(party_doc, old_party_master=None):
+    """
+    Safety net: explicitly enqueue voucher update if on_update hooks
+    didn't fire (e.g. due to flags or smart wrapper early-exit).
+    Idempotent — if vouchers are already updated, this is a no-op.
+    """
+    from uph.party.controllers.party import (
+        on_change_party_master_update_transactional_document_types,
+    )
+
+    if frappe.flags.in_test:
+        on_change_party_master_update_transactional_document_types(
+            party=party_doc, old_party_master=old_party_master, counts_only=False
+        )
+    else:
+        frappe.enqueue(
+            on_change_party_master_update_transactional_document_types,
+            party=party_doc,
+            old_party_master=old_party_master,
+            counts_only=False,
+            queue="long",
+            enqueue_after_commit=True,
+        )
 
 
 def _find_best_parent_group_for_role(role_doctype: str):
