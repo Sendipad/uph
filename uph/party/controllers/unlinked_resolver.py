@@ -691,7 +691,7 @@ def resolve_unlinked_voucher(role_doctype: str, role_name: str, party_master: st
         fields=["name", "reference_doctype", "reference_name"],
     )
 
-    now = now_datetime()
+    now = frappe.utils.now_datetime()
     for issue in issues:
         dt = issue.reference_doctype
         name = issue.reference_name

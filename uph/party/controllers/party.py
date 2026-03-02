@@ -293,7 +293,7 @@ def validate_party_master_on_target_party_type(doc, method):
                         ).format(doc.name, pt)
                     )
 
-    if method == "on_update":
+    if method in ("on_update", "after_rename"):
         old_doc = doc.get_doc_before_save()
         old_party_master = old_doc.get("party_master") if old_doc else None
         is_default_for_party_master = doc.is_default_for_party_master
@@ -310,9 +310,6 @@ def validate_party_master_on_target_party_type(doc, method):
                 SmartCache.update_party_to_pm_data(
                     doc.doctype, doc.name, new_pm=doc.party_master
                 )
-                # This also updates the List_Parties hash implicitly in SmartCache logic if needed
-                # But let's be explicit if we want to force refresh or just let existing logic work
-                # SmartCache.update_party_master_parties(doc.party_master) # This fetches fresh list
 
             if old_party_master:
                 update_linked_party_to_party_master_count(old_party_master)
@@ -320,12 +317,14 @@ def validate_party_master_on_target_party_type(doc, method):
                     doc.doctype, doc.name, old_pm=old_party_master
                 )
 
-        if doc.party_master != old_party_master:
+        if doc.party_master != old_party_master or method == "after_rename":
             if frappe.flags.in_test:
-                return on_change_party_master_update_transactional_document_types(
-                    party=doc, old_party_master=old_party_master
+                on_change_party_master_update_transactional_document_types(
+                    party=doc, old_party_master=old_party_master, counts_only=False
                 )
-            return frappe.enqueue(
+                return
+
+            frappe.enqueue(
                 on_change_party_master_update_transactional_document_types,
                 party=doc,
                 old_party_master=old_party_master,
@@ -416,7 +415,7 @@ def on_change_party_master_update_transactional_document_types(
                 f"Failed to add comment to {party.name} during voucher sync: {e}"
             )
 
-    if not counts_only:
+    if not counts_only and not frappe.flags.in_test:
         frappe.db.commit()
 
 
@@ -434,42 +433,38 @@ def _update_party_master_field_on_exists_transactional_document_types(
     This FunctionReceived Args as Str without commiting Change
     Return Count of Effected Docs
     """
-    doc = frappe.qb.DocType(doctype)
-
-    # Define conditions
-    conditions = doc[party_fieldname] == party
+    # Refactored to explicit SQL for guaranteed index usage and production safety
+    where_clause = f"`{party_fieldname}` = %s"
+    params = [party]
 
     if old_party_master:
-        conditions &= doc.party_master == old_party_master
+        where_clause += " AND `party_master` = %s"
+        params.append(old_party_master)
     else:
-        # Match documents where party_master is NULL or empty, and different from target
-        conditions &= Coalesce(doc.party_master, "") == ""
-        conditions &= Coalesce(doc.party_master, "") != (party_master or "")
+        if party_master:
+            where_clause += " AND (`party_master` IS NULL OR `party_master` = '')"
+        else:
+            where_clause += " AND (`party_master` IS NOT NULL AND `party_master` != '')"
 
-    # Avoid touching cancelled documents for audit integrity
     if frappe.db.has_column(doctype, "docstatus"):
-        conditions &= doc.docstatus < 2
+        where_clause += " AND `docstatus` < 2"
 
     if party_type_fieldname:
-        conditions &= doc[party_type_fieldname] == party_type
+        where_clause += f" AND `{party_type_fieldname}` = %s"
+        params.append(party_type)
 
-    # Get count of affected records
-    affected_count = (
-        frappe.qb.from_(doc)
-        .select(Count("*").as_("count"))
-        .where(conditions)
-        .run(as_dict=True)
+    if counts_only:
+        return frappe.db.sql(
+            f"SELECT COUNT(*) FROM `tab{doctype}` WHERE {where_clause}", params
+        )[0][0]
+
+    frappe.db.sql(
+        f"UPDATE `tab{doctype}` SET `party_master` = %s WHERE {where_clause}",
+        [party_master] + params,
     )
-    count = affected_count[0]["count"] if affected_count else 0
-
-    if count > 0 and not counts_only:
-
-        # Step 2: Perform bulk update separately
-        frappe.qb.update(doc).set(doc.party_master, party_master).where(
-            conditions
-        ).run()
-
-    return count
+    return frappe.db.count(
+        doctype, filters={party_fieldname: party, "party_master": party_master}
+    )  # Approximated count after update
 
 
 def get_functional_document_types(document_type=None):
