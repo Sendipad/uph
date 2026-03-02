@@ -254,8 +254,8 @@ class PartyMasterSettings(Document):
         doctypes = set()
         for d in self.document_types:
             # Validate required fields
-            if not d.document_type and not d.parent_doctype:
-                frappe.throw(_("Document Type and Parent Doctype are Required"))
+            if not d.document_type:
+                frappe.throw(_("Document Type is required at row {0}").format(d.idx))
 
             dt_meta = frappe.get_meta(d.document_type)
             meta = None  # Meta of the Parent Doctype
