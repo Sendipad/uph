@@ -1,5 +1,6 @@
 import random
 import string
+from unittest.mock import patch
 
 import frappe
 from frappe.tests.utils import FrappeTestCase
@@ -187,6 +188,59 @@ class TestPartyControllers(FrappeTestCase, AccountsTestMixin):
         # Refresh SI and check party_master
         updated_si_pm = frappe.db.get_value("Sales Invoice", si_name, "party_master")
         self.assertEqual(updated_si_pm, new_pm_name)
+
+    def test_on_change_party_master_does_not_commit_in_controller(self):
+        from uph.party.controllers.party import (
+            on_change_party_master_update_transactional_document_types,
+        )
+
+        si = frappe.new_doc("Sales Invoice")
+        si.company = self.company
+        si.customer = self.customer
+        si.party_master = self.party_master
+        si.debit_to = self.debit_to
+        si.currency = self.currency
+        si.posting_date = frappe.utils.today()
+        si.due_date = frappe.utils.today()
+        si.conversion_rate = 1
+        si.plc_conversion_rate = 1
+        si.append(
+            "items",
+            {
+                "item_code": "_Test Item",
+                "qty": 1,
+                "rate": 100,
+                "income_account": self.income_account,
+                "cost_center": self.cost_center,
+            },
+        )
+        si.insert()
+
+        existing_pm = frappe.get_doc("Party Master", self.party_master)
+        parent_group = existing_pm.parent_party_master
+        new_pm = frappe.get_doc(
+            {
+                "doctype": "Party Master",
+                "party_name": f"_Test New PM {frappe.generate_hash(length=6)}",
+                "parent_party_master": parent_group,
+                "is_group": 0,
+                "party_type": "Customer",
+                "type": "Individual",
+            }
+        )
+        new_pm.party_number = _unique_party_number()
+        new_pm.insert(ignore_permissions=True)
+
+        customer_doc = frappe.get_doc("Customer", self.customer)
+        old_pm = customer_doc.party_master
+        customer_doc.party_master = new_pm.name
+        customer_doc.save()
+
+        with patch.object(frappe.db, "commit") as mock_commit:
+            on_change_party_master_update_transactional_document_types(
+                party=customer_doc, old_party_master=old_pm, counts_only=False
+            )
+            mock_commit.assert_not_called()
 
     def test_check_duplicate_voucher_party_master(self):
         from uph.party.controllers.party import check_duplicate_voucher_party_master
