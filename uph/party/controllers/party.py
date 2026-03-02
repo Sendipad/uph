@@ -415,8 +415,8 @@ def on_change_party_master_update_transactional_document_types(
                 f"Failed to add comment to {party.name} during voucher sync: {e}"
             )
 
-    if not counts_only and not frappe.flags.in_test:
-        frappe.db.commit()
+    # Let Frappe request/patch transaction boundaries handle commits.
+    # Avoid controller-level commits in deep business logic.
 
 
 def _update_party_master_field_on_exists_transactional_document_types(

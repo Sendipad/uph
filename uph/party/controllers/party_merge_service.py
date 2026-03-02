@@ -132,8 +132,6 @@ class PartyMergeService:
                 SmartCache.invalidate_party_master_parties(primary_pm)
                 SmartCache.invalidate_party_master_parties(secondary_pm)
 
-                frappe.db.commit()
-
                 return {
                     "success": True,
                     "message": _("{0} has been merged into {1}").format(

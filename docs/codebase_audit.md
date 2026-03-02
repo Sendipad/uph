@@ -53,8 +53,15 @@ This aligns with Frappe conventions where schema-shaping work belongs to migrate
   - Not a UPH-specific production requirement.
   - Better constrained to test/developer environments.
 
-## Additional anti-patterns to refactor next
+## Anti-pattern refactor status
+
+### Refactored in this pass
 
 1. **Controller-level commits** (`frappe.db.commit()` in deep business logic).
+   - Removed commits from party sync / merge controller paths so transaction boundaries are owned by Frappe request/job lifecycle.
 2. **Patch scripts relying on `print()` instead of structured logging.**
-3. **Manual SQL string assembly in report/query paths where Query Builder can replace it.**
+   - Replaced `print()` calls with `frappe.logger("uph.patches")` info/warning logs while preserving `frappe.log_error` on failures.
+
+### Remaining candidate
+
+1. **Manual SQL string assembly in report/query paths where Query Builder can replace it.**
