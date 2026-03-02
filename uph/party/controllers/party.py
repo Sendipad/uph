@@ -67,7 +67,7 @@ def get_party_type_validation_rule(party_type):
     return frappe.local_cache("party_type_validation_rule", party_type, generator)
 
 
-def validate_party_master_on_document_types(doc, method=None):
+def validate_party_master_on_document_types(doc, method=None, *args, **kwargs):
     if (
         frappe.flags.in_patch
         or frappe.flags.in_install
@@ -206,7 +206,7 @@ def validate_party_analytic_accounting(doc, party_master):
         )
 
 
-def validate_party_master_on_target_party_type(doc, method):
+def validate_party_master_on_target_party_type(doc, method=None, *args, **kwargs):
     if (
         frappe.flags.in_patch
         or frappe.flags.in_install
@@ -567,7 +567,7 @@ def check_duplicate_voucher_party_master(
 
 
 # Smart wrappers for hooks
-def validate_party_master_on_document_types_smart(doc, method=None):
+def validate_party_master_on_document_types_smart(doc, method=None, *args, **kwargs):
     from uph.party.controllers.cache_utils import is_configured_doctype
 
     if (
@@ -580,10 +580,10 @@ def validate_party_master_on_document_types_smart(doc, method=None):
         return
 
     if is_configured_doctype(doc.doctype):
-        validate_party_master_on_document_types(doc, method)
+        validate_party_master_on_document_types(doc, method, *args, **kwargs)
 
 
-def validate_party_master_on_target_party_type_smart(doc, method):
+def validate_party_master_on_target_party_type_smart(doc, method=None, *args, **kwargs):
     from uph.party.controllers.cache_utils import is_configured_party_type
 
     if (
@@ -596,7 +596,7 @@ def validate_party_master_on_target_party_type_smart(doc, method):
         return
 
     if is_configured_party_type(doc.doctype):
-        validate_party_master_on_target_party_type(doc, method)
+        validate_party_master_on_target_party_type(doc, method, *args, **kwargs)
 
 
 @frappe.whitelist()
