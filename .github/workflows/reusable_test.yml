@@ -95,6 +95,37 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
+      - name: Cache Bench App Mirrors
+        id: cache-bench-repos
+        uses: actions/cache@v4
+        with:
+          path: .bench-repo-cache
+          key: ${{ runner.os }}-bench-repos-${{ inputs.frappe_branch }}-${{ inputs.erpnext_branch }}-${{ hashFiles('.github/workflows/reusable_test.yml', '**/pyproject.toml', '**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bench-repos-${{ inputs.frappe_branch }}-${{ inputs.erpnext_branch }}-
+            ${{ runner.os }}-bench-repos-${{ inputs.frappe_branch }}-
+
+      - name: Prepare Bench App Mirrors
+        run: |
+          set -euo pipefail
+          mkdir -p .bench-repo-cache
+
+          if [ ! -d .bench-repo-cache/frappe/.git ]; then
+            git clone --depth 1 --branch ${{ inputs.frappe_branch }} https://github.com/frappe/frappe.git .bench-repo-cache/frappe
+          else
+            git -C .bench-repo-cache/frappe fetch origin ${{ inputs.frappe_branch }} --depth 1
+            git -C .bench-repo-cache/frappe checkout ${{ inputs.frappe_branch }}
+            git -C .bench-repo-cache/frappe reset --hard origin/${{ inputs.frappe_branch }}
+          fi
+
+          if [ ! -d .bench-repo-cache/erpnext/.git ]; then
+            git clone --depth 1 --branch ${{ inputs.erpnext_branch }} https://github.com/frappe/erpnext.git .bench-repo-cache/erpnext
+          else
+            git -C .bench-repo-cache/erpnext fetch origin ${{ inputs.erpnext_branch }} --depth 1
+            git -C .bench-repo-cache/erpnext checkout ${{ inputs.erpnext_branch }}
+            git -C .bench-repo-cache/erpnext reset --hard origin/${{ inputs.erpnext_branch }}
+          fi
+
       - name: Configure MariaDB
         run: |
           mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL character_set_server = 'utf8mb4'"
@@ -105,7 +136,7 @@ jobs:
 
       - name: Initialize Bench
         run: |
-          bench init --skip-redis-config-generation --skip-assets --frappe-branch ${{ inputs.frappe_branch }} frappe-bench
+          bench init --skip-redis-config-generation --skip-assets --frappe-path $GITHUB_WORKSPACE/.bench-repo-cache/frappe --frappe-branch ${{ inputs.frappe_branch }} frappe-bench || bench init --skip-redis-config-generation --skip-assets --frappe-branch ${{ inputs.frappe_branch }} frappe-bench
           if [ "${{ inputs.setuptools_version }}" != "latest" ]; then
             cd frappe-bench
             ./env/bin/python -m pip install --upgrade pip "setuptools${{ inputs.setuptools_version }}" wheel
@@ -121,7 +152,7 @@ jobs:
 
       - name: Install ERPNext
         working-directory: frappe-bench
-        run: bench get-app erpnext --branch ${{ inputs.erpnext_branch }}
+        run: bench get-app erpnext $GITHUB_WORKSPACE/.bench-repo-cache/erpnext --branch ${{ inputs.erpnext_branch }} || bench get-app erpnext --branch ${{ inputs.erpnext_branch }}
 
       - name: Install UPH
         working-directory: frappe-bench
