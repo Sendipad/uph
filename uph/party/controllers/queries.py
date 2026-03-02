@@ -422,6 +422,8 @@ def get_roles_for_pm(party_master):
         return []
 
     if isinstance(party_master, str):
+        if not frappe.db.exists("Party Master", party_master):
+            return []
         party_master = frappe.get_cached_doc("Party Master", party_master)
 
     if not hasattr(party_master, "get"):
@@ -798,6 +800,8 @@ def get_party_master_dashboard_info(party_master_name):
     from collections import defaultdict
 
     # 1. Get all leaf Party Masters under this node (direct or hierarchical)
+    if not frappe.db.exists("Party Master", party_master_name):
+        return []
     pm_doc = frappe.get_cached_doc("Party Master", party_master_name)
     target_pms = [party_master_name]
 
