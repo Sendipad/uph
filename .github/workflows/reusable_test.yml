@@ -142,9 +142,11 @@ jobs:
         working-directory: frappe-bench
         run: |
           bench --site test_site install-app erpnext
-          bench --site test_site install-app uph
-          bench --site test_site execute frappe.utils.install.complete_setup_wizard
+          # Create deterministic ERPNext baseline data via test utility helper.
+          # Avoid calling complete_setup_wizard in CI because it is noisy and
+          # best-effort (logs Document Insert Error traces while continuing).
           bench --site test_site execute uph.tests.test_utils.setup_erpnext_baseline
+          bench --site test_site install-app uph
           bench build --app uph
 
       - name: Run Python Tests
