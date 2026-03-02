@@ -91,7 +91,7 @@ def validate_party_master_on_document_types(doc, method=None, *args, **kwargs):
     if not meta.has_field(party_field):
         return
 
-    fetch_if_not_exist = not meta.get_field(party_field).reqd
+    is_mandatory = map_conf.get("reqd")
     alert_msg = []
 
     # Pre-fetch logic for performance
@@ -138,32 +138,35 @@ def validate_party_master_on_document_types(doc, method=None, *args, **kwargs):
 
         new_party_master = party_master_map.get((party_type, party))
 
-        should_autoset = (
-            not party_master
-            and new_party_master
-            and (
-                fetch_if_not_exist
-                or getattr(doc.flags, "ignore_validate", False)
-                or frappe.flags.in_test
-            )
-        )
-
-        if should_autoset:
+        # 1. Strategy: If Party Master is missing but exists on the linked Party (Customer/Supplier),
+        # ALWAYS try to set it to maintain data integrity.
+        if not party_master and new_party_master:
             d.party_master = new_party_master
+            party_master = new_party_master
             msg = _("Party Master for {0} set to {1} automatically").format(
                 d.doctype, new_party_master
             )
             if msg not in alert_msg:
                 alert_msg.append(msg)
 
-        elif not party_master or party_master != new_party_master:
+        # 2. Strategy: Validate Mismatch
+        if party_master and new_party_master and party_master != new_party_master:
             frappe.throw(
-                _("Party Master mismatch or missing for Party {0} ({1})").format(
-                    party, party_type
-                )
+                _(
+                    "Party Master mismatch for Party {0} ({1}): Expected {2}, found {3}"
+                ).format(party, party_type, new_party_master, party_master)
             )
 
-        validate_party_analytic_accounting(d, new_party_master)
+        # 3. Strategy: Validate Mandatory
+        if not party_master and is_mandatory:
+            frappe.throw(
+                _(
+                    "Party Master is mandatory for {0}, but not set and not found on Party {1} ({2})"
+                ).format(_(doctype), party, party_type)
+            )
+
+        if party_master:
+            validate_party_analytic_accounting(d, party_master)
 
     if is_child:
         for d in doc.get_all_children():
