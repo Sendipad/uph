@@ -301,10 +301,7 @@ def setup_party_master_custom_fields():
             create_custom_field(dt, dt_df.get(dt))
         except Exception as e:
             frappe.log_error(e)
-            frappe.db.rollback()
             raise e
-        finally:
-            frappe.db.commit()
 
 
 @frappe.whitelist()

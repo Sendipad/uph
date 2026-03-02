@@ -15,6 +15,7 @@ Test Coverage:
 
 import random
 import string
+from unittest.mock import patch
 
 import frappe
 from frappe.tests.utils import FrappeTestCase
@@ -220,6 +221,20 @@ class TestPartyMergeService(FrappeTestCase):
 
         # Customer B should NOT exist (merged into A)
         self.assertFalse(frappe.db.exists("Customer", cust_b))
+
+    def test_merge_does_not_commit_in_service_layer(self):
+        from uph.party.controllers.party_merge_service import PartyMergeService
+
+        pm_a = self._create_party_master("A0")
+        pm_b = self._create_party_master("B0")
+        self._create_customer("A0", pm_a, "USD")
+        self._create_customer("B0", pm_b, "USD")
+
+        service = PartyMergeService()
+        with patch.object(frappe.db, "commit") as mock_commit:
+            result = service.merge(pm_a, pm_b)
+            self.assertTrue(result["success"])
+            mock_commit.assert_not_called()
 
     def test_case_a_transfers_addresses(self):
         """

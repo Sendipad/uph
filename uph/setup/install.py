@@ -192,7 +192,7 @@ def on_migrate():
     if frappe.flags.in_install:
         return
 
-    _safe_setup_operations()
+    _safe_setup_operations(include_schema_ddl=True)
 
 
 # ---------------------------------------------------------
@@ -201,7 +201,7 @@ def on_migrate():
 
 
 def run_install_setup():
-    _safe_setup_operations()
+    _safe_setup_operations(include_schema_ddl=False)
     # seed_default_party_master_structure() # Deferred to Setup Wizard
 
 
@@ -209,22 +209,28 @@ def run_pending_setup():
     run_install_setup()
 
 
-def _safe_setup_operations():
+def _safe_setup_operations(include_schema_ddl=False):
     ensure_essential_erpnext_fixtures()
     setup_initial_document_types()
     setup_party_types_table()
     create_party_master_tree()
     create_party_analytic_accounting_dimension()
-    create_gender_fixtures()
-    create_custom_indices()
+
+    # Gender records are framework-level seed data and are only helpful in test/dev sites.
+    if frappe.flags.in_test or frappe.conf.get("developer_mode"):
+        create_gender_fixtures()
+
+    # Keep install bootstrap focused on functional setup. Run DDL during migrate/patch flows.
+    if include_schema_ddl:
+        create_custom_indices()
 
 
 def create_custom_indices():
     """Create custom database indices for performance optimization."""
     indices = [
         # Table, Columns
-        ("tabSales Invoice", ["party", "party_master", "docstatus"]),
-        ("tabPurchase Invoice", ["party", "party_master", "docstatus"]),
+        ("tabSales Invoice", ["customer", "party_master", "docstatus"]),
+        ("tabPurchase Invoice", ["supplier", "party_master", "docstatus"]),
         ("tabPayment Entry", ["party", "party_master", "docstatus"]),
         ("tabJournal Entry", ["party_master", "docstatus"]),
         ("tabJournal Entry Account", ["party", "party_master", "docstatus"]),
@@ -235,10 +241,8 @@ def create_custom_indices():
         if not frappe.db.exists("DocType", doctype):
             continue
 
-        # check if columns exist
-        if not frappe.db.has_column(doctype, columns[0]) or not frappe.db.has_column(
-            doctype, columns[1]
-        ):
+        # Check if all expected columns exist.
+        if any(not frappe.db.has_column(doctype, col) for col in columns):
             continue
 
         index_name = (
@@ -252,7 +256,7 @@ def create_custom_indices():
             try:
                 frappe.db.commit()  # Prevent ImplicitCommitError during DDL statement
                 frappe.db.sql(
-                    f"CREATE INDEX `{index_name}` ON `{table}` ({', '.join(columns)})"
+                    f"CREATE INDEX `{index_name}` ON `{table}` ({', '.join(f'`{c}`' for c in columns)})"
                 )
             except Exception as e:
                 frappe.log_error(
@@ -315,20 +319,18 @@ def create_gender_fixtures():
 
 
 def create_party_master_tree():
+    """Ensure at least one valid root exists.
+
+    UPH supports multi-root structures (especially with setup-wizard templates),
+    so we only bootstrap a fallback root when no root group exists.
+    """
     root_filter = {"is_group": 1, "parent_party_master": ["in", ["", None]]}
     roots = frappe.get_all("Party Master", filters=root_filter, pluck="name")
 
-    if len(roots) == 1:
+    if roots:
         return
 
-    if len(roots) > 1:
-        frappe.log_error(
-            title="UPH: Multiple Party Master Roots",
-            message=f"Detected multiple root nodes: {roots}",
-        )
-        return
-
-    # Normalize if 1000 exists
+    # Normalize if 1000 exists (even if it is not currently a proper root)
     existing = frappe.db.get_value(
         "Party Master",
         "1000",
@@ -347,7 +349,7 @@ def create_party_master_tree():
         doc.save(ignore_permissions=True)
         return
 
-    # Create fresh root
+    # Create fallback root for fresh installs before setup wizard seeds templates.
     doc = frappe.new_doc("Party Master")
     doc.party_name = "All Party Masters"
     doc.party_number = "1000"
