@@ -119,6 +119,18 @@ This patch migrates legacy **Duplicate Exclusion** records into **Party Issue** 
 
 > **Prerequisites:** Frappe/ERPNext v15+ and a working bench site.
 
+### Getting Started: Prevent Customer/Supplier Name Overwrites
+
+If you want to stop `customer_name` / `supplier_name` from changing after a rename, pick one:
+
+1. Change ERPNext naming settings  
+Set “Customer Naming By” to `Naming Series` in **Selling Settings**.  
+Set “Supplier Naming By” to `Naming Series` in **Buying Settings**.  
+This prevents `after_rename` from overwriting `customer_name` / `supplier_name`.
+
+2. Code override (UPH)  
+Implement a small hook to skip updating `customer_name` / `supplier_name` during rename events. If you want this pattern in-core, open an issue or PR and reference your expected behavior.
+
 ```bash
 # Install app
 bench get-app https://github.com/Sendipad/uph
