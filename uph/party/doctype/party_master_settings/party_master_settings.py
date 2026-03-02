@@ -332,11 +332,18 @@ class PartyMasterSettings(Document):
         create_party_master_on_document_types()
 
     def after_save(self):
-        doctypes = [d.document_type for d in self.document_types]
-        for d in doctypes:
-            meta = frappe.get_meta(d)
-            if not meta.issingle:
-                frappe.db.add_index(d, ["party_master"])
+        for d in self.document_types:
+            doctype = d.document_type
+            meta = frappe.get_meta(doctype)
+            if meta.issingle:
+                continue
+
+            # Index party_master
+            frappe.db.add_index(doctype, ["party_master"])
+
+            # Index the party field itself if missing
+            if d.party_fieldname:
+                frappe.db.add_index(doctype, [d.party_fieldname])
 
 
 def create_party_master_on_document_types(document_types=None):

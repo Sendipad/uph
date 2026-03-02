@@ -223,10 +223,11 @@ def create_custom_indices():
     """Create custom database indices for performance optimization."""
     indices = [
         # Table, Columns
-        ("tabSales Invoice", ["party_master", "docstatus"]),
-        ("tabPurchase Invoice", ["party_master", "docstatus"]),
-        ("tabPayment Entry", ["party_master", "docstatus"]),
+        ("tabSales Invoice", ["party", "party_master", "docstatus"]),
+        ("tabPurchase Invoice", ["party", "party_master", "docstatus"]),
+        ("tabPayment Entry", ["party", "party_master", "docstatus"]),
         ("tabJournal Entry", ["party_master", "docstatus"]),
+        ("tabJournal Entry Account", ["party", "party_master", "docstatus"]),
     ]
 
     for table, columns in indices:

@@ -72,6 +72,9 @@ doc_events = {
         "on_change": [
             "uph.party.controllers.party.validate_party_master_on_document_types_smart"
         ],
+        "after_rename": [
+            "uph.party.controllers.party.validate_party_master_on_document_types_smart"
+        ],
     }
 }
 
@@ -86,6 +89,9 @@ for party_type in parties_type:
             "uph.party.controllers.party.validate_party_master_on_target_party_type_smart"
         ],
         "on_trash": [
+            "uph.party.controllers.party.validate_party_master_on_target_party_type_smart"
+        ],
+        "after_rename": [
             "uph.party.controllers.party.validate_party_master_on_target_party_type_smart"
         ],
     }
