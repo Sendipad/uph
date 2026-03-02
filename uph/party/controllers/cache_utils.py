@@ -256,7 +256,11 @@ def get_configured_doctypes():
         )
         if not settings:
             return set()
-        return {d.document_type for d in settings.document_types if d.document_type}
+        return {
+            d.document_type
+            for d in settings.document_types
+            if d.document_type and d.enabled
+        }
 
     val = SmartCache.get_cached_value(CACHE_KEY_CONFIGURED_DOCTYPES, generator)
     return set(val) if val else set()
@@ -314,7 +318,7 @@ def get_doctypes_functional_fields_mapping_as_dict():
     def generator():
         doctypes = frappe.db.get_all(
             "Party Master Settings DocType",
-            filters={"parenttype": "Party Master Settings"},
+            filters={"parenttype": "Party Master Settings", "enabled": 1},
             fields=[
                 "document_type",
                 "parent_doctype",
