@@ -91,7 +91,7 @@ def validate_party_master_on_document_types(doc, method=None, *args, **kwargs):
     if not meta.has_field(party_field):
         return
 
-    fetch_if_not_exist = not meta.get_field(party_field).reqd
+    is_mandatory = map_conf.get("reqd")
     alert_msg = []
 
     # Pre-fetch logic for performance
@@ -138,32 +138,35 @@ def validate_party_master_on_document_types(doc, method=None, *args, **kwargs):
 
         new_party_master = party_master_map.get((party_type, party))
 
-        should_autoset = (
-            not party_master
-            and new_party_master
-            and (
-                fetch_if_not_exist
-                or getattr(doc.flags, "ignore_validate", False)
-                or frappe.flags.in_test
-            )
-        )
-
-        if should_autoset:
+        # 1. Strategy: If Party Master is missing but exists on the linked Party (Customer/Supplier),
+        # ALWAYS try to set it to maintain data integrity.
+        if not party_master and new_party_master:
             d.party_master = new_party_master
+            party_master = new_party_master
             msg = _("Party Master for {0} set to {1} automatically").format(
                 d.doctype, new_party_master
             )
             if msg not in alert_msg:
                 alert_msg.append(msg)
 
-        elif not party_master or party_master != new_party_master:
+        # 2. Strategy: Validate Mismatch
+        if party_master and new_party_master and party_master != new_party_master:
             frappe.throw(
-                _("Party Master mismatch or missing for Party {0} ({1})").format(
-                    party, party_type
-                )
+                _(
+                    "Party Master mismatch for Party {0} ({1}): Expected {2}, found {3}"
+                ).format(party, party_type, new_party_master, party_master)
             )
 
-        validate_party_analytic_accounting(d, new_party_master)
+        # 3. Strategy: Validate Mandatory
+        if not party_master and is_mandatory:
+            frappe.throw(
+                _(
+                    "Party Master is mandatory for {0}, but not set and not found on Party {1} ({2})"
+                ).format(_(doctype), party, party_type)
+            )
+
+        if party_master:
+            validate_party_analytic_accounting(d, party_master)
 
     if is_child:
         for d in doc.get_all_children():
@@ -230,24 +233,28 @@ def validate_party_master_on_target_party_type(doc, method=None, *args, **kwargs
                     "Party Master is mandatory for {0},<br> You can unset Mandatory in Party Master Settings"
                 ).format(_(doc.doctype))
             )
-        if doc.party_master and not is_valide_party_master_to_party(
-            doc.party_master, doc.doctype
-        ):
-            pm_data = frappe.get_cached_doc("Party Master", doc.party_master)
-            reason = (
-                _("is disabled")
-                if pm_data.disabled
-                else (
-                    _("is a group")
-                    if pm_data.is_group
-                    else _("missing the role of {0}").format(_(doc.doctype))
+        if doc.party_master:
+            if not frappe.db.exists("Party Master", doc.party_master):
+                # If the linked Party Master doesn't exist (e.g., after app reset),
+                # allow the save so the user can re-assign it.
+                return
+
+            if not is_valide_party_master_to_party(doc.party_master, doc.doctype):
+                pm_data = frappe.get_cached_doc("Party Master", doc.party_master)
+                reason = (
+                    _("is disabled")
+                    if pm_data.disabled
+                    else (
+                        _("is a group")
+                        if pm_data.is_group
+                        else _("missing the role of {0}").format(_(doc.doctype))
+                    )
                 )
-            )
-            frappe.throw(
-                _("Party Master {0} is invalid for {1}: {2}").format(
-                    doc.party_master, _(doc.doctype), reason
+                frappe.throw(
+                    _("Party Master {0} is invalid for {1}: {2}").format(
+                        doc.party_master, _(doc.doctype), reason
+                    )
                 )
-            )
         if doc.party_master:
             rule_fieldname = get_party_type_validation_rule(doc.doctype).get(
                 "rule_fieldname"
@@ -335,6 +342,8 @@ def validate_party_master_on_target_party_type(doc, method=None, *args, **kwargs
 
     # Require flag before deleting document to empty doc.party_master and pass previous validation
     if method == "on_trash" and doc.party_master:
+        if not frappe.db.exists("Party Master", doc.party_master):
+            return
         pm = frappe.get_doc("Party Master", doc.party_master)
         pm.add_comment("Comment", _("Party : {0} Has been deleted").format(doc.name))
         SmartCache.update_party_to_pm_data(
@@ -344,6 +353,8 @@ def validate_party_master_on_target_party_type(doc, method=None, *args, **kwargs
 
 def is_valide_party_master_to_party(party_master, role):
     if isinstance(party_master, str):
+        if not frappe.db.exists("Party Master", party_master):
+            return False
         party_master = frappe.get_cached_doc("Party Master", party_master)
     if party_master.is_group or party_master.disabled:
         return False
@@ -404,7 +415,7 @@ def on_change_party_master_update_transactional_document_types(
                 "Comment", f"🎯 {content} Assigned to → {party_master or 'NULL'}"
             )
 
-            if party_master:
+            if party_master and frappe.db.exists("Party Master", party_master):
                 doc_pm = frappe.get_doc("Party Master", party_master)
                 doc_pm.add_comment(
                     "Comment", f"{party.name} Assigned and Updated: {content}"
@@ -481,6 +492,8 @@ def get_functional_document_types(document_type=None):
 
 def update_linked_party_to_party_master_count(party_master):
     if isinstance(party_master, str):
+        if not frappe.db.exists("Party Master", party_master):
+            return
         party_master = frappe.get_doc("Party Master", party_master)
     if party_master.is_group or party_master.is_new():
         party_master.total_linked_party = 0
@@ -604,6 +617,8 @@ def get_party_master_details_with_parties(party_master, party_type=None):
     if not party_master:
         return {}
 
+    if not frappe.db.exists("Party Master", party_master):
+        return None
     pm_doc = frappe.get_doc("Party Master", party_master)
     from uph.party.controllers.queries import get_party_master_parties
 
@@ -691,6 +706,25 @@ def get_party_details(
         )
 
     # Fetch PM details
+    if not frappe.db.exists("Party Master", party_master):
+        return erp_get_party_details(
+            party=party,
+            account=account,
+            party_type=party_type,
+            company=company,
+            posting_date=posting_date,
+            bill_date=bill_date,
+            price_list=price_list,
+            currency=currency,
+            doctype=doctype,
+            ignore_permissions=ignore_permissions,
+            fetch_payment_terms_template=fetch_payment_terms_template,
+            party_address=party_address,
+            company_address=company_address,
+            shipping_address=shipping_address,
+            dispatch_address=dispatch_address,
+            pos_profile=pos_profile,
+        )
     pm = frappe.get_doc("Party Master", party_master)
 
     # Prefer PM defaults in the original ERPNext call to avoid re-fetching
@@ -846,6 +880,9 @@ def sync_party_name_from_party_master(doc):
 
     settings = frappe.get_cached_doc("Party Master Settings")
     if not settings.sync_erp_party_naming:
+        return
+
+    if not frappe.db.exists("Party Master", doc.party_master):
         return
 
     pm = frappe.get_cached_doc("Party Master", doc.party_master)

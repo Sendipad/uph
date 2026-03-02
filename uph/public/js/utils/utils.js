@@ -229,6 +229,9 @@ $(document).on("app_ready", function () {
 					setup: function (frm) {
 						uph.party.setups(frm);
 					},
+					onload: function (frm) {
+						uph.party.set_party_query(frm, fieldname);
+					},
 					party_master: function (frm) {
 						uph.party.handle_party_master_change(frm, fieldname);
 						uph.party.set_party_query(frm, fieldname);
@@ -239,6 +242,7 @@ $(document).on("app_ready", function () {
 					},
 					refresh: function (frm) {
 						uph.party.refresh(frm);
+						uph.party.set_party_query(frm, fieldname);
 					},
 				});
 			})(doctype, fieldname);

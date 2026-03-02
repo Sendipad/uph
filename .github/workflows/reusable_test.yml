@@ -181,7 +181,7 @@ jobs:
       - name: Build Assets (UI runs only)
         if: ${{ inputs.run_ui }}
         working-directory: frappe-bench
-        run: bench build --app uph
+        run: bench build
 
       - name: Run Python Tests
         if: ${{ inputs.run_python }}

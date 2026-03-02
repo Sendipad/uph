@@ -295,6 +295,15 @@ def get_unlinked_voucher_issues(
 
 
 @frappe.whitelist()
+def run_all_scans():
+    """
+    Manually trigger all background quality scanners.
+    """
+    frappe.enqueue("uph.tasks.run_all_quality_scans", queue="long", timeout=3600)
+    return {"message": _("All scanners started in background")}
+
+
+@frappe.whitelist()
 def trigger_refresh():
     """
     Manually trigger background refresh of stats.

@@ -89,10 +89,14 @@ frappe.ui.form.on("Party Master Settings DocType", {
 
 function update_selection_fields(frm, cdt, cdn) {
     let row = locals[cdt][cdn];
-    if (!row.document_type) return;
+    if (!row || !row.document_type) return;
+
+    // Defensive check: Ensure we are only acting on the correct child table
+    if (cdt !== "Party Master Settings DocType") return;
 
     frappe.model.with_doctype(row.document_type, () => {
         let meta = frappe.get_meta(row.document_type);
+        if (!meta) return;
 
         let fieldnames = meta.fields
             .filter(d => !frappe.model.no_value_type.includes(d.fieldtype))
@@ -102,29 +106,30 @@ function update_selection_fields(frm, cdt, cdn) {
         if (!grid) return;
 
         let grid_row = grid.get_row(cdn);
-        if (!grid_row) return;
+        if (!grid_row || !grid_row.fields_dict) return;
 
         // Update field options (for Select fields)
-        const party_field = grid_row.get_field("party_fieldname");
-        if (party_field) {
-            party_field.df.options = fieldnames.join("\n");
-            party_field.refresh();
+        ["party_fieldname", "party_type_fieldname"].forEach(fname => {
+            const field = grid_row.fields_dict[fname];
+            if (field && field.df) {
+                field.df.options = fieldnames.join("\n");
+                field.refresh();
+            }
+        });
+
+        // Validate existing values (and ensure field exists in child table meta)
+        const row_meta = frappe.get_meta(cdt);
+        if (row_meta && row_meta.fields.find(f => f.fieldname === "party_fieldname")) {
+            if (row.party_fieldname && !fieldnames.includes(row.party_fieldname)) {
+                frappe.model.set_value(cdt, cdn, "party_fieldname", "");
+            }
         }
 
-        const party_type_field = grid_row.get_field("party_type_fieldname");
-        if (party_type_field) {
-            party_type_field.df.options = fieldnames.join("\n");
-            party_type_field.refresh();
-        }
-
-        // Validate existing values
-        if (row.party_fieldname && !fieldnames.includes(row.party_fieldname)) {
-            frappe.model.set_value(cdt, cdn, "party_fieldname", "");
-        }
-
-        if (row.is_dynamic_party_type && row.party_type_fieldname &&
-            !fieldnames.includes(row.party_type_fieldname)) {
-            frappe.model.set_value(cdt, cdn, "party_type_fieldname", "");
+        if (row.is_dynamic_party_type && row_meta &&
+            row_meta.fields.find(f => f.fieldname === "party_type_fieldname")) {
+            if (row.party_type_fieldname && !fieldnames.includes(row.party_type_fieldname)) {
+                frappe.model.set_value(cdt, cdn, "party_type_fieldname", "");
+            }
         }
     });
 }
@@ -133,20 +138,24 @@ function update_selection_fields(frm, cdt, cdn) {
 
 function update_party_type_rule_field(frm, cdt, cdn) {
     let row = locals[cdt][cdn];
-    if (!row.party_type || row.allowed === 0) return;
+    if (!row || !row.party_type || row.allowed === 0) return;
 
     frappe.model.with_doctype(row.party_type, () => {
         let meta = frappe.get_meta(row.party_type);
+        if (!meta) return;
+
         let fieldnames = meta.fields
             .filter(d => !frappe.model.no_value_type.includes(d.fieldtype))
             .map(d => d.fieldname);
 
-        let grid = frm.fields_dict.party_types.grid;
+        let grid = frm.fields_dict.party_types?.grid;
+        if (!grid) return;
+
         let grid_row = grid.get_row(row.name);
 
-        if (grid_row) {
-            let field = grid_row.get_field("rule_fieldname");
-            if (field) {
+        if (grid_row && grid_row.fields_dict) {
+            let field = grid_row.fields_dict["rule_fieldname"];
+            if (field && field.df) {
                 field.df.options = fieldnames.join("\n");
                 field.refresh();
             }

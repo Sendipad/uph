@@ -531,14 +531,25 @@ uph.party = {
 	},
 
 	set_party_query: function (frm, fieldname) {
-		let filters = {};
-		if (frm.doc.party_master) {
-			filters.party_master = frm.doc.party_master;
+		const set = () => {
+			frm.set_query(fieldname, () => {
+				const pm = frm.doc.party_master || "";
+				return {
+					filters: {
+						party_master: pm,
+					},
+				};
+			});
+		};
+
+		set();
+
+		// Re-apply on focus to ensure our filter wins against ERPNext overrides
+		if (frm.fields_dict[fieldname] && frm.fields_dict[fieldname].$input) {
+			frm.fields_dict[fieldname].$input.off('focus.uph_filter').on('focus.uph_filter', () => {
+				set();
+			});
 		}
-		frm.set_query(fieldname, () => ({
-			filters: filters,
-		}));
-		frm.refresh_field(fieldname);
 	},
 
 	get_default: function (frm, fn) {
@@ -1088,17 +1099,16 @@ uph.party = {
 						const list = duplicates
 							.map(
 								(d) => `
-						< li style = "margin-bottom: 10px;" >
+						<li style="margin-bottom: 5px;">
                                 <a href="/app/${frappe.router.slug(
 									frm.doctype,
 								)}/${encodeURIComponent(d.name)}" 
                                    target="_blank">
                                     ${d.name}
                                 </a>
-                                <span  
-                                   class="text-muted">
-                                (${d.party || ""})    (${d.total || ""})</span>
-                            </li >
+                                <span class="text-muted">
+                                (${d.party || ""}) (${d.total || ""})</span>
+                            </li>
 						`,
 							)
 							.join("");
