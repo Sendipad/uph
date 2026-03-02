@@ -75,3 +75,17 @@ def run_full_duplicate_scan():
     Runs daily.
     """
     run_duplicate_scan()
+
+
+def run_all_quality_scans():
+    """
+    Runs all data quality scanners and refreshes dashboard stats.
+    """
+    from uph.party.controllers.duplicate_scanner import run_duplicate_scan
+    from uph.party.controllers.unlinked_resolver import run_unlinked_issue_scan
+    from uph.party.controllers.transaction_health import run_transaction_policy_scan
+
+    run_duplicate_scan()
+    run_unlinked_issue_scan()
+    run_transaction_policy_scan()
+    refresh_dashboard_stats()

@@ -105,9 +105,16 @@ class DataQualityDashboard {
 
     setup_page_actions() {
         this.page.set_primary_action(__('Refresh'), () => {
-            frappe.cache = {};
-            this.load_stats();
-            this.load_tab_content();
+            frappe.call({
+                method: 'uph.party.page.data_quality_dashboard.data_quality_dashboard.run_all_scans',
+                callback: (r) => {
+                    if (r.message) {
+                        frappe.show_alert({ message: r.message, indicator: 'blue' });
+                    }
+                    this.load_stats();
+                    this.load_tab_content();
+                }
+            });
         }, 'refresh');
 
         this.page.add_menu_item(__('Settings'), () => {
