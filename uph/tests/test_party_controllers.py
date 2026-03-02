@@ -188,6 +188,66 @@ class TestPartyControllers(FrappeTestCase, AccountsTestMixin):
         updated_si_pm = frappe.db.get_value("Sales Invoice", si_name, "party_master")
         self.assertEqual(updated_si_pm, new_pm_name)
 
+    def test_first_link_updates_vouchers_with_incorrect_party_master(self):
+        from uph.party.controllers.party import (
+            on_change_party_master_update_transactional_document_types,
+        )
+
+        # Create a secondary PM to simulate stale/wrong voucher data
+        existing_pm = frappe.get_doc("Party Master", self.party_master)
+        parent_group = existing_pm.parent_party_master
+
+        stale_pm = frappe.get_doc(
+            {
+                "doctype": "Party Master",
+                "party_name": f"_Test Stale PM {frappe.generate_hash(length=6)}",
+                "parent_party_master": parent_group,
+                "is_group": 0,
+                "party_type": "Customer",
+                "type": "Individual",
+            }
+        )
+        stale_pm.party_number = _unique_party_number()
+        stale_pm.insert(ignore_permissions=True)
+
+        # Start with an unlinked customer (old_party_master = None)
+        customer_doc = frappe.get_doc("Customer", self.customer)
+        customer_doc.party_master = None
+        customer_doc.save(ignore_permissions=True)
+
+        # Existing voucher has stale Party Master and should be normalized on first link
+        si = frappe.new_doc("Sales Invoice")
+        si.company = self.company
+        si.customer = self.customer
+        si.party_master = stale_pm.name
+        si.debit_to = self.debit_to
+        si.currency = self.currency
+        si.posting_date = frappe.utils.today()
+        si.due_date = frappe.utils.today()
+        si.conversion_rate = 1
+        si.plc_conversion_rate = 1
+        si.append(
+            "items",
+            {
+                "item_code": "_Test Item",
+                "qty": 1,
+                "rate": 100,
+                "income_account": self.income_account,
+                "cost_center": self.cost_center,
+            },
+        )
+        si.insert()
+
+        # First link to Party Master
+        customer_doc = frappe.get_doc("Customer", self.customer)
+        customer_doc.party_master = self.party_master
+        on_change_party_master_update_transactional_document_types(
+            party=customer_doc, old_party_master=None, counts_only=False
+        )
+
+        updated_si_pm = frappe.db.get_value("Sales Invoice", si.name, "party_master")
+        self.assertEqual(updated_si_pm, self.party_master)
+
     def test_check_duplicate_voucher_party_master(self):
         from uph.party.controllers.party import check_duplicate_voucher_party_master
 

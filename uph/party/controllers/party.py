@@ -442,8 +442,8 @@ def _update_party_master_field_on_exists_transactional_document_types(
     if old_party_master:
         conditions &= doc.party_master == old_party_master
     else:
-        # Match documents where party_master is NULL or empty, and different from target
-        conditions &= Coalesce(doc.party_master, "") == ""
+        # First-time linking should normalize all existing vouchers for this party.
+        # We only skip documents already pointing to the target Party Master.
         conditions &= Coalesce(doc.party_master, "") != (party_master or "")
 
     # Avoid touching cancelled documents for audit integrity
