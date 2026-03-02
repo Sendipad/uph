@@ -176,7 +176,12 @@ class TestPartyMaster(FrappeTestCase):
             self.skipTest("No root group")
 
         # Create parties with names that would be out of order if not sorted
-        names = ["Zebra Test", "Apple Test", "Mango Test"]
+        suffix = frappe.generate_hash(length=6)
+        names = [
+            f"Zebra Test {suffix}",
+            f"Apple Test {suffix}",
+            f"Mango Test {suffix}",
+        ]
         for name in names:
             frappe.get_doc(
                 {

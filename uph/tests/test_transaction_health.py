@@ -32,16 +32,17 @@ class TestTransactionHealth(FrappeTestCase):
         ).insert(ignore_permissions=True)
         self.party.db_set("status", "Active")
 
-        # Create a custom customer for this test and link to the party master
+        # Create a custom customer for this test, then link to the party master
+        # without validation to avoid duplicate PM linkage issues on dirty test sites.
         self.customer = frappe.get_doc(
             {
                 "doctype": "Customer",
                 "customer_name": f"Test Customer {frappe.generate_hash(length=8)}",
                 "customer_group": frappe.get_all("Customer Group", limit=1)[0].name,
                 "territory": frappe.get_all("Territory", limit=1)[0].name,
-                "party_master": self.party.name,
             }
         ).insert(ignore_permissions=True)
+        self.customer.db_set("party_master", self.party.name)
 
         frappe.db.commit()
 

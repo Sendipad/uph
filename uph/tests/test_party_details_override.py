@@ -33,15 +33,16 @@ class TestPartyDetailsOverride(FrappeTestCase):
             }
         ).insert(ignore_permissions=True)
 
-        # 3. Create Customer linked to Child PM
+        # 3. Create Customer, then link to Child PM without validation
+        # to avoid duplicate PM linkage issues on dirty test sites.
         self.customer = frappe.get_doc(
             {
                 "doctype": "Customer",
                 "customer_name": f"Hierarchical Customer {suffix}",
-                "party_master": self.child_pm.name,
                 "language": "",  # Ensure empty to test PM enrichment
             }
         ).insert(ignore_permissions=True)
+        self.customer.db_set("party_master", self.child_pm.name)
 
         # 4. Setup Group Account for PM
         acc_name = f"PM Group Receivable {suffix}"
