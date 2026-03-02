@@ -364,7 +364,7 @@ def link_to_party_master(role_doctype: str, role_name: str, party_master: str):
     doc.save()
 
     # Safety net: explicitly enqueue voucher update in case hooks were skipped
-    _ensure_voucher_update(doc, old_party_master)
+    _ensure_voucher_update(doc, old_party_master, force_sync=True)
 
     # Invalidate cache
     invalidate_dashboard_stats()
@@ -471,7 +471,7 @@ def create_party_master_from_unlinked_role(role_doctype: str, role_name: str):
     role_doc.save()
 
     # Safety net: explicitly enqueue voucher update in case hooks were skipped
-    _ensure_voucher_update(role_doc, old_party_master=None)
+    _ensure_voucher_update(role_doc, old_party_master=None, force_sync=True)
 
     # Invalidate cache
     invalidate_dashboard_stats()
@@ -485,10 +485,12 @@ def create_party_master_from_unlinked_role(role_doctype: str, role_name: str):
     }
 
 
-def _ensure_voucher_update(party_doc, old_party_master=None):
+def _ensure_voucher_update(party_doc, old_party_master=None, force_sync=False):
     """
-    Safety net: explicitly enqueue voucher update if on_update hooks
-    didn't fire (e.g. due to flags or smart wrapper early-exit).
+    Safety net: ensure voucher update if on_update hooks didn't fire
+    (e.g. due to flags or smart wrapper early-exit).
+    If force_sync is True, try a direct update first to make the UI
+    action feel immediate; fall back to enqueue on failure.
     Idempotent — if vouchers are already updated, this is a no-op.
     """
     from uph.party.controllers.party import (
@@ -499,15 +501,27 @@ def _ensure_voucher_update(party_doc, old_party_master=None):
         on_change_party_master_update_transactional_document_types(
             party=party_doc, old_party_master=old_party_master, counts_only=False
         )
-    else:
-        frappe.enqueue(
-            on_change_party_master_update_transactional_document_types,
-            party=party_doc,
-            old_party_master=old_party_master,
-            counts_only=False,
-            queue="long",
-            enqueue_after_commit=True,
-        )
+        return
+
+    if force_sync:
+        try:
+            on_change_party_master_update_transactional_document_types(
+                party=party_doc, old_party_master=old_party_master, counts_only=False
+            )
+            return
+        except Exception:
+            frappe.logger("uph").exception(
+                "Sync voucher update failed; falling back to enqueue"
+            )
+
+    frappe.enqueue(
+        on_change_party_master_update_transactional_document_types,
+        party=party_doc,
+        old_party_master=old_party_master,
+        counts_only=False,
+        queue="long",
+        enqueue_after_commit=True,
+    )
 
 
 def _find_best_parent_group_for_role(role_doctype: str):
