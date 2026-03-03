@@ -512,8 +512,10 @@ This project is licensed under the GPL-3.0 License - see the [LICENSE](license.t
 - **GitHub Issues**: Report bugs and request features
 - **Documentation**: [https://sendipad.github.io/uph/](https://sendipad.github.io/uph/)
 - **ERPNext Community**: [https://discuss.erpnext.com](https://discuss.erpnext.com)
+  
 
 ---
+![Clones](https://img.shields.io/badge/dynamic/json?color=blue&label=Clones&query=count&url=https://raw.githubusercontent.com/Sendipad/uph/develop/clones.json)
 
 <div align="center">
   <sub>Built with ❤️ for the ERPNext Community</sub>
