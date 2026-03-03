@@ -250,8 +250,12 @@ def setup_party_master_custom_fields():
 
         # Get the party field in the Doctype
         party_field = get_party_field_in_doctype(d)
-        fetch_from = f"doc.{party_field}.party_master"
-        mandatory_depends_on = "eval:frm.is_new()===1"
+        if not party_field:
+            # Skip doctypes with unknown party field mapping
+            continue
+        fetch_from = f"{party_field}.party_master"
+        # Use doc context (frm is not available in depends_on expressions)
+        mandatory_depends_on = "eval:doc.__islocal"
         # Determine where to insert the field
         insert_after = (
             "naming_series"
@@ -260,7 +264,7 @@ def setup_party_master_custom_fields():
         )
         if doctype == "Journal Entry Account":
             insert_after = "bank_account"
-            mandatory_depends_on = mandatory_depends_on + "doc.party_type && doc.party"
+            mandatory_depends_on = "eval:doc.__islocal && doc.party_type && doc.party"
         if doctype == "Payment Reconciliation":
             insert_after = "company"
 
@@ -274,7 +278,7 @@ def setup_party_master_custom_fields():
                     fetch_if_empty=1,
                     fetch_from=fetch_from,
                     allow_on_submit=1,
-                    mandatory_depends_on="'{0}'".format(mandatory_depends_on),
+                    mandatory_depends_on=mandatory_depends_on,
                     in_list_view=1,
                     in_standard_filter=1,
                     bold=1,

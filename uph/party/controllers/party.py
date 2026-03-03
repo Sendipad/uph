@@ -166,6 +166,7 @@ def validate_party_master_on_document_types(doc, method=None, *args, **kwargs):
             )
 
         if party_master:
+            _ensure_party_contact_link(d, party_type, party, party_master)
             validate_party_analytic_accounting(d, party_master)
 
     if is_child:
@@ -177,6 +178,60 @@ def validate_party_master_on_document_types(doc, method=None, *args, **kwargs):
 
     for msg in alert_msg:
         frappe.msgprint(title=_("Party Master Auto-set"), msg=msg, alert=1)
+
+
+def _ensure_party_contact_link(doc, party_type, party, party_master=None):
+    """Ensure Contact is linked to the ERP Party when it comes from Party Master."""
+    if not (doc and party_type and party):
+        return
+
+    meta = doc.meta
+    if not meta or not meta.has_field("contact_person"):
+        return
+
+    contact = doc.get("contact_person")
+    if not contact:
+        return
+
+    if frappe.db.exists(
+        "Dynamic Link",
+        {
+            "parenttype": "Contact",
+            "parent": contact,
+            "link_doctype": party_type,
+            "link_name": party,
+        },
+    ):
+        return
+
+    if not party_master:
+        return
+
+    pm_contact = frappe.db.get_value(
+        "Party Master", party_master, "party_primary_contact"
+    )
+
+    if contact != pm_contact and not frappe.db.exists(
+        "Dynamic Link",
+        {
+            "parenttype": "Contact",
+            "parent": contact,
+            "link_doctype": "Party Master",
+            "link_name": party_master,
+        },
+    ):
+        return
+
+    frappe.get_doc(
+        {
+            "doctype": "Dynamic Link",
+            "parenttype": "Contact",
+            "parent": contact,
+            "parentfield": "links",
+            "link_doctype": party_type,
+            "link_name": party,
+        }
+    ).db_insert()
 
 
 def _group_by_party_type(party_tuples):
