@@ -12,7 +12,7 @@ jobs:
   update-clone-stats:
     runs-on: ubuntu-latest
     env:
-      # Prefer a personal access token for traffic APIs. Fall back to GITHUB_TOKEN.
+      # Prefer a personal access token for traffic APIs.
       TRAFFIC_TOKEN: ${{ secrets.TRAFFIC_TOKEN }}
 
     steps:
@@ -24,14 +24,53 @@ jobs:
       - name: Switch to stats branch
         run: git checkout -B stats
 
+      - name: Restore existing stats history
+        run: |
+          if git show origin/stats:stats/clone_history.json >/tmp/clone_history.json 2>/dev/null; then
+            mkdir -p stats
+            cp /tmp/clone_history.json stats/clone_history.json
+          fi
+
       - name: Fetch clone stats from GitHub API
         run: |
-          TOKEN="${TRAFFIC_TOKEN:-${{ github.token }}}"
-          curl -fsSL \
-            -H "Authorization: Bearer ${TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository }}/traffic/clones" \
-            -o traffic.json
+          API_URL="https://api.github.com/repos/${{ github.repository }}/traffic/clones"
+
+          fetch_traffic() {
+            local token="$1"
+            local code
+            code=$(curl -sS -L \
+              -H "Authorization: Bearer ${token}" \
+              -H "Accept: application/vnd.github+json" \
+              -o traffic.json \
+              -w "%{http_code}" \
+              "${API_URL}")
+            echo "${code}"
+          }
+
+          if [ -z "${TRAFFIC_TOKEN}" ]; then
+            echo "TRAFFIC_TOKEN secret is missing. Configure a classic PAT with repo scope in repository secrets."
+            exit 1
+          fi
+
+          STATUS=$(fetch_traffic "${TRAFFIC_TOKEN}")
+
+          if [ "${STATUS}" = "401" ]; then
+            echo "TRAFFIC_TOKEN is invalid or expired (HTTP 401). Generate a new classic PAT with repo scope and update the TRAFFIC_TOKEN secret."
+            cat traffic.json
+            exit 1
+          fi
+
+          if [ "${STATUS}" = "403" ]; then
+            echo "TRAFFIC_TOKEN lacks required access (HTTP 403). Ensure it is a classic PAT with repo scope from a user with push/admin access to this repository."
+            cat traffic.json
+            exit 1
+          fi
+
+          if [ "${STATUS}" -lt 200 ] || [ "${STATUS}" -ge 300 ]; then
+            echo "Failed to fetch clone traffic (HTTP ${STATUS}). Response:"
+            cat traffic.json
+            exit 1
+          fi
 
           # Fail early with a clear message if GitHub API did not return usable traffic data.
           if [ "$(jq -r 'has("count") and has("uniques")' traffic.json)" != "true" ]; then
@@ -44,13 +83,29 @@ jobs:
         run: |
           COUNT=$(jq '.count' traffic.json)
           UNIQUES=$(jq '.uniques' traffic.json)
+
+          if [ -f stats/clone_history.json ]; then
+            jq -s '
+              (.[0] + .[1])
+              | sort_by(.timestamp)
+              | group_by(.timestamp)
+              | map(max_by(.count))
+            ' stats/clone_history.json <(jq '.clones' traffic.json) > stats/clone_history_merged.json
+          else
+            jq '.clones' traffic.json > stats/clone_history_merged.json
+          fi
+
+          mv stats/clone_history_merged.json stats/clone_history.json
+          TOTAL_COUNT=$(jq '[.[].count] | add // 0' stats/clone_history.json)
+
           mkdir -p stats
-          echo "{ \"count\": $COUNT, \"uniques\": $UNIQUES }" > stats/clones.json
+          echo "{ \"count\": $COUNT, \"uniques\": $UNIQUES, \"total_count\": $TOTAL_COUNT }" > stats/clones.json
 
       - name: Commit and push to stats branch
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
+          git add stats/clone_history.json
           git add stats/clones.json
           git commit -m "Update clone stats" || exit 0
           git push origin stats --force
