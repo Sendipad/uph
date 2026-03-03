@@ -29,7 +29,8 @@ jobs:
       - name: Extract total count
         run: |
           COUNT=$(jq '.count' traffic.json)
-          echo "{ \"count\": $COUNT }" > clones.json
+          mkdir -p stats
+          echo "{ \"count\": $COUNT }" > stats/clones.json
 
       - name: Commit and push to stats branch
         run: |
