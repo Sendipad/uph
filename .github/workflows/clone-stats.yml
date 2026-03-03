@@ -12,7 +12,7 @@ jobs:
   update-clone-stats:
     runs-on: ubuntu-latest
     env:
-      # Prefer a personal access token for traffic APIs. Fall back to GITHUB_TOKEN.
+      # Prefer a personal access token for traffic APIs.
       TRAFFIC_TOKEN: ${{ secrets.TRAFFIC_TOKEN }}
 
     steps:
