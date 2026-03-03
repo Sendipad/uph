@@ -12,38 +12,41 @@
  "engine": "InnoDB",
  "field_order": [
   "details_tab",
-  "section_break_relationships",
-  "relationships_html",
-  "parties",
   "section_break_overview",
-  "naming_series",
   "party_name",
   "party_type",
   "status",
   "column_break_general_right",
+  "party_number",
+  "naming_series",
+  "section_break_hierarchy",
   "is_group",
   "parent_party_master",
   "group_type",
   "party_type_group",
-  "party_number",
   "section_break_metadata_general",
   "territory",
   "account_manager",
   "language",
   "column_break_metadata_right",
   "image",
+  "relationships_tab",
+  "section_break_relationships",
+  "parties",
+  "section_break_relationships_graph",
+  "relationships_html",
   "identity_tab",
   "section_break_legal_identity",
   "type",
   "legal_entity_type",
   "date_of_establishment",
-  "column_break_reg_info",
+  "section_break_registration_ids",
   "national_id",
+  "column_break_reg_info",
   "passport_number",
   "business_registration_number",
   "section_break_personal",
   "salutation",
-  "party_details",
   "column_break_personal_right",
   "gender",
   "contacts_information_tab",
@@ -51,8 +54,9 @@
   "party_primary_contact",
   "mobile_no",
   "email_id",
-  "column_break_address_detail",
+  "section_break_primary_address",
   "party_primary_address",
+  "column_break_address_detail",
   "primary_address",
   "section_break_visuals",
   "contact_html",
@@ -61,9 +65,9 @@
   "roles_tab",
   "section_break_role_mgmt",
   "is_primary_role",
-  "has_secondary_role_party",
   "primary_party_master",
   "section_break_secondary_roles",
+  "has_secondary_role_party",
   "roles",
   "tab_3_tab",
   "section_break_trade",
@@ -92,13 +96,16 @@
   "industry",
   "column_break_biz_scope_right",
   "market_segment",
+  "analytics_tab",
   "section_break_analytics",
   "enforce_party_analaytic_accounting_selection",
   "portal_users_tab",
   "portal_users",
+  "dashboard_tab",
   "section_break_system_logs",
   "total_linked_party",
   "normalized_party_name",
+  "party_details",
   "column_break_logs_right",
   "disputed_reasons",
   "section_break_hidden",
@@ -108,19 +115,23 @@
   "lft",
   "rgt",
   "old_parent",
-  "title",
-  "dashboard_tab"
+  "title"
  ],
  "fields": [
   {
    "fieldname": "details_tab",
    "fieldtype": "Tab Break",
-   "label": "Details"
+   "label": "Overview"
+  },
+  {
+   "fieldname": "relationships_tab",
+   "fieldtype": "Tab Break",
+   "label": "Relationships"
   },
   {
    "fieldname": "section_break_relationships",
    "fieldtype": "Section Break",
-   "label": "Relationships"
+   "label": "Linked Parties"
   },
   {
    "fieldname": "relationships_html",
@@ -137,9 +148,14 @@
    "read_only": 1
   },
   {
+   "fieldname": "section_break_relationships_graph",
+   "fieldtype": "Section Break",
+   "label": "Relationships Graph"
+  },
+  {
    "fieldname": "section_break_overview",
    "fieldtype": "Section Break",
-   "label": "Overview"
+   "label": "Core Identity"
   },
   {
    "default": "{party_number}",
@@ -244,6 +260,11 @@
    "unique": 1
   },
   {
+   "fieldname": "section_break_hierarchy",
+   "fieldtype": "Section Break",
+   "label": "Hierarchy"
+  },
+  {
    "collapsible": 1,
    "fieldname": "section_break_metadata_general",
    "fieldtype": "Section Break",
@@ -287,7 +308,7 @@
   {
    "fieldname": "identity_tab",
    "fieldtype": "Tab Break",
-   "label": "Identity"
+   "label": "Identity & Legal"
   },
   {
    "depends_on": "eval:!doc.is_group&&doc.type",
@@ -316,6 +337,11 @@
    "fieldname": "date_of_establishment",
    "fieldtype": "Date",
    "label": "Date"
+  },
+  {
+   "fieldname": "section_break_registration_ids",
+   "fieldtype": "Section Break",
+   "label": "Registration IDs"
   },
   {
    "fieldname": "column_break_reg_info",
@@ -347,7 +373,7 @@
   {
    "fieldname": "section_break_personal",
    "fieldtype": "Section Break",
-   "label": "Personal Details"
+   "label": "Personal"
   },
   {
    "depends_on": "eval:doc.type !=\"Company\"&&!doc.is_group",
@@ -376,7 +402,7 @@
   {
    "fieldname": "section_break_primary_contact",
    "fieldtype": "Section Break",
-   "label": "Primary Contact Information"
+   "label": "Primary Contact"
   },
   {
    "description": "Reselect, if the chosen contact is edited after save",
@@ -403,6 +429,11 @@
    "fieldtype": "Read Only",
    "label": "Email Id",
    "options": "Email"
+  },
+  {
+   "fieldname": "section_break_primary_address",
+   "fieldtype": "Section Break",
+   "label": "Primary Address"
   },
   {
    "fieldname": "column_break_address_detail",
@@ -454,7 +485,7 @@
   {
    "fieldname": "section_break_role_mgmt",
    "fieldtype": "Section Break",
-   "label": "Role Management"
+   "label": "Primary Role"
   },
   {
    "default": "1",
@@ -504,7 +535,7 @@
   {
    "fieldname": "section_break_trade",
    "fieldtype": "Section Break",
-   "label": "Trade Settings"
+   "label": "Trade Defaults"
   },
   {
    "fieldname": "default_currency",
@@ -530,7 +561,7 @@
   {
    "fieldname": "section_break_internal_accounting",
    "fieldtype": "Section Break",
-   "label": "Internal Party Configuration"
+   "label": "Internal Party"
   },
   {
    "default": "0",
@@ -584,12 +615,12 @@
   {
    "fieldname": "tax_tab",
    "fieldtype": "Tab Break",
-   "label": "Tax"
+   "label": "Tax & Compliance"
   },
   {
    "fieldname": "section_break_taxation",
    "fieldtype": "Section Break",
-   "label": "Taxation Details"
+   "label": "Taxation"
   },
   {
    "fieldname": "tax_id",
@@ -615,7 +646,7 @@
   {
    "fieldname": "industry_tab",
    "fieldtype": "Tab Break",
-   "label": "Industry & Metadata"
+   "label": "Industry & Market"
   },
   {
    "fieldname": "section_break_biz_scope",
@@ -651,9 +682,14 @@
    "options": "Market Segment"
   },
   {
+   "fieldname": "analytics_tab",
+   "fieldtype": "Tab Break",
+   "label": "Analytics"
+  },
+  {
    "fieldname": "section_break_analytics",
    "fieldtype": "Section Break",
-   "label": "Analytics"
+   "label": "Party Analytic Accounting"
   },
   {
    "default": "0",
@@ -664,7 +700,7 @@
   {
    "fieldname": "portal_users_tab",
    "fieldtype": "Tab Break",
-   "label": "Portal Users"
+   "label": "Portal"
   },
   {
    "fieldname": "portal_users",
@@ -675,7 +711,7 @@
   {
    "fieldname": "section_break_system_logs",
    "fieldtype": "Section Break",
-   "label": "System Logs & CRM details"
+   "label": "System Logs"
   },
   {
    "default": "0",
@@ -716,7 +752,7 @@
    "fieldname": "section_break_hidden",
    "fieldtype": "Section Break",
    "hidden": 1,
-   "label": "System Settings"
+   "label": "System Flags"
   },
   {
    "default": "0",
@@ -768,7 +804,7 @@
    "depends_on": "eval:!doc.is_group",
    "fieldname": "dashboard_tab",
    "fieldtype": "Tab Break",
-   "label": "Dashboard"
+   "label": "System"
   }
  ],
  "grid_page_length": 50,

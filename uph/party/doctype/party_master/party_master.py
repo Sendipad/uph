@@ -178,6 +178,7 @@ class PartyMaster(NestedSet):
         self._validate_party_name_uniqueness()
         self.validate_roles()
         self._validate_accounts_uniqueness()
+        self._validate_parent_numbering()
 
     def _validate_accounts_uniqueness(self):
         """Ensure (company, currency) is unique in the accounts table."""
@@ -325,7 +326,7 @@ class PartyMaster(NestedSet):
         if self.is_group:
             self.salutation = ""
             self.gender = ""
-            self.phone = ""
+            self.mobile_no = ""
             self.type = ""
             self.territory = ""
             self.language = ""
@@ -348,10 +349,28 @@ class PartyMaster(NestedSet):
                 return frappe.throw(
                     _("Setting Primary role of same Party Type is Not Allowed")
                 )
-            else:
-                if not primary_role.has_accounting_dimension:
-                    primary_role.has_accounting_dimension = 1
-                    primary_role.save()
+            return
+
+    def _validate_parent_numbering(self):
+        """Enforce parent-number prefix rules if enabled in settings."""
+        if not self.parent_party_master or not self.party_number:
+            return
+
+        enforce = frappe.db.get_single_value(
+            "Party Master Settings", "enforce_parent_numbering"
+        )
+        if not enforce:
+            return
+
+        parent_number = frappe.db.get_value(
+            "Party Master", self.parent_party_master, "party_number"
+        )
+        if parent_number and not self.party_number.startswith(parent_number):
+            frappe.throw(
+                _(
+                    "Party Number {0} must start with parent Party Number {1}"
+                ).format(self.party_number, parent_number)
+            )
 
     # =========================================================================
     # After Update Hooks
@@ -732,14 +751,28 @@ def get_next_party_master_number(parent=None, is_group=0):
         if not parent and not is_group:
             frappe.throw(_("Cannot create a leaf Party Master without a parent group"))
 
-        # Read configurable digits_count from settings (default 6)
-        digits_count = (
-            frappe.db.get_single_value("Party Master Settings", "digits_count") or 6
-        )
-        digits_count = int(digits_count)
+        settings = frappe.get_cached_doc("Party Master Settings")
+        digits_count = int(settings.digits_count or 6)
+        group_digits = int(settings.group_digits or 4)
+        enforce_parent_numbering = bool(settings.enforce_parent_numbering)
+
+        def _lock_numbering_scope(lock_parent):
+            # Serialize number generation per parent to avoid duplicates
+            if lock_parent:
+                frappe.db.sql(
+                    "SELECT name FROM `tabParty Master` WHERE name=%s FOR UPDATE",
+                    (lock_parent,),
+                )
+            else:
+                # Lock a single settings row to serialize root numbering
+                frappe.db.sql(
+                    "SELECT doctype FROM `tabSingles` WHERE doctype=%s LIMIT 1 FOR UPDATE",
+                    ("Party Master Settings",),
+                )
 
         # ROOT GROUP
         if not parent and is_group:
+            _lock_numbering_scope(None)
             last_root = frappe.db.sql(
                 """
                 SELECT MAX(CAST(party_number AS UNSIGNED))
@@ -747,13 +780,29 @@ def get_next_party_master_number(parent=None, is_group=0):
                 WHERE parent_party_master IS NULL AND is_group=1
             """
             )[0][0]
-            return str(int(last_root or 0) + 1000).zfill(4)
+            base = 10 ** (group_digits - 1)
+            return str(int(last_root or 0) + base).zfill(group_digits)
 
         # SUBGROUPS
         if parent and is_group:
+            _lock_numbering_scope(parent)
             parent_number = frappe.db.get_value("Party Master", parent, "party_number")
             if not parent_number:
                 frappe.throw(_("Parent {0} has no party number").format(parent))
+
+            if enforce_parent_numbering:
+                last_sibling = frappe.db.sql(
+                    """
+                    SELECT MAX(CAST(party_number AS UNSIGNED))
+                    FROM `tabParty Master`
+                    WHERE parent_party_master=%s AND is_group=1
+                    AND party_number LIKE %s AND LENGTH(party_number)=%s
+                """,
+                    (parent, f"{parent_number}%", len(parent_number) + group_digits),
+                )[0][0]
+
+                suffix = int(str(last_sibling)[-group_digits:] if last_sibling else 0) + 1
+                return f"{parent_number}{suffix:0{group_digits}d}"
 
             last_sibling = frappe.db.sql(
                 """
@@ -769,6 +818,7 @@ def get_next_party_master_number(parent=None, is_group=0):
 
         # LEAVES
         if parent and not is_group:
+            _lock_numbering_scope(parent)
             parent_number = frappe.db.get_value("Party Master", parent, "party_number")
             if not parent_number:
                 frappe.throw(_("Parent {0} has no party number").format(parent))
