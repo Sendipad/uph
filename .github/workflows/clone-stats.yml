@@ -24,6 +24,13 @@ jobs:
       - name: Switch to stats branch
         run: git checkout -B stats
 
+      - name: Restore existing stats history
+        run: |
+          if git show origin/stats:stats/clone_history.json >/tmp/clone_history.json 2>/dev/null; then
+            mkdir -p stats
+            cp /tmp/clone_history.json stats/clone_history.json
+          fi
+
       - name: Fetch clone stats from GitHub API
         run: |
           TOKEN="${TRAFFIC_TOKEN:-${{ github.token }}}"
@@ -44,13 +51,29 @@ jobs:
         run: |
           COUNT=$(jq '.count' traffic.json)
           UNIQUES=$(jq '.uniques' traffic.json)
+
+          if [ -f stats/clone_history.json ]; then
+            jq -s '
+              (.[0] + .[1])
+              | sort_by(.timestamp)
+              | group_by(.timestamp)
+              | map(max_by(.count))
+            ' stats/clone_history.json <(jq '.clones' traffic.json) > stats/clone_history_merged.json
+          else
+            jq '.clones' traffic.json > stats/clone_history_merged.json
+          fi
+
+          mv stats/clone_history_merged.json stats/clone_history.json
+          TOTAL_COUNT=$(jq '[.[].count] | add // 0' stats/clone_history.json)
+
           mkdir -p stats
-          echo "{ \"count\": $COUNT, \"uniques\": $UNIQUES }" > stats/clones.json
+          echo "{ \"count\": $COUNT, \"uniques\": $UNIQUES, \"total_count\": $TOTAL_COUNT }" > stats/clones.json
 
       - name: Commit and push to stats branch
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
+          git add stats/clone_history.json
           git add stats/clones.json
           git commit -m "Update clone stats" || exit 0
           git push origin stats --force
