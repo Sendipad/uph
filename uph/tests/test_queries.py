@@ -484,17 +484,11 @@ class TestQueries(FrappeTestCase, AccountsTestMixin):
 
 
 def create_customer(name, party_master=None):
-    customer_id = frappe.db.exists("Customer", {"customer_name": name})
-    if not customer_id:
-        if frappe.db.exists("Customer", {"customer_name": name}):
-            name = f"{name} {frappe.generate_hash(length=6)}"
-        cust = frappe.get_doc(
-            {"doctype": "Customer", "customer_name": name, "party_master": party_master}
-        )
-        cust.name = _unique_docname("Customer", "TEST-CUST")
-        cust.insert(ignore_permissions=True)
-        return cust.name
-    else:
-        if party_master:
-            frappe.db.set_value("Customer", customer_id, "party_master", party_master)
-        return customer_id
+    if frappe.db.exists("Customer", {"customer_name": name}):
+        name = f"{name} {frappe.generate_hash(length=6)}"
+    cust = frappe.get_doc(
+        {"doctype": "Customer", "customer_name": name, "party_master": party_master}
+    )
+    cust.name = _unique_docname("Customer", "TEST-CUST")
+    cust.insert(ignore_permissions=True)
+    return cust.name

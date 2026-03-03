@@ -112,6 +112,7 @@ class TestPartyControllers(FrappeTestCase, AccountsTestMixin):
                 from uph.party.controllers.cache_utils import clear_all_caches
 
                 clear_all_caches()
+                frappe.clear_cache()
 
                 cust_no_pm = frappe.get_doc("Customer", self.customer)
                 cust_no_pm.party_master = None
@@ -126,6 +127,7 @@ class TestPartyControllers(FrappeTestCase, AccountsTestMixin):
                 customer_pt.reqd = old_reqd
                 settings.save(ignore_permissions=True)
                 clear_all_caches()
+                frappe.clear_cache()
 
     def test_on_change_party_master_update_transactional_document_types(self):
         from uph.party.controllers.party import (
