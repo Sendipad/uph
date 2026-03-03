@@ -47,23 +47,15 @@ jobs:
             echo "${code}"
           }
 
-          if [ -z "${TRAFFIC_TOKEN}" ]; then
-            echo "TRAFFIC_TOKEN secret is missing. Configure a classic PAT with repo scope in repository secrets."
-            exit 1
-          fi
+          if [ -n "${TRAFFIC_TOKEN}" ]; then
+            STATUS=$(fetch_traffic "${TRAFFIC_TOKEN}")
 
-          STATUS=$(fetch_traffic "${TRAFFIC_TOKEN}")
-
-          if [ "${STATUS}" = "401" ]; then
-            echo "TRAFFIC_TOKEN is invalid or expired (HTTP 401). Generate a new classic PAT with repo scope and update the TRAFFIC_TOKEN secret."
-            cat traffic.json
-            exit 1
-          fi
-
-          if [ "${STATUS}" = "403" ]; then
-            echo "TRAFFIC_TOKEN lacks required access (HTTP 403). Ensure it is a classic PAT with repo scope from a user with push/admin access to this repository."
-            cat traffic.json
-            exit 1
+            if [ "${STATUS}" = "401" ] || [ "${STATUS}" = "403" ]; then
+              echo "TRAFFIC_TOKEN was rejected (${STATUS}); retrying with github.token fallback."
+              STATUS=$(fetch_traffic "${{ github.token }}")
+            fi
+          else
+            STATUS=$(fetch_traffic "${{ github.token }}")
           fi
 
           if [ "${STATUS}" -lt 200 ] || [ "${STATUS}" -ge 300 ]; then
