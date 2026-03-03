@@ -24,11 +24,11 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/Sendipad/uph/traffic/clones \
-            -o clones.json
+            -o traffic.json
 
       - name: Extract total count
         run: |
-          COUNT=$(jq '.count' clones.json)
+          COUNT=$(jq '.count' traffic.json)
           echo "{ \"count\": $COUNT }" > clones.json
 
       - name: Commit and push to stats branch
