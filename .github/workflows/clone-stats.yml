@@ -11,6 +11,9 @@ permissions:
 jobs:
   update-clone-stats:
     runs-on: ubuntu-latest
+    env:
+      # Prefer a personal access token for traffic APIs. Fall back to GITHUB_TOKEN.
+      TRAFFIC_TOKEN: ${{ secrets.TRAFFIC_TOKEN }}
 
     steps:
       - name: Checkout repository
@@ -23,17 +26,26 @@ jobs:
 
       - name: Fetch clone stats from GitHub API
         run: |
-          curl -sS \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          TOKEN="${TRAFFIC_TOKEN:-${{ github.token }}}"
+          curl -fsSL \
+            -H "Authorization: Bearer ${TOKEN}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${{ github.repository }}/traffic/clones" \
             -o traffic.json
 
-      - name: Extract total count
+          # Fail early with a clear message if GitHub API did not return usable traffic data.
+          if [ "$(jq -r 'has("count") and has("uniques")' traffic.json)" != "true" ]; then
+            echo "Failed to fetch clone traffic. Response:"
+            cat traffic.json
+            exit 1
+          fi
+
+      - name: Extract total clone stats
         run: |
           COUNT=$(jq '.count' traffic.json)
+          UNIQUES=$(jq '.uniques' traffic.json)
           mkdir -p stats
-          echo "{ \"count\": $COUNT }" > stats/clones.json
+          echo "{ \"count\": $COUNT, \"uniques\": $UNIQUES }" > stats/clones.json
 
       - name: Commit and push to stats branch
         run: |
