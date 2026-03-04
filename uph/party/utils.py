@@ -268,6 +268,12 @@ def setup_party_master_custom_fields():
         if doctype == "Payment Reconciliation":
             insert_after = "company"
 
+        depends_on = None
+        if doctype == "Payment Entry":
+            depends_on = (
+                "eval:doc.payment_type=='Pay' || doc.payment_type=='Receive'"
+            )
+
         # Add field definition to dictionary
         dt_df.update(
             {
@@ -278,6 +284,7 @@ def setup_party_master_custom_fields():
                     fetch_if_empty=1,
                     fetch_from=fetch_from,
                     allow_on_submit=1,
+                    depends_on=depends_on,
                     mandatory_depends_on=mandatory_depends_on,
                     in_list_view=1,
                     in_standard_filter=1,

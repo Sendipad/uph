@@ -7,6 +7,7 @@ uph.patches.rename_party_issue_fields
 # Patches added in this section will be executed after doctypes are migrated
 uph.patches.add_indexes
 uph.patches.setup_pm_fields
+uph.patches.update_payment_entry_party_master_visibility
 uph.patches.populate_normalized_party_name
 uph.patches.migrate_duplicate_exclusion_to_party_issue
 uph.patches.rescan_transaction_health_and_unlinked

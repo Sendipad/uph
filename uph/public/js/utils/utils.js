@@ -225,7 +225,7 @@ $(document).on("app_ready", function () {
 		let [doctype, child, fieldname] = row;
 		if (doctype === child) {
 			(function (doctype, fieldname) {
-				frappe.ui.form.on(doctype, {
+				const handlers = {
 					setup: function (frm) {
 						uph.party.setups(frm);
 					},
@@ -236,6 +236,12 @@ $(document).on("app_ready", function () {
 						uph.party.handle_party_master_change(frm, fieldname);
 						uph.party.set_party_query(frm, fieldname);
 					},
+					party_type: function (frm) {
+						if (!frm.fields_dict || !frm.fields_dict["party_type"]) return;
+						if (frm.uph_setting_party_master) return;
+						frm.set_value("party_master", "");
+						uph.party.set_party_query(frm, fieldname);
+					},
 					posting_date: function (frm) {
 						if (!frm.fields_dict["posting_date"] || !frm.doc?.posting_date) return;
 						uph.party.check_duplicate_voucher_for_party_master(frm);
@@ -244,7 +250,15 @@ $(document).on("app_ready", function () {
 						uph.party.refresh(frm);
 						uph.party.set_party_query(frm, fieldname);
 					},
-				});
+				};
+
+				if (fieldname) {
+					handlers[fieldname] = function (frm) {
+						uph.party.on_party_field_change(frm);
+					};
+				}
+
+				frappe.ui.form.on(doctype, handlers);
 			})(doctype, fieldname);
 		} else if (doctype !== child && fieldname) {
 			(function (doctype, child, fieldname) {
@@ -258,12 +272,27 @@ $(document).on("app_ready", function () {
 						uph.party.check_duplicate_voucher_for_party_master(frm);
 					},
 				});
-				frappe.ui.form.on(child, {
+				const childHandlers = {
 					party_master: function (frm, cdt, cdn) {
 						let row = locals[cdt][cdn];
 						uph.party.handle_party_master_change_in_child(frm, row);
 					},
-				});
+					party_type: function (frm, cdt, cdn) {
+						const row = locals[cdt][cdn];
+						if (frm.uph_setting_party_master || !row) return;
+						frappe.model.set_value(cdt, cdn, "party_master", "");
+						if (cdt === "Journal Entry Account") {
+							frm.refresh_field("accounts");
+						}
+					},
+				};
+				if (fieldname) {
+					childHandlers[fieldname] = function (frm, cdt, cdn) {
+						const row = locals[cdt][cdn];
+						uph.party.on_party_field_change_in_child(frm, row);
+					};
+				}
+				frappe.ui.form.on(child, childHandlers);
 			})(doctype, child, fieldname);
 		}
 	});
