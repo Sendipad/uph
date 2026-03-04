@@ -74,8 +74,16 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
+          HAS_CHANGES=0
+          if ! git diff --quiet; then
+            git stash -u
+            HAS_CHANGES=1
+          fi
           git fetch origin stats
           git rebase origin/stats
+          if [ "$HAS_CHANGES" = "1" ]; then
+            git stash pop
+          fi
           git add stats/clones.json
           git commit -m "Update clone stats" || exit 0
           git push origin HEAD:stats
