@@ -513,6 +513,10 @@ def create_custom_party_master_field(docfield, update=False, field_properity=Non
         "reqd": reqd,
         "translatable": 0,
     }
+    if doctype == "Payment Entry":
+        field_doc["depends_on"] = (
+            "eval:doc.payment_type=='Pay' || doc.payment_type=='Receive'"
+        )
     customfield = create_custom_field(doctype, field_doc)
 
     return customfield.name

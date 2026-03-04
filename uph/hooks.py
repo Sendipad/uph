@@ -20,11 +20,7 @@ treeviews = ["Party Master"]
 
 docment_type_with_custom_js = ["Sales Invoice", "Payment Entry", "Journal Entry"]
 # include js in doctype views
-doctype_js = {
-    "Sales Invoice": "public/js/erpnext/sales_invoice.js",
-    "Payment Entry": "public/js/erpnext/payment_entry.js",
-    "Journal Entry": "public/js/erpnext/journal_entry.js",
-}
+doctype_js = {}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
