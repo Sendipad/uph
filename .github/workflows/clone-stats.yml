@@ -69,11 +69,13 @@ jobs:
         if: steps.fetch_clone_stats.outputs.success != 'true'
         run: echo "Skipping clone stats write/commit because traffic API was unavailable for this run."
 
-      - name: Commit and push to develop branch
+      - name: Commit and push to stats branch
         if: steps.fetch_clone_stats.outputs.success == 'true'
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
+          git fetch origin stats
+          git rebase origin/stats
           git add stats/clones.json
           git commit -m "Update clone stats" || exit 0
-          git push origin HEAD:develop
+          git push origin HEAD:stats
