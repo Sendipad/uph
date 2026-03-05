@@ -124,6 +124,24 @@ scheduler_events = {
 # Fixtures (Workflow + Workflow States for Party Issue)
 fixtures = [
     {
+        "doctype": "Module Onboarding",
+        "filters": [["name", "in", ["Party"]]],
+    },
+    {
+        "doctype": "Onboarding Step",
+        "filters": [
+            [
+                "name",
+                "in",
+                [
+                    "Party Master Settings",
+                    "Create Party Master",
+                    "Data Quality Dashboard",
+                ],
+            ],
+        ],
+    },
+    {
         "doctype": "Workflow",
         "filters": [["name", "in", ["Party Issue Workflow"]]],
     },
