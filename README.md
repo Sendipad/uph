@@ -7,7 +7,8 @@
   
   <p><b>Centralize. Unify. Govern.</b></p>
 
-![Clones (14d total)](https://img.shields.io/badge/dynamic/json?color=blue&label=Clones%20(14d%20total)&query=count&url=https://raw.githubusercontent.com/Sendipad/uph/stats/stats/clones.json)
+![Clones (14d total)](https://img.shields.io/badge/dynamic/json?color=blue&label=Clones%20(14d%20total)&query=count&url=https://raw.githubusercontent.com/Sendipad/uph/stats/stats/clones.json&cacheSeconds=300)
+![Unique Clones (14d)](https://img.shields.io/badge/dynamic/json?color=6f42c1&label=Unique%20Clones%20(14d)&query=uniques&url=https://raw.githubusercontent.com/Sendipad/uph/stats/stats/clones.json&cacheSeconds=300)
   [![CI develop](https://img.shields.io/github/actions/workflow/status/Sendipad/uph/ci.yml?branch=develop&job=test_v17&label=CI%20develop)](https://github.com/Sendipad/uph/actions/workflows/ci.yml)
   [![CI v16](https://img.shields.io/github/actions/workflow/status/Sendipad/uph/ci.yml?branch=develop&job=test_v16&label=CI%20v16)](https://github.com/Sendipad/uph/actions/workflows/ci.yml)
   [![CI v15](https://img.shields.io/github/actions/workflow/status/Sendipad/uph/ci.yml?branch=develop&job=test_v15&label=CI%20v15)](https://github.com/Sendipad/uph/actions/workflows/ci.yml)

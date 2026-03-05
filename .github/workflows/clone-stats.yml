@@ -58,12 +58,13 @@ jobs:
 
           echo "success=true" >> "$GITHUB_OUTPUT"
 
-      - name: Extract total count
+      - name: Extract total and unique counts
         if: steps.fetch_clone_stats.outputs.success == 'true'
         run: |
           COUNT=$(jq -er '.count' traffic.json)
+          UNIQUES=$(jq -er '.uniques' traffic.json)
           mkdir -p stats
-          echo "{ \"count\": $COUNT }" > stats/clones.json
+          echo "{ \"count\": $COUNT, \"uniques\": $UNIQUES }" > stats/clones.json
 
       - name: Skip update when traffic API is unavailable
         if: steps.fetch_clone_stats.outputs.success != 'true'
