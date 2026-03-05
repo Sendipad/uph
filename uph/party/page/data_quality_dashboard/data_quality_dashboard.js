@@ -108,8 +108,9 @@ class DataQualityDashboard {
             frappe.call({
                 method: 'uph.party.page.data_quality_dashboard.data_quality_dashboard.run_all_scans',
                 callback: (r) => {
-                    if (r.message) {
-                        frappe.show_alert({ message: r.message, indicator: 'blue' });
+                    const message = (r && r.message && r.message.message) || (r && r.message);
+                    if (message) {
+                        frappe.show_alert({ message, indicator: 'blue' });
                     }
                     this.load_stats();
                     this.load_tab_content();

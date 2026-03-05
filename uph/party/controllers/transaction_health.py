@@ -16,7 +16,10 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, cint, now_datetime
 
-from uph.party.controllers.party_issue_utils import create_party_issue_if_missing
+from uph.party.controllers.party_issue_utils import (
+    create_party_issue_if_missing,
+    get_severity_rank,
+)
 from uph.party.controllers.cache_utils import (
     get_doctypes_functional_fields_mapping_as_dict,
 )
@@ -656,9 +659,15 @@ def sync_transaction_health_issues():
         else:
             # 3. If not resolved, sync severity
             current_severity = severity_map.get(dt, "High")
-            if issue.severity != current_severity:
+            current_rank = get_severity_rank(current_severity)
+            if (
+                issue.severity != current_severity
+                or getattr(issue, "severity_rank", None) != current_rank
+            ):
                 frappe.db.set_value(
-                    "Party Issue", issue.name, "severity", current_severity
+                    "Party Issue",
+                    issue.name,
+                    {"severity": current_severity, "severity_rank": current_rank},
                 )
                 updated_count += 1
 

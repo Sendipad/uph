@@ -5,6 +5,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+from uph.party.controllers.party_issue_utils import get_severity_rank
 
 class PartyIssue(Document):
     # begin: auto-generated types
@@ -26,6 +27,7 @@ class PartyIssue(Document):
         resolved_on: DF.Datetime | None
         score: DF.Float
         severity: DF.Literal["Low", "Medium", "High", "Critical"]
+        severity_rank: DF.Int
         source_engine: DF.Data | None
         status: DF.Literal["Open", "Under Review", "Resolved", "Ignored"]
     # end: auto-generated types
@@ -34,6 +36,7 @@ class PartyIssue(Document):
             self.detected_on = frappe.utils.now_datetime()
 
     def validate(self):
+        self.severity_rank = get_severity_rank(self.severity)
         self._set_resolution_metadata()
 
     def _set_resolution_metadata(self):
@@ -61,5 +64,31 @@ def on_doctype_update():
 
     # 3. Dashboard/Priority index
     frappe.db.add_index(
-        "Party Issue", ["status", "severity", "detected_on"], "idx_dashboard_order"
+        "Party Issue", ["status", "severity_rank", "detected_on"], "idx_dashboard_order"
     )
+
+    # Backfill severity_rank for existing records (safe, idempotent)
+    start = 0
+    page_len = 500
+    while True:
+        rows = frappe.get_all(
+            "Party Issue",
+            fields=["name", "severity"],
+            or_filters=[
+                ["severity_rank", "is", "not set"],
+                ["severity_rank", "=", 0],
+            ],
+            limit_start=start,
+            limit_page_length=page_len,
+        )
+        if not rows:
+            break
+        for row in rows:
+            frappe.db.set_value(
+                "Party Issue",
+                row.name,
+                "severity_rank",
+                get_severity_rank(row.severity),
+                update_modified=False,
+            )
+        start += page_len
