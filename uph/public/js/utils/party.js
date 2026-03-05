@@ -372,16 +372,66 @@ uph.party = {
 
 	// Child table handler for party field change
 	on_party_field_change_in_child: function (frm, row) {
-		if (row.party_master && row.party_master !== "") return;
 		const party_type = row.party_type;
 		const party = row.party;
 		if (!party_type || !party) return;
-		frappe.db.get_value(party_type, party, "party_master", (r) => {
-			if (r?.party_master) {
-				frappe.model.set_value(row.doctype, row.name, "party_master", r.party_master);
-				const fieldname = frm.pm_on_child_fieldname;
-				if (fieldname) frm.refresh_field(fieldname);
-			}
+		if (!row.party_master) {
+			frappe.db.get_value(party_type, party, "party_master", (r) => {
+				if (r?.party_master) {
+					frappe.model.set_value(row.doctype, row.name, "party_master", r.party_master);
+					const fieldname = frm.pm_on_child_fieldname;
+					if (fieldname) frm.refresh_field(fieldname);
+				}
+			});
+		}
+
+		this.apply_party_master_defaults_to_child(frm, row);
+	},
+
+	apply_party_master_defaults_to_child: function (frm, row) {
+		if (!row || !row.party_type || !row.party) return;
+
+		const cdt = row.doctype;
+		const cdn = row.name;
+
+		const can_set_cost_center = frappe.meta.has_field(cdt, "cost_center");
+		const can_set_project = frappe.meta.has_field(cdt, "project");
+		const can_set_party_analytic_accounting = frappe.meta.has_field(
+			cdt,
+			"party_analytic_accounting",
+		);
+
+		if (!can_set_cost_center && !can_set_project && !can_set_party_analytic_accounting) return;
+
+		frappe.call({
+			method: "uph.party.controllers.party.get_party_master_defaults",
+			args: {
+				party_type: row.party_type,
+				party: row.party,
+				party_master: row.party_master,
+			},
+			callback: function (r) {
+				if (!r.message) return;
+				const current = locals[cdt]?.[cdn] || row;
+				if (can_set_cost_center && r.message.cost_center && !current.cost_center) {
+					frappe.model.set_value(cdt, cdn, "cost_center", r.message.cost_center);
+				}
+				if (can_set_project && r.message.project && !current.project) {
+					frappe.model.set_value(cdt, cdn, "project", r.message.project);
+				}
+				if (
+					can_set_party_analytic_accounting &&
+					r.message.party_analytic_accounting &&
+					!current.party_analytic_accounting
+				) {
+					frappe.model.set_value(
+						cdt,
+						cdn,
+						"party_analytic_accounting",
+						r.message.party_analytic_accounting,
+					);
+				}
+			},
 		});
 	},
 
