@@ -5,6 +5,18 @@ from frappe.utils import now_datetime
 
 OPEN_STATUSES = ("Open", "Under Review")
 TERMINAL_STATUSES = ("Resolved", "Ignored")
+SEVERITY_RANK = {
+    "High": 4,
+    "Critical": 3,
+    "Medium": 2,
+    "Low": 1,
+}
+
+
+def get_severity_rank(severity: str | None) -> int:
+    if not severity:
+        return 0
+    return SEVERITY_RANK.get(severity, 0)
 
 
 def normalize_party_pair(party_1, party_2):
@@ -81,11 +93,15 @@ def create_party_issue_if_missing(
     new_details_json = (
         json.dumps(details) if isinstance(details, (dict, list)) else details
     )
+    new_severity_rank = get_severity_rank(severity)
 
     if existing_doc:
         updates = {}
         if existing_doc.severity != severity:
             updates["severity"] = severity
+            updates["severity_rank"] = new_severity_rank
+        elif getattr(existing_doc, "severity_rank", None) != new_severity_rank:
+            updates["severity_rank"] = new_severity_rank
         if score is not None and getattr(existing_doc, "score", None) != score:
             updates["score"] = score
         if existing_doc.details_json != new_details_json:
@@ -102,6 +118,7 @@ def create_party_issue_if_missing(
             "party_master": party_master,
             "issue_type": issue_type,
             "severity": severity,
+            "severity_rank": new_severity_rank,
             "status": status,
             "score": score,
             "reference_doctype": reference_doctype,

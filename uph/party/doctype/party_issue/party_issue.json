@@ -9,6 +9,7 @@
   "details_section",
   "issue_type",
   "severity",
+  "severity_rank",
   "status",
   "column_break_core",
   "party_master",
@@ -52,6 +53,13 @@
    "search_index": 1
   },
   {
+   "fieldname": "severity_rank",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Severity Rank",
+   "read_only": 1
+  },
+  {
    "default": "Open",
    "fieldname": "status",
    "fieldtype": "Select",
@@ -73,8 +81,8 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Party Master",
+   "mandatory_depends_on": "eval:doc.issue_type!='Unlinked'",
    "options": "Party Master",
-   "reqd": 1,
    "search_index": 1
   },
   {
@@ -151,11 +159,12 @@
    "read_only": 1
   },
   {
-   "depends_on": "eval:doc.status=='Ignored'",
-   "description": "Reason of Ignoring",
+   "depends_on": "eval:doc.status=='Ignored' || doc.status=='Resolved'",
+   "description": "Reason of Ignoring or Resolving",
    "fieldname": "dismiss_reason",
    "fieldtype": "Small Text",
-   "label": "Dismiss Reason"
+   "label": "Dismiss Reason",
+   "mandatory_depends_on": "eval:doc.status=='Ignored' || doc.status=='Resolved'"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -191,7 +200,7 @@
   }
  ],
  "row_format": "Dynamic",
- "sort_field": "severity",
+ "sort_field": "severity_rank",
  "sort_order": "DESC",
  "states": []
 }

@@ -1,4 +1,6 @@
 frappe.listview_settings['Party Issue'] = {
+    sort_by: "severity_rank",
+    sort_order: "desc",
     hide_name_column: true,
     get_indicator(doc) {
         const status_colors = {

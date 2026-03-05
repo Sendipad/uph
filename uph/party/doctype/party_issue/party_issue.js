@@ -6,26 +6,82 @@ frappe.ui.form.on("Party Issue", {
     },
 
     setup_buttons(frm) {
-        if (frm.doc.status === "Open") {
-            frm.add_custom_button(__("Resolve"), () => {
-                frm.set_value("status", "Resolved");
-                frm.save();
-            }, __("Actions"));
+        const apply_workflow_action = (action, reason = null) => {
+            frappe.dom.freeze();
+            const maybe_set_reason = reason
+                ? frm.set_value("dismiss_reason", reason)
+                : Promise.resolve();
 
-            frm.add_custom_button(__("Ignore"), () => {
-                frappe.prompt([
-                    {
-                        label: __("Reason for Ignoring"),
-                        fieldname: "reason",
-                        fieldtype: "Small Text",
-                        reqd: 1
+            maybe_set_reason
+                .then(() =>
+                    frappe.xcall("frappe.model.workflow.apply_workflow", {
+                        doc: frm.doc,
+                        action: action,
+                    })
+                )
+                .then((doc) => {
+                    if (doc) {
+                        frappe.model.sync(doc);
                     }
-                ], (values) => {
-                    frm.set_value("status", "Ignored");
-                    frm.set_value("dismiss_reason", values.reason);
-                    frm.save();
-                }, __("Ignore Issue"), __("Submit"));
-            }, __("Actions"));
+                    frm.refresh();
+                })
+                .finally(() => {
+                    frappe.dom.unfreeze();
+                });
+        };
+
+        if (frm.doc.status === "Open") {
+            frm.add_custom_button(
+                __("Review"),
+                () => apply_workflow_action("Review"),
+                __("Actions")
+            );
+        }
+
+        if (frm.doc.status === "Under Review") {
+            frm.add_custom_button(
+                __("Resolve"),
+                () => {
+                    frappe.prompt(
+                        [
+                            {
+                                label: __("Reason"),
+                                fieldname: "reason",
+                                fieldtype: "Small Text",
+                                reqd: 1,
+                            },
+                        ],
+                        (values) => {
+                            apply_workflow_action("Resolve", values.reason);
+                        },
+                        __("Resolve Issue"),
+                        __("Submit")
+                    );
+                },
+                __("Actions")
+            );
+
+            frm.add_custom_button(
+                __("Ignore"),
+                () => {
+                    frappe.prompt(
+                        [
+                            {
+                                label: __("Reason"),
+                                fieldname: "reason",
+                                fieldtype: "Small Text",
+                                reqd: 1,
+                            },
+                        ],
+                        (values) => {
+                            apply_workflow_action("Ignore", values.reason);
+                        },
+                        __("Ignore Issue"),
+                        __("Submit")
+                    );
+                },
+                __("Actions")
+            );
         }
     },
 
