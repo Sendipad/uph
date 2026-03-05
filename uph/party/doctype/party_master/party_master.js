@@ -106,6 +106,24 @@ frappe.ui.form.on("Party Master", {
 			filters: { party_master: frm.doc.name },
 		}));
 
+		frm.set_query("default_cost_center", () => {
+			const filters = { is_group: 0 };
+			if (frm.doc.represents_company) {
+				filters.company = frm.doc.represents_company;
+			}
+			return { filters };
+		});
+
+		frm.set_query("default_project", () => ({
+			query: "erpnext.controllers.queries.get_project_name",
+			filters: frm.doc.represents_company ? { company: frm.doc.represents_company } : {},
+		}));
+
+		frm.set_query("default_party_analytic_accounting", () => ({
+			query: "uph.party.controllers.queries.get_party_analytic_accounting_filtered",
+			filters: { party_master: frm.doc.name },
+		}));
+
 		frm.toggle_display("roles", frm.doc.has_secondary_role_party === 1);
 		render_relationships(frm);
 	},

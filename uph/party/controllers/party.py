@@ -683,6 +683,36 @@ def get_party_master_details_with_parties(party_master, party_type=None):
 
 
 @frappe.whitelist()
+def get_party_master_defaults(party_type=None, party=None, party_master=None):
+    """Return Party Master defaults mapped to transactional fields."""
+    if not party_master and party_type and party:
+        party_master = frappe.db.get_value(party_type, party, "party_master")
+
+    if not party_master or not frappe.db.exists("Party Master", party_master):
+        return {}
+
+    defaults = frappe.db.get_value(
+        "Party Master",
+        party_master,
+        ["default_cost_center", "default_project", "default_party_analytic_accounting"],
+        as_dict=1,
+    )
+
+    if not defaults:
+        return {}
+
+    out = {}
+    if defaults.get("default_cost_center"):
+        out["cost_center"] = defaults["default_cost_center"]
+    if defaults.get("default_project"):
+        out["project"] = defaults["default_project"]
+    if defaults.get("default_party_analytic_accounting"):
+        out["party_analytic_accounting"] = defaults["default_party_analytic_accounting"]
+
+    return out
+
+
+@frappe.whitelist()
 def allow_duplicate_submission(doctype, docname):
     settings = frappe.get_cached_doc("Party Master Settings")
     if not settings.check_party_master_duplicate_vouchers:
@@ -868,6 +898,9 @@ def get_party_details(
         "territory": "territory",
         "default_currency": "currency",
         "tax_category": "tax_category",
+        "default_cost_center": "cost_center",
+        "default_project": "project",
+        "default_party_analytic_accounting": "party_analytic_accounting",
     }
 
     if party_type == "Customer":

@@ -74,6 +74,8 @@
   "default_currency",
   "default_price_list",
   "payment_terms",
+  "default_cost_center",
+  "default_project",
   "section_break_internal_accounting",
   "is_internal_party",
   "represents_company",
@@ -96,6 +98,7 @@
   "market_segment",
   "section_break_analytics",
   "enforce_party_analaytic_accounting_selection",
+  "default_party_analytic_accounting",
   "dashboard_tab",
   "portal_users",
   "section_break_system_logs",
@@ -555,6 +558,18 @@
    "options": "Payment Terms Template"
   },
   {
+   "fieldname": "default_cost_center",
+   "fieldtype": "Link",
+   "label": "Default Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "fieldname": "default_project",
+   "fieldtype": "Link",
+   "label": "Default Project",
+   "options": "Project"
+  },
+  {
    "fieldname": "section_break_internal_accounting",
    "fieldtype": "Section Break",
    "label": "Internal Party"
@@ -692,6 +707,12 @@
    "fieldname": "enforce_party_analaytic_accounting_selection",
    "fieldtype": "Check",
    "label": "Enforce Party Analaytic Accounting Selection"
+  },
+  {
+   "fieldname": "default_party_analytic_accounting",
+   "fieldtype": "Link",
+   "label": "Default Party Analytic Accounting",
+   "options": "Party Analytic Accounting"
   },
   {
    "fieldname": "portal_users_tab",
