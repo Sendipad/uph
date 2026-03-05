@@ -868,6 +868,9 @@ def get_party_details(
         "territory": "territory",
         "default_currency": "currency",
         "tax_category": "tax_category",
+        "default_cost_center": "cost_center",
+        "default_project": "project",
+        "default_party_analytic_accounting": "party_analytic_accounting",
     }
 
     if party_type == "Customer":
