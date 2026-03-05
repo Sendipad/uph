@@ -665,34 +665,112 @@ class DataQualityDashboard {
                                 ${__('Create New Party Master')}
                             </button>
                             <div class="text-muted small" style="margin-top: 5px;">
-                                ${__('Create a new Party Master for this record automatically')}
+                                ${__('Create a new Party Master using quick entry')}
                             </div>
                         </div>
                     `);
 
                     create_btn.find('.btn-create-pm').on('click', () => {
-                        frappe.confirm(__('Are you sure you want to create a new Party Master for {0}?', [display_name]), () => {
-                            frappe.call({
-                                method: 'uph.party.controllers.unlinked_resolver.create_party_master_from_unlinked_role',
-                                args: {
-                                    role_doctype: role_doctype,
-                                    role_name: role_name
-                                },
-                                callback: (r) => {
-                                    if (r.message && r.message.success) {
-                                        d.hide();
-                                        frappe.show_alert({ message: r.message.message, indicator: 'green' });
-                                        this.load_stats();
-                                        this.load_unlinked();
-                                    }
-                                }
-                            });
-                        });
+                        d.hide();
+                        this.open_party_master_quick_entry(role_doctype, role_name, display_name);
                     });
 
                     d.fields_dict.suggestions_html.$wrapper.append(create_btn);
                 }
             }
+        });
+    }
+
+    open_party_master_quick_entry(role_doctype, role_name, display_name) {
+        const party_type = role_doctype || '';
+        const role_name_fallback = display_name && display_name.includes(':') ? role_name : display_name;
+
+        if (!role_doctype) {
+            const new_doc = frappe.model.get_new_doc('Party Master');
+            new_doc.party_name = role_name_fallback || role_name || __('New Party');
+            new_doc.is_group = 0;
+            frappe.ui.form.make_quick_entry('Party Master', null, null, new_doc);
+            return;
+        }
+
+        frappe.model.with_doctype(role_doctype, () => {
+            const has_field = (fieldname) => !!frappe.meta.get_docfield(role_doctype, fieldname);
+            const candidate_fields = [
+                'customer_name',
+                'supplier_name',
+                'employee_name',
+                'default_currency',
+                'default_price_list',
+                'payment_terms',
+                'territory',
+                'language',
+                'email_id',
+                'mobile_no',
+                'tax_id',
+                'customer_group',
+                'supplier_group',
+            ];
+            const fields = candidate_fields.filter((fieldname) => has_field(fieldname));
+            fields.push('name');
+
+            frappe.db.get_value(role_doctype, role_name, fields)
+                .then((r) => {
+                    const role = (r && r.message) || {};
+                    const new_doc = frappe.model.get_new_doc('Party Master');
+
+                    const party_name =
+                        role.customer_name ||
+                        role.supplier_name ||
+                        role.employee_name ||
+                        role_name_fallback ||
+                        role.name ||
+                        role_name;
+
+                    new_doc.party_name = party_name;
+                    new_doc.party_type = party_type;
+                    new_doc.is_group = 0;
+
+                    if (role.default_currency) new_doc.default_currency = role.default_currency;
+                    if (role.default_price_list) new_doc.default_price_list = role.default_price_list;
+                    if (role.payment_terms) new_doc.payment_terms = role.payment_terms;
+                    if (role.territory) new_doc.territory = role.territory;
+                    if (role.language) new_doc.language = role.language;
+                    if (role.email_id) new_doc.email_id = role.email_id;
+                    if (role.mobile_no) new_doc.mobile_no = role.mobile_no;
+                    if (role.tax_id) new_doc.tax_id = role.tax_id;
+
+                    if (role_doctype === 'Customer' && role.customer_group) {
+                        new_doc.group_type = 'Customer Group';
+                        new_doc.party_type_group = role.customer_group;
+                    }
+                    if (role_doctype === 'Supplier' && role.supplier_group) {
+                        new_doc.group_type = 'Supplier Group';
+                        new_doc.party_type_group = role.supplier_group;
+                    }
+
+                    frappe.ui.form.make_quick_entry(
+                        'Party Master',
+                        (doc) => {
+                            frappe.call({
+                                method: 'uph.party.controllers.unlinked_resolver.link_to_party_master',
+                                args: {
+                                    role_doctype: role_doctype,
+                                    role_name: role_name,
+                                    party_master: doc.name,
+                                },
+                                callback: (res) => {
+                                    if (res.message && res.message.success) {
+                                        frappe.show_alert({ message: res.message.message, indicator: 'green' });
+                                        this.load_stats();
+                                        this.load_unlinked();
+                                    }
+                                }
+                            });
+                        },
+                        null,
+                        new_doc
+                    );
+                });
         });
     }
 

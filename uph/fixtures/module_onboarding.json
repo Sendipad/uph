@@ -1,0 +1,32 @@
+[
+ {
+  "allow_roles": [
+   {
+    "role": "System Manager"
+   },
+   {
+    "role": "Party Manager"
+   }
+  ],
+  "docstatus": 0,
+  "doctype": "Module Onboarding",
+  "documentation_url": "https://sendipad.github.io/uph/en/docs/",
+  "is_complete": 0,
+  "module": "Party",
+  "name": "Party",
+  "steps": [
+   {
+    "step": "Party Master Settings"
+   },
+   {
+    "step": "Create Party Master"
+   },
+   {
+    "step": "Data Quality Dashboard"
+   }
+  ],
+  "subtitle": "Configure Party Master, map roles, and monitor data quality.",
+  "success_message": "The Party module is ready.",
+  "title": "Let's set up the Party module."
+ }
+]
