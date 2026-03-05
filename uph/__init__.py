@@ -5,7 +5,7 @@ from uph.party.controllers.queries import (
 )
 from uph.party.controllers.cache_utils import SmartCache
 
-__version__ = "3.3.5"
+__version__ = "3.3.6"
 
 
 # ----------------------------------------------------------------------------
