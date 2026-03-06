@@ -208,22 +208,28 @@ function update_buttons(frm) {
 
 	let party_count = counts[frm.doc.party_type] || 0;
 
-	// Primary action: Linking existing parties
+	// Primary action: Route to Data Quality Dashboard
 	if (party_count > 0) {
 		frm.page.set_primary_action(
-			__("Linking Existing {0} ({1})", [frm.doc.party_type, party_count]),
-			() => fetch_existing_parties(frm, { party_type: frm.doc.party_type })
+			__("Unlinked Roles in Party Issue ({0})", [party_count]),
+			() => {
+				frappe.route_options = { party_master: frm.doc.name };
+				frappe.set_route("data-quality-dashboard");
+			}
 		);
 	}
 
-	// Secondary roles
+	// Secondary roles: Also route to Data Quality Dashboard
 	if (frm.doc.has_secondary_role_party && frm.doc.roles) {
 		frm.doc.roles.forEach((role) => {
 			const role_count = counts[role.party_type_role] || 0;
 			if (role_count > 0) {
 				frm.add_custom_button(
-					__("Linking Existing {0} ({1})", [role.party_type_role, role_count]),
-					() => fetch_existing_parties(frm, { party_type: role.party_type_role }),
+					__("Unlinked Roles in Party Issue ({0})", [role_count]),
+					() => {
+						frappe.route_options = { party_master: frm.doc.name };
+						frappe.set_route("data-quality-dashboard");
+					},
 					__("Fetch From :")
 				);
 			}
@@ -231,33 +237,6 @@ function update_buttons(frm) {
 	}
 }
 
-function fetch_existing_parties(frm, filters) {
-	const dialog = new frappe.ui.form.MultiSelectDialog({
-		doctype: filters.party_type,
-		target: frm,
-		setters: {},
-		columns: ["name", "party_name", "currency"],
-		add_filters_group: 1,
-		get_query() {
-			return {
-				query: "uph.party.doctype.party_master.party_master.get_unset_parties_list",
-				filters: { party_master: frm.doc.name, unset: 1, party_type: filters.party_type },
-			};
-		},
-		action(selections) {
-			const data = selections.map((name) => ({ name, party_type: filters.party_type }));
-			frappe.call({
-				method: "set_party_master",
-				doc: frm.doc,
-				args: { data },
-				callback() {
-					frm.refresh_field("linked_party");
-					dialog.dialog.hide();
-				},
-			});
-		},
-	});
-}
 
 function get_counts_unlinked_parties() {
 	if (frappe.boot.unlinked_parties_counts) return frappe.boot.unlinked_parties_counts;
