@@ -7,22 +7,32 @@ def get_data():
         "fieldname": "party_master",
         "transactions": [
             {
-                "label": _("Linked Documents"),
+                "label": _("Accounting & Compliance"),
+                "items": [
+                    "Payment Entry",
+                    "Journal Entry",
+                    "Party Analytic Accounting",
+                    "Party Issue",
+                ],
+            },
+            {
+                "label": _("Sales & Buying"),
                 "items": [
                     "Customer",
                     "Supplier",
-                    "Employee",
-                    "Expense Claim",
                     "Sales Order",
                     "Delivery Note",
                     "Sales Invoice",
                     "Purchase Order",
                     "Purchase Receipt",
                     "Purchase Invoice",
-                    "Payment Entry",
-                    "Journal Entry",
-                    "Party Analytic Accounting",
-                    "Party Issue",
+                ],
+            },
+            {
+                "label": _("People & Relationships"),
+                "items": [
+                    "Employee",
+                    "Expense Claim",
                     {
                         "doctype": "Party Relationship",
                         "fieldname": "subject_party",
