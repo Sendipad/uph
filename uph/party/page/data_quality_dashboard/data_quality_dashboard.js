@@ -38,8 +38,16 @@ class DataQualityDashboard {
         this.setup_page_actions();
         this.render_layout();
         this.setup_filters();
-        this.load_stats();
-        this.load_tab_content();
+
+        if (frappe.route_options && frappe.route_options.party_master) {
+            const pm = frappe.route_options.party_master;
+            frappe.route_options = null;
+            // Don't force 'unlinked' tab, let it default or be specified
+            this.party_master_field.set_value(pm);
+        } else {
+            this.load_stats();
+            this.load_tab_content();
+        }
     }
 
     setup_filters() {

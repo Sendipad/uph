@@ -26,24 +26,47 @@ def get_duplicate_issues(
     filters = {"issue_type": "Duplicate", "status": ["in", ["Open", "Under Review"]]}
     if float(min_score) > 0:
         filters["score"] = [">=", float(min_score)]
-    if party_master:
-        filters["party_master"] = party_master
 
-    duplicates = frappe.get_all(
-        "Party Issue",
-        fields=[
-            "name",
-            "party_master",
-            "reference_doctype",
-            "reference_name",
-            "score",
-            "status",
-        ],
-        filters=filters,
-        order_by="score desc",
-        limit_start=offset,
-        limit_page_length=limit,
-    )
+    if party_master:
+        # Filter for issues where the party is either on the left or the right
+        # We use manual SQL here because complex OR across different fields is tricky in Frappe's filters dict
+        where_clause = """
+            issue_type = 'Duplicate'
+            AND status IN ('Open', 'Under Review')
+            AND (party_master = %(pm)s OR (reference_doctype = 'Party Master' AND reference_name = %(pm)s))
+        """
+        params = {"pm": party_master}
+        if float(min_score) > 0:
+            where_clause += " AND score >= %(score)s"
+            params["score"] = float(min_score)
+
+        duplicates = frappe.db.sql(
+            f"""
+            SELECT name, party_master, reference_doctype, reference_name, score, status
+            FROM `tabParty Issue`
+            WHERE {where_clause}
+            ORDER BY score DESC
+            LIMIT %(limit)s OFFSET %(offset)s
+            """,
+            {**params, "limit": limit, "offset": offset},
+            as_dict=True,
+        )
+    else:
+        duplicates = frappe.get_all(
+            "Party Issue",
+            fields=[
+                "name",
+                "party_master",
+                "reference_doctype",
+                "reference_name",
+                "score",
+                "status",
+            ],
+            filters=filters,
+            order_by="score desc",
+            limit_start=offset,
+            limit_page_length=limit,
+        )
 
     # Bulk-fetch party names to avoid N+1 queries
     if duplicates:
