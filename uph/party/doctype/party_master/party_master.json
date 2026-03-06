@@ -29,15 +29,14 @@
   "account_manager",
   "language",
   "column_break_metadata_right",
+  "party_details",
   "image",
-  "industry_tab",
   "section_break_biz_scope",
   "enable_selling",
   "enable_buying",
   "industry",
   "column_break_biz_scope_right",
   "market_segment",
-  "identity_tab",
   "section_break_legal_identity",
   "type",
   "legal_entity_type",
@@ -51,7 +50,6 @@
   "salutation",
   "column_break_personal_right",
   "gender",
-  "roles_tab",
   "section_break_role_mgmt",
   "is_primary_role",
   "has_secondary_role_party",
@@ -63,7 +61,6 @@
   "section_break_relationships",
   "relationships_html",
   "parties",
-  "section_break_relationships_graph",
   "contacts_information_tab",
   "section_break_primary_contact",
   "party_primary_contact",
@@ -95,7 +92,6 @@
   "accounts",
   "column_break_financials_right",
   "credit_limits",
-  "analytics_tab",
   "section_break_analytics",
   "enforce_party_analaytic_accounting_selection",
   "column_break_analytics_right",
@@ -112,7 +108,6 @@
   "section_break_system_logs",
   "total_linked_party",
   "normalized_party_name",
-  "party_details",
   "column_break_logs_right",
   "disputed_reasons",
   "section_break_hidden",
@@ -284,11 +279,6 @@
    "label": "Image"
   },
   {
-   "fieldname": "industry_tab",
-   "fieldtype": "Section Break",
-   "label": "Industry & Market"
-  },
-  {
    "fieldname": "section_break_biz_scope",
    "fieldtype": "Section Break",
    "label": "Business Scope"
@@ -320,11 +310,6 @@
    "fieldtype": "Link",
    "label": "Market Segment",
    "options": "Market Segment"
-  },
-  {
-   "fieldname": "identity_tab",
-   "fieldtype": "Section Break",
-   "label": "Identity & Legal"
   },
   {
    "depends_on": "eval:!doc.is_group&&doc.type",
@@ -410,11 +395,6 @@
    "options": "Gender"
   },
   {
-   "fieldname": "roles_tab",
-   "fieldtype": "Section Break",
-   "label": "Roles"
-  },
-  {
    "fieldname": "section_break_role_mgmt",
    "fieldtype": "Section Break",
    "label": "Primary Role"
@@ -486,11 +466,6 @@
    "label": "Parties",
    "options": "Party Master Parties",
    "read_only": 1
-  },
-  {
-   "fieldname": "section_break_relationships_graph",
-   "fieldtype": "Section Break",
-   "label": "Relationships Graph"
   },
   {
    "depends_on": "eval:!doc.is_group",
@@ -682,11 +657,6 @@
    "options": "Customer Credit Limit"
   },
   {
-   "fieldname": "analytics_tab",
-   "fieldtype": "Section Break",
-   "label": "Analytics"
-  },
-  {
    "fieldname": "section_break_analytics",
    "fieldtype": "Section Break",
    "label": "Party Analytic Accounting"
@@ -853,7 +823,7 @@
  "is_calendar_and_gantt": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2026-03-01 21:02:24.069742",
+ "modified": "2026-03-06 23:51:31.093068",
  "modified_by": "ruzaqi@gmail.com",
  "module": "Party",
  "name": "Party Master",
