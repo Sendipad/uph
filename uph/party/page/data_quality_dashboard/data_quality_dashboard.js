@@ -42,9 +42,7 @@ class DataQualityDashboard {
         if (frappe.route_options && frappe.route_options.party_master) {
             const pm = frappe.route_options.party_master;
             frappe.route_options = null;
-            this.active_tab = 'unlinked';
-            this.wrapper.find('.nav-link').removeClass('active');
-            this.wrapper.find(`.nav-link[data-tab="unlinked"]`).addClass('active');
+            // Don't force 'unlinked' tab, let it default or be specified
             this.party_master_field.set_value(pm);
         } else {
             this.load_stats();
