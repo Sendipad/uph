@@ -12,29 +12,29 @@
  "engine": "InnoDB",
  "field_order": [
   "details_tab",
+  "relationships_tab",
+  "section_break_relationships",
+  "relationships_html",
+  "parties",
+  "section_break_relationships_graph",
   "section_break_overview",
+  "naming_series",
   "party_name",
   "party_type",
   "status",
-  "column_break_general_right",
-  "party_number",
-  "naming_series",
   "section_break_hierarchy",
   "is_group",
   "parent_party_master",
+  "column_break_general_right",
   "group_type",
   "party_type_group",
+  "party_number",
   "section_break_metadata_general",
   "territory",
   "account_manager",
   "language",
   "column_break_metadata_right",
   "image",
-  "relationships_tab",
-  "section_break_relationships",
-  "parties",
-  "section_break_relationships_graph",
-  "relationships_html",
   "identity_tab",
   "section_break_legal_identity",
   "type",
@@ -42,8 +42,8 @@
   "date_of_establishment",
   "section_break_registration_ids",
   "national_id",
-  "column_break_reg_info",
   "passport_number",
+  "column_break_reg_info",
   "business_registration_number",
   "section_break_personal",
   "salutation",
@@ -52,6 +52,7 @@
   "contacts_information_tab",
   "section_break_primary_contact",
   "party_primary_contact",
+  "column_break_primary_contact",
   "mobile_no",
   "email_id",
   "section_break_primary_address",
@@ -65,15 +66,16 @@
   "roles_tab",
   "section_break_role_mgmt",
   "is_primary_role",
+  "has_secondary_role_party",
   "primary_party_master",
   "section_break_secondary_roles",
-  "has_secondary_role_party",
   "roles",
   "tab_3_tab",
   "section_break_trade",
   "default_currency",
   "default_price_list",
   "payment_terms",
+  "column_break_trade_right",
   "default_cost_center",
   "default_project",
   "section_break_internal_accounting",
@@ -85,21 +87,24 @@
   "accounts",
   "column_break_financials_right",
   "credit_limits",
+  "tax_tab",
   "section_break_taxation",
   "tax_id",
   "column_break_tax_right",
   "tax_category",
   "tax_withholding_category",
+  "industry_tab",
   "section_break_biz_scope",
   "enable_selling",
   "enable_buying",
   "industry",
   "column_break_biz_scope_right",
   "market_segment",
+  "analytics_tab",
   "section_break_analytics",
   "enforce_party_analaytic_accounting_selection",
   "default_party_analytic_accounting",
-  "dashboard_tab",
+  "portal_users_tab",
   "portal_users",
   "section_break_system_logs",
   "total_linked_party",
@@ -114,7 +119,8 @@
   "lft",
   "rgt",
   "old_parent",
-  "title"
+  "title",
+  "dashboard_tab"
  ],
  "fields": [
   {
@@ -200,8 +206,9 @@
    "read_only": 1
   },
   {
-   "fieldname": "column_break_general_right",
-   "fieldtype": "Column Break"
+   "fieldname": "section_break_hierarchy",
+   "fieldtype": "Section Break",
+   "label": "Hierarchy"
   },
   {
    "allow_in_quick_entry": 1,
@@ -222,6 +229,10 @@
    "link_filters": "[[\"Party Master\",\"is_group\",\"=\",1]]",
    "mandatory_depends_on": "eval:!doc.is_group",
    "options": "Party Master"
+  },
+  {
+   "fieldname": "column_break_general_right",
+   "fieldtype": "Column Break"
   },
   {
    "allow_in_quick_entry": 1,
@@ -257,11 +268,6 @@
    "mandatory_depends_on": "eval:doc.is_group",
    "no_copy": 1,
    "unique": 1
-  },
-  {
-   "fieldname": "section_break_hierarchy",
-   "fieldtype": "Section Break",
-   "label": "Hierarchy"
   },
   {
    "collapsible": 1,
@@ -343,11 +349,6 @@
    "label": "Registration IDs"
   },
   {
-   "fieldname": "column_break_reg_info",
-   "fieldtype": "Column Break",
-   "label": "Registration Information"
-  },
-  {
    "depends_on": "eval:doc.type == 'Individual'",
    "description": "Government-issued ID for individuals",
    "fieldname": "national_id",
@@ -361,6 +362,11 @@
    "fieldname": "passport_number",
    "fieldtype": "Data",
    "label": "Passport Number"
+  },
+  {
+   "fieldname": "column_break_reg_info",
+   "fieldtype": "Column Break",
+   "label": "Registration Information"
   },
   {
    "depends_on": "eval:doc.type == 'Company'",
@@ -411,6 +417,10 @@
    "options": "Contact"
   },
   {
+   "fieldname": "column_break_primary_contact",
+   "fieldtype": "Column Break"
+  },
+  {
    "allow_in_quick_entry": 1,
    "fetch_from": "party_primary_contact.mobile_no",
    "fieldname": "mobile_no",
@@ -435,16 +445,16 @@
    "label": "Primary Address"
   },
   {
-   "fieldname": "column_break_address_detail",
-   "fieldtype": "Column Break",
-   "label": "Address Detail"
-  },
-  {
    "description": "Reselect, if the chosen address is edited after save",
    "fieldname": "party_primary_address",
    "fieldtype": "Link",
    "label": "Party Primary Address",
    "options": "Address"
+  },
+  {
+   "fieldname": "column_break_address_detail",
+   "fieldtype": "Column Break",
+   "label": "Address Detail"
   },
   {
    "fieldname": "primary_address",
@@ -556,6 +566,10 @@
    "fieldtype": "Link",
    "label": "Default Payment Terms Template",
    "options": "Payment Terms Template"
+  },
+  {
+   "fieldname": "column_break_trade_right",
+   "fieldtype": "Column Break"
   },
   {
    "fieldname": "default_cost_center",
