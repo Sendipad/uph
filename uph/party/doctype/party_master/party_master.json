@@ -12,11 +12,6 @@
  "engine": "InnoDB",
  "field_order": [
   "details_tab",
-  "relationships_tab",
-  "section_break_relationships",
-  "relationships_html",
-  "parties",
-  "section_break_relationships_graph",
   "section_break_overview",
   "naming_series",
   "party_name",
@@ -56,6 +51,19 @@
   "salutation",
   "column_break_personal_right",
   "gender",
+  "roles_tab",
+  "section_break_role_mgmt",
+  "is_primary_role",
+  "has_secondary_role_party",
+  "column_break_roles_right",
+  "primary_party_master",
+  "section_break_secondary_roles",
+  "roles",
+  "relationships_tab",
+  "section_break_relationships",
+  "relationships_html",
+  "parties",
+  "section_break_relationships_graph",
   "contacts_information_tab",
   "section_break_primary_contact",
   "party_primary_contact",
@@ -70,14 +78,6 @@
   "contact_html",
   "column_break_visuals_right",
   "address_html",
-  "roles_tab",
-  "section_break_role_mgmt",
-  "is_primary_role",
-  "has_secondary_role_party",
-  "column_break_roles_right",
-  "primary_party_master",
-  "section_break_secondary_roles",
-  "roles",
   "tab_3_tab",
   "section_break_trade",
   "default_currency",
@@ -95,20 +95,20 @@
   "accounts",
   "column_break_financials_right",
   "credit_limits",
+  "analytics_tab",
+  "section_break_analytics",
+  "enforce_party_analaytic_accounting_selection",
+  "column_break_analytics_right",
+  "default_party_analytic_accounting",
   "tax_tab",
   "section_break_taxation",
   "tax_id",
   "column_break_tax_right",
   "tax_category",
   "tax_withholding_category",
-  "analytics_tab",
-  "section_break_analytics",
-  "enforce_party_analaytic_accounting_selection",
-  "column_break_analytics_right",
-  "default_party_analytic_accounting",
-  "dashboard_tab",
   "portal_users_tab",
   "portal_users",
+  "dashboard_tab",
   "section_break_system_logs",
   "total_linked_party",
   "normalized_party_name",
@@ -129,35 +129,6 @@
    "fieldname": "details_tab",
    "fieldtype": "Tab Break",
    "label": "Overview"
-  },
-  {
-   "fieldname": "relationships_tab",
-   "fieldtype": "Tab Break",
-   "label": "Relationships"
-  },
-  {
-   "fieldname": "section_break_relationships",
-   "fieldtype": "Section Break",
-   "label": "Linked Parties"
-  },
-  {
-   "fieldname": "relationships_html",
-   "fieldtype": "HTML",
-   "ignore_user_permissions": 1,
-   "label": "Relationships",
-   "read_only": 1
-  },
-  {
-   "fieldname": "parties",
-   "fieldtype": "Table",
-   "label": "Parties",
-   "options": "Party Master Parties",
-   "read_only": 1
-  },
-  {
-   "fieldname": "section_break_relationships_graph",
-   "fieldtype": "Section Break",
-   "label": "Relationships Graph"
   },
   {
    "fieldname": "section_break_overview",
@@ -352,7 +323,7 @@
   },
   {
    "fieldname": "identity_tab",
-   "fieldtype": "Tab Break",
+   "fieldtype": "Section Break",
    "label": "Identity & Legal"
   },
   {
@@ -439,10 +410,93 @@
    "options": "Gender"
   },
   {
+   "fieldname": "roles_tab",
+   "fieldtype": "Section Break",
+   "label": "Roles"
+  },
+  {
+   "fieldname": "section_break_role_mgmt",
+   "fieldtype": "Section Break",
+   "label": "Primary Role"
+  },
+  {
+   "default": "1",
+   "depends_on": "eval:!doc.is_group",
+   "fieldname": "is_primary_role",
+   "fieldtype": "Check",
+   "label": "Is Primary Role"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:!doc.is_group",
+   "fieldname": "has_secondary_role_party",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "label": "Has Secondary Role Party",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_roles_right",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:!doc.is_group&&!doc.is_primary_role",
+   "fieldname": "primary_party_master",
+   "fieldtype": "Link",
+   "label": "Primary Party Master",
+   "link_filters": "[[\"Party Master\",\"is_group\",\"=\",0],[\"Party Master\",\"party_type\",\"!=\",\"eval:doc.party_type\"]]",
+   "no_copy": 1,
+   "options": "Party Master"
+  },
+  {
+   "fieldname": "section_break_secondary_roles",
+   "fieldtype": "Section Break",
+   "label": "Secondary Roles"
+  },
+  {
+   "depends_on": "eval:doc.has_secondary_role_party",
+   "fieldname": "roles",
+   "fieldtype": "Table MultiSelect",
+   "in_filter": 1,
+   "in_standard_filter": 1,
+   "label": "Party Type Roles",
+   "options": "Party Master Role"
+  },
+  {
+   "fieldname": "relationships_tab",
+   "fieldtype": "Tab Break",
+   "label": "Relationships"
+  },
+  {
+   "fieldname": "section_break_relationships",
+   "fieldtype": "Section Break",
+   "label": "Linked Parties"
+  },
+  {
+   "fieldname": "relationships_html",
+   "fieldtype": "HTML",
+   "ignore_user_permissions": 1,
+   "label": "Relationships",
+   "read_only": 1
+  },
+  {
+   "fieldname": "parties",
+   "fieldtype": "Table",
+   "label": "Parties",
+   "options": "Party Master Parties",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_relationships_graph",
+   "fieldtype": "Section Break",
+   "label": "Relationships Graph"
+  },
+  {
    "depends_on": "eval:!doc.is_group",
    "fieldname": "contacts_information_tab",
-   "fieldtype": "Section Break",
-   "label": "Contacts & Address"
+   "fieldtype": "Tab Break",
+   "label": "Address & Contact"
   },
   {
    "fieldname": "section_break_primary_contact",
@@ -527,63 +581,9 @@
    "read_only": 1
   },
   {
-   "fieldname": "roles_tab",
-   "fieldtype": "Section Break",
-   "label": "Roles"
-  },
-  {
-   "fieldname": "section_break_role_mgmt",
-   "fieldtype": "Section Break",
-   "label": "Primary Role"
-  },
-  {
-   "default": "1",
-   "depends_on": "eval:!doc.is_group",
-   "fieldname": "is_primary_role",
-   "fieldtype": "Check",
-   "label": "Is Primary Role"
-  },
-  {
-   "default": "0",
-   "depends_on": "eval:!doc.is_group",
-   "fieldname": "has_secondary_role_party",
-   "fieldtype": "Check",
-   "in_list_view": 1,
-   "in_preview": 1,
-   "label": "Has Secondary Role Party",
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_roles_right",
-   "fieldtype": "Column Break"
-  },
-  {
-   "depends_on": "eval:!doc.is_group&&!doc.is_primary_role",
-   "fieldname": "primary_party_master",
-   "fieldtype": "Link",
-   "label": "Primary Party Master",
-   "link_filters": "[[\"Party Master\",\"is_group\",\"=\",0],[\"Party Master\",\"party_type\",\"!=\",\"eval:doc.party_type\"]]",
-   "no_copy": 1,
-   "options": "Party Master"
-  },
-  {
-   "fieldname": "section_break_secondary_roles",
-   "fieldtype": "Section Break",
-   "label": "Secondary Roles"
-  },
-  {
-   "depends_on": "eval:doc.has_secondary_role_party",
-   "fieldname": "roles",
-   "fieldtype": "Table MultiSelect",
-   "in_filter": 1,
-   "in_standard_filter": 1,
-   "label": "Party Type Roles",
-   "options": "Party Master Role"
-  },
-  {
    "fieldname": "tab_3_tab",
    "fieldtype": "Tab Break",
-   "label": "Accounting & Compliance"
+   "label": "Accounting"
   },
   {
    "fieldname": "section_break_trade",
@@ -682,9 +682,35 @@
    "options": "Customer Credit Limit"
   },
   {
-   "fieldname": "tax_tab",
+   "fieldname": "analytics_tab",
    "fieldtype": "Section Break",
-   "label": "Tax & Compliance"
+   "label": "Analytics"
+  },
+  {
+   "fieldname": "section_break_analytics",
+   "fieldtype": "Section Break",
+   "label": "Party Analytic Accounting"
+  },
+  {
+   "default": "0",
+   "fieldname": "enforce_party_analaytic_accounting_selection",
+   "fieldtype": "Check",
+   "label": "Enforce Party Analaytic Accounting Selection"
+  },
+  {
+   "fieldname": "column_break_analytics_right",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_party_analytic_accounting",
+   "fieldtype": "Link",
+   "label": "Default Party Analytic Accounting",
+   "options": "Party Analytic Accounting"
+  },
+  {
+   "fieldname": "tax_tab",
+   "fieldtype": "Tab Break",
+   "label": "Tax"
   },
   {
    "fieldname": "section_break_taxation",
@@ -713,40 +739,8 @@
    "options": "Tax Withholding Category"
   },
   {
-   "fieldname": "analytics_tab",
-   "fieldtype": "Section Break",
-   "label": "Analytics"
-  },
-  {
-   "fieldname": "section_break_analytics",
-   "fieldtype": "Section Break",
-   "label": "Party Analytic Accounting"
-  },
-  {
-   "default": "0",
-   "fieldname": "enforce_party_analaytic_accounting_selection",
-   "fieldtype": "Check",
-   "label": "Enforce Party Analaytic Accounting Selection"
-  },
-  {
-   "fieldname": "column_break_analytics_right",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "default_party_analytic_accounting",
-   "fieldtype": "Link",
-   "label": "Default Party Analytic Accounting",
-   "options": "Party Analytic Accounting"
-  },
-  {
-   "depends_on": "eval:!doc.is_group",
-   "fieldname": "dashboard_tab",
-   "fieldtype": "Tab Break",
-   "label": "System"
-  },
-  {
    "fieldname": "portal_users_tab",
-   "fieldtype": "Section Break",
+   "fieldtype": "Tab Break",
    "label": "Portal Users"
   },
   {
@@ -754,6 +748,12 @@
    "fieldtype": "Table",
    "label": "Party Portal Users",
    "options": "Portal User"
+  },
+  {
+   "depends_on": "eval:!doc.is_group",
+   "fieldname": "dashboard_tab",
+   "fieldtype": "Tab Break",
+   "label": "System"
   },
   {
    "fieldname": "section_break_system_logs",
