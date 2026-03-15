@@ -38,8 +38,10 @@ frappe.ui.form.PartyMasterQuickEntryForm = class PartyMasterQuickEntryForm exten
 					});
 					field.onchange = () => {
 						const type = this.dialog.doc.party_type;
-						if (type === "Customer") this.dialog.set_value("group_type", "Customer Group");
-						else if (type === "Supplier") this.dialog.set_value("group_type", "Supplier Group");
+						if (type === "Customer")
+							this.dialog.set_value("group_type", "Customer Group");
+						else if (type === "Supplier")
+							this.dialog.set_value("group_type", "Supplier Group");
 						else this.dialog.set_value("group_type", "");
 						this.dialog.get_field("group_type").refresh();
 					};
@@ -102,9 +104,13 @@ frappe.ui.form.PartyMasterQuickEntryForm = class PartyMasterQuickEntryForm exten
 					const msg = r.message || {};
 
 					if (msg.exact_name || msg.exact_number) {
-						desc = `<span style="color:red; font-weight:bold;"> ${__("Exists: ")} ${msg.exact_name || msg.exact_number} </span>`;
+						desc = `<span style="color:red; font-weight:bold;"> ${__("Exists: ")} ${
+							msg.exact_name || msg.exact_number
+						} </span>`;
 					} else if (msg.fuzzy_name) {
-						desc = `<span style="color:orange; font-weight:bold;"> ${__("Similar: ")} ${msg.fuzzy_name} (${msg.fuzzy_score}%) </span>`;
+						desc = `<span style="color:orange; font-weight:bold;"> ${__("Similar: ")} ${
+							msg.fuzzy_name
+						} (${msg.fuzzy_score}%) </span>`;
 					} else {
 						desc =
 							fieldname === "party_name"
@@ -154,7 +160,12 @@ frappe.ui.form.PartyMasterQuickEntryForm = class PartyMasterQuickEntryForm exten
 			{ fieldtype: "Section Break", label: __("Primary Contact Details"), collapsible: 0 },
 			{ label: __("Mobile Number"), fieldname: "mobile_number", fieldtype: "Data" },
 			{ fieldtype: "Column Break" },
-			{ label: __("Email Id"), fieldname: "email_address", fieldtype: "Data", options: "Email" },
+			{
+				label: __("Email Id"),
+				fieldname: "email_address",
+				fieldtype: "Data",
+				options: "Email",
+			},
 			{ fieldtype: "Section Break", label: __("Primary Address Details"), collapsible: 1 },
 			{ label: __("Address Line 1"), fieldname: "address_line1", fieldtype: "Data" },
 			{ label: __("Address Line 2"), fieldname: "address_line2", fieldtype: "Data" },
@@ -163,7 +174,12 @@ frappe.ui.form.PartyMasterQuickEntryForm = class PartyMasterQuickEntryForm exten
 			{ label: __("City"), fieldname: "city", fieldtype: "Data" },
 			{ label: __("State"), fieldname: "state", fieldtype: "Data" },
 			{ label: __("Country"), fieldname: "country", fieldtype: "Link", options: "Country" },
-			{ label: __("Customer POS Id"), fieldname: "customer_pos_id", fieldtype: "Data", hidden: 1 },
+			{
+				label: __("Customer POS Id"),
+				fieldname: "customer_pos_id",
+				fieldtype: "Data",
+				hidden: 1,
+			},
 		];
 	}
 };

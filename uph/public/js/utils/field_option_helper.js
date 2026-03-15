@@ -7,7 +7,9 @@ uph.hub.docfields = {
 	cache: {},
 
 	get_docfields(document_type, basefieldname = null, callback) {
-		let key = Array.isArray(document_type) ? document_type.slice().sort().join(",") : document_type;
+		let key = Array.isArray(document_type)
+			? document_type.slice().sort().join(",")
+			: document_type;
 
 		let cached = this.cache[key];
 
@@ -131,7 +133,9 @@ uph.utils.FieldOptionHelper = {
 			fieldnames.forEach((fieldname) => {
 				grid.update_docfield_property(fieldname, "options", values);
 
-				const rows = row_name ? [grid.grid_rows_by_docname?.[row_name]] : grid.grid_rows || [];
+				const rows = row_name
+					? [grid.grid_rows_by_docname?.[row_name]]
+					: grid.grid_rows || [];
 
 				rows.forEach((row) => {
 					const field = row?.grid_form?.fields_dict?.[fieldname];
@@ -226,13 +230,13 @@ uph.utils.FieldOptionHelper = {
 */
 
 //file uph/public/js/utils/field_option_helper.js
-/** 
+/**
 frappe.provide("uph.utils");
 
 uph.utils.FieldOptionHelper = {
 	cache: {},
 
-	
+
 	load({ documentType, callback }) {
 		if (Array.isArray(documentType)) {
 			// Multiple doctypes → get intersection
@@ -320,7 +324,7 @@ uph.utils.FieldOptionHelper = {
 			}
 		});
 	},
- 
+
 frappe.provide("uph.utils");
 
 uph.utils.FieldOptionHelper = {

@@ -55,16 +55,19 @@ describe("UPH Frontend Utility Tests", () => {
 
 								win.frappe.call = ({ callback }) => callback({ message: null });
 								win.uph.party_type_pm_rules = {};
-								win.uph.get_party_type_party_master_rules("Customer", (emptyRules) => {
-									try {
-										expect(emptyRules).to.equal(null);
-										win.frappe.call = originalCall;
-										resolve();
-									} catch (error) {
-										win.frappe.call = originalCall;
-										reject(error);
+								win.uph.get_party_type_party_master_rules(
+									"Customer",
+									(emptyRules) => {
+										try {
+											expect(emptyRules).to.equal(null);
+											win.frappe.call = originalCall;
+											resolve();
+										} catch (error) {
+											win.frappe.call = originalCall;
+											reject(error);
+										}
 									}
-								});
+								);
 							} catch (error) {
 								win.frappe.call = originalCall;
 								reject(error);
@@ -103,7 +106,9 @@ describe("UPH Frontend Utility Tests", () => {
 					this.lastToggle = { fieldname, value };
 				},
 			};
-			win.uph.party.finalize_pm_details(frm, { enforce_party_analytic_accounting_selection: true });
+			win.uph.party.finalize_pm_details(frm, {
+				enforce_party_analytic_accounting_selection: true,
+			});
 			expect(frm.lastToggle).to.deep.equal({
 				fieldname: "party_analytic_accounting",
 				value: true,
@@ -111,8 +116,11 @@ describe("UPH Frontend Utility Tests", () => {
 
 			const fields = win.uph.party.get_dialog_field(
 				{ get_default_partyRole: false },
-				{ party_type_roles: ["Customer"], parties: [{ name: "CUST-0001", currency: "USD" }] },
-				{ party_type: "Customer", isdynamic: 0 },
+				{
+					party_type_roles: ["Customer"],
+					parties: [{ name: "CUST-0001", currency: "USD" }],
+				},
+				{ party_type: "Customer", isdynamic: 0 }
 			);
 			const partyField = fields.find((field) => field.fieldname === "party");
 			const partyTypeField = fields.find((field) => field.fieldname === "party_type");
@@ -123,7 +131,7 @@ describe("UPH Frontend Utility Tests", () => {
 				{ doctype: "Sales Invoice", party_master: "PM-001", customer: "CUST-0001" },
 				null,
 				"party_analytic_accounting",
-				"Test Company",
+				"Test Company"
 			);
 			expect(query).to.deep.equal({
 				query: "uph.party.controllers.queries.get_party_analytic_accounting_filtered",

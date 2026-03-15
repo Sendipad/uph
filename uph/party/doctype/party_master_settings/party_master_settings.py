@@ -1,453 +1,421 @@
 # Copyright (c) 2025, Abdo Mohammed Ruzaqi and contributors
 # For license information, please see license.txt
-from frappe.custom.doctype.custom_field.custom_field import (
-    create_custom_field,
-    create_custom_fields,
-)
 from collections import OrderedDict
+
 import frappe
 from frappe import _
+from frappe.custom.doctype.custom_field.custom_field import (
+	create_custom_field,
+	create_custom_fields,
+)
 from frappe.model.document import Document
+
 import uph
 
 
 class PartyMasterSettings(Document):
-    # begin: auto-generated types
-    # This code is auto-generated. Do not modify anything in this block.
+	# begin: auto-generated types
+	# This code is auto-generated. Do not modify anything in this block.
 
-    from typing import TYPE_CHECKING
+	from typing import TYPE_CHECKING
 
-    if TYPE_CHECKING:
-        from frappe.types import DF
-        from uph.party.doctype.party_master_settings_docfield.party_master_settings_docfield import (
-            PartyMasterSettingsDocField,
-        )
-        from uph.party.doctype.party_master_settings_doctype.party_master_settings_doctype import (
-            PartyMasterSettingsDocType,
-        )
-        from uph.party.doctype.party_master_settings_party_type.party_master_settings_party_type import (
-            PartyMasterSettingsPartyType,
-        )
+	if TYPE_CHECKING:
+		from frappe.types import DF
 
-        auto_expand_levels: DF.Int
-        check_party_master_duplicate_vouchers: DF.Check
-        digits_count: DF.Int
-        document_types: DF.Table[PartyMasterSettingsDocType]
-        duplicate_voucher_action: DF.Literal["Warn", "Stop"]
-        enable_party_analytic_accounting: DF.Check
-        enforce_cross_type_uniqueness: DF.Check
-        enforce_parent_numbering: DF.Check
-        enforce_strict_currency: DF.Check
-        group_digits: DF.Int
-        hide_balance: DF.Check
-        numbering_format: DF.Literal["Concatenated", "Dash-Separated"]
-        override_party_details_api: DF.Check
-        party_master_fields: DF.Table[PartyMasterSettingsDocField]
-        party_types: DF.Table[PartyMasterSettingsPartyType]
-        role_prefix_mode: DF.Literal[
-            "Prefix for All Role",
-            "Prefix for Secondary Role",
-            "Suffix for All Role",
-            "Suffix Secondary Roles",
-        ]
-        role_to_bypass_duplicate_voucher: DF.Link | None
-        setup_finished: DF.Check
-        sync_erp_party_naming: DF.Check
-        transaction_policy_cancelled_reference_days: DF.Int
-        transaction_policy_draft_days: DF.Int
+		from uph.party.doctype.party_master_settings_docfield.party_master_settings_docfield import (
+			PartyMasterSettingsDocField,
+		)
+		from uph.party.doctype.party_master_settings_doctype.party_master_settings_doctype import (
+			PartyMasterSettingsDocType,
+		)
+		from uph.party.doctype.party_master_settings_party_type.party_master_settings_party_type import (
+			PartyMasterSettingsPartyType,
+		)
 
-    # end: auto-generated types
-    def validate(self):
-        self.validate_document_types()
-        self.validate_party_master_fields_options()
-        self.validate_role_naming_rules()
-        self._validate_governance_immutability()
+		auto_expand_levels: DF.Int
+		check_party_master_duplicate_vouchers: DF.Check
+		digits_count: DF.Int
+		document_types: DF.Table[PartyMasterSettingsDocType]
+		duplicate_voucher_action: DF.Literal["Warn", "Stop"]
+		enable_party_analytic_accounting: DF.Check
+		enforce_cross_type_uniqueness: DF.Check
+		enforce_parent_numbering: DF.Check
+		enforce_strict_currency: DF.Check
+		group_digits: DF.Int
+		hide_balance: DF.Check
+		numbering_format: DF.Literal["Concatenated", "Dash-Separated"]
+		override_party_details_api: DF.Check
+		party_master_fields: DF.Table[PartyMasterSettingsDocField]
+		party_types: DF.Table[PartyMasterSettingsPartyType]
+		role_prefix_mode: DF.Literal[
+			"Prefix for All Role",
+			"Prefix for Secondary Role",
+			"Suffix for All Role",
+			"Suffix Secondary Roles",
+		]
+		role_to_bypass_duplicate_voucher: DF.Link | None
+		setup_finished: DF.Check
+		sync_erp_party_naming: DF.Check
+		transaction_policy_cancelled_reference_days: DF.Int
+		transaction_policy_draft_days: DF.Int
 
-    def validate_role_naming_rules(self):
-        """Validate that role-specific prefixes/suffixes are the first two letters of the party type capitalized."""
-        if not self.sync_erp_party_naming:
-            return
+	# end: auto-generated types
+	def validate(self):
+		self.validate_document_types()
+		self.validate_party_master_fields_options()
+		self.validate_role_naming_rules()
+		self._validate_governance_immutability()
 
-        # Map of Party Type to expected identifier (first two letters capitalized)
-        expected_identifiers = {
-            "Customer": "Cu",
-            "Supplier": "Su",
-            "Employee": "Em",
-            "Shareholder": "Sh",
-            "Student": "St",
-            "Volunteer": "Vo",
-            "Member": "Me",
-        }
+	def validate_role_naming_rules(self):
+		"""Validate that role-specific prefixes/suffixes are the first two letters of the party type capitalized."""
+		if not self.sync_erp_party_naming:
+			return
 
-        # This is a validation logic. If the user uses a prefix/suffix, it should ideally be consistent.
-        # The user's request: "when allow to add prefix or suffix for any naming it must be first two letters with capital first letter."
-        # However, the current Settings doesn't have a place to DEFINE the prefix per role, it's a global Switch.
-        # The actual identifiers are likely defined in the 'Party Master Settings Party Type' child table or inferred.
-        # Looking at 'Party Master Role' and 'Party Master Settings Party Type', there is no 'identifier' field.
-        # The 'uph' logic seems to use a hardcoded or dynamic 2-letter mapping.
+		# Map of Party Type to expected identifier (first two letters capitalized)
 
-        # The standardized pattern is now enforced in the controller.
-        # This validation ensures the user is aware of the rule when they enable naming sync.
-        msg = _(
-            "Note: Role-specific naming identifiers (prefixes/suffixes) will be automatically generated using the first two letters of the Party Type capitalized (e.g., 'Cu' for Customer, 'Su' for Supplier)."
-        )
-        frappe.msgprint(msg, alert=True)
+		# This is a validation logic. If the user uses a prefix/suffix, it should ideally be consistent.
+		# The user's request: "when allow to add prefix or suffix for any naming it must be first two letters with capital first letter."
+		# However, the current Settings doesn't have a place to DEFINE the prefix per role, it's a global Switch.
+		# The actual identifiers are likely defined in the 'Party Master Settings Party Type' child table or inferred.
+		# Looking at 'Party Master Role' and 'Party Master Settings Party Type', there is no 'identifier' field.
+		# The 'uph' logic seems to use a hardcoded or dynamic 2-letter mapping.
 
-    def _validate_governance_immutability(self):
-        """Once setup_finished is set, lock core numbering settings."""
-        old = self.get_doc_before_save()
-        if not old or not old.setup_finished:
-            return
+		# The standardized pattern is now enforced in the controller.
+		# This validation ensures the user is aware of the rule when they enable naming sync.
+		msg = _(
+			"Note: Role-specific naming identifiers (prefixes/suffixes) will be automatically generated using the first two letters of the Party Type capitalized (e.g., 'Cu' for Customer, 'Su' for Supplier)."
+		)
+		frappe.msgprint(msg, alert=True)
 
-        immutable_fields = ["numbering_format", "digits_count"]
-        for field in immutable_fields:
-            if self.get(field) != old.get(field):
-                frappe.throw(
-                    _(
-                        "Cannot change '{0}' after setup is finished. Uncheck 'Setup Finished' first."
-                    ).format(frappe.unscrub(field))
-                )
+	def _validate_governance_immutability(self):
+		"""Once setup_finished is set, lock core numbering settings."""
+		old = self.get_doc_before_save()
+		if not old or not old.setup_finished:
+			return
 
-    def on_update(self):
-        # Clear UPH controller caches (for smart hooks)
-        from uph.party.controllers.cache_utils import clear_all_caches
+		immutable_fields = ["numbering_format", "digits_count"]
+		for field in immutable_fields:
+			if self.get(field) != old.get(field):
+				frappe.throw(
+					_("Cannot change '{0}' after setup is finished. Uncheck 'Setup Finished' first.").format(
+						frappe.unscrub(field)
+					)
+				)
 
-        clear_all_caches()
+	def on_update(self):
+		# Clear UPH controller caches (for smart hooks)
+		from uph.party.controllers.cache_utils import clear_all_caches
 
-        # Existing logic
-        self.create_pm_fields_on_party_doctype()
-        self.sync_update_to_doctype_fields()
+		clear_all_caches()
 
-    def create_pm_fields_on_party_doctype(self):
-        if not getattr(self, "_doc_before_save", None):
-            return
+		# Existing logic
+		self.create_pm_fields_on_party_doctype()
+		self.sync_update_to_doctype_fields()
 
-        if self.is_child_table_same("party_types"):
-            return
+	def create_pm_fields_on_party_doctype(self):
+		if not getattr(self, "_doc_before_save", None):
+			return
 
-        party_types = [x.get("party_type") for x in self.party_types]
-        custom_fields = {}
+		if self.is_child_table_same("party_types"):
+			return
 
-        for d in party_types:
-            meta = frappe.get_meta(d)
-            fieldnames = [f.fieldname for f in meta.fields]
+		party_types = [x.get("party_type") for x in self.party_types]
+		custom_fields = {}
 
-            insert_after = None
-            if "naming_series" in fieldnames:
-                insert_after = "naming_series"
-            elif f"{d.lower()}_name" in fieldnames:
-                idx = fieldnames.index(f"{d.lower()}_name")
-                if idx > 0:
-                    prev_field = fieldnames[idx - 1]
-                    insert_after = prev_field
-            else:
-                insert_after = "naming_series"  # fallback default
+		for d in party_types:
+			meta = frappe.get_meta(d)
+			fieldnames = [f.fieldname for f in meta.fields]
 
-            custom_fields[d] = [
-                {
-                    "fieldname": "party_master",
-                    "fieldtype": "Link",
-                    "options": "Party Master",
-                    "label": "Party Master",
-                    "placeholder": "Set Parent Party Master",
-                    "reqd": 0,
-                    "in_list_view": 1,
-                    "in_standard_filter": 1,
-                    "bold": 1,
-                    "allow_in_quick_entry": 1,
-                    "insert_after": insert_after,
-                    "search_index": 1,
-                    "read_only_depends_on": "",
-                    "read_only": 0,
-                },
-                {
-                    "fieldname": "is_default_for_party_master",
-                    "fieldtype": "Check",
-                    "label": "Is Default for Party Master",
-                    "reqd": 0,
-                    "in_list_view": 1,
-                    "in_standard_filter": 0,
-                    "allow_in_quick_entry": 1,
-                    "insert_after": "party_master",
-                    "search_index": 1,
-                    "depends_on": "eval:doc.party_master",
-                    "description": "Checking this will make it the default for Party Master.",
-                },
-            ]
+			insert_after = None
+			if "naming_series" in fieldnames:
+				insert_after = "naming_series"
+			elif f"{d.lower()}_name" in fieldnames:
+				idx = fieldnames.index(f"{d.lower()}_name")
+				if idx > 0:
+					prev_field = fieldnames[idx - 1]
+					insert_after = prev_field
+			else:
+				insert_after = "naming_series"  # fallback default
 
-        if custom_fields:
-            create_custom_fields(custom_fields, update=True)
+			custom_fields[d] = [
+				{
+					"fieldname": "party_master",
+					"fieldtype": "Link",
+					"options": "Party Master",
+					"label": "Party Master",
+					"placeholder": "Set Parent Party Master",
+					"reqd": 0,
+					"in_list_view": 1,
+					"in_standard_filter": 1,
+					"bold": 1,
+					"allow_in_quick_entry": 1,
+					"insert_after": insert_after,
+					"search_index": 1,
+					"read_only_depends_on": "",
+					"read_only": 0,
+				},
+				{
+					"fieldname": "is_default_for_party_master",
+					"fieldtype": "Check",
+					"label": "Is Default for Party Master",
+					"reqd": 0,
+					"in_list_view": 1,
+					"in_standard_filter": 0,
+					"allow_in_quick_entry": 1,
+					"insert_after": "party_master",
+					"search_index": 1,
+					"depends_on": "eval:doc.party_master",
+					"description": "Checking this will make it the default for Party Master.",
+				},
+			]
 
-    def validate_party_master_fields_options(self):
-        if self.is_child_table_same("party_master_fields"):
-            return
+		if custom_fields:
+			create_custom_fields(custom_fields, update=True)
 
-        old_docfields = self.get_doc_before_save().get("party_master_fields", [])
-        party_types = frappe.get_all("Party Type", pluck="name")
+	def validate_party_master_fields_options(self):
+		if self.is_child_table_same("party_master_fields"):
+			return
 
-        new_row_mapped = OrderedDict()
-        new_row_mapped = {d.fieldname: d.options for d in self.party_master_fields}
+		old_docfields = self.get_doc_before_save().get("party_master_fields", [])
+		party_types = frappe.get_all("Party Type", pluck="name")
 
-        if not old_docfields:
-            return
+		new_row_mapped = OrderedDict()
+		new_row_mapped = {d.fieldname: d.options for d in self.party_master_fields}
 
-        old_mapped = {d.fieldname: d.options for d in old_docfields}
+		if not old_docfields:
+			return
 
-        for df, option in new_row_mapped.items():
-            # Skip if unchanged from old doc
-            if df in old_mapped and option == old_mapped.get(df):
-                continue
+		old_mapped = {d.fieldname: d.options for d in old_docfields}
 
-            option_list = []
-            if option:
-                option_list = [
-                    (line.split(":")[0].strip(), line.split(":")[1].strip())
-                    for line in option.split("\n")
-                    if ":" in line
-                ]
+		for df, option in new_row_mapped.items():
+			# Skip if unchanged from old doc
+			if df in old_mapped and option == old_mapped.get(df):
+				continue
 
-            for party_name in party_types:
-                # Skip if party already exists with '_' value
-                if any(name == party_name and val == "_" for name, val in option_list):
-                    continue
+			option_list = []
+			if option:
+				option_list = [
+					(line.split(":")[0].strip(), line.split(":")[1].strip())
+					for line in option.split("\n")
+					if ":" in line
+				]
 
-                meta = frappe.get_meta(party_name)
-                party_field = next(
-                    (field for name, field in option_list if name == party_name), None
-                )
+			for party_name in party_types:
+				# Skip if party already exists with '_' value
+				if any(name == party_name and val == "_" for name, val in option_list):
+					continue
 
-                # If valid field exists, continue
-                if party_field and meta.has_field(party_field):
-                    continue
+				meta = frappe.get_meta(party_name)
+				party_field = next((field for name, field in option_list if name == party_name), None)
 
-                # Try to use df as fieldname if it exists
-                if meta.has_field(df):
-                    option_list.append((party_name, df))
-                    continue
+				# If valid field exists, continue
+				if party_field and meta.has_field(party_field):
+					continue
 
-                # Default case
-                option_list.append((party_name, "_"))
+				# Try to use df as fieldname if it exists
+				if meta.has_field(df):
+					option_list.append((party_name, df))
+					continue
 
-            # Convert back to string format
-            new_row_mapped[df] = "\n".join(
-                f"{name}:{field}" for name, field in option_list
-            )
+				# Default case
+				option_list.append((party_name, "_"))
 
-        # Update the child table
-        for d in self.party_master_fields:
-            d.options = new_row_mapped.get(d.fieldname)
+			# Convert back to string format
+			new_row_mapped[df] = "\n".join(f"{name}:{field}" for name, field in option_list)
 
-    def validate_document_types(self):
+		# Update the child table
+		for d in self.party_master_fields:
+			d.options = new_row_mapped.get(d.fieldname)
 
-        self.flags.document_types_same = False
-        if self.is_child_table_same("document_types"):
-            self.flags.document_types_same = True
-            return
-        if (
-            frappe.session.user != "Administrator"
-            and "System Manager" not in frappe.get_roles()
-        ):
-            frappe.throw(
-                _("Only System Managers are allowed to update this settings."),
-                frappe.PermissionError,
-            )
-        doctypes = set()
-        for d in self.document_types:
-            # Validate required fields
-            if not d.document_type:
-                frappe.throw(_("Document Type is required at row {0}").format(d.idx))
+	def validate_document_types(self):
+		self.flags.document_types_same = False
+		if self.is_child_table_same("document_types"):
+			self.flags.document_types_same = True
+			return
+		if frappe.session.user != "Administrator" and "System Manager" not in frappe.get_roles():
+			frappe.throw(
+				_("Only System Managers are allowed to update this settings."),
+				frappe.PermissionError,
+			)
+		doctypes = set()
+		for d in self.document_types:
+			# Validate required fields
+			if not d.document_type:
+				frappe.throw(_("Document Type is required at row {0}").format(d.idx))
 
-            dt_meta = frappe.get_meta(d.document_type)
-            meta = None  # Meta of the Parent Doctype
+			dt_meta = frappe.get_meta(d.document_type)
+			meta = None  # Meta of the Parent Doctype
 
-            # Handle cases where parent doctype is not provided
-            if not d.parent_doctype:
-                if dt_meta.istable:
-                    frappe.throw(
-                        _("Parent Doctype is Required at row {0}").format(d.idx)
-                    )
-                d.parent_doctype = d.document_type  # Self-parented
+			# Handle cases where parent doctype is not provided
+			if not d.parent_doctype:
+				if dt_meta.istable:
+					frappe.throw(_("Parent Doctype is Required at row {0}").format(d.idx))
+				d.parent_doctype = d.document_type  # Self-parented
 
-            # If parent and child are different, validate the linkage
-            if d.parent_doctype != d.document_type:
-                meta = frappe.get_meta(d.parent_doctype)
-                child_tables = [
-                    df.options for df in meta.fields if df.fieldtype == "Table"
-                ]
-                if d.document_type not in child_tables:
-                    frappe.throw(
-                        _(
-                            "The Parent Doctype at row {0} has no Child Table pointing to {1}"
-                        ).format(d.idx, _(d.document_type))
-                    )
+			# If parent and child are different, validate the linkage
+			if d.parent_doctype != d.document_type:
+				meta = frappe.get_meta(d.parent_doctype)
+				child_tables = [df.options for df in meta.fields if df.fieldtype == "Table"]
+				if d.document_type not in child_tables:
+					frappe.throw(
+						_("The Parent Doctype at row {0} has no Child Table pointing to {1}").format(
+							d.idx, _(d.document_type)
+						)
+					)
 
-            # Validate party field
-            if not d.party_fieldname:
-                frappe.throw(
-                    _(
-                        "Party Fieldname is required at the target Document Type at row {0}"
-                    ).format(d.idx)
-                )
+			# Validate party field
+			if not d.party_fieldname:
+				frappe.throw(
+					_("Party Fieldname is required at the target Document Type at row {0}").format(d.idx)
+				)
 
-            field = dt_meta.get_field(d.party_fieldname)
-            if not field:
-                frappe.throw(
-                    _('Party Fieldname "{0}" does not exist in {1} (row {2})').format(
-                        d.party_fieldname, d.document_type, d.idx
-                    )
-                )
+			field = dt_meta.get_field(d.party_fieldname)
+			if not field:
+				frappe.throw(
+					_('Party Fieldname "{0}" does not exist in {1} (row {2})').format(
+						d.party_fieldname, d.document_type, d.idx
+					)
+				)
 
-            fieldtype = field.fieldtype
-            if fieldtype not in ("Link", "Dynamic Link"):
-                frappe.throw(
-                    _(
-                        "Party Fieldname at the target Document Type at row {0} must be either a Link or Dynamic Link"
-                    ).format(d.idx)
-                )
+			fieldtype = field.fieldtype
+			if fieldtype not in ("Link", "Dynamic Link"):
+				frappe.throw(
+					_(
+						"Party Fieldname at the target Document Type at row {0} must be either a Link or Dynamic Link"
+					).format(d.idx)
+				)
 
-            # Assign dynamic/static party type fields
-            option = field.options
-            if fieldtype == "Link":
-                d.party_type = option
-                d.is_dynamic_party_type = 0
-                d.party_type_fieldname = ""
-            elif fieldtype == "Dynamic Link":
-                d.party_type = None
-                d.is_dynamic_party_type = 1
-                d.party_type_fieldname = option
+			# Assign dynamic/static party type fields
+			option = field.options
+			if fieldtype == "Link":
+				d.party_type = option
+				d.is_dynamic_party_type = 0
+				d.party_type_fieldname = ""
+			elif fieldtype == "Dynamic Link":
+				d.party_type = None
+				d.is_dynamic_party_type = 1
+				d.party_type_fieldname = option
 
-            # Check for duplicates
-            key = (d.document_type, d.parent_doctype)
-            if key in doctypes:
-                frappe.throw(
-                    _("Duplicate Document Type mapping found at row {0}").format(d.idx)
-                )
+			# Check for duplicates
+			key = (d.document_type, d.parent_doctype)
+			if key in doctypes:
+				frappe.throw(_("Duplicate Document Type mapping found at row {0}").format(d.idx))
 
-            doctypes.add(key)
+			doctypes.add(key)
 
-    def sync_update_to_doctype_fields(self, force_update=False):
-        if self.flags.document_types_same:
-            return
+	def sync_update_to_doctype_fields(self, force_update=False):
+		if self.flags.document_types_same:
+			return
 
-        create_party_master_on_document_types()
+		create_party_master_on_document_types()
 
-    def after_save(self):
-        for d in self.document_types:
-            doctype = d.document_type
-            meta = frappe.get_meta(doctype)
-            if meta.issingle:
-                continue
+	def after_save(self):
+		for d in self.document_types:
+			doctype = d.document_type
+			meta = frappe.get_meta(doctype)
+			if meta.issingle:
+				continue
 
-            # Index party_master
-            frappe.db.add_index(doctype, ["party_master"])
+			# Index party_master
+			frappe.db.add_index(doctype, ["party_master"])
 
-            # Index the party field itself if missing
-            if d.party_fieldname:
-                frappe.db.add_index(doctype, [d.party_fieldname])
+			# Index the party field itself if missing
+			if d.party_fieldname:
+				frappe.db.add_index(doctype, [d.party_fieldname])
 
 
 def create_party_master_on_document_types(document_types=None):
-    base_cf = {
-        "fieldname": "party_master",
-        "fieldtype": "Link",
-        "options": "Party Master",
-        "label": "Party Master",
-        "placeholder": "Set Party Master",
-        "reqd": 0,
-        "in_list_view": 1,
-        "in_standard_filter": 1,
-        "bold": 1,
-        "allow_in_quick_entry": 1,
-        "search_index": 1,
-        "read_only": 0,
-        "fetch_if_empty": 0,
-        "allow_on_submit": 0,
-    }
+	base_cf = {
+		"fieldname": "party_master",
+		"fieldtype": "Link",
+		"options": "Party Master",
+		"label": "Party Master",
+		"placeholder": "Set Party Master",
+		"reqd": 0,
+		"in_list_view": 1,
+		"in_standard_filter": 1,
+		"bold": 1,
+		"allow_in_quick_entry": 1,
+		"search_index": 1,
+		"read_only": 0,
+		"fetch_if_empty": 0,
+		"allow_on_submit": 0,
+	}
 
-    def get_safe_insert_after(fieldnames, meta, preferred_fields):
-        for fname in preferred_fields:
-            df = meta.get_field(fname)
-            if df and not frappe.db.exists(
-                "Custom Field", {"dt": meta.name, "fieldname": fname}
-            ):
-                return fname
-        for df in meta.fields:
-            if not frappe.db.exists(
-                "Custom Field", {"dt": meta.name, "fieldname": df.fieldname}
-            ):
-                return df.fieldname
+	def get_safe_insert_after(fieldnames, meta, preferred_fields):
+		for fname in preferred_fields:
+			df = meta.get_field(fname)
+			if df and not frappe.db.exists("Custom Field", {"dt": meta.name, "fieldname": fname}):
+				return fname
+		for df in meta.fields:
+			if not frappe.db.exists("Custom Field", {"dt": meta.name, "fieldname": df.fieldname}):
+				return df.fieldname
 
-    setting = frappe.get_doc("Party Master Settings")
-    all_doc_types = {row.document_type for row in setting.document_types}
+	setting = frappe.get_doc("Party Master Settings")
+	all_doc_types = {row.document_type for row in setting.document_types}
 
-    if (
-        document_types
-        and isinstance(document_types, str)
-        and document_types in all_doc_types
-    ):
-        document_types = [document_types]
-    elif not document_types:
-        document_types = all_doc_types
+	if document_types and isinstance(document_types, str) and document_types in all_doc_types:
+		document_types = [document_types]
+	elif not document_types:
+		document_types = all_doc_types
 
-    custom_fields = {}
+	custom_fields = {}
 
-    for doctype in document_types:
-        meta = frappe.get_meta(doctype)
-        fieldnames = [
-            df.fieldname
-            for df in meta.fields
-            if df.fieldtype not in ("Column Break", "Section Break", "Tab Break")
-        ]
+	for doctype in document_types:
+		meta = frappe.get_meta(doctype)
+		fieldnames = [
+			df.fieldname
+			for df in meta.fields
+			if df.fieldtype not in ("Column Break", "Section Break", "Tab Break")
+		]
 
-        # Avoid inserting after a deleted or custom field
-        if "party_master" in fieldnames:
-            fieldnames.remove("party_master")
+		# Avoid inserting after a deleted or custom field
+		if "party_master" in fieldnames:
+			fieldnames.remove("party_master")
 
-        # Get settings for this doctype
-        setting_row = next(
-            (row for row in setting.document_types if row.document_type == doctype),
-            None,
-        )
-        party_fieldname = setting_row.party_fieldname if setting_row else None
-        party_type_fieldname = (
-            setting_row.get("party_type_fieldname") if setting_row else None
-        )
+		# Get settings for this doctype
+		setting_row = next(
+			(row for row in setting.document_types if row.document_type == doctype),
+			None,
+		)
+		party_fieldname = setting_row.party_fieldname if setting_row else None
+		party_type_fieldname = setting_row.get("party_type_fieldname") if setting_row else None
 
-        # Build insert_after preference list
-        preferred_fields = []
-        if party_type_fieldname and party_type_fieldname in fieldnames:
-            idx = fieldnames.index(party_type_fieldname)
-            if idx > 0:
-                preferred_fields.append(fieldnames[idx - 1])
-        elif party_fieldname and party_fieldname in fieldnames:
-            idx = fieldnames.index(party_fieldname)
-            if idx > 0:
-                preferred_fields.append(fieldnames[idx - 1])
+		# Build insert_after preference list
+		preferred_fields = []
+		if party_type_fieldname and party_type_fieldname in fieldnames:
+			idx = fieldnames.index(party_type_fieldname)
+			if idx > 0:
+				preferred_fields.append(fieldnames[idx - 1])
+		elif party_fieldname and party_fieldname in fieldnames:
+			idx = fieldnames.index(party_fieldname)
+			if idx > 0:
+				preferred_fields.append(fieldnames[idx - 1])
 
-        preferred_fields += ["naming_series", "company"]
+		preferred_fields += ["naming_series", "company"]
 
-        insert_after = get_safe_insert_after(fieldnames, meta, preferred_fields)
+		insert_after = get_safe_insert_after(fieldnames, meta, preferred_fields)
 
-        # Build custom field
-        custom_field = base_cf.copy()
-        custom_field["insert_after"] = insert_after
+		# Build custom field
+		custom_field = base_cf.copy()
+		custom_field["insert_after"] = insert_after
 
-        if meta.issingle:
-            custom_field.update(
-                {
-                    "in_list_view": 0,
-                    "in_standard_filter": 0,
-                    "bold": 0,
-                    "allow_in_quick_entry": 0,
-                    "search_index": 0,
-                }
-            )
+		if meta.issingle:
+			custom_field.update(
+				{
+					"in_list_view": 0,
+					"in_standard_filter": 0,
+					"bold": 0,
+					"allow_in_quick_entry": 0,
+					"search_index": 0,
+				}
+			)
 
-        custom_fields[doctype] = custom_field
+		custom_fields[doctype] = custom_field
 
-    if custom_fields:
-        create_custom_fields(custom_fields, update=True)
-        """
+	if custom_fields:
+		create_custom_fields(custom_fields, update=True)
+		"""
         for dt in custom_fields:
             docs = frappe.get_all("DocType Layout", {"document_type": dt})
             if docs:
@@ -459,223 +427,213 @@ def create_party_master_on_document_types(document_types=None):
 
 
 def create_custom_party_master_field(docfield, update=False, field_properity=None):
-    doctype = docfield.get("document_type")
-    if not doctype:
-        frappe.throw(_("Missing document_type in docfield"))
+	doctype = docfield.get("document_type")
+	if not doctype:
+		frappe.throw(_("Missing document_type in docfield"))
 
-    meta = frappe.get_meta(doctype)
-    # options = options or {}
+	meta = frappe.get_meta(doctype)
+	# options = options or {}
 
-    # Check if field already exists
-    field = meta.get_field("party_master")
-    if field:
-        if field.fieldtype != "Link" or field.options != "Party Master":
-            frappe.log_error(
-                _("Cannot create Party Master field in {0}").format(doctype),
-                f"Field exists with conflicting properties: {field}",
-            )
-            return None
-        if not update:
-            return field.fieldname
+	# Check if field already exists
+	field = meta.get_field("party_master")
+	if field:
+		if field.fieldtype != "Link" or field.options != "Party Master":
+			frappe.log_error(
+				_("Cannot create Party Master field in {0}").format(doctype),
+				f"Field exists with conflicting properties: {field}",
+			)
+			return None
+		if not update:
+			return field.fieldname
 
-    # If custom field is defined in options, use that
-    if not field and docfield.get("party_master_custom_field"):
-        field = meta.get_field(docfield.get("party_master_custom_field"))
-        if field:
-            return field.fieldname
+	# If custom field is defined in options, use that
+	if not field and docfield.get("party_master_custom_field"):
+		field = meta.get_field(docfield.get("party_master_custom_field"))
+		if field:
+			return field.fieldname
 
-    # Build fetch logic
-    fetch_from = (
-        f"{docfield.get('party_fieldname')}.party_master"
-        if not docfield.get("party_type")
-        else ""
-    )
-    fetch_if_empty = 1 if fetch_from else 0
-    reqd = docfield.get("reqd", 0)
-    # Determine where to insert the field
-    insert_after = None
-    if docfield.get("party_fieldname"):
-        party_field = meta.get_field(docfield.get("party_fieldname"))
-        if party_field:
-            insert_after = party_field.fieldname
+	# Build fetch logic
+	fetch_from = f"{docfield.get('party_fieldname')}.party_master" if not docfield.get("party_type") else ""
+	fetch_if_empty = 1 if fetch_from else 0
+	reqd = docfield.get("reqd", 0)
+	# Determine where to insert the field
+	insert_after = None
+	if docfield.get("party_fieldname"):
+		party_field = meta.get_field(docfield.get("party_fieldname"))
+		if party_field:
+			insert_after = party_field.fieldname
 
-    # Create the custom field
-    field_doc = {
-        "fieldname": "party_master",
-        "label": "Party Master",
-        "fieldtype": "Link",
-        "options": "Party Master",
-        "insert_after": insert_after,
-        "in_list_view": 1 if not meta.istable else 0,
-        "in_standard_filter": 1 if not meta.istable else 0,
-        "fetch_from": fetch_from,
-        "fetch_if_empty": fetch_if_empty,
-        "reqd": reqd,
-        "translatable": 0,
-    }
-    if doctype == "Payment Entry":
-        field_doc["depends_on"] = (
-            "eval:doc.payment_type=='Pay' || doc.payment_type=='Receive'"
-        )
-    customfield = create_custom_field(doctype, field_doc)
+	# Create the custom field
+	field_doc = {
+		"fieldname": "party_master",
+		"label": "Party Master",
+		"fieldtype": "Link",
+		"options": "Party Master",
+		"insert_after": insert_after,
+		"in_list_view": 1 if not meta.istable else 0,
+		"in_standard_filter": 1 if not meta.istable else 0,
+		"fetch_from": fetch_from,
+		"fetch_if_empty": fetch_if_empty,
+		"reqd": reqd,
+		"translatable": 0,
+	}
+	if doctype == "Payment Entry":
+		field_doc["depends_on"] = "eval:doc.payment_type=='Pay' || doc.payment_type=='Receive'"
+	customfield = create_custom_field(doctype, field_doc)
 
-    return customfield.name
+	return customfield.name
 
 
 def get_fixtures_document_types():
-    return [
-        {
-            "document_type": "Sales Invoice",
-            "document_categories": "Selling DocType",
-            "party_fieldname": "customer",
-            "party_type": "Customer",
-        },
-        {
-            "document_type": "Delivery Note",
-            "document_categories": "Selling DocType",
-            "party_fieldname": "customer",
-            "party_type": "Customer",
-        },
-        {
-            "document_type": "Sales Order",
-            "document_categories": "Selling DocType",
-            "party_fieldname": "customer",
-            "party_type": "Customer",
-        },
-        {
-            "document_type": "Purchase Invoice",
-            "document_categories": "Purchasing DocType",
-            "party_fieldname": "supplier",
-            "party_type": "Supplier",
-        },
-        {
-            "document_type": "Purchase Receipt",
-            "document_categories": "Purchasing DocType",
-            "party_fieldname": "supplier",
-            "party_type": "Supplier",
-        },
-        {
-            "document_type": "Purchase Order",
-            "document_categories": "Purchasing DocType",
-            "party_fieldname": "supplier",
-            "party_type": "Supplier",
-        },
-        {
-            "document_type": "Payment Entry",
-            "document_categories": "Dynamic type As Parent",
-            "party_fieldname": "party",
-            "party_type_fieldname": "party_type",
-            "is_dynamic_party_type": 1,
-        },
-        {
-            "document_type": "Journal Entry Account",
-            "parent_doctype": "Journal Entry",
-            "document_categories": "Dynamic Type As Child",
-            "party_fieldname": "party",
-            "party_type_fieldname": "party_type",
-            "is_dynamic_party_type": 1,
-        },
-        {
-            "document_type": "Expense Claim",
-            "document_categories": "Employee DocType",
-            "party_fieldname": "employee",
-            "party_type": "Employee",
-        },
-        {
-            "document_type": "Payment Reconciliation",
-            "reqd": 0,
-            "document_categories": "Dynamic type As Parent",
-            "party_fieldname": "party",
-            "party_type_fieldname": "party_type",
-            "is_dynamic_party_type": 1,
-        },
-    ]
+	return [
+		{
+			"document_type": "Sales Invoice",
+			"document_categories": "Selling DocType",
+			"party_fieldname": "customer",
+			"party_type": "Customer",
+		},
+		{
+			"document_type": "Delivery Note",
+			"document_categories": "Selling DocType",
+			"party_fieldname": "customer",
+			"party_type": "Customer",
+		},
+		{
+			"document_type": "Sales Order",
+			"document_categories": "Selling DocType",
+			"party_fieldname": "customer",
+			"party_type": "Customer",
+		},
+		{
+			"document_type": "Purchase Invoice",
+			"document_categories": "Purchasing DocType",
+			"party_fieldname": "supplier",
+			"party_type": "Supplier",
+		},
+		{
+			"document_type": "Purchase Receipt",
+			"document_categories": "Purchasing DocType",
+			"party_fieldname": "supplier",
+			"party_type": "Supplier",
+		},
+		{
+			"document_type": "Purchase Order",
+			"document_categories": "Purchasing DocType",
+			"party_fieldname": "supplier",
+			"party_type": "Supplier",
+		},
+		{
+			"document_type": "Payment Entry",
+			"document_categories": "Dynamic type As Parent",
+			"party_fieldname": "party",
+			"party_type_fieldname": "party_type",
+			"is_dynamic_party_type": 1,
+		},
+		{
+			"document_type": "Journal Entry Account",
+			"parent_doctype": "Journal Entry",
+			"document_categories": "Dynamic Type As Child",
+			"party_fieldname": "party",
+			"party_type_fieldname": "party_type",
+			"is_dynamic_party_type": 1,
+		},
+		{
+			"document_type": "Expense Claim",
+			"document_categories": "Employee DocType",
+			"party_fieldname": "employee",
+			"party_type": "Employee",
+		},
+		{
+			"document_type": "Payment Reconciliation",
+			"reqd": 0,
+			"document_categories": "Dynamic type As Parent",
+			"party_fieldname": "party",
+			"party_type_fieldname": "party_type",
+			"is_dynamic_party_type": 1,
+		},
+	]
 
 
 def setup_initial_document_types():
-    docs = get_fixtures_document_types()
-    if not frappe.db.exists("Party Master Settings", "Party Master Settings"):
-        settings = frappe.new_doc("Party Master Settings")
-        settings.save()
+	docs = get_fixtures_document_types()
+	if not frappe.db.exists("Party Master Settings", "Party Master Settings"):
+		settings = frappe.new_doc("Party Master Settings")
+		settings.save()
 
-    settings = frappe.get_doc("Party Master Settings")
-    settings_document_types = settings.document_types or []
-    exists = {d.get("document_type") for d in settings_document_types}
+	settings = frappe.get_doc("Party Master Settings")
+	settings_document_types = settings.document_types or []
+	exists = {d.get("document_type") for d in settings_document_types}
 
-    for d in docs:
-        doctype = d.get("document_type")
-        if doctype in exists:
-            continue
+	for d in docs:
+		doctype = d.get("document_type")
+		if doctype in exists:
+			continue
 
-        parent = d.get("parent_doctype") or doctype
-        if frappe.db.exists("DocType", doctype):
-            new_row = {
-                "document_type": doctype,
-                "parent_doctype": parent,
-                "party_fieldname": d.get("party_fieldname"),
-                "party_type": d.get("party_type"),
-                "party_type_fieldname": d.get("party_type_fieldname"),
-                "is_dynamic_party_type": d.get("is_dynamic_party_type", 0),
-                "document_categories": d.get("document_categories"),
-            }
-            settings.append("document_types", new_row)
-            exists.add(doctype)
+		parent = d.get("parent_doctype") or doctype
+		if frappe.db.exists("DocType", doctype):
+			new_row = {
+				"document_type": doctype,
+				"parent_doctype": parent,
+				"party_fieldname": d.get("party_fieldname"),
+				"party_type": d.get("party_type"),
+				"party_type_fieldname": d.get("party_type_fieldname"),
+				"is_dynamic_party_type": d.get("is_dynamic_party_type", 0),
+				"document_categories": d.get("document_categories"),
+			}
+			settings.append("document_types", new_row)
+			exists.add(doctype)
 
-    settings.save()
+	settings.save()
 
 
 # if Reset will Reset to Default
 def setup_party_types_table(reset=False):
-    party_types = frappe.db.get_all("Party Type", pluck="name", order_by="name asc")
-    settings = frappe.get_doc("Party Master Settings")
-    exist_party_type = [x.get("party_type") for x in settings.party_types]
-    for d in party_types:
-        if d in exist_party_type and not reset:
-            continue
-        if d not in exist_party_type or reset:
-            row = party_types_dict(d)
-            if d in exist_party_type:
-                for x in settings.party_types:
-                    if d == x.get("party_type"):
-                        d.update(row)
-            else:
-                settings.append("party_types", row)
+	party_types = frappe.db.get_all("Party Type", pluck="name", order_by="name asc")
+	settings = frappe.get_doc("Party Master Settings")
+	exist_party_type = [x.get("party_type") for x in settings.party_types]
+	for d in party_types:
+		if d in exist_party_type and not reset:
+			continue
+		if d not in exist_party_type or reset:
+			row = party_types_dict(d)
+			if d in exist_party_type:
+				for x in settings.party_types:
+					if d == x.get("party_type"):
+						d.update(row)
+			else:
+				settings.append("party_types", row)
 
-    # Remove party types that are not in the current list
-    for d in exist_party_type:
-        if d not in party_types:
-            settings.party_types = [
-                x for x in settings.party_types if x.get("party_type") != d
-            ]
-    settings.save()
+	# Remove party types that are not in the current list
+	for d in exist_party_type:
+		if d not in party_types:
+			settings.party_types = [x for x in settings.party_types if x.get("party_type") != d]
+	settings.save()
 
 
 def party_types_dict(party_type):
-    return frappe._dict(
-        {
-            "party_type": party_type,
-            "reqd": 1,
-            "allowed": 1 if party_type in ("Customer", "Supplier") else 0,
-            "rule_fieldname": (
-                "default_currency" if party_type in ("Customer", "Supplier") else ""
-            ),
-        }
-    )
+	return frappe._dict(
+		{
+			"party_type": party_type,
+			"reqd": 1,
+			"allowed": 1 if party_type in ("Customer", "Supplier") else 0,
+			"rule_fieldname": ("default_currency" if party_type in ("Customer", "Supplier") else ""),
+		}
+	)
 
 
 @frappe.whitelist()
 def get_party_type_party_master_rules_dict():
-    result = {}
-    doc = frappe.get_doc("Party Master Settings")
-    for d in doc.get("party_types"):
-        result.update(
-            {
-                d.get("party_type"): {
-                    "reqd": d.get("reqd"),
-                    "allowed": d.get("allowed"),
-                    "rule_fieldname": d.get("rule_fieldname"),
-                }
-            }
-        )
+	result = {}
+	doc = frappe.get_doc("Party Master Settings")
+	for d in doc.get("party_types"):
+		result.update(
+			{
+				d.get("party_type"): {
+					"reqd": d.get("reqd"),
+					"allowed": d.get("allowed"),
+					"rule_fieldname": d.get("rule_fieldname"),
+				}
+			}
+		)
 
-    return result
+	return result
