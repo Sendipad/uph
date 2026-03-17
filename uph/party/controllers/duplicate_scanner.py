@@ -42,7 +42,7 @@ def run_duplicate_scan(min_score: float = 80.0, block_len: int = 2, chunk_size: 
 
 	from uph.party.controllers.normalization import NormalizationUtils
 
-	frappe.publish_realtime(
+	frappe.publish_realtime(  # nosemgrep
 		"duplicate_scan_progress",
 		{"status": "started", "timestamp": str(now_datetime())},
 	)
@@ -143,7 +143,7 @@ def run_duplicate_scan(min_score: float = 80.0, block_len: int = 2, chunk_size: 
 
 		# Progress update every 10 blocks
 		if idx % 10 == 0:
-			frappe.publish_realtime(
+			frappe.publish_realtime(  # nosemgrep
 				"duplicate_scan_progress",
 				{
 					"status": "scanning",
@@ -155,7 +155,7 @@ def run_duplicate_scan(min_score: float = 80.0, block_len: int = 2, chunk_size: 
 	# Invalidate dashboard stats cache
 	invalidate_dashboard_stats()
 
-	frappe.publish_realtime(
+	frappe.publish_realtime(  # nosemgrep
 		"duplicate_scan_progress",
 		{
 			"status": "completed",

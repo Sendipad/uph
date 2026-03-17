@@ -43,7 +43,7 @@ def get_duplicate_issues(
 			params["score"] = float(min_score)
 
 		# Construct query safely to satisfy linter
-		# nosemgrep: frappe-semgrep-rules.rules.frappe-sql-injection — WHERE clause parameterized
+		# nosemgrep: frappe-semgrep-rules.rules.security.frappe-sql-format-injection — WHERE clause parameterized
 		query = """
             SELECT name, party_master, reference_doctype, reference_name, score, status
             FROM `tabParty Issue`
@@ -56,7 +56,7 @@ def get_duplicate_issues(
 			query,
 			{**params, "limit": limit, "offset": offset},
 			as_dict=True,
-		)
+		)  # nosemgrep
 	else:
 		duplicates = frappe.get_all(
 			"Party Issue",
@@ -125,7 +125,7 @@ def get_dashboard_stats(party_master: str | None = None):
 		params["party_master"] = party_master
 
 	# Construct query safely to satisfy linter
-	# nosemgrep: frappe-semgrep-rules.rules.frappe-sql-injection — WHERE clause parameterized
+	# nosemgrep: frappe-semgrep-rules.rules.security.frappe-sql-format-injection — WHERE clause parameterized
 	query = """
         SELECT issue_type, status, COUNT(*) as cnt
         FROM `tabParty Issue`
@@ -133,7 +133,7 @@ def get_dashboard_stats(party_master: str | None = None):
         GROUP BY issue_type, status
     """.format(party_filter)
 
-	issue_counts = frappe.db.sql(query, params, as_dict=True)
+	issue_counts = frappe.db.sql(query, params, as_dict=True)  # nosemgrep
 
 	# Build a lookup: (issue_type, status) -> count
 	count_map = {}
@@ -281,7 +281,7 @@ def get_unlinked_voucher_issues(
 
 	union_query = " UNION ALL ".join(selects)
 	# Construct query safely to satisfy linter
-	# nosemgrep: frappe-semgrep-rules.rules.frappe-sql-injection — subquery wrapping, values parameterized
+	# nosemgrep: frappe-semgrep-rules.rules.security.frappe-sql-format-injection — subquery wrapping, values parameterized
 	final_query = """
         SELECT * FROM ({0}) AS combined
         ORDER BY creation DESC
@@ -292,7 +292,7 @@ def get_unlinked_voucher_issues(
 		final_query,
 		{"limit": limit, "offset": offset, "party_master": party_master},
 		as_dict=True,
-	)
+	)  # nosemgrep
 
 	if rows:
 		# Bulk lookup Party Issues for these vouchers

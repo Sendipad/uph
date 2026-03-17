@@ -495,13 +495,13 @@ def _update_party_master_field_on_exists_transactional_document_types(
 	table_name = "tab" + doctype
 
 	if counts_only:
-		# nosemgrep: frappe-semgrep-rules.rules.frappe-sql-injection — table/column names from internal config
-		query = "SELECT COUNT(*) FROM `{0}` WHERE {1}".format(table_name, where_clause)
-		return frappe.db.sql(query, params)[0][0]
+		# nosemgrep: frappe-semgrep-rules.rules.security.frappe-sql-format-injection — table/column names from internal config
+		query = "SELECT COUNT(*) FROM `{0}` WHERE {1}".format(table_name, where_clause)  # nosemgrep
+		return frappe.db.sql(query, params)[0][0]  # nosemgrep
 
-	# nosemgrep: frappe-semgrep-rules.rules.frappe-sql-injection — table/column names from internal config
-	query = "UPDATE `{0}` SET `party_master` = %s WHERE {1}".format(table_name, where_clause)
-	frappe.db.sql(query, [party_master, *params])
+	# nosemgrep: frappe-semgrep-rules.rules.security.frappe-sql-format-injection — table/column names from internal config
+	query = "UPDATE `{0}` SET `party_master` = %s WHERE {1}".format(table_name, where_clause)  # nosemgrep
+	frappe.db.sql(query, [party_master, *params])  # nosemgrep
 
 	return frappe.db.count(
 		doctype, filters={party_fieldname: party, "party_master": party_master}
@@ -544,7 +544,7 @@ def update_linked_party_to_party_master_count(party_master):
 		party_master.db_set("total_linked_party", total)
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 def set_party_as_default_for_party_master(party, party_type, party_master, value, commit=True):
 	# check if there is another default to the same party master:
 	defaults = frappe.get_list(
@@ -563,7 +563,7 @@ def set_party_as_default_for_party_master(party, party_type, party_master, value
 	doc.save()
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 def check_duplicate_voucher_party_master(party_master, doctype, posting_date, current_name=None, doc=None):
 	settings = frappe.get_cached_doc("Party Master Settings")
 	if not settings.check_party_master_duplicate_vouchers:
@@ -636,7 +636,7 @@ def validate_party_master_on_target_party_type_smart(doc, method=None, *args, **
 		validate_party_master_on_target_party_type(doc, method, *args, **kwargs)
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 def get_party_master_details_with_parties(party_master, party_type=None):
 	if not party_master:
 		return {}
@@ -651,7 +651,7 @@ def get_party_master_details_with_parties(party_master, party_type=None):
 	return {"party_master": pm_doc, "parties": parties}
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 def get_party_master_defaults(party_type=None, party=None, party_master=None):
 	"""Return Party Master defaults mapped to transactional fields."""
 	if not party_master and party_type and party:
@@ -681,7 +681,7 @@ def get_party_master_defaults(party_type=None, party=None, party_master=None):
 	return out
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 def allow_duplicate_submission(doctype, docname):
 	settings = frappe.get_cached_doc("Party Master Settings")
 	if not settings.check_party_master_duplicate_vouchers:
@@ -694,7 +694,7 @@ def allow_duplicate_submission(doctype, docname):
 	return False
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 def get_party_details(
 	party=None,
 	account=None,

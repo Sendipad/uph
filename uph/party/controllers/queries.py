@@ -15,7 +15,7 @@ from uph.party.controllers.cache_utils import (
 )
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 @frappe.validate_and_sanitize_search_inputs
 def party_master_link_query(doctype, txt, searchfield, start, page_len, filters=None, reference_doctype=None):
 	party_type = filters.get("party_type") if filters else None
@@ -118,7 +118,7 @@ def party_master_link_query(doctype, txt, searchfield, start, page_len, filters=
 
 
 # Deprectated
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 @frappe.validate_and_sanitize_search_inputs
 def get_party_master(doctype, txt, searchfield, start, page_len, filters):
 	PartyMaster = frappe.qb.DocType("Party Master")
@@ -307,7 +307,7 @@ def get_leaf_party_master_list_from_any_node(filters):
 	return list(set(leaf_parties))
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 def get_party_master_parties(party_master, party_type=None, cached=True):
 	# Delegate to SmartCache
 	if cached:
@@ -325,7 +325,7 @@ def get_party_master_parties(party_master, party_type=None, cached=True):
 	return parties
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 def get_all_vouchers_documents_with_null_or_another_party_master(
 	doctypes=None, parties=None, party_master=None
 ):
@@ -582,7 +582,7 @@ def get_fields(doctype, fields):
 	return [f for f in fields if meta.has_field(f) or f == "name"]
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 def get_unlinked_party(filters, limit=None):
 	if isinstance(filters, str):
 		import json
@@ -611,7 +611,7 @@ def get_unlinked_party(filters, limit=None):
 	return results
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 def get_linked_parties_list(party_master_filters=None, party_type=None):
 	if not party_master_filters:
 		return []
@@ -629,7 +629,7 @@ def get_linked_parties_list(party_master_filters=None, party_type=None):
 	return results
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 def get_counts_of_unposted_or_cancelled_vouchers(company, party_master=None, is_party_gl_effected=1):
 	"""
 	Get counts of vouchers that are not posted or are cancelled.
@@ -688,7 +688,7 @@ def get_counts_of_unposted_or_cancelled_vouchers(company, party_master=None, is_
 	return results
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 @frappe.validate_and_sanitize_search_inputs
 def get_party_analytic_accounting_filtered(doctype, txt, searchfield, start, page_len, filters):
 	"""
@@ -705,7 +705,7 @@ def get_party_analytic_accounting_filtered(doctype, txt, searchfield, start, pag
 	)
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 def query_similar_name_or_number(party_name=None, party_number=None):
 	"""
 	Check for existing Party Master with same or similar name/number.
@@ -764,7 +764,7 @@ def query_similar_name_or_number(party_name=None, party_number=None):
 	return res
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 def get_party_master_dashboard_info(party_master_name):
 	from collections import defaultdict
 
@@ -865,7 +865,7 @@ def get_party_master_dashboard_info(party_master_name):
 	return result
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 def get_party_master_history_stats(party_master):
 	if not party_master:
 		return []

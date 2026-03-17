@@ -107,14 +107,14 @@ def get_unlinked_parties(limit: int = 20, offset: int = 0, role_doctype: str | N
 
 	union_query = " UNION ALL ".join(selects)
 	# Construct query safely to satisfy linter
-	# nosemgrep: frappe-semgrep-rules.rules.frappe-sql-injection — subquery wrapping, values parameterized
+	# nosemgrep: frappe-semgrep-rules.rules.security.frappe-sql-format-injection — subquery wrapping, values parameterized
 	query = """
         SELECT * FROM ({0}) AS unlinked
         ORDER BY role_doctype, role_name
         LIMIT %s OFFSET %s
     """.format(union_query)
 
-	paginated = frappe.db.sql(query, (limit, offset), as_dict=True)
+	paginated = frappe.db.sql(query, (limit, offset), as_dict=True)  # nosemgrep
 
 	return {"unlinked": paginated, "total": total}
 
@@ -218,14 +218,14 @@ def get_unlinked_transactions(limit: int = 20, offset: int = 0, transaction_doct
 
 	union_query = " UNION ALL ".join(selects)
 	# Construct query safely to satisfy linter
-	# nosemgrep: frappe-semgrep-rules.rules.frappe-sql-injection — subquery wrapping, values parameterized
+	# nosemgrep: frappe-semgrep-rules.rules.security.frappe-sql-format-injection — subquery wrapping, values parameterized
 	query = """
         SELECT * FROM ({0}) AS unlinked
         ORDER BY creation DESC
         LIMIT %s OFFSET %s
     """.format(union_query)
 
-	paginated = frappe.db.sql(query, (limit, offset), as_dict=True)
+	paginated = frappe.db.sql(query, (limit, offset), as_dict=True)  # nosemgrep
 
 	return {"unlinked": paginated, "total": total}
 

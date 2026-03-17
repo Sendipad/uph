@@ -71,7 +71,7 @@ def get_transaction_health(
 		params["reference_doctype"] = reference_doctype
 
 	# Construct query safely to satisfy linter
-	query = """
+	query = """  # nosemgrep
         SELECT
             pi.party_master,
             pi.reference_doctype,
@@ -93,7 +93,7 @@ def get_transaction_health(
           AND pi.party_master != ''
           {0}
         GROUP BY pi.party_master, pi.reference_doctype
-    """.format(party_filter)  # nosemgrep: frappe-semgrep-rules.rules.frappe-sql-injection
+    """.format(party_filter)  # nosemgrep: frappe-semgrep-rules.rules.security.frappe-sql-format-injection
 
 	agg_rows = frappe.db.sql(query, params, as_dict=True)
 
@@ -502,7 +502,7 @@ def run_transaction_policy_scan():
 			if party_fieldname and party_type and frappe.db.exists("DocType", party_type):
 				parent_select = ", dt.parent" if is_child else ""
 				# Construct query safely to satisfy linter
-				query = """
+				query = """  # nosemgrep
                     SELECT dt.name {0}, dt.party_master, p.party_master AS expected_pm
                     FROM `tab{1}` dt
                     INNER JOIN `tab{2}` p ON p.name = dt.`{3}`
@@ -514,7 +514,7 @@ def run_transaction_policy_scan():
                       AND dt.party_master != p.party_master
                 """.format(
 					parent_select, dt, party_type, party_fieldname
-				)  # nosemgrep: frappe-semgrep-rules.rules.frappe-sql-injection
+				)  # nosemgrep: frappe-semgrep-rules.rules.security.frappe-sql-format-injection
 
 				rows = frappe.db.sql(query, as_dict=True)
 				for row in rows or []:

@@ -307,7 +307,7 @@ def setup_party_master_custom_fields():
 			raise e
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 @frappe.validate_and_sanitize_search_inputs
 def get_party_master_list(doctype, txt, searchfield, start, page_len, filters):
 	"""

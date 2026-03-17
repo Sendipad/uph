@@ -104,11 +104,11 @@ frappe.ui.form.PartyMasterQuickEntryForm = class PartyMasterQuickEntryForm exten
 					const msg = r.message || {};
 
 					if (msg.exact_name || msg.exact_number) {
-						desc = `<span style="color:red; font-weight:bold;"> ${__("Exists: ")} ${
+						desc = `<span style="color:red; font-weight:bold;"> ${__("Exists:")} ${
 							msg.exact_name || msg.exact_number
 						} </span>`;
 					} else if (msg.fuzzy_name) {
-						desc = `<span style="color:orange; font-weight:bold;"> ${__("Similar: ")} ${
+						desc = `<span style="color:orange; font-weight:bold;"> ${__("Similar:")} ${
 							msg.fuzzy_name
 						} (${msg.fuzzy_score}%) </span>`;
 					} else {

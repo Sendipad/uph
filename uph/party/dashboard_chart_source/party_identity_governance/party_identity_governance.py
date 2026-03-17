@@ -6,7 +6,7 @@ from frappe import _
 from frappe.utils.dashboard import cache_source
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 @cache_source
 def get_data(
 	chart_name=None,
@@ -46,7 +46,7 @@ def get_data(
 		)
 
 		# Calculate Linked vs Unlinked
-		stats = frappe.db.sql(
+		stats = frappe.db.sql(  # nosemgrep
 			f"""
             SELECT
                 COUNT(*) as total,

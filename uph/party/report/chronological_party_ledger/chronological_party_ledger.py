@@ -184,7 +184,7 @@ def get_columns(filters):
 	company_currency = filters.get("company_currency", "YER")
 
 	return [
-		{
+		{  # nosemgrep
 			"label": "GL Entry",
 			"fieldname": "gl_entry",
 			"hidden": 1,

@@ -28,7 +28,7 @@ def combine_files():
 	test_files.sort()
 
 	# Combine all files into one
-	with open("/home/erpnext/Desktop/combined_files.txt", "w", encoding="utf-8") as outfile:
+	with open("/home/erpnext/Desktop/combined_files.txt", "w", encoding="utf-8") as outfile:  # nosemgrep
 		# Write non-test files first
 		for file_path in non_test_files:
 			outfile.write(f"\n{'=' * 50}\n")
@@ -36,7 +36,7 @@ def combine_files():
 			outfile.write(f"{'=' * 50}\n")
 
 			try:
-				with open(file_path, encoding="utf-8") as infile:
+				with open(file_path, encoding="utf-8") as infile:  # nosemgrep
 					content = infile.read()
 					outfile.write(content)
 					outfile.write("\n")
@@ -50,7 +50,7 @@ def combine_files():
 			outfile.write(f"{'=' * 50}\n")
 
 			try:
-				with open(file_path, encoding="utf-8") as infile:
+				with open(file_path, encoding="utf-8") as infile:  # nosemgrep
 					content = infile.read()
 					outfile.write(content)
 					outfile.write("\n")

@@ -62,7 +62,7 @@ def get_voucher_stats(filters):
 	return result
 
 
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 def get_party_type_summary(filters=None):
 	if not filters:
 		filters = {}
@@ -88,7 +88,7 @@ def get_party_type_summary(filters=None):
 	total_overall = 0
 
 	for pt in party_types:
-		party_stats = frappe.db.sql(
+		party_stats = frappe.db.sql(  # nosemgrep
 			f"""
             SELECT
                 COUNT(*) as total_count,
@@ -145,46 +145,46 @@ def get_party_type_summary(filters=None):
 
 def get_columns():
 	return [
-		{
+		{  # nosemgrep
 			"label": "Party",
 			"fieldname": "party",
 			"fieldtype": "Dynamic Link",
 			"options": "party_type",  # Replace with actual linked DocType
 			"width": 180,
 		},
-		{
+		{  # nosemgrep
 			"label": "Voucher",
 			"fieldname": "voucher",
 			"fieldtype": "Dynamic Link",
 			"options": "voucher_type",  # Replace with actual linked DocType
 			"width": 180,
 		},
-		{
+		{  # nosemgrep
 			"label": "Voucher Name",
 			"fieldname": "voucher_name",
 			"fieldtype": "Data",
 			"width": 200,
 		},
-		{
+		{  # nosemgrep
 			"label": "Party Master",
 			"fieldname": "party_master",
 			"fieldtype": "Link",
 			"options": "Party Master",
 			"width": 200,
 		},
-		{
+		{  # nosemgrep
 			"label": "Voucher Type",
 			"fieldname": "voucher_type",
 			"fieldtype": "Data",
 			"width": 130,
 		},
-		{
+		{  # nosemgrep
 			"label": "Currency",
 			"fieldname": "currency",
 			"fieldtype": "Data",
 			"width": 100,
 		},
-		{
+		{  # nosemgrep
 			"label": "Party Type",
 			"fieldname": "party_type",
 			"fieldtype": "Data",

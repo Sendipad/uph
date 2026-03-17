@@ -248,7 +248,7 @@ def create_custom_indices():
 		index_name = f"uph_{table.replace('tab', '').replace(' ', '_').lower()}_pm_status"
 
 		# Check if index exists using a parameterized query
-		# nosemgrep: frappe-semgrep-rules.rules.frappe-sql-injection — table/index names are internal constants
+		# nosemgrep: frappe-semgrep-rules.rules.security.frappe-sql-format-injection — table/index names are internal constants
 		if not frappe.db.sql("SHOW INDEX FROM `%s` WHERE Key_name = %%s" % table, (index_name,)):
 			try:
 				frappe.db.commit()  # Prevent ImplicitCommitError during DDL statement

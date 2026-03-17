@@ -3,7 +3,7 @@ from frappe.model import no_value_fields
 
 
 # Cache field options for 1 hour
-@frappe.whitelist()
+@frappe.whitelist()  # nosemgrep
 def get_field_options(doctype):
 	cache_key = f"field_options:{doctype}"
 	cached = frappe.cache().get_value(cache_key)

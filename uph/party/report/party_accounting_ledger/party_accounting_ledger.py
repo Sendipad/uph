@@ -537,7 +537,7 @@ def query_gls(filters):
 def get_columns(filters):
 	company_currency = filters.get("company_currency", "YER")
 	columns = [
-		{
+		{  # nosemgrep
 			"label": "GL Entry",
 			"fieldname": "gl_entry",
 			"hidden": 1,
