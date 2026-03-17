@@ -18,7 +18,6 @@ const PURCHASE_DOCTYPES = [
 	"Purchase Receipt",
 	"Purchase Invoice",
 ];
-let uphdialog = null;
 
 uph.party = {
 	show_party_selection_dialog_callback: function (
@@ -28,9 +27,19 @@ uph.party = {
 		callback
 	) {
 		if (frm.in_show_party_selection) return;
+
+		// Use the correct party type from context if available
+		const fieldnames = this.get_fieldnames(frm);
+		let target_party_type = null;
+		if (frm.doc.doctype === "Payment Entry") {
+			target_party_type = frm.doc.party_type;
+		}
+
 		let filters = { party_master: party_master };
 		if (frm.is_single_party_type && frm.party_type) {
 			filters.party_type = frm.party_type;
+		} else if (target_party_type) {
+			filters.party_type = target_party_type;
 		}
 
 		frappe.call({
@@ -48,7 +57,7 @@ uph.party = {
 						);
 						return;
 					}
-					if (parties.length == 1) {
+					if (parties.length == 1 && !force_show) {
 						return callback(parties[0]);
 					} else if (frm.is_single_party_type) {
 						let selected_party = parties.find((p) => p.is_default === 1);
@@ -56,119 +65,101 @@ uph.party = {
 							return callback(selected_party);
 						}
 					}
-					if (!uphdialog) {
-						uphdialog = new frappe.ui.Dialog({
-							title: __("Select Party"),
-							fields: [
-								{
-									fieldname: "party",
-									fieldtype: "Select",
-									label: __("Select Party"),
-									options: [],
-								},
-								{
-									fieldname: "party_type",
-									fieldtype: "Select",
-									label: __("Select Party Type"),
-									options: [],
-								},
-								{ fieldtype: "Column Break" },
-								{
-									fieldname: "party_name",
-									fieldtype: "Data",
-									label: __("Name"),
-									read_only: 1,
-								},
-								{
-									fieldname: "currency",
-									fieldtype: "Link",
-									options: "Currency",
-									read_only: 1,
-								},
-								{ fieldtype: "Section Break" },
-								{
-									fieldname: "is_default_for_party_master",
-									fieldtype: "Check",
-									hidden: 1,
-									label: "Set As Default",
-								},
-							],
-						});
-					}
-					let party_type = [...new Set(parties.map((p) => p.party_type))];
-					uphdialog.set_df_property(
-						"party",
-						"options",
-						parties.map((p) => p.party)
-					);
+
+					let party_types = [...new Set(parties.map((p) => p.party_type))];
 					let default_party = parties.find((p) => p.is_default === 1);
-					let selected_party = default_party || parties[0];
+					let initial_party = default_party || parties[0];
 
-					uphdialog.set_value("party_name", "");
-					uphdialog.set_value("party", selected_party.party);
-					uphdialog.fields_dict.party.df.onchange = function () {
-						let selected_party = uphdialog.get_value("party");
-						let party_data = parties.find((p) => p.party === selected_party);
-						if (party_data) {
-							uphdialog.set_value("currency", party_data.currency);
-							uphdialog.set_value("party_name", party_data.party_name);
-							uphdialog.set_value("party_type", party_data.party_type);
-						}
-					};
-
-					if (party_type.length == 1) {
-						uphdialog.set_value("party_type", party_type[0]);
-						uphdialog.set_df_property("party_type", "read_only", 1);
-					} else if (party_type.length > 1) {
-						uphdialog.set_df_property("party_type", "read_only", 0);
-						uphdialog.set_df_property("party_type", "options", party_type);
-						uphdialog.set_value("party_type", party_type[0]);
-						/*uphdialog.fields_dict.party_type.df.onchange=function(){
-
-							let selected_pt = uphdialog.get_value("party_type");
-							let party_data = parties.filter(p => p.party_type === selected_pt);
-							if (party_data) {
-								let party=party_data.map(p => p.name);
-								uphdialog.set_df_property("party","options",party);
+					let dialog = new frappe.ui.Dialog({
+						title: __("Select Party"),
+						fields: [
+							{
+								fieldname: "party",
+								fieldtype: "Select",
+								label: __("Select Party"),
+								options: parties.map((p) => p.party),
+								default: initial_party.party,
+								onchange: function () {
+									const val = this.get_value();
+									const p_data = parties.find((p) => p.party === val);
+									if (p_data) {
+										dialog.set_value("currency", p_data.currency);
+										dialog.set_value("party_name", p_data.party_name);
+										dialog.set_value("party_type", p_data.party_type);
+									}
+								},
+							},
+							{
+								fieldname: "party_type",
+								fieldtype: "Select",
+								label: __("Select Party Type"),
+								options: party_types,
+								default: initial_party.party_type,
+								read_only: party_types.length === 1,
+							},
+							{ fieldtype: "Column Break" },
+							{
+								fieldname: "party_name",
+								fieldtype: "Data",
+								label: __("Name"),
+								read_only: 1,
+								default: initial_party.party_name,
+							},
+							{
+								fieldname: "currency",
+								fieldtype: "Link",
+								options: "Currency",
+								read_only: 1,
+								default: initial_party.currency,
+							},
+							{ fieldtype: "Section Break" },
+							{
+								fieldname: "is_default_for_party_master",
+								fieldtype: "Check",
+								hidden: 1,
+								label: __("Set As Default"),
+							},
+						],
+						primary_action_label: __("Set Party"),
+						primary_action: (values) => {
+							if (values.is_default_for_party_master) {
+								frappe.call({
+									method: "uph.party.controllers.party.set_party_as_default_for_party_master",
+									args: {
+										party: values.party,
+										party_type: values.party_type,
+										party_master: party_master,
+										value: values.is_default_for_party_master,
+									},
+									callback: function (r) {
+										if (!r.exc) {
+											frappe.show_alert(
+												{
+													message: __(
+														"Successfully Set {0} as Default for {1}",
+														[values.party, party_master]
+													),
+													indicator: "green",
+												},
+												5
+											);
+										}
+									},
+								});
 							}
-						}*/
-					}
-					uphdialog.set_df_property("is_default_for_party_master", "hidden", 1);
+							dialog.hide();
+							callback(values);
+						},
+					});
+
 					if (
 						SALES_DOCTYPES.includes(frm.doc.doctype) ||
 						PURCHASE_DOCTYPES.includes(frm.doc.doctype)
 					) {
-						uphdialog.set_df_property("is_default_for_party_master", "hidden", 0);
+						dialog.set_df_property("is_default_for_party_master", "hidden", 0);
 					}
-					uphdialog.refresh();
-					uphdialog.show();
-					uphdialog.set_primary_action(__("Set Party"), () => {
-						let values = uphdialog.get_values();
-						if (values.is_default_for_party_master) {
-							frappe.call({
-								method: "uph.party.controllers.party.set_party_as_default_for_party_master",
-								args: {
-									party: values.party,
-									party_type: values.party_type,
-									party_master: party_master,
-									value: values.is_default_for_party_master,
-								},
-								callback: function (r) {
-									if (!r.exc) {
-										frappe.msgprint({
-											message: __("Successfully Set {0} as Default for {1}", [
-												values.party,
-												party_master,
-											]),
-											alert: true,
-										});
-									}
-									//if error then show else alert update successfully
-								},
-							});
-						}
-						frappe.run_serially([() => callback(values), () => uphdialog.hide()]);
-					});
+
+					dialog.show();
 				}
 			},
 		});
@@ -614,7 +605,8 @@ uph.party = {
 	set_party_query: function (frm, fieldname) {
 		const set = () => {
 			frm.set_query(fieldname, () => {
-				const pm = frm.doc.party_master || "";
+				const pm = frm.doc.party_master;
+				if (!pm) return {};
 				return {
 					filters: {
 						party_master: pm,
@@ -881,114 +873,15 @@ uph.party = {
 				cdn
 			) {
 				let row = locals[cdt][cdn];
+				if (!row.party_master) return {};
 				return {
 					filters: {
-						party_master: row.party_master, // assuming this is the field in the link doctype
+						party_master: row.party_master,
 					},
 				};
 			};
 			frm.refresh_field(child_doctype);
 		}
-	},
-	show_selection_dialog_callback: function (frm, party_master, callback) {
-		if (frm.in_show_party_selection) return;
-		let filters = { party_master: party_master };
-		if (frm.is_single_party_type && frm.party_type) {
-			filters.party_type = frm.party_type;
-		}
-		frappe.call({
-			method: "uph.party.controllers.queries.get_party_master_parties",
-			args: filters,
-			callback: (r) => {
-				if (r.message) {
-					let parties = r.message;
-
-					if (parties.length === 0) {
-						frappe.confirm(
-							__("Create Party for Party Master {0}?", [party_master]),
-							() => {
-								this.create_party_for_party_master_from_node(party_master);
-							}
-						);
-						return;
-					}
-					if (
-						parties.length == 1 ||
-						(frm.is_single_party_type && parties[0].is_default == 1)
-					) {
-						return callback(parties[0]);
-					}
-					let is_initializing_dialog = true;
-					let dialog = new frappe.ui.Dialog({
-						title: __("Select Party"),
-						fields: [
-							{
-								fieldname: "party",
-								fieldtype: "Select",
-								label: __("Select Party"),
-								options: parties.map((p) => p.name),
-								onchange: function () {
-									if (is_initializing_dialog) return;
-
-									let selected_party = this.get_value();
-									let party_data = parties.find((p) => p.name === selected_party);
-
-									if (party_data) {
-										dialog.set_value("currency", party_data.currency);
-										dialog.set_value("party_name", party_data.party_name);
-										dialog.set_value("party_type", party_data.party_type);
-									}
-								},
-							},
-							{
-								fieldname: "party_type",
-								fieldtype: "Select",
-								label: __("Select Party Type"),
-								options: [...new Set(parties.map((p) => p.party_type))],
-								read_only: 1, // Unique party types
-							},
-							{ fieldtype: "Column Break" },
-							{
-								fieldname: "party_name",
-								fieldtype: "Data",
-								label: __("Name"),
-								read_only: 1,
-							},
-							{
-								fieldname: "currency",
-								fieldtype: "Link",
-								options: "Currency",
-								read_only: 1,
-							},
-						],
-						primary_action_label: __("Set"),
-						primary_action(values) {
-							if (!values || !values.party) {
-								frappe.msgprint(__("You must select a party."));
-								return;
-							}
-							frappe.run_serially([
-								() => callback(values),
-								() => dialog.hide(),
-								() => (frm.in_show_party_selection = false),
-							]);
-						},
-					});
-					//frm.in_show_party_selection=true,
-
-					// Show and then set values with flag ON
-					dialog.show();
-
-					dialog.set_value("party", parties[0].name);
-					dialog.set_value("party_type", parties[0].party_type);
-					dialog.set_value("party_name", parties[0].party_name);
-					dialog.set_value("currency", parties[0].currency);
-					is_initializing_dialog = false;
-
-					// ✅ Now allow onchange to run
-				}
-			},
-		});
 	},
 
 	setups: function (frm) {

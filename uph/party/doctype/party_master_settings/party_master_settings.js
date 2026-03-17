@@ -26,6 +26,16 @@ frappe.ui.form.on("Party Master Settings", {
 		// Refresh the document_types grid
 		frm.refresh_field("document_types");
 
+		// Refresh the party_types grid
+		frm.refresh_field("party_types");
+
+		// Update selection fields for existing rows in party_types
+		if (frm.doc.party_types && frm.doc.party_types.length) {
+			frm.doc.party_types.forEach((row) => {
+				update_party_type_rule_field(frm, "Party Master Settings Party Type", row.name);
+			});
+		}
+
 		// Update selection fields for existing rows
 		if (frm.doc.document_types && frm.doc.document_types.length) {
 			frm.doc.document_types.forEach((row) => {
@@ -91,7 +101,14 @@ frappe.ui.form.on("Party Master Settings Party Type", {
 	form_render: function (frm, cdt, cdn) {
 		update_party_type_rule_field(frm, cdt, cdn);
 	},
+	party_type: function (frm, cdt, cdn) {
+		update_party_type_rule_field(frm, cdt, cdn);
+	},
 	allowed: function (frm, cdt, cdn) {
+		update_party_type_rule_field(frm, cdt, cdn);
+	},
+	rule_fieldname: function (frm, cdt, cdn) {
+		// Ensure options are there when clicking the field
 		update_party_type_rule_field(frm, cdt, cdn);
 	},
 });
@@ -158,7 +175,10 @@ function update_selection_fields(frm, cdt, cdn) {
 
 function update_party_type_rule_field(frm, cdt, cdn) {
 	let row = locals[cdt][cdn];
-	if (!row || !row.party_type || row.allowed === 0) return;
+	if (!row || !row.party_type) return;
+
+	// Defensive check: Ensure we are only acting on the correct child table
+	if (cdt !== "Party Master Settings Party Type") return;
 
 	frappe.model.with_doctype(row.party_type, () => {
 		let meta = frappe.get_meta(row.party_type);
@@ -166,18 +186,40 @@ function update_party_type_rule_field(frm, cdt, cdn) {
 
 		let fieldnames = meta.fields
 			.filter((d) => !frappe.model.no_value_type.includes(d.fieldtype))
-			.map((d) => d.fieldname);
+			.map((d) => d.fieldname)
+			.sort();
 
+		// Ensure an empty option is available
+		if (fieldnames.indexOf("") === -1) {
+			fieldnames.unshift("");
+		}
+
+		const options_str = fieldnames.join("\n");
+
+		// 1. Official way to set property per row in child table
+		frm.set_df_property(
+			"party_types",
+			"options",
+			options_str,
+			frm.doc.name,
+			"rule_fieldname",
+			cdn
+		);
+
+		// 2. Direct grid manipulation for immediate visual feedback
 		let grid = frm.fields_dict.party_types?.grid;
-		if (!grid) return;
-
-		let grid_row = grid.get_row(row.name);
-
-		if (grid_row && grid_row.fields_dict) {
-			let field = grid_row.fields_dict["rule_fieldname"];
-			if (field && field.df) {
-				field.df.options = fieldnames.join("\n");
-				field.refresh();
+		if (grid) {
+			let grid_row = grid.get_row(cdn);
+			if (grid_row) {
+				if (grid_row.fields_dict && grid_row.fields_dict["rule_fieldname"]) {
+					let field = grid_row.fields_dict["rule_fieldname"];
+					if (field && field.df) {
+						field.df.options = options_str;
+						field.refresh();
+					}
+				}
+				// Force grid row refresh
+				grid.refresh_row(cdn);
 			}
 		}
 	});
