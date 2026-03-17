@@ -6,7 +6,7 @@ from uph.party.controllers.queries import (
 	get_linked_parties_list,
 )
 
-__version__ = "3.3.6"
+__version__ = "3.3.7"
 
 
 # ----------------------------------------------------------------------------
