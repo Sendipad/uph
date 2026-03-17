@@ -2,6 +2,10 @@
 name: Linters
 
 on:
+  push:
+    branches:
+      - develop
+      - main
   pull_request:
   workflow_dispatch:
 
@@ -16,7 +20,6 @@ jobs:
   linter:
     name: 'Frappe Linter'
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
 
     steps:
       - uses: actions/checkout@v4
@@ -33,7 +36,7 @@ jobs:
 
       - name: Run Semgrep rules
         env:
-          SEMGREP_BASELINE_REF: ${{ github.event.pull_request.base.sha }}
+          SEMGREP_BASELINE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
           pip install semgrep
           semgrep ci --config ./frappe-semgrep-rules/rules --config r/python.lang.correctness
