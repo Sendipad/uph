@@ -60,13 +60,13 @@ class PartyMasterSettings(Document):
 		transaction_policy_draft_days: DF.Int
 
 	# end: auto-generated types
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_document_types()
 		self.validate_party_master_fields_options()
 		self.validate_role_naming_rules()
 		self._validate_governance_immutability()
 
-	def validate_role_naming_rules(self):
+	def validate_role_naming_rules(self) -> None:
 		"""Validate that role-specific prefixes/suffixes are the first two letters of the party type capitalized."""
 		if not self.sync_erp_party_naming:
 			return
@@ -87,7 +87,7 @@ class PartyMasterSettings(Document):
 		)
 		frappe.msgprint(msg, alert=True)
 
-	def _validate_governance_immutability(self):
+	def _validate_governance_immutability(self) -> None:
 		"""Once setup_finished is set, lock core numbering settings."""
 		old = self.get_doc_before_save()
 		if not old or not old.setup_finished:
@@ -102,7 +102,7 @@ class PartyMasterSettings(Document):
 					)
 				)
 
-	def on_update(self):
+	def on_update(self) -> None:
 		# Clear UPH controller caches (for smart hooks)
 		from uph.party.controllers.cache_utils import clear_all_caches
 
@@ -111,8 +111,9 @@ class PartyMasterSettings(Document):
 		# Existing logic
 		self.create_pm_fields_on_party_doctype()
 		self.sync_update_to_doctype_fields()
+		self.add_indexes_to_document_types()
 
-	def create_pm_fields_on_party_doctype(self):
+	def create_pm_fields_on_party_doctype(self) -> None:
 		if not getattr(self, "_doc_before_save", None):
 			return
 
@@ -172,7 +173,7 @@ class PartyMasterSettings(Document):
 		if custom_fields:
 			create_custom_fields(custom_fields, update=True)
 
-	def validate_party_master_fields_options(self):
+	def validate_party_master_fields_options(self) -> None:
 		if self.is_child_table_same("party_master_fields"):
 			return
 
@@ -227,7 +228,7 @@ class PartyMasterSettings(Document):
 		for d in self.party_master_fields:
 			d.options = new_row_mapped.get(d.fieldname)
 
-	def validate_document_types(self):
+	def validate_document_types(self) -> None:
 		self.flags.document_types_same = False
 		if self.is_child_table_same("document_types"):
 			self.flags.document_types_same = True
@@ -303,13 +304,13 @@ class PartyMasterSettings(Document):
 
 			doctypes.add(key)
 
-	def sync_update_to_doctype_fields(self, force_update=False):
+	def sync_update_to_doctype_fields(self, force_update: bool = False) -> None:
 		if self.flags.document_types_same:
 			return
 
 		create_party_master_on_document_types()
 
-	def after_save(self):
+	def add_indexes_to_document_types(self) -> None:
 		for d in self.document_types:
 			doctype = d.document_type
 			meta = frappe.get_meta(doctype)

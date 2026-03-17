@@ -15,7 +15,6 @@ class TestPartyRelationship(FrappeTestCase):
 		)
 		for p in test_parties:
 			frappe.db.delete("Party Master", {"name": p})
-		frappe.db.commit()
 
 		cls._create_test_relationship_types()
 		cls._create_test_party_masters()
@@ -71,7 +70,6 @@ class TestPartyRelationship(FrappeTestCase):
 			"Parent Company",
 		)
 		frappe.db.set_value("Party Relationship Type", "Partner", "reverse_relationship_type", "Partner")
-		frappe.db.commit()
 
 	@classmethod
 	def _create_test_party_masters(cls):
@@ -99,7 +97,6 @@ class TestPartyRelationship(FrappeTestCase):
 						"parent_party_master": root_group,
 					}
 				).insert(ignore_permissions=True, ignore_if_duplicate=True)
-		frappe.db.commit()
 
 	def tearDown(self):
 		"""Clean up test relationships after each test."""
@@ -116,7 +113,6 @@ class TestPartyRelationship(FrappeTestCase):
 				"Party Relationship",
 				{"object_party": ["in", test_parties]},
 			)
-		frappe.db.commit()
 
 	def test_create_relationship(self):
 		"""Test basic relationship creation."""
@@ -244,7 +240,6 @@ class TestPartyRelationship(FrappeTestCase):
 		# Cleanup potential existing relationships from previous runs
 		frappe.db.delete("Party Relationship", {"subject_party": ["in", [p1, p2, p3]]})
 		frappe.db.delete("Party Relationship", {"object_party": ["in", [p1, p2, p3]]})
-		frappe.db.commit()
 
 		# P1 -> P2
 		frappe.get_doc(

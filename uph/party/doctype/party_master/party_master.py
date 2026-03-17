@@ -131,22 +131,22 @@ class PartyMaster(NestedSet):
 	# Lifecycle Hooks
 	# =========================================================================
 
-	def onload(self):
+	def onload(self) -> None:
 		self.set("parties", get_party_master_parties(self.name))
 		self.load_dashboard_info()
 
-	def load_dashboard_info(self):
+	def load_dashboard_info(self) -> None:
 		from uph.party.controllers.queries import get_party_master_dashboard_info
 
 		info = get_party_master_dashboard_info(self.name)
 		self.set_onload("dashboard_info", info)
 
-	def autoname(self):
+	def autoname(self) -> None:
 		if not self.party_number:
 			self.numbering()
 		self.name = self.party_number
 
-	def numbering(self):
+	def numbering(self) -> str | None:
 		"""Generate the next party number based on hierarchy."""
 		# Skip if party_number is already set and not flagged for update
 		if (
@@ -165,7 +165,7 @@ class PartyMaster(NestedSet):
 	# Validation Methods (Refactored)
 	# =========================================================================
 
-	def validate(self):
+	def validate(self) -> None:
 		"""Main validation entry point - delegates to focused validators."""
 		self._validate_status_reasons()
 		self._validate_party_name_uniqueness()
@@ -173,7 +173,7 @@ class PartyMaster(NestedSet):
 		self._validate_accounts_uniqueness()
 		self._validate_parent_numbering()
 
-	def _validate_accounts_uniqueness(self):
+	def _validate_accounts_uniqueness(self) -> None:
 		"""Ensure (company, currency) is unique in the accounts table."""
 		seen = set()
 		for row in self.accounts:
@@ -186,17 +186,17 @@ class PartyMaster(NestedSet):
 				)
 			seen.add(key)
 
-	def _validate_status_reasons(self):
+	def _validate_status_reasons(self) -> None:
 		"""Validate that disputed parties have reasons."""
 		if self.status == "Disputed" and not self.disputed_reasons:
 			frappe.throw(_("Must Mention Reason to put This Party {0} as Disputed").format(self.name))
 
-	def _validate_party_name_uniqueness(self):
+	def _validate_party_name_uniqueness(self) -> None:
 		"""Validate party name is unique."""
 		if frappe.db.exists("Party Master", {"party_name": self.party_name, "name": ["!=", self.name]}):
 			frappe.throw(_("Party Name {0} already exists").format(self.party_name))
 
-	def validate_roles(self):
+	def validate_roles(self) -> None:
 		"""Validate that secondary roles don't have duplicates."""
 		exist_role = {self.party_type}
 		if self.has_secondary_role_party or len(self.roles) > 0:
@@ -213,24 +213,24 @@ class PartyMaster(NestedSet):
 	# Before Save/Insert Hooks
 	# =========================================================================
 
-	def before_insert(self):
+	def before_insert(self) -> None:
 		self.set("parties", [])  # Ensure child table is initialized
 		self.set_missing_value()
 		self._prepare_party_name()
 		self._prepare_party_number()
 		self._validate_party_type_requirement()
 
-	def _prepare_party_name(self):
+	def _prepare_party_name(self) -> None:
 		"""Clean and normalize party name."""
 		if self.party_name:
 			self.party_name = self.party_name.strip()
 
-	def _prepare_party_number(self):
+	def _prepare_party_number(self) -> None:
 		"""Generate party number if not exists."""
 		if not self.party_number:
 			self.party_number = self.numbering()
 
-	def _validate_party_type_requirement(self):
+	def _validate_party_type_requirement(self) -> None:
 		"""Validate party type is set when parent exists."""
 		if self.flags.ignore_validate:
 			return
@@ -238,7 +238,7 @@ class PartyMaster(NestedSet):
 		if not self.party_type and self.parent_party_master and not self.is_group:
 			frappe.throw(_("Default Party Type is Mandatory"))
 
-	def before_save(self):
+	def before_save(self) -> None:
 		"""Main before_save hook - delegates to focused methods."""
 		self._update_normalized_name()
 		self._invalidate_cache()
@@ -249,19 +249,19 @@ class PartyMaster(NestedSet):
 		self._update_linked_count()
 		self.set_missing_values()
 
-	def _update_normalized_name(self):
+	def _update_normalized_name(self) -> None:
 		"""Update normalized party name for deduplication."""
 		if self.party_name:
 			# Use consolidated normalization
 			self.normalized_party_name = NormalizationUtils.normalize(self.party_name)
 
-	def _invalidate_cache(self):
+	def _invalidate_cache(self) -> None:
 		"""Invalidate relevant caches."""
 		from uph.party.controllers.cache_utils import SmartCache
 
 		SmartCache.invalidate_party_master_parties(self.name)
 
-	def _handle_parent_change(self):
+	def _handle_parent_change(self) -> None:
 		"""Handle parent party master changes."""
 		old = self.get_doc_before_save()
 		if old and self.parent_party_master != old.parent_party_master:
@@ -269,22 +269,22 @@ class PartyMaster(NestedSet):
 		if self.flags.update_party_number:
 			self.numbering()
 
-	def _validate_number_change(self):
+	def _validate_number_change(self) -> None:
 		"""Validate party number changes."""
 		old = self.get_doc_before_save()
 		if old and self.party_number != old.party_number and not self.flags.update_party_number:
 			frappe.throw(_("You are not allowed to Change Party Number"))
 
-	def _update_secondary_role_flag(self):
+	def _update_secondary_role_flag(self) -> None:
 		"""Update secondary role flag based on roles."""
 		if len(self.roles) > 0 and self.has_secondary_role_party == 0:
 			self.has_secondary_role_party = 1
 
-	def _generate_title(self):
+	def _generate_title(self) -> None:
 		"""Generate title from party name."""
 		self.title = self.party_name
 
-	def _update_linked_count(self):
+	def _update_linked_count(self) -> None:
 		"""Update total linked party count."""
 		self.set_total_linked_party()
 
@@ -292,7 +292,7 @@ class PartyMaster(NestedSet):
 	# Missing Values & Defaults
 	# =========================================================================
 
-	def set_missing_value(self):
+	def set_missing_value(self) -> None:
 		"""Set default values for new records."""
 		if (
 			self.party_type in ("Customer", "Supplier")
@@ -317,10 +317,10 @@ class PartyMaster(NestedSet):
 			self.represents_company = ""
 			self.portal_users = []
 
-	def set_total_linked_party(self):
+	def set_total_linked_party(self) -> int:
 		return update_linked_party_to_party_master_count(self)
 
-	def set_missing_values(self):
+	def set_missing_values(self) -> None:
 		"""Set values that depend on other fields."""
 		if not self.is_primary_role and not self.primary_party_master:
 			self.set("is_primary_role", 1)
@@ -330,7 +330,7 @@ class PartyMaster(NestedSet):
 				return frappe.throw(_("Setting Primary role of same Party Type is Not Allowed"))
 			return
 
-	def _validate_parent_numbering(self):
+	def _validate_parent_numbering(self) -> None:
 		"""Enforce parent-number prefix rules if enabled in settings."""
 		if not self.parent_party_master or not self.party_number:
 			return
@@ -351,18 +351,18 @@ class PartyMaster(NestedSet):
 	# After Update Hooks
 	# =========================================================================
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self.create_primary_contact()
 		self.create_primary_address()
 
-	def create_primary_contact(self):
+	def create_primary_contact(self) -> None:
 		if not self.party_primary_contact and (self.mobile_no or self.email_id):
 			contact = make_contact(self)
 			self.db_set("party_primary_contact", contact.name)
 			self.db_set("mobile_no", self.mobile_no)
 			self.db_set("email_id", self.email_id)
 
-	def create_primary_address(self):
+	def create_primary_address(self) -> None:
 		from frappe.contacts.doctype.address.address import get_address_display
 
 		if self.flags.is_new_doc and self.get("address_line1"):
@@ -376,7 +376,7 @@ class PartyMaster(NestedSet):
 	# Delete & Rename
 	# =========================================================================
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		# Skip linked party check during merge operations
 		if self.flags.get("in_merge"):
 			return
@@ -384,7 +384,7 @@ class PartyMaster(NestedSet):
 		if self.total_linked_party > 0 or get_party_master_parties(self.name):
 			frappe.throw(_("Cannot delete Party Master that is linked to other Parties"))
 
-	def after_rename(self, olddn, newdn, merge=False):
+	def after_rename(self, olddn: str, newdn: str, merge: bool = False) -> None:
 		if olddn == self.party_number:
 			self.party_number = newdn
 			self.db_set("party_number", newdn)

@@ -1044,7 +1044,12 @@ uph.party = {
 			return;
 		}
 		frm.__pm_history_shortcut_registered = true;
-		const resolve_frm = () => (cur_frm && cur_frm.doc ? cur_frm : frm);
+		const resolve_frm = () => {
+			const route = frappe.get_route();
+			const is_form = route && route[0] === "Form";
+			const active_frm = is_form ? frappe.get_doc_view() : null;
+			return active_frm && active_frm.doc?.name === frm.doc?.name ? active_frm : frm;
+		};
 		const shortcut_action = () => {
 			const active_frm = resolve_frm();
 			const party_master = this.get_party_master_for_history(active_frm);
@@ -1057,10 +1062,12 @@ uph.party = {
 		};
 
 		const condition = () => {
-			if (!cur_frm || cur_frm.doc?.name !== frm.doc?.name) {
+			const route = frappe.get_route();
+			if (!route || route[0] !== "Form" || route[2] !== frm.doc?.name) {
 				return false;
 			}
-			const has_pm = !!this.get_party_master_for_history(cur_frm);
+			const active_frm = frappe.get_doc_view();
+			const has_pm = active_frm && !!this.get_party_master_for_history(active_frm);
 			console.log("[UPH] History shortcut condition checked, result:", has_pm);
 			return has_pm;
 		};

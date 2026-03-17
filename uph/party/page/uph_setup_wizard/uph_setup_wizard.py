@@ -29,17 +29,19 @@ def get_tree_templates():
 					{
 						"id": fname.replace(".json", ""),
 						"name": name,
-						"preview": _get_template_preview(os.path.join(path, fname)),
+						"preview": _get_template_preview(fname),
 					}
 				)
 	return templates
 
 
-def _get_template_preview(filepath):
+def _get_template_preview(filename: str):
 	"""Return a simplified tree for preview."""
 	try:
-		with open(filepath) as f:
-			data = json.load(f)
+		path = frappe.get_app_path("uph", "setup/data/templates", filename)
+		content = frappe.read_file(path)
+		if content:
+			data = json.loads(content)
 			# Return top-level nodes only for preview to save bandwidth
 			return [
 				{
@@ -79,11 +81,14 @@ def apply_setup_settings(settings: str, template_id: str):
 	doc.save()
 
 	# 2. Seed Tree
-	if not data.get("skip_seeding"):
-		template_path = frappe.get_app_path("uph", f"setup/data/templates/{template_id}.json")
-		if os.path.exists(template_path):
-			with open(template_path) as f:
-				structure = json.load(f)
+	if not data.get("skip_seeding") and template_id:
+		# Sanitize template_id to prevent traversal
+		template_id = os.path.basename(template_id)
+		template_path = frappe.get_app_path("uph", "setup", "data", "templates", f"{template_id}.json")
+
+		content = frappe.read_file(template_path)
+		if content:
+			structure = json.loads(content)
 
 			from uph.setup.install import PartyMasterSeeder
 
