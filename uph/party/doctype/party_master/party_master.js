@@ -70,7 +70,13 @@ frappe.ui.form.on("Party Master", {
 				},
 				__("Action")
 			);
-			frm.add_custom_button(__("Add Secondary Roles"), () => { open_secondary_roles_dialog(frm); }, __("Action"),);
+			frm.add_custom_button(
+				__("Add Secondary Roles"),
+				() => {
+					open_secondary_roles_dialog(frm);
+				},
+				__("Action")
+			);
 			frm.add_custom_button(
 				__("Account Statement"),
 				() => {
@@ -80,11 +86,7 @@ frappe.ui.form.on("Party Master", {
 				__("View")
 			);
 
-			frm.add_custom_button(
-				__("Parties"),
-				() => show_linked_parties(frm),
-				__("View")
-			);
+			frm.add_custom_button(__("Parties"), () => show_linked_parties(frm), __("View"));
 			if (frm.doc.total_linked_party && frm.doc.total_linked_party > 0) {
 				frm.add_custom_button(
 					__("Reassign Linked Parties"),
@@ -92,7 +94,6 @@ frappe.ui.form.on("Party Master", {
 					__("Action")
 				);
 			}
-
 		}
 
 		update_buttons(frm);
@@ -127,13 +128,19 @@ frappe.ui.form.on("Party Master", {
 		frm.toggle_display("roles", frm.doc.has_secondary_role_party === 1);
 		render_relationships(frm);
 	},
-
 });
 
 function build_parties_dialog(frm, action) {
 	const child_table = get_child_table();
 	const parties_dialog_fields = [
-		{ label: __("Parties"), fieldname: "parties", fieldtype: "Table", read_only: 1, fields: child_table, cannot_add_rows: true },
+		{
+			label: __("Parties"),
+			fieldname: "parties",
+			fieldtype: "Table",
+			read_only: 1,
+			fields: child_table,
+			cannot_add_rows: true,
+		},
 	];
 
 	const filters = [];
@@ -172,7 +179,8 @@ function build_parties_dialog(frm, action) {
 						return;
 					}
 
-					const new_party_master = action === "to_reassign" ? values.to_party_master : frm.doc.name;
+					const new_party_master =
+						action === "to_reassign" ? values.to_party_master : frm.doc.name;
 					const selection_map = selections.map((elem) => ({
 						new_party_master,
 						party_type: elem.party_type,
@@ -237,7 +245,6 @@ function update_buttons(frm) {
 	}
 }
 
-
 function get_counts_unlinked_parties() {
 	if (frappe.boot.unlinked_parties_counts) return frappe.boot.unlinked_parties_counts;
 
@@ -256,7 +263,15 @@ function show_linked_parties(frm) {
 	const child_table = get_child_table();
 
 	const fields = [
-		{ label: __("Parties"), fieldname: "parties", fieldtype: "Table", read_only: 1, editable: false, fields: child_table, cannot_add_rows: true }
+		{
+			label: __("Parties"),
+			fieldname: "parties",
+			fieldtype: "Table",
+			read_only: 1,
+			editable: false,
+			fields: child_table,
+			cannot_add_rows: true,
+		},
 	];
 
 	frappe.call({
@@ -274,31 +289,54 @@ function show_linked_parties(frm) {
 
 function get_child_table() {
 	return [
-		{ label: __("Party"), fieldname: "party", fieldtype: "Dynamic Link", options: "party_type", in_list_view: 1, read_only: 1 },
-		{ label: __("Name"), fieldname: "party_name", fieldtype: "Data", in_list_view: 1, read_only: 1 },
-		{ label: __("Party Type"), fieldname: "party_type", fieldtype: "Link", options: "DocType", in_list_view: 1, read_only: 1 },
-		{ label: __("Currency"), fieldname: "currency", fieldtype: "Link", in_list_view: 1, read_only: 1 }
+		{
+			label: __("Party"),
+			fieldname: "party",
+			fieldtype: "Dynamic Link",
+			options: "party_type",
+			in_list_view: 1,
+			read_only: 1,
+		},
+		{
+			label: __("Name"),
+			fieldname: "party_name",
+			fieldtype: "Data",
+			in_list_view: 1,
+			read_only: 1,
+		},
+		{
+			label: __("Party Type"),
+			fieldname: "party_type",
+			fieldtype: "Link",
+			options: "DocType",
+			in_list_view: 1,
+			read_only: 1,
+		},
+		{
+			label: __("Currency"),
+			fieldname: "currency",
+			fieldtype: "Link",
+			in_list_view: 1,
+			read_only: 1,
+		},
 	];
 }
 
-
 function open_secondary_roles_dialog(frm) {
 	// Get existing child table roles
-	const existing_roles = frm.doc.roles ? frm.doc.roles.map(r => r.party_type_role) : [];
+	const existing_roles = frm.doc.roles ? frm.doc.roles.map((r) => r.party_type_role) : [];
 
 	// Build available roles from frappe.boot.party_account_types
 	let party_types = Object.keys(frappe.boot.party_account_types).filter(
-		p => p !== frm.doc.primary_role &&
-			p !== frm.doc.party_type &&
-			!existing_roles.includes(p)
+		(p) => p !== frm.doc.primary_role && p !== frm.doc.party_type && !existing_roles.includes(p)
 	);
 
 	// Dynamically build check fields
-	const check_fields = party_types.map(role_name => ({
+	const check_fields = party_types.map((role_name) => ({
 		label: role_name,
-		fieldname: `role_${role_name.replace(/\s+/g, '_')}`,
+		fieldname: `role_${role_name.replace(/\s+/g, "_")}`,
 		fieldtype: "Check",
-		default: 0
+		default: 0,
 	}));
 
 	// If no roles are available, alert the user
@@ -317,16 +355,16 @@ function open_secondary_roles_dialog(frm) {
 				fieldname: "has_secondary_role_party",
 				fieldtype: "Check",
 				default: 1,
-				read_only: 1
+				read_only: 1,
 			},
-			...check_fields
+			...check_fields,
 		],
 		primary_action_label: __("Add"),
 		primary_action(values) {
 			// Collect checked roles
 			const selected_roles = check_fields
-				.filter(f => values[f.fieldname])
-				.map(f => f.label);
+				.filter((f) => values[f.fieldname])
+				.map((f) => f.label);
 
 			if (!selected_roles.length) {
 				frappe.msgprint(__("Please select at least one role."));
@@ -337,8 +375,8 @@ function open_secondary_roles_dialog(frm) {
 			frm.doc.roles = frm.doc.roles || [];
 
 			// Add selected roles to child table
-			selected_roles.forEach(role_name => {
-				if (!frm.doc.roles.some(r => r.party_type_role === role_name)) {
+			selected_roles.forEach((role_name) => {
+				if (!frm.doc.roles.some((r) => r.party_type_role === role_name)) {
 					const row = frappe.model.add_child(frm.doc, "Party Master Role", "roles");
 					row.party_type_role = role_name; // mandatory field
 				}
@@ -347,23 +385,24 @@ function open_secondary_roles_dialog(frm) {
 			// Refresh child table and save
 			frm.refresh_field("roles");
 
-			frm.save().then(() => {
-				dialog.hide();
-				frm.reload_doc();
-				frappe.show_alert({
-					message: __("Secondary roles added successfully"),
-					indicator: "green"
+			frm.save()
+				.then(() => {
+					dialog.hide();
+					frm.reload_doc();
+					frappe.show_alert({
+						message: __("Secondary roles added successfully"),
+						indicator: "green",
+					});
+				})
+				.catch((err) => {
+					frappe.msgprint(__("Error saving form. Check console."));
+					console.error(err);
 				});
-			}).catch(err => {
-				frappe.msgprint(__("Error saving form. Check console."));
-				console.error(err);
-			});
-		}
+		},
 	});
 
 	dialog.show();
 }
-
 
 function set_party_master_dashboard_indicators(frm) {
 	if (frm.doc.__onload && frm.doc.__onload.dashboard_info) {
@@ -372,26 +411,36 @@ function set_party_master_dashboard_indicators(frm) {
 
 		if (dashboard_info.length > 0) {
 			dashboard_info.forEach((info) => {
-				const color = info.total_unpaid > 0 ? "orange" : info.total_unpaid < 0 ? "red" : "green";
+				const color =
+					info.total_unpaid > 0 ? "orange" : info.total_unpaid < 0 ? "red" : "green";
 				const unpaid_label =
 					info.total_unpaid > 0
-						? __("Net Receivable: {0}", [format_currency(info.total_unpaid, info.currency)])
+						? __("Net Receivable: {0}", [
+								format_currency(info.total_unpaid, info.currency),
+						  ])
 						: info.total_unpaid < 0
-							? __("Net Payable: {0}", [format_currency(Math.abs(info.total_unpaid), info.currency)])
-							: __("No Outstanding Balance");
+						? __("Net Payable: {0}", [
+								format_currency(Math.abs(info.total_unpaid), info.currency),
+						  ])
+						: __("No Outstanding Balance");
 
 				// Add company/currency context if multi-company
-				const prefix = dashboard_info.length > 1 ? `${info.company} (${info.currency}): ` : "";
+				const prefix =
+					dashboard_info.length > 1 ? `${info.company} (${info.currency}): ` : "";
 
 				if (info.annual_sales) {
 					frm.dashboard.add_indicator(
-						`${prefix}${__("Annual Sales: {0}", [format_currency(info.annual_sales, info.currency)])}`,
+						`${prefix}${__("Annual Sales: {0}", [
+							format_currency(info.annual_sales, info.currency),
+						])}`,
 						"blue"
 					);
 				}
 				if (info.annual_purchases) {
 					frm.dashboard.add_indicator(
-						`${prefix}${__("Annual Purchases: {0}", [format_currency(info.annual_purchases, info.currency)])}`,
+						`${prefix}${__("Annual Purchases: {0}", [
+							format_currency(info.annual_purchases, info.currency),
+						])}`,
 						"blue"
 					);
 				}
@@ -415,12 +464,12 @@ function render_relationships(frm) {
 	frappe.call({
 		method: "uph.party.doctype.party_relationship.party_relationship.get_party_relationships",
 		args: {
-			party_master: frm.doc.name
+			party_master: frm.doc.name,
 		},
 		callback: function (r) {
 			if (!r.message || r.message.length === 0) {
 				frm.fields_dict.relationships_html.$wrapper.html(
-					'<div class="text-muted">' + __("No relationships found") + '</div>'
+					'<div class="text-muted">' + __("No relationships found") + "</div>"
 				);
 				return;
 			}
@@ -439,8 +488,9 @@ function render_relationships(frm) {
                     <tbody>
             `;
 
-			relationships.forEach(rel => {
-				let related_party = rel.subject_party === frm.doc.name ? rel.object_party : rel.subject_party;
+			relationships.forEach((rel) => {
+				let related_party =
+					rel.subject_party === frm.doc.name ? rel.object_party : rel.subject_party;
 				let direction = rel.subject_party === frm.doc.name ? __("Is") : __("Has");
 				// e.g. Subject(Me) IS Parent of Object. OR Subject(Parent) HAS Subsidiary(Me).
 				// Actually, the relationship type name handles this better usually.
@@ -456,7 +506,9 @@ function render_relationships(frm) {
 				html += `
                     <tr>
                         <td>
-                            <a href="/app/party-relationship/${rel.name}" data-doctype="Party Relationship" data-name="${rel.name}">
+                            <a href="/app/party-relationship/${
+								rel.name
+							}" data-doctype="Party Relationship" data-name="${rel.name}">
                                 ${rel_label}
                             </a>
                         </td>
@@ -466,24 +518,26 @@ function render_relationships(frm) {
                             </a>
                         </td>
                         <td>${rel.status}</td>
-                        <td>${rel.ownership_percentage ? rel.ownership_percentage + '%' : '-'}</td>
+                        <td>${rel.ownership_percentage ? rel.ownership_percentage + "%" : "-"}</td>
                     </tr>
                 `;
 			});
 
-			html += '</tbody></table>';
+			html += "</tbody></table>";
 
 			// Add a button to create new relationship
 			html += `
                 <div class="mt-2">
-                    <button class="btn btn-sm btn-default" onclick="frappe.new_doc('Party Relationship', {subject_party: '${frm.doc.name}'})">
+                    <button class="btn btn-sm btn-default" onclick="frappe.new_doc('Party Relationship', {subject_party: '${
+						frm.doc.name
+					}'})">
                         ${__("Add Relationship")}
                     </button>
                 </div>
             `;
 
 			frm.fields_dict.relationships_html.$wrapper.html(html);
-		}
+		},
 	});
 }
 
@@ -503,7 +557,9 @@ function check_high_severity_issues(frm) {
 		callback: (r) => {
 			if (r.message && r.message > 0) {
 				frm.dashboard.set_headline(
-					__("This Party Master has {0} high severity issues that require attention.", [r.message]),
+					__("This Party Master has {0} high severity issues that require attention.", [
+						r.message,
+					]),
 					"red"
 				);
 			}

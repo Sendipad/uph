@@ -1,6 +1,8 @@
-import frappe
 import math
-from frappe.utils import flt, get_defaults, cint
+
+import frappe
+from frappe.utils import cint, flt, get_defaults
+
 
 def get_number_format_info(format: str) -> tuple[str, str, int]:
 	return number_format_info.get(format) or (".", ",", 2)
@@ -19,8 +21,8 @@ number_format_info = {
 	"#,###": ("", ",", 0),
 	"#.########": (".", "", 8),
 }
-from frappe.utils import get_defaults
 from num2words import num2words
+
 
 def money_in_words(
 	number: str | float | int,
@@ -47,7 +49,9 @@ def money_in_words(
 	if not main_currency:
 		main_currency = d.get("currency", "INR")
 	if not fraction_currency:
-		fraction_currency = frappe.db.get_value("Currency", main_currency, "fraction", cache=True) or _("Cent")
+		fraction_currency = frappe.db.get_value("Currency", main_currency, "fraction", cache=True) or _(
+			"Cent"
+		)
 
 	# Get number format
 	number_format = (
@@ -80,12 +84,12 @@ def money_in_words(
 		if main == "0" and fraction in ["00", "000"]:
 			out = f"صفر {main_currency}"
 		elif main == "0":
-			out = f"{fraction_words} {_(fraction_currency,context='Currency')}"
-	
+			out = f"{fraction_words} {_(fraction_currency, context='Currency')}"
+
 		else:
-			out = f"{main_words} {_(main_currency, context='Currency') }"
+			out = f"{main_words} {_(main_currency, context='Currency')}"
 			if cint(fraction):
-				out += f" {_('And')}{fraction_words} {_(fraction_currency,context='Currency')}"
+				out += f" {_('And')}{fraction_words} {_(fraction_currency, context='Currency')}"
 	else:
 		# Default English formatting
 		if main == "0" and fraction in ["00", "000"]:
@@ -99,6 +103,7 @@ def money_in_words(
 
 	return out + " " + _("only.")
 
+
 def in_words(integer: int, in_million=True, lang="en") -> str:
 	"""
 	Returns string in words for the given integer, with Arabic support.
@@ -111,9 +116,9 @@ def in_words(integer: int, in_million=True, lang="en") -> str:
 
 
 def test_arabic():
-    amount=10000.00
-    currency="YER"
-    frappe.response["charset"] = "utf-8"
+	amount = 10000.00
+	currency = "YER"
+	frappe.response["charset"] = "utf-8"
 
-    frappe.local.lang = "ar"
-    return money_in_words(amount,currency)
+	frappe.local.lang = "ar"
+	return money_in_words(amount, currency)

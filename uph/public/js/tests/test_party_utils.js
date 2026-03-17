@@ -14,22 +14,32 @@ QUnit.module("UPH Party Utils", (hooks) => {
 		const sales = uph.party.get_fieldnames({ doc: { doctype: "Sales Invoice" } });
 		assert.deepEqual(
 			sales,
-			{ party_type: "Customer", party_fieldname: "customer", default_role_fieldname: "default_customer" },
-			"returns sales party mapping",
+			{
+				party_type: "Customer",
+				party_fieldname: "customer",
+				default_role_fieldname: "default_customer",
+			},
+			"returns sales party mapping"
 		);
 
 		const purchase = uph.party.get_fieldnames({ doc: { doctype: "Purchase Order" } });
 		assert.deepEqual(
 			purchase,
-			{ party_type: "Supplier", party_fieldname: "supplier", default_role_fieldname: "default_supplier" },
-			"returns purchase party mapping",
+			{
+				party_type: "Supplier",
+				party_fieldname: "supplier",
+				default_role_fieldname: "default_supplier",
+			},
+			"returns purchase party mapping"
 		);
 
-		const payment = uph.party.get_fieldnames({ doc: { doctype: "Payment Entry", party_type: "Employee" } });
+		const payment = uph.party.get_fieldnames({
+			doc: { doctype: "Payment Entry", party_type: "Employee" },
+		});
 		assert.deepEqual(
 			payment,
 			{ party_type: "Employee", party_fieldname: "party", isdynamic: 1 },
-			"returns dynamic payment entry mapping",
+			"returns dynamic payment entry mapping"
 		);
 	});
 
@@ -50,7 +60,7 @@ QUnit.module("UPH Party Utils", (hooks) => {
 				is_group: 0,
 				party_type: "Customer",
 			},
-			"builds the base party master filter",
+			"builds the base party master filter"
 		);
 	});
 
@@ -73,7 +83,7 @@ QUnit.module("UPH Party Utils", (hooks) => {
 		assert.deepEqual(
 			frm.lastToggle,
 			{ fieldname: "party_analytic_accounting", value: true },
-			"enforces requirement when enabled",
+			"enforces requirement when enabled"
 		);
 
 		uph.party.finalize_pm_details(frm, {
@@ -82,7 +92,7 @@ QUnit.module("UPH Party Utils", (hooks) => {
 		assert.deepEqual(
 			frm.lastToggle,
 			{ fieldname: "party_analytic_accounting", value: false },
-			"removes requirement when disabled",
+			"removes requirement when disabled"
 		);
 	});
 
@@ -97,11 +107,10 @@ QUnit.module("UPH Party Utils", (hooks) => {
 			parties: [{ name: "CUST-0001", currency: "USD" }],
 		};
 
-		const fields = uph.party.get_dialog_field(
-			{ get_default_partyRole: false },
-			pmDetails,
-			{ party_type: "Customer", isdynamic: 0 },
-		);
+		const fields = uph.party.get_dialog_field({ get_default_partyRole: false }, pmDetails, {
+			party_type: "Customer",
+			isdynamic: 0,
+		});
 
 		const partyField = fields.find((field) => field.fieldname === "party");
 		const partyTypeField = fields.find((field) => field.fieldname === "party_type");
@@ -109,9 +118,13 @@ QUnit.module("UPH Party Utils", (hooks) => {
 		assert.deepEqual(
 			partyField.options,
 			["CUST-0001 (USD)"],
-			"includes currency in party option labels",
+			"includes currency in party option labels"
 		);
-		assert.strictEqual(partyTypeField.hidden, true, "hides party type when only one option exists");
+		assert.strictEqual(
+			partyTypeField.hidden,
+			true,
+			"hides party type when only one option exists"
+		);
 	});
 
 	QUnit.test("get_filtered_dimensions targets party master analytics", (assert) => {
@@ -124,7 +137,7 @@ QUnit.module("UPH Party Utils", (hooks) => {
 			{ doctype: "Sales Invoice", party_master: "PM-001", customer: "CUST-0001" },
 			null,
 			"party_analytic_accounting",
-			"Test Company",
+			"Test Company"
 		);
 
 		assert.deepEqual(
@@ -137,7 +150,7 @@ QUnit.module("UPH Party Utils", (hooks) => {
 					company: "Test Company",
 				},
 			},
-			"returns the party master analytics query",
+			"returns the party master analytics query"
 		);
 	});
 });

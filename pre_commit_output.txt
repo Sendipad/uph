@@ -1,0 +1,863 @@
+trim trailing whitespace.................................................Passed
+check for merge conflicts................................................Passed
+check python ast.........................................................Passed
+check json...............................................................Passed
+check toml...............................................................Passed
+check yaml...........................................(no files to check)Skipped
+debug statements (python)................................................Passed
+Run ruff linter and apply fixes..........................................Failed
+- hook id: ruff
+- exit code: 1
+
+F841 Local variable `pair_key` is assigned to but never used
+   --> uph/party/controllers/duplicate_scanner.py:106:6
+    |
+104 |                     p2 = block[start + j]
+105 |                     party_1, party_2 = normalize_party_pair(p1.name, p2.name)
+106 |                     pair_key = (party_1, party_2)
+    |                     ^^^^^^^^
+107 |
+108 |                     existing_issue = get_issue_status(
+    |
+help: Remove assignment to unused variable `pair_key`
+
+RUF005 Consider `[party_master, *params]` instead of concatenation
+   --> uph/party/controllers/party.py:498:3
+    |
+496 |     frappe.db.sql(
+497 |         f"UPDATE `tab{doctype}` SET `party_master` = %s WHERE {where_clause}",
+498 |         [party_master] + params,
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+499 |     )
+500 |     return frappe.db.count(
+    |
+help: Replace with `[party_master, *params]`
+
+RUF013 PEP 484 prohibits implicit `Optional`
+  --> uph/party/controllers/party_merge_service.py:47:19
+   |
+45 |         primary_pm: str,
+46 |         secondary_pm: str,
+47 |         fields_to_keep: dict = None,
+   |                         ^^^^
+48 |         ignore_validation: bool = False,
+49 |     ) -> dict:
+   |
+help: Convert to `T | None`
+
+RUF013 PEP 484 prohibits implicit `Optional`
+   --> uph/party/controllers/party_merge_service.py:353:90
+    |
+351 |         pass  # Party Master uses party_primary_address/party_primary_contact fields
+352 |
+353 |     def _transfer_pm_child_tables(self, primary_pm: str, secondary_pm: str, fields_to_keep: dict = None):
+    |                                                                                             ^^^^
+354 |         """
+355 |         Transfer child tables and fields from secondary to primary PM.
+    |
+help: Convert to `T | None`
+
+RUF013 PEP 484 prohibits implicit `Optional`
+   --> uph/party/controllers/party_merge_service.py:476:18
+    |
+474 |     primary_party: str,
+475 |     secondary_party: str,
+476 |     fields_to_keep: dict = None,
+    |                     ^^^^
+477 |     ignore_validation: bool = False,
+478 | ) -> dict:
+    |
+help: Convert to `T | None`
+
+RUF013 PEP 484 prohibits implicit `Optional`
+  --> uph/party/controllers/transaction_health.py:33:16
+   |
+31 |     limit: int = 20,
+32 |     offset: int = 0,
+33 |     party_master: str = None,
+   |                   ^^^
+34 |     reference_doctype: str = None,
+35 | ):
+   |
+help: Convert to `T | None`
+
+RUF013 PEP 484 prohibits implicit `Optional`
+  --> uph/party/controllers/transaction_health.py:34:21
+   |
+32 |     offset: int = 0,
+33 |     party_master: str = None,
+34 |     reference_doctype: str = None,
+   |                        ^^^
+35 | ):
+36 |     """
+   |
+help: Convert to `T | None`
+
+RUF013 PEP 484 prohibits implicit `Optional`
+   --> uph/party/controllers/transaction_health.py:160:67
+    |
+159 | @frappe.whitelist()
+160 | def get_party_health_detail(party_master: str, reference_doctype: str = None):
+    |                                                                   ^^^
+161 |     """
+162 |     Drill-down: list individual policy issues for a given Party Master.
+    |
+help: Convert to `T | None`
+
+RUF013 PEP 484 prohibits implicit `Optional`
+   --> uph/party/controllers/transaction_health.py:222:64
+    |
+221 | @frappe.whitelist()
+222 | def resolve_health_issue(issue_name: str, action: str, reason: str = None):
+    |                                                                ^^^
+223 |     """
+224 |     Resolve a specific transaction health issue (e.g. submit draft, cancel).
+    |
+help: Convert to `T | None`
+
+E722 Do not use bare `except`
+   --> uph/party/controllers/transaction_health.py:281:5
+    |
+279 |                 try:
+280 |                     details = json.loads(issue.details_json)
+281 |                 except:
+    |                 ^^^^^^
+282 |                     pass
+283 |             details["dismiss_reason"] = reason or "Dismissed from Dashboard"
+    |
+
+E722 Do not use bare `except`
+   --> uph/party/controllers/transaction_health.py:592:4
+    |
+590 |             try:
+591 |                 details = json.loads(issue.details_json)
+592 |             except:
+    |             ^^^^^^
+593 |                 pass
+    |
+
+RUF013 PEP 484 prohibits implicit `Optional`
+  --> uph/party/controllers/unlinked_resolver.py:22:74
+   |
+21 | @frappe.whitelist()
+22 | def get_unlinked_parties(limit: int = 20, offset: int = 0, role_doctype: str = None):
+   |                                                                          ^^^
+23 |     """
+24 |     Find ERPNext role records where party_master is NULL or empty.
+   |
+help: Convert to `T | None`
+
+RUF013 PEP 484 prohibits implicit `Optional`
+   --> uph/party/controllers/unlinked_resolver.py:123:86
+    |
+122 | @frappe.whitelist()
+123 | def get_unlinked_transactions(limit: int = 20, offset: int = 0, transaction_doctype: str = None):
+    |                                                                                      ^^^
+124 |     """
+125 |     Find ERPNext transactions where party_master is NULL or empty.
+    |
+help: Convert to `T | None`
+
+B007 Loop control variable `match_text` not used within loop body
+   --> uph/party/controllers/unlinked_resolver.py:305:6
+    |
+304 |     suggestions = []
+305 |     for match_text, score, _idx in matches:
+    |         ^^^^^^^^^^
+306 |         if score < 50:
+307 |             continue
+    |
+help: Rename unused `match_text` to `_match_text`
+
+RUF013 PEP 484 prohibits implicit `Optional`
+   --> uph/party/controllers/unlinked_resolver.py:539:73
+    |
+538 | @frappe.whitelist()
+539 | def get_unlinked_issues(limit: int = 20, offset: int = 0, party_master: str = None):
+    |                                                                         ^^^
+540 |     """
+541 |     Fetch unlinked issues from Party Issue (governance registry).
+    |
+help: Convert to `T | None`
+
+F841 Local variable `name_field` is assigned to but never used
+   --> uph/party/controllers/unlinked_resolver.py:592:6
+    |
+590 |             ]:
+591 |                 if meta.has_field(candidate):
+592 |                     name_field = candidate
+    |                     ^^^^^^^^^^
+593 |                     fields.append(candidate)
+594 |                     break
+    |
+help: Remove assignment to unused variable `name_field`
+
+F841 Local variable `result` is assigned to but never used
+   --> uph/party/controllers/unlinked_resolver.py:675:2
+    |
+674 |     # Link the underlying role using the existing robust method
+675 |     result = link_to_party_master(role_doctype, role_name, party_master)
+    |     ^^^^^^
+676 |
+677 |     # Additionally, resolve any open Unlinked Voucher issues for this specific transaction
+    |
+help: Remove assignment to unused variable `result`
+
+F841 Local variable `GL` is assigned to but never used
+   --> uph/party/doctype/party_master/party_master.py:591:2
+    |
+589 |         return cached
+590 |
+591 |     GL = DocType("GL Entry")
+    |     ^^
+592 |
+593 |     # 1. Fetch all non-zero balance parties for this company once
+    |
+help: Remove assignment to unused variable `GL`
+
+E731 Do not assign a `lambda` expression, use a `def`
+   --> uph/party/doctype/party_master/party_master.py:835:3
+    |
+833 |         get_val = args.get
+834 |     else:
+835 |         get_val = lambda k, default=None: getattr(args, k, default)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+836 |
+837 |     values = {
+    |
+help: Rewrite `get_val` as a `def`
+
+E731 Do not assign a `lambda` expression, use a `def`
+   --> uph/party/doctype/party_master/party_master.py:881:3
+    |
+879 |         doctype_val = args.get("doctype", "Party Master")
+880 |     else:
+881 |         get_val = lambda k, default=None: getattr(args, k, default)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+882 |         doctype_val = args.doctype
+    |
+help: Rewrite `get_val` as a `def`
+
+F841 Local variable `comments` is assigned to but never used
+    --> uph/party/doctype/party_master/party_master.py:1035:2
+     |
+1033 | @frappe.whitelist()
+1034 | def assign_party_master_for_selection(old_party_master, new_party_master, selections):
+1035 |     comments = []
+     |     ^^^^^^^^
+1036 |
+1037 |     for p in selections:
+     |
+help: Remove assignment to unused variable `comments`
+
+F841 Local variable `expected_identifiers` is assigned to but never used
+  --> uph/party/doctype/party_master_settings/party_master_settings.py:75:3
+   |
+74 |         # Map of Party Type to expected identifier (first two letters capitalized)
+75 |         expected_identifiers = {
+   |         ^^^^^^^^^^^^^^^^^^^^
+76 |             "Customer": "Cu",
+77 |             "Supplier": "Su",
+   |
+help: Remove assignment to unused variable `expected_identifiers`
+
+RUF013 PEP 484 prohibits implicit `Optional`
+   --> uph/party/doctype/party_relationship/party_relationship.py:293:63
+    |
+292 | @frappe.whitelist()
+293 | def get_related_parties(party_master: str, relationship_type: str = None):
+    |                                                               ^^^
+294 |     """
+295 |     Get all parties related to the given party master.
+    |
+help: Convert to `T | None`
+
+F841 Local variable `rel` is assigned to but never used
+   --> uph/party/doctype/party_relationship/test_party_relationship.py:296:3
+    |
+295 |         # Create P1 -> P2
+296 |         rel = frappe.get_doc(
+    |         ^^^
+297 |             {
+298 |                 "doctype": "Party Relationship",
+    |
+help: Remove assignment to unused variable `rel`
+
+RUF013 PEP 484 prohibits implicit `Optional`
+  --> uph/party/page/data_quality_dashboard/data_quality_dashboard.py:16:96
+   |
+15 | @frappe.whitelist()
+16 | def get_duplicate_issues(limit: int = 50, offset: int = 0, min_score: float = 0, party_master: str = None):
+   |                                                                                                ^^^
+17 |     """
+18 |     Get duplicate Party Issues from the governance registry.
+   |
+help: Convert to `T | None`
+
+RUF013 PEP 484 prohibits implicit `Optional`
+   --> uph/party/page/data_quality_dashboard/data_quality_dashboard.py:103:39
+    |
+102 | @frappe.whitelist()
+103 | def get_dashboard_stats(party_master: str = None):
+    |                                       ^^^
+104 |     """
+105 |     Get summary statistics sourced entirely from the Party Issue doctype.
+    |
+help: Convert to `T | None`
+
+RUF013 PEP 484 prohibits implicit `Optional`
+   --> uph/party/page/data_quality_dashboard/data_quality_dashboard.py:168:16
+    |
+166 |     limit: int = 20,
+167 |     offset: int = 0,
+168 |     party_master: str = None,
+    |                   ^^^
+169 |     reference_doctype: str = None,
+170 | ):
+    |
+help: Convert to `T | None`
+
+RUF013 PEP 484 prohibits implicit `Optional`
+   --> uph/party/page/data_quality_dashboard/data_quality_dashboard.py:169:21
+    |
+167 |     offset: int = 0,
+168 |     party_master: str = None,
+169 |     reference_doctype: str = None,
+    |                        ^^^
+170 | ):
+171 |     """
+    |
+help: Convert to `T | None`
+
+RUF013 PEP 484 prohibits implicit `Optional`
+   --> uph/party/page/data_quality_dashboard/data_quality_dashboard.py:329:59
+    |
+328 | @frappe.whitelist()
+329 | def dismiss_duplicate(party_1: str, party_2: str, reason: str = None):
+    |                                                           ^^^
+330 |     """
+331 |     Dismiss a duplicate issue by setting status to Ignored.
+    |
+help: Convert to `T | None`
+
+RUF013 PEP 484 prohibits implicit `Optional`
+   --> uph/party/page/data_quality_dashboard/data_quality_dashboard.py:385:18
+    |
+383 |     primary_party: str,
+384 |     secondary_party: str,
+385 |     fields_to_keep: dict = None,
+    |                     ^^^^
+386 |     ignore_validation: bool = False,
+387 | ):
+    |
+help: Convert to `T | None`
+
+F841 Local variable `hide_equal` is assigned to but never used
+  --> uph/party/report/chronological_party_ledger/chronological_party_ledger.py:42:2
+   |
+40 |     data = get_data(filters)
+41 |     chart = get_timeline_chart_by_currency(data)
+42 |     hide_equal = (
+   |     ^^^^^^^^^^
+43 |         True
+44 |         if filters.get("display_options") and "Hide Equals Voucher" in filters.get("display_options")
+   |
+help: Remove assignment to unused variable `hide_equal`
+
+RUF005 Consider iterable unpacking instead of concatenation
+   --> uph/party/report/party_account_balances/party_account_balances.py:384:9
+    |
+382 |               }
+383 |           )
+384 |       return columns + [
+    |  ____________^
+385 | |         {"fieldname": "mobile_no", "fieldtype": "Data", "label": _("Mobile No")},
+386 | |         {
+387 | |             "fieldname": "posting_date",
+388 | |             "fieldtype": "Data",
+389 | |             "label": _("Latest Posting Date"),
+390 | |         },
+391 | |         {"fieldname": "status", "fieldtype": "Data", "label": _("Status")},
+392 | |         {"fieldname": "territory", "fieldtype": "Data", "label": _("Territory")},
+393 | |         {
+394 | |             "fieldname": "party_type_group",
+395 | |             "fieldtype": "Data",
+396 | |             "label": _("Party Type Group"),
+397 | |         },
+398 | |         {
+399 | |             "fieldname": "party_details",
+400 | |             "fieldtype": "Text Editor",
+401 | |             "label": _("Party Details"),
+402 | |         },
+403 | |     ]
+    | |_____^
+    |
+help: Replace with iterable unpacking
+
+RUF057 Value being rounded is already an integer
+   --> uph/party/report/party_account_statement/party_account_statement.py:131:23
+    |
+129 |         for month in sorted_months:
+130 |             # Add balance before applying this month's change
+131 |             line_values.append(round(cumulative_balance, 2))
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+132 |
+133 |             change = month_map.get(month, 0)
+    |
+help: Remove unnecessary `round` call
+
+RUF005 Consider iterable unpacking instead of concatenation
+   --> uph/party/report/party_account_statement/party_account_statement.py:181:14
+    |
+179 |     filters.party = [x.party for x in partylist]
+180 |
+181 |     dimension = ["cost_center", "project"] + get_accounting_dimensions(as_list=True)
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+182 |
+183 |     opening, entries = query_gl(filters, dimension)
+    |
+help: Replace with iterable unpacking
+
+RUF005 Consider iterable unpacking instead of concatenation
+   --> uph/party/report/party_account_statement/party_account_statement.py:443:14
+    |
+442 | def query_gl(filters, dimension):
+443 |     dimension = ["cost_center", "project"] + get_accounting_dimensions(as_list=True)
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+444 |     GL = DocType("GL Entry")
+445 |     display_options = set(filters.get("display_options") or [])
+    |
+help: Replace with iterable unpacking
+
+RUF005 Consider iterable unpacking instead of concatenation
+   --> uph/party/report/party_account_statement/party_account_statement.py:514:11
+    |
+512 |           entry_condition &= ~GL.voucher_no.isin(filters.get("voucher_no_not_in"))
+513 |
+514 |       fields = [
+    |  ______________^
+515 | |         GL.name.as_("entry"),
+516 | |         GL.debit_in_account_currency.as_("debit"),
+517 | |         GL.credit_in_account_currency.as_("credit"),
+518 | |         GL.posting_date,
+519 | |         GL.account,
+520 | |         GL.remarks,
+521 | |         GL.account_currency.as_("currency"),
+522 | |         GL.party_type,
+523 | |         GL.party,
+524 | |         GL.voucher_type,
+525 | |         GL.voucher_subtype,
+526 | |         GL.voucher_no,
+527 | |         GL.against_voucher_type,
+528 | |         GL.against_voucher,
+529 | |         GL.against,
+530 | |         GL.is_opening,
+531 | |         GL.creation,
+532 | |     ] + dimension
+    | |_________________^
+533 |       if filters.get("in_company_currency"):
+534 |           fields.extend([GL.debit.as_("debit_in_cc"), GL.credit.as_("credit_in_cc")])
+    |
+help: Replace with iterable unpacking
+
+RUF005 Consider iterable unpacking instead of concatenation
+   --> uph/party/report/party_accounting_ledger/party_accounting_ledger.py:129:14
+    |
+127 |     partylist = get_party_master_parties_db(party_master, all_roles=False, roles=filters.party_type)
+128 |     filters.party = [x.party for x in partylist]
+129 |     dimension = ["cost_center", "project"] + get_accounting_dimensions(as_list=True)
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+130 |
+131 |     opening, entries = query_gl(filters, dimension)
+    |
+help: Replace with iterable unpacking
+
+RUF059 Unpacked variable `total_balance_in_cc` is never used
+   --> uph/party/report/party_accounting_ledger/party_accounting_ledger.py:259:18
+    |
+257 |             )
+258 |             data.append(row)
+259 |         total_balance, total_balance_in_cc = prepare_entries(
+    |                        ^^^^^^^^^^^^^^^^^^^
+260 |             key,
+261 |             party.get("party_master"),
+    |
+help: Prefix it with an underscore or any other dummy variable pattern
+
+RUF005 Consider iterable unpacking instead of concatenation
+   --> uph/party/report/party_accounting_ledger/party_accounting_ledger.py:299:14
+    |
+297 |     import pypika.terms
+298 |
+299 |     dimension = ["cost_center", "project"] + get_accounting_dimensions(as_list=True)
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+300 |     GL = DocType("GL Entry")
+301 |     display_options = set(filters.get("display_options") or [])
+    |
+help: Replace with iterable unpacking
+
+F841 Local variable `company_currency` is assigned to but never used
+   --> uph/party/report/party_accounting_ledger/party_accounting_ledger.py:303:2
+    |
+301 |     display_options = set(filters.get("display_options") or [])
+302 |     conditions = GL.company == filters.get("company")
+303 |     company_currency = frappe.get_cached_value("Company", filters.get("company"), "default_currency")
+    |     ^^^^^^^^^^^^^^^^
+304 |     from_date = filters.get("from_date")
+305 |     period_condition = GL.posting_date.between(from_date, filters.get("to_date"))
+    |
+help: Remove assignment to unused variable `company_currency`
+
+RUF005 Consider iterable unpacking instead of concatenation
+   --> uph/party/report/party_accounting_ledger/party_accounting_ledger.py:357:11
+    |
+356 |       total_query = get_totals_opening_and_current()
+357 |       fields = [
+    |  ______________^
+358 | |         GL.name.as_("entry"),
+359 | |         GL.debit_in_account_currency.as_("debit"),
+360 | |         GL.credit_in_account_currency.as_("credit"),
+361 | |         GL.posting_date,
+362 | |         GL.account,
+363 | |         GL.remarks,
+364 | |         GL.account_currency.as_("currency"),
+365 | |         GL.party_type,
+366 | |         GL.party,
+367 | |         GL.voucher_type,
+368 | |         GL.voucher_subtype,
+369 | |         GL.voucher_no,
+370 | |         GL.against_voucher_type,
+371 | |         GL.against_voucher,
+372 | |         GL.against,
+373 | |         GL.is_opening,
+374 | |     ] + dimension
+    | |_________________^
+375 |       if filters.get("in_company_currency"):
+376 |           fields.extend([GL.debit.as_("debit_in_cc"), GL.credit.as_("credit_in_cc")])
+    |
+help: Replace with iterable unpacking
+
+RUF005 Consider iterable unpacking instead of concatenation
+   --> uph/party/report/party_accounting_ledger/party_accounting_ledger.py:395:14
+    |
+394 | def query_gls(filters):
+395 |     dimension = ["cost_center", "project"] + get_accounting_dimensions(as_list=True)
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+396 |     display_options = set(filters.get("display_options") or [])
+397 |     company = filters.get("company")
+    |
+help: Replace with iterable unpacking
+
+F841 Local variable `company_currency` is assigned to but never used
+   --> uph/party/report/party_accounting_ledger/party_accounting_ledger.py:400:2
+    |
+398 |     from_date = filters.get("from_date")
+399 |     to_date = filters.get("to_date")
+400 |     company_currency = filters.get("company_currency")
+    |     ^^^^^^^^^^^^^^^^
+401 |     party_type = filters.get("party_type")
+402 |     party = filters.get("party")
+    |
+help: Remove assignment to unused variable `company_currency`
+
+RUF005 Consider iterable unpacking instead of concatenation
+   --> uph/party/report/party_accounting_ledger/party_accounting_ledger.py:454:22
+    |
+452 |       ]
+453 |
+454 |       gl_entries_fields = fields + [
+    |  _________________________^
+455 | |         "gl.debit_in_account_currency AS debit",
+456 | |         "gl.credit_in_account_currency AS credit",
+457 | |     ]
+    | |_____^
+458 |
+459 |       if "show_cancelled_entries" not in display_options:
+    |
+help: Replace with iterable unpacking
+
+RUF003 Comment contains ambiguous `–` (EN DASH). Did you mean `-` (HYPHEN-MINUS)?
+  --> uph/patches/rename_party_issue_fields.py:18:11
+   |
+16 |         return
+17 |
+18 |     # Step 0 – reload the new JSON so the new fieldname exists in the schema
+   |              ^
+19 |     frappe.reload_doc("party", "doctype", "party_issue")
+   |
+
+RUF003 Comment contains ambiguous `–` (EN DASH). Did you mean `-` (HYPHEN-MINUS)?
+  --> uph/patches/rename_party_issue_fields.py:21:11
+   |
+19 |     frappe.reload_doc("party", "doctype", "party_issue")
+20 |
+21 |     # Step 1 – rename ``party`` → ``party_master`` (copies data)
+   |              ^
+22 |     if frappe.db.has_column("Party Issue", "party"):
+23 |         from frappe.model.utils.rename_field import rename_field
+   |
+
+RUF003 Comment contains ambiguous `–` (EN DASH). Did you mean `-` (HYPHEN-MINUS)?
+  --> uph/patches/rename_party_issue_fields.py:27:11
+   |
+25 |         rename_field("Party Issue", "party", "party_master")
+26 |
+27 |     # Step 2 – migrate ``party_secondary`` → reference fields
+   |              ^
+28 |     if frappe.db.has_column("Party Issue", "party_secondary"):
+29 |         # Only migrate rows where party_secondary has a value AND reference_name
+   |
+
+RUF002 Docstring contains ambiguous `–` (EN DASH). Did you mean `-` (HYPHEN-MINUS)?
+  --> uph/patches/rescan_transaction_health_and_unlinked.py:16:42
+   |
+14 | 2. Auto-resolve false-positive Transaction Policy issues where the referenced
+15 |    voucher is no longer in the relevant state (e.g. draft was submitted).
+16 | 3. Run ``run_transaction_policy_scan()`` – creates Party Issue entries
+   |                                          ^
+17 |    for draft-overdue, cancelled-referenced, and party-master-mismatch
+18 |    vouchers that have not yet been registered.
+   |
+
+RUF002 Docstring contains ambiguous `–` (EN DASH). Did you mean `-` (HYPHEN-MINUS)?
+  --> uph/patches/rescan_transaction_health_and_unlinked.py:19:38
+   |
+17 |    for draft-overdue, cancelled-referenced, and party-master-mismatch
+18 |    vouchers that have not yet been registered.
+19 | 4. Run ``run_unlinked_issue_scan()`` – creates Party Issue entries for
+   |                                      ^
+20 |    role records (Customer, Supplier, Employee, …) that are not linked
+21 |    to a Party Master.
+   |
+
+F841 Local variable `result` is assigned to but never used
+   --> uph/tests/test_cache_utils.py:144:3
+    |
+142 |             return None
+143 |
+144 |         result = SmartCache.get_cached_value(cache_key, generator)
+    |         ^^^^^^
+145 |         # Result might be None (depending on implementation)
+146 |         # The key is that it doesn't error
+    |
+help: Remove assignment to unused variable `result`
+
+F841 Local variable `c` is assigned to but never used
+  --> uph/tests/test_missing_apis.py:35:3
+   |
+34 |         # Create Customer without link
+35 |         c = frappe.get_doc({"doctype": "Customer", "customer_name": "Unlinked Customer"}).insert(
+   |         ^
+36 |             ignore_permissions=True
+37 |         )
+   |
+help: Remove assignment to unused variable `c`
+
+RUF013 PEP 484 prohibits implicit `Optional`
+   --> uph/tests/test_party_merge.py:139:61
+    |
+137 |         return pm.name
+138 |
+139 |     def _create_customer(self, name_suffix: str, party_master: str = None, currency: str = "USD") -> str:
+    |                                                                ^^^
+140 |         """Create a test Customer linked to Party Master."""
+141 |         # Check if customer group exists
+    |
+help: Convert to `T | None`
+
+F841 Local variable `cust_a` is assigned to but never used
+   --> uph/tests/test_party_merge.py:307:3
+    |
+305 |         pm_a = self._create_party_master("A4")
+306 |         pm_b = self._create_party_master("B4")
+307 |         cust_a = self._create_customer("A4", pm_a, "USD")
+    |         ^^^^^^
+308 |         cust_b = self._create_customer("B4", pm_b, "EUR")
+    |
+help: Remove assignment to unused variable `cust_a`
+
+F841 Local variable `cust_b` is assigned to but never used
+   --> uph/tests/test_party_merge.py:308:3
+    |
+306 |         pm_b = self._create_party_master("B4")
+307 |         cust_a = self._create_customer("A4", pm_a, "USD")
+308 |         cust_b = self._create_customer("B4", pm_b, "EUR")
+    |         ^^^^^^
+309 |
+310 |         # Skip transaction test if Sales Invoice cannot be created
+    |
+help: Remove assignment to unused variable `cust_b`
+
+RUF059 Unpacked variable `message` is never used
+  --> uph/tests/test_report_coverage.py:51:18
+   |
+49 |             "party_master": self.party_master,
+50 |         }
+51 |         columns, data, message, chart = execute(filters)
+   |                        ^^^^^^^
+52 |         self.assertTrue(len(columns) > 0)
+53 |         self.assertTrue(len(data) > 0)
+   |
+help: Prefix it with an underscore or any other dummy variable pattern
+
+RUF059 Unpacked variable `chart` is never used
+  --> uph/tests/test_report_coverage.py:51:27
+   |
+49 |             "party_master": self.party_master,
+50 |         }
+51 |         columns, data, message, chart = execute(filters)
+   |                                 ^^^^^
+52 |         self.assertTrue(len(columns) > 0)
+53 |         self.assertTrue(len(data) > 0)
+   |
+help: Prefix it with an underscore or any other dummy variable pattern
+
+RUF059 Unpacked variable `message` is never used
+  --> uph/tests/test_report_coverage.py:66:18
+   |
+64 |             "party_master": self.party_master,
+65 |         }
+66 |         columns, data, message, chart = execute(filters)
+   |                        ^^^^^^^
+67 |         self.assertTrue(len(columns) > 0)
+68 |         self.assertTrue(len(data) > 0)
+   |
+help: Prefix it with an underscore or any other dummy variable pattern
+
+RUF059 Unpacked variable `chart` is never used
+  --> uph/tests/test_report_coverage.py:66:27
+   |
+64 |             "party_master": self.party_master,
+65 |         }
+66 |         columns, data, message, chart = execute(filters)
+   |                                 ^^^^^
+67 |         self.assertTrue(len(columns) > 0)
+68 |         self.assertTrue(len(data) > 0)
+   |
+help: Prefix it with an underscore or any other dummy variable pattern
+
+RUF059 Unpacked variable `message` is never used
+  --> uph/tests/test_report_coverage.py:81:18
+   |
+79 |             "party_master": self.party_master,
+80 |         }
+81 |         columns, data, message, chart = execute(filters)
+   |                        ^^^^^^^
+82 |         self.assertTrue(len(columns) > 0)
+83 |         self.assertTrue(len(data) > 0)
+   |
+help: Prefix it with an underscore or any other dummy variable pattern
+
+RUF059 Unpacked variable `chart` is never used
+  --> uph/tests/test_report_coverage.py:81:27
+   |
+79 |             "party_master": self.party_master,
+80 |         }
+81 |         columns, data, message, chart = execute(filters)
+   |                                 ^^^^^
+82 |         self.assertTrue(len(columns) > 0)
+83 |         self.assertTrue(len(data) > 0)
+   |
+help: Prefix it with an underscore or any other dummy variable pattern
+
+RUF059 Unpacked variable `data` is never used
+   --> uph/tests/test_report_coverage.py:146:12
+    |
+144 |             "to_date": frappe.utils.today(),
+145 |         }
+146 |         columns, data = execute(filters)
+    |                  ^^^^
+147 |         self.assertTrue(len(columns) > 0)
+    |
+help: Prefix it with an underscore or any other dummy variable pattern
+
+RUF059 Unpacked variable `message` is never used
+   --> uph/tests/test_report_coverage.py:171:18
+    |
+170 |         filters = {"party_type": ["Customer"]}
+171 |         columns, data, message, chart = execute(filters)
+    |                        ^^^^^^^
+172 |         self.assertTrue(len(columns) > 0)
+173 |         self.assertIsInstance(data, list)
+    |
+help: Prefix it with an underscore or any other dummy variable pattern
+
+RUF059 Unpacked variable `chart` is never used
+   --> uph/tests/test_report_coverage.py:171:27
+    |
+170 |         filters = {"party_type": ["Customer"]}
+171 |         columns, data, message, chart = execute(filters)
+    |                                 ^^^^^
+172 |         self.assertTrue(len(columns) > 0)
+173 |         self.assertIsInstance(data, list)
+    |
+help: Prefix it with an underscore or any other dummy variable pattern
+
+Found 63 errors.
+No fixes available (56 hidden fixes can be enabled with the `--unsafe-fixes` option).
+
+Format Python code.......................................................Passed
+prettier.................................................................Passed
+eslint...................................................................Failed
+- hook id: eslint
+- exit code: 1
+
+/home/erpnext/frappe-bench/apps/uph/uph/public/js/tests/test_utils.js
+   1:1  error  'QUnit' is not defined  no-undef
+  19:2  error  'QUnit' is not defined  no-undef
+  44:2  error  'QUnit' is not defined  no-undef
+
+✖ 3 problems (3 errors, 0 warnings)
+
+
+/home/erpnext/frappe-bench/apps/uph/uph/party/report/chronological_party_ledger/chronological_party_ledger.js
+  28:55  error  'txt' is not defined  no-undef
+
+/home/erpnext/frappe-bench/apps/uph/uph/party/report/party_account_statement/party_account_statement.js
+  224:13  error  'erpnext' is not defined  no-undef
+  325:1   error  'erpnext' is not defined  no-undef
+
+/home/erpnext/frappe-bench/apps/uph/uph/public/js/utils/party.js
+   290:15  error  'erpnext' is not defined                            no-undef
+   530:16  error  'erpnext' is not defined                            no-undef
+   582:4   error  'get_party_type_party_master_rules' is not defined  no-undef
+  1312:42  error  'erpnext' is not defined                            no-undef
+  1314:1   error  'erpnext' is not defined                            no-undef
+  1346:36  error  'erpnext' is not defined                            no-undef
+  1348:1   error  'erpnext' is not defined                            no-undef
+
+✖ 10 problems (10 errors, 0 warnings)
+
+
+/home/erpnext/frappe-bench/apps/uph/uph/party/report/party_account_balances/party_account_balances.js
+  196:13  error  'erpnext' is not defined  no-undef
+  306:1   error  'erpnext' is not defined  no-undef
+
+/home/erpnext/frappe-bench/apps/uph/uph/public/js/tests/test_party_utils.js
+    1:1   error  'QUnit' is not defined    no-undef
+    8:2   error  'QUnit' is not defined    no-undef
+   46:2   error  'QUnit' is not defined    no-undef
+   67:2   error  'QUnit' is not defined    no-undef
+   99:2   error  'QUnit' is not defined    no-undef
+  130:2   error  'QUnit' is not defined    no-undef
+  136:18  error  'erpnext' is not defined  no-undef
+
+✖ 9 problems (9 errors, 0 warnings)
+
+
+/home/erpnext/frappe-bench/apps/uph/uph/party/doctype/party_master/party_master_tree.js
+  264:13  error  'erpnext' is not defined  no-undef
+  266:13  error  'erpnext' is not defined  no-undef
+
+/home/erpnext/frappe-bench/apps/uph/uph/party/report/party_accounting_ledger/party_accounting_ledger.js
+  183:13  error  'erpnext' is not defined  no-undef
+  253:1   error  'erpnext' is not defined  no-undef
+
+/home/erpnext/frappe-bench/apps/uph/uph/party/report/party_master_ledger/party_master_ledger.js
+   98:13  error  'erpnext' is not defined             no-undef
+  160:5   error  'get_print_settings' is not defined  no-undef
+  181:4   error  'get_print_settings' is not defined  no-undef
+  189:1   error  'erpnext' is not defined             no-undef
+
+✖ 8 problems (8 errors, 0 warnings)
+

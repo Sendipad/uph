@@ -12,7 +12,7 @@ app_license = "gpl-3.0"
 required_apps = ["erpnext"]
 
 app_include_js = [
-    "uph.bundle.js",
+	"uph.bundle.js",
 ]
 # include js in page
 # page_js = {"page" : "public/js/file.js"}
@@ -38,15 +38,15 @@ boot_session = "uph.party.boot.add_pm_doctypes"
 
 
 tx_doctype_with_party_master = [
-    "Sales Invoice",
-    "Purchase Invoice",
-    "Journal Entry Account",
-    "Payment Entry",
-    "Sales Order",
-    "Purchase Order",
-    "Delivery Note",
-    "Purchase Receipt",
-    "Expense Claim",
+	"Sales Invoice",
+	"Purchase Invoice",
+	"Journal Entry Account",
+	"Payment Entry",
+	"Sales Order",
+	"Purchase Order",
+	"Delivery Note",
+	"Purchase Receipt",
+	"Expense Claim",
 ]
 # Document Events
 # ============================================================================
@@ -57,40 +57,28 @@ tx_doctype_with_party_master = [
 parties_type = ["Customer", "Supplier", "Employee"]
 
 doc_events = {
-    "*": {
-        # Smart wrappers with early-exit for transactional doctypes
-        "validate": [
-            "uph.party.controllers.party.validate_party_master_on_document_types_smart",
-        ],
-        "before_validate": [
-            "uph.party.controllers.party.validate_party_master_on_document_types_smart"
-        ],
-        "on_change": [
-            "uph.party.controllers.party.validate_party_master_on_document_types_smart"
-        ],
-        "after_rename": [
-            "uph.party.controllers.party.validate_party_master_on_document_types_smart"
-        ],
-    }
+	"*": {
+		# Smart wrappers with early-exit for transactional doctypes
+		"validate": [
+			"uph.party.controllers.party.validate_party_master_on_document_types_smart",
+		],
+		"before_validate": ["uph.party.controllers.party.validate_party_master_on_document_types_smart"],
+		"on_change": ["uph.party.controllers.party.validate_party_master_on_document_types_smart"],
+		"after_rename": ["uph.party.controllers.party.validate_party_master_on_document_types_smart"],
+	}
 }
 
 # Explicit hooks for party types (Customer, Supplier, Employee)
 # These always run validation since they're core party types
 for party_type in parties_type:
-    doc_events[party_type] = {
-        "validate": [
-            "uph.party.controllers.party.validate_party_master_on_target_party_type_smart",
-        ],
-        "on_update": [
-            "uph.party.controllers.party.validate_party_master_on_target_party_type_smart"
-        ],
-        "on_trash": [
-            "uph.party.controllers.party.validate_party_master_on_target_party_type_smart"
-        ],
-        "after_rename": [
-            "uph.party.controllers.party.validate_party_master_on_target_party_type_smart"
-        ],
-    }
+	doc_events[party_type] = {
+		"validate": [
+			"uph.party.controllers.party.validate_party_master_on_target_party_type_smart",
+		],
+		"on_update": ["uph.party.controllers.party.validate_party_master_on_target_party_type_smart"],
+		"on_trash": ["uph.party.controllers.party.validate_party_master_on_target_party_type_smart"],
+		"after_rename": ["uph.party.controllers.party.validate_party_master_on_target_party_type_smart"],
+	}
 
 # doc_events = {
 # 	"*": {
@@ -99,9 +87,9 @@ for party_type in parties_type:
 # 	}
 # }
 global_search_doctypes = {
-    "Default": [
-        {"doctype": "Party Master", "index": 0},
-    ]
+	"Default": [
+		{"doctype": "Party Master", "index": 0},
+	]
 }
 export_python_type_annotations = True
 
@@ -109,64 +97,64 @@ export_python_type_annotations = True
 # ---------------
 
 scheduler_events = {
-    "hourly": [
-        "uph.tasks.refresh_dashboard_stats",
-        "uph.party.controllers.unlinked_resolver.sync_unlinked_issues",
-        "uph.party.controllers.duplicate_scanner.sync_duplicate_issues",
-    ],
-    "daily": [
-        "uph.party.controllers.unlinked_resolver.enqueue_unlinked_issue_scan",
-        "uph.party.controllers.transaction_health.enqueue_transaction_policy_scan",
-        "uph.party.controllers.duplicate_scanner.enqueue_duplicate_scan",
-    ],
+	"hourly": [
+		"uph.tasks.refresh_dashboard_stats",
+		"uph.party.controllers.unlinked_resolver.sync_unlinked_issues",
+		"uph.party.controllers.duplicate_scanner.sync_duplicate_issues",
+	],
+	"daily": [
+		"uph.party.controllers.unlinked_resolver.enqueue_unlinked_issue_scan",
+		"uph.party.controllers.transaction_health.enqueue_transaction_policy_scan",
+		"uph.party.controllers.duplicate_scanner.enqueue_duplicate_scan",
+	],
 }
 
 # Fixtures (Workflow + Workflow States for Party Issue)
 fixtures = [
-    {
-        "doctype": "Module Onboarding",
-        "filters": [["name", "in", ["Party"]]],
-    },
-    {
-        "doctype": "Onboarding Step",
-        "filters": [
-            [
-                "name",
-                "in",
-                [
-                    "Party Master Settings",
-                    "Create Party Master",
-                    "Data Quality Dashboard",
-                ],
-            ],
-        ],
-    },
-    {
-        "doctype": "Workflow",
-        "filters": [["name", "in", ["Party Issue Workflow"]]],
-    },
-    {
-        "doctype": "Workflow State",
-        "filters": [
-            [
-                "workflow_state_name",
-                "in",
-                ["Open", "Under Review", "Resolved", "Ignored"],
-            ],
-        ],
-    },
+	{
+		"doctype": "Module Onboarding",
+		"filters": [["name", "in", ["Party"]]],
+	},
+	{
+		"doctype": "Onboarding Step",
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					"Party Master Settings",
+					"Create Party Master",
+					"Data Quality Dashboard",
+				],
+			],
+		],
+	},
+	{
+		"doctype": "Workflow",
+		"filters": [["name", "in", ["Party Issue Workflow"]]],
+	},
+	{
+		"doctype": "Workflow State",
+		"filters": [
+			[
+				"workflow_state_name",
+				"in",
+				["Open", "Under Review", "Resolved", "Ignored"],
+			],
+		],
+	},
 ]
 
 # Database indexes
 db_table_indexes = {
-    "tabParty Issue": [
-        ["party"],
-        ["issue_type"],
-        ["status"],
-        ["severity"],
-        ["party", "status"],
-        ["reference_doctype", "reference_name"],
-    ]
+	"tabParty Issue": [
+		["party"],
+		["issue_type"],
+		["status"],
+		["severity"],
+		["party", "status"],
+		["reference_doctype", "reference_name"],
+	]
 }
 
 # Testing
@@ -174,15 +162,15 @@ db_table_indexes = {
 
 before_tests = "uph.tests.test_utils.before_tests"
 qunit_tests = [
-    "public/js/tests/test_utils.js",
-    "public/js/tests/test_party_utils.js",
+	"public/js/tests/test_utils.js",
+	"public/js/tests/test_party_utils.js",
 ]
 
 # Overriding Methods
 # ------------------------------
 #
 override_whitelisted_methods = {
-    "erpnext.accounts.party.get_party_details": "uph.party.controllers.party.get_party_details"
+	"erpnext.accounts.party.get_party_details": "uph.party.controllers.party.get_party_details"
 }
 #
 # each overriding function accepts a `data` argument;

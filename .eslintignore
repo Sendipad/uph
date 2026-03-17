@@ -1,0 +1,3 @@
+# ESLint ignore
+uph/ruleflow/doctype/process/boilerplate/controller.js
+**/boilerplate/*.js

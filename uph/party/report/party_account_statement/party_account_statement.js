@@ -42,7 +42,7 @@ frappe.query_reports["Party Account Statement"] = {
 						party = party.value;
 					}
 
-					frappe.db.get_value('Party Master', party, 'party_name', (value) => {
+					frappe.db.get_value("Party Master", party, "party_name", (value) => {
 						if (value && value.party_name) {
 							frappe.query_report.set_filter_value("party_name", value.party_name);
 						}
@@ -206,15 +206,13 @@ frappe.query_reports["Party Account Statement"] = {
 					},
 				];
 
-				let dynamic_options = Object.keys(
-					frappe.boot.party_account_types || {}
-				).map((key) => ({
-					value: key,
-					label: __(key),
-					description: __("only accounting entries for {0} will be shown", [
-						__(key),
-					]),
-				}));
+				let dynamic_options = Object.keys(frappe.boot.party_account_types || {}).map(
+					(key) => ({
+						value: key,
+						label: __(key),
+						description: __("only accounting entries for {0} will be shown", [__(key)]),
+					})
+				);
 
 				return default_option.concat(dynamic_options);
 			},
@@ -254,7 +252,7 @@ frappe.query_reports["Party Account Statement"] = {
 		},
 	],
 
-	"formatter": function (value, row, column, data, default_formatter) {
+	formatter: function (value, row, column, data, default_formatter) {
 		value = default_formatter(value, row, column, data);
 		if (column.fieldname == "voucher_subtype" && data && data.voucher_subtype) {
 			value = __(value, "Voucher Type");
@@ -264,7 +262,6 @@ frappe.query_reports["Party Account Statement"] = {
 		}
 		if (data == {}) {
 			value = "";
-
 		}
 		if (data && data.warning && column.fieldname === "remarks") {
 			let msg = "";
@@ -274,8 +271,12 @@ frappe.query_reports["Party Account Statement"] = {
 			if (data.issue_groups && data.issue_groups.length > 0) {
 				if (msg) msg += " | ";
 				msg += __("Active Issues:") + " ";
-				let links = data.issue_groups.map(g => {
-					let href = `/app/party-issue?party_master=${encodeURIComponent(data.party_master)}&issue_type=${encodeURIComponent(g.issue_type)}&status=%5B%22in%22%2C%5B%22Open%22%2C%22Under+Review%22%5D%5D`;
+				let links = data.issue_groups.map((g) => {
+					let href = `/app/party-issue?party_master=${encodeURIComponent(
+						data.party_master
+					)}&issue_type=${encodeURIComponent(
+						g.issue_type
+					)}&status=%5B%22in%22%2C%5B%22Open%22%2C%22Under+Review%22%5D%5D`;
 					return `<a href="${href}" target="_blank" style="text-decoration:underline; font-weight:bold;">${g.count} ${g.itype_translated} (${g.sev_translated})</a>`;
 				});
 				msg += links.join(", ");
@@ -286,7 +287,6 @@ frappe.query_reports["Party Account Statement"] = {
 		}
 		if (data && data.bold) {
 			value = "<span style='font-size:bold'>" + value.bold() + "</span>";
-
 		}
 		if (data && data.is_opening == 1) {
 			value = "<span style='color:blue'>" + value + "</span>";
@@ -297,22 +297,32 @@ frappe.query_reports["Party Account Statement"] = {
 		return value;
 	},
 	onload: function (report) {
-		report.page.add_inner_button(__("Chronological Party Ledger"), function () {
-			var filters = report.get_values();
-			frappe.set_route("query-report", "Chronological Party Ledger", { company: filters.company, party_master: filters.party_master, });
-		}, __("View"));
-		report.page.add_inner_button(__("Account Balance Summary"), function () {
-			var filters = report.get_values();
-			frappe.set_route("query-report", "Party Account Balances", { company: filters.company, party_master: filters.party_master, });
-		}, __("View"));
-
+		report.page.add_inner_button(
+			__("Chronological Party Ledger"),
+			function () {
+				var filters = report.get_values();
+				frappe.set_route("query-report", "Chronological Party Ledger", {
+					company: filters.company,
+					party_master: filters.party_master,
+				});
+			},
+			__("View")
+		);
+		report.page.add_inner_button(
+			__("Account Balance Summary"),
+			function () {
+				var filters = report.get_values();
+				frappe.set_route("query-report", "Party Account Balances", {
+					company: filters.company,
+					party_master: filters.party_master,
+				});
+			},
+			__("View")
+		);
 	},
-
-
 };
 
 erpnext.utils.add_dimensions("Party Account Statement", 9);
-
 
 __("Pay", "Voucher Type");
 __("Receive", "Voucher Type");

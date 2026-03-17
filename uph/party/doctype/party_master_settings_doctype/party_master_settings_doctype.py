@@ -15,7 +15,14 @@ class PartyMasterSettingsDocType(Document):
 		from frappe.types import DF
 
 		client_script: DF.Link | None
-		document_categories: DF.Literal["", "Selling DocType", "Purchasing DocType", "Dynamic type As Parent", "Dynamic Type As Child", "Employee DocType"]
+		document_categories: DF.Literal[
+			"",
+			"Selling DocType",
+			"Purchasing DocType",
+			"Dynamic type As Parent",
+			"Dynamic Type As Child",
+			"Employee DocType",
+		]
 		document_type: DF.Link
 		enabled: DF.Check
 		is_dynamic_party_type: DF.Check

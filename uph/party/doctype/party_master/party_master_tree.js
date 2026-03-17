@@ -11,21 +11,23 @@ frappe.treeview_settings["Party Master"] = {
 		treeview.load_settings = function () {
 			return Promise.all([
 				frappe.db.get_single_value("Party Master Settings", "auto_expand_levels"),
-				frappe.db.get_single_value("Party Master Settings", "hide_balance")
-			]).then(([levels, hide_balance]) => {
-				treeview.settings = {
-					expand_levels: levels || 3,
-					hide_balance: hide_balance || 0
-				};
-				return treeview.settings;
-			}).catch(err => {
-				// Default if settings not found
-				treeview.settings = {
-					expand_levels: 3,
-					hide_balance: 0
-				};
-				return treeview.settings;
-			});
+				frappe.db.get_single_value("Party Master Settings", "hide_balance"),
+			])
+				.then(([levels, hide_balance]) => {
+					treeview.settings = {
+						expand_levels: levels || 3,
+						hide_balance: hide_balance || 0,
+					};
+					return treeview.settings;
+				})
+				.catch((err) => {
+					// Default if settings not found
+					treeview.settings = {
+						expand_levels: 3,
+						hide_balance: 0,
+					};
+					return treeview.settings;
+				});
 		};
 
 		// Load settings immediately
@@ -47,7 +49,9 @@ frappe.treeview_settings["Party Master"] = {
 					try {
 						if (doc?.name) {
 							frappe.show_alert({
-								message: __("Created new Party Master {0}", [doc.party_name || doc.name]),
+								message: __("Created new Party Master {0}", [
+									doc.party_name || doc.name,
+								]),
 								indicator: "green",
 							});
 							if (cur_tree && parent_node) {
@@ -85,7 +89,7 @@ frappe.treeview_settings["Party Master"] = {
 
 				cur_tree.load_children(node).then(() => {
 					setTimeout(() => {
-						Object.values(cur_tree.nodes).forEach(child => {
+						Object.values(cur_tree.nodes).forEach((child) => {
 							if (child.parent_node === node) {
 								expand_recursive(child, current_level + 1);
 							}
@@ -101,7 +105,7 @@ frappe.treeview_settings["Party Master"] = {
 		for (let report of [
 			"Party Account Statement",
 			"Party Account Balances",
-			"Chronological Party Ledger"
+			"Chronological Party Ledger",
 		]) {
 			treeview.page.add_inner_button(
 				__(report),
@@ -134,19 +138,21 @@ frappe.treeview_settings["Party Master"] = {
 		let party_masters = [];
 		if (deep) {
 			// Deep load (e.g. initial root load or mass expansion)
-			party_masters = nodes.flatMap(n => {
-				const data = n.data || n;
-				if (Array.isArray(data)) {
-					return data.map(item => item?.value);
-				}
-				return data?.value ? [data.value] : [];
-			}).filter(Boolean);
+			party_masters = nodes
+				.flatMap((n) => {
+					const data = n.data || n;
+					if (Array.isArray(data)) {
+						return data.map((item) => item?.value);
+					}
+					return data?.value ? [data.value] : [];
+				})
+				.filter(Boolean);
 		} else {
 			// Normal expansion: nodes are Node objects
-			party_masters = nodes.map(n => n?.value || n.data?.value).filter(Boolean);
+			party_masters = nodes.map((n) => n?.value || n.data?.value).filter(Boolean);
 
 			// Refresh parent nodes' aggregate balances
-			nodes.forEach(n => {
+			nodes.forEach((n) => {
 				if (n.parent_node && (n.parent_node.value || n.parent_node.data?.value)) {
 					party_masters.push(n.parent_node.value || n.parent_node.data.value);
 				}
@@ -180,23 +186,21 @@ frappe.treeview_settings["Party Master"] = {
 		const batched_names = [...new Set(tree.pending_balance_nodes)];
 		tree.pending_balance_nodes = [];
 
-
 		frappe.call({
 			method: "uph.party.doctype.party_master.party_master.get_party_master_balances",
 			args: {
 				name: batched_names,
-				company: treeview.get_company()
+				company: treeview.get_company(),
 			},
 			callback: (r) => {
 				if (!r.message) return;
 
-
-				r.message.forEach(pm => {
+				r.message.forEach((pm) => {
 					const node = tree.nodes[pm.name];
 					if (!node || node.is_root) return;
 
 					const balance_html = pm.balances
-						.map(balance => {
+						.map((balance) => {
 							const is_dr = balance.amount >= 0;
 							const arrow = is_dr ? "▲" : "▼";
 							const color = is_dr ? "red" : "green";
@@ -216,17 +220,19 @@ frappe.treeview_settings["Party Master"] = {
 						node.parent && node.parent.find(".balance-area").remove();
 
 						// Insert before Children UL (floats right)
-						$(`<span class="balance-area pull-right">${balance_html}</span>`)
-							.insertBefore(node.$ul);
+						$(
+							`<span class="balance-area pull-right">${balance_html}</span>`
+						).insertBefore(node.$ul);
 					} else if ($link.length) {
 						// Fallback for nodes without $ul (e.g. maybe leaves if tree struct differs?)
 						// But usually leaves have empty $ul or we can insert after link
 						$link.find(".balance-area").remove();
-						$(`<span class="balance-area pull-right">${balance_html}</span>`)
-							.appendTo($link);
+						$(`<span class="balance-area pull-right">${balance_html}</span>`).appendTo(
+							$link
+						);
 					}
 				});
-			}
+			},
 		});
 	},
 
@@ -248,7 +254,7 @@ frappe.treeview_settings["Party Master"] = {
 			action: function () {
 				this.make_tree();
 			},
-		}
+		},
 	],
 
 	filters: [
@@ -289,7 +295,7 @@ frappe.treeview_settings["Party Master"] = {
 						if (!r.message) return;
 
 						const { is_group, parent_party_master } = r.message;
-						const new_root = is_group ? party_master : (parent_party_master || null);
+						const new_root = is_group ? party_master : parent_party_master || null;
 
 						treeview.root_value = new_root;
 						treeview.root_label = new_root || treeview.opts.root_label;
@@ -343,7 +349,9 @@ frappe.treeview_settings["Party Master"] = {
 				(doc) => {
 					if (doc?.name) {
 						frappe.show_alert({
-							message: __("Created new Party Master {0}", [doc.party_name || doc.name]),
+							message: __("Created new Party Master {0}", [
+								doc.party_name || doc.name,
+							]),
 							indicator: "green",
 						});
 						treeview.make_tree();
@@ -385,7 +393,7 @@ frappe.treeview_settings["Party Master"] = {
 			click: function (node) {
 				frappe.route_options = {
 					party_master: node.label,
-					company: frappe.views.trees["Party Master"].get_company()
+					company: frappe.views.trees["Party Master"].get_company(),
 				};
 				frappe.set_route("query-report", "Party Account Statement");
 			},

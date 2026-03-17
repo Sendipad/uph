@@ -1,3 +1,3 @@
 from frappe import _
 
-receive=_("Receive", context="Voucher Type")
+receive = _("Receive", context="Voucher Type")  # nosemgrep

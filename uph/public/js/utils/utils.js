@@ -1,4 +1,4 @@
-if (typeof frappe !== 'undefined') {
+if (typeof frappe !== "undefined") {
 	frappe.provide("uph");
 }
 window.uph = window.uph || {};
@@ -7,8 +7,7 @@ uph.get_party_type_party_master_rules = function (party_type, callback) {
 	if (!uph.party_type_pm_rules) uph.party_type_pm_rules = {};
 	if (Object.keys(uph.party_type_pm_rules).length === 0) {
 		frappe.call({
-			method:
-				"uph.party.doctype.party_master_settings.party_master_settings.get_party_type_party_master_rules_dict",
+			method: "uph.party.doctype.party_master_settings.party_master_settings.get_party_type_party_master_rules_dict",
 			callback: function (r) {
 				if (r.message) {
 					Object.assign(uph.party_type_pm_rules, r.message);
@@ -21,7 +20,7 @@ uph.get_party_type_party_master_rules = function (party_type, callback) {
 	} else {
 		callback(uph.party_type_pm_rules[party_type]);
 	}
-}
+};
 
 $(document).on("app_ready", function () {
 	if (!frappe.boot) return;
@@ -68,7 +67,7 @@ $(document).on("app_ready", function () {
 										},
 									});
 								},
-								__("Actions"),
+								__("Actions")
 							);
 						}
 					});
@@ -115,7 +114,10 @@ $(document).on("app_ready", function () {
 									Employee: frm.doc.employee_name,
 								};
 
-								const party_name = party_name_map[frm.doc.doctype] || frm.doc.title || frm.doc.name;
+								const party_name =
+									party_name_map[frm.doc.doctype] ||
+									frm.doc.title ||
+									frm.doc.name;
 
 								frappe.ui.form.make_quick_entry(
 									"Party Master",
@@ -124,7 +126,9 @@ $(document).on("app_ready", function () {
 											frm.set_value("party_master", doc.name);
 											frm.save().then(() => frm.reload_doc());
 											frappe.show_alert({
-												message: __("Linked new Party Master {0}", [doc.party_name]),
+												message: __("Linked new Party Master {0}", [
+													doc.party_name,
+												]),
 												indicator: "green",
 											});
 										}
@@ -135,7 +139,7 @@ $(document).on("app_ready", function () {
 										party_type: frm.doc.doctype,
 									},
 									null,
-									frappe.ui.form.PartyMasterQuickEntryForm,
+									frappe.ui.form.PartyMasterQuickEntryForm
 								);
 							}, 300); // small wait so modal backdrop clears
 						});
@@ -143,26 +147,32 @@ $(document).on("app_ready", function () {
 						d.show();
 					});
 				} else if (!frm.is_new()) {
-					frm.add_custom_button(__("Parent Party: {0}", [frm.doc.party_master]), function () {
-						frappe.set_route("Form", "Party Master", frm.doc.party_master);
-					});
+					frm.add_custom_button(
+						__("Parent Party: {0}", [frm.doc.party_master]),
+						function () {
+							frappe.set_route("Form", "Party Master", frm.doc.party_master);
+						}
+					);
 					frm.add_custom_button(
 						__("Unlink Party Master"),
 						function () {
-							frappe.confirm(__("Are you sure you want to unlink this Party Master?"), function () {
-								frm.set_value("party_master", "");
-								frm.save();
-								frm.reload();
-							});
+							frappe.confirm(
+								__("Are you sure you want to unlink this Party Master?"),
+								function () {
+									frm.set_value("party_master", "");
+									frm.save();
+									frm.reload();
+								}
+							);
 						},
-						__("Actions"),
+						__("Actions")
 					);
 					frm.add_custom_button(
 						__("Sync Party Master Details"),
 						function () {
 							frappe.confirm(
 								__(
-									"This will synchronize all details from Party Master as configured in settings. Continue?",
+									"This will synchronize all details from Party Master as configured in settings. Continue?"
 								),
 								function () {
 									let args = {
@@ -172,8 +182,7 @@ $(document).on("app_ready", function () {
 										save: true,
 									};
 									frappe.call({
-										method:
-											"uph.party.doctype.party_master.party_master.create_party_from_party_master", // Replace with actual method path
+										method: "uph.party.doctype.party_master.party_master.create_party_from_party_master", // Replace with actual method path
 										args: args,
 										freeze: true, // Prevent user actions during the request
 										freeze_message: __("Syncing details..."),
@@ -187,15 +196,17 @@ $(document).on("app_ready", function () {
 											console.error("Sync failed:", err);
 											frappe.msgprint({
 												title: __("Error"),
-												message: __("Synchronization failed. Please check the console."),
+												message: __(
+													"Synchronization failed. Please check the console."
+												),
 												indicator: "red",
 											});
 										},
 									});
-								},
+								}
 							);
 						},
-						__("Actions"),
+						__("Actions")
 					);
 				}
 			},
@@ -302,7 +313,7 @@ frappe.provide("uph.utils");
 uph.utils.open_client_script_generator_dialog = function (
 	frm,
 	options = {},
-	additional_fields = [],
+	additional_fields = []
 ) {
 	const base_fields = [
 		{ fieldtype: "Section Break", label: __("Details"), collapsible: 1, collapsed: 1 },

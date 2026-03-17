@@ -4,8 +4,11 @@
 		"node": true,
 		"es2022": true
 	},
+	"parser": "vue-eslint-parser",
 	"parserOptions": {
-		"sourceType": "module"
+		"parser": "@babel/eslint-parser",
+		"sourceType": "module",
+		"requireConfigFile": false
 	},
 	"extends": "eslint:recommended",
 	"rules": {
@@ -13,21 +16,46 @@
 		"brace-style": "off",
 		"no-mixed-spaces-and-tabs": "off",
 		"no-useless-escape": "off",
-		"space-unary-ops": ["error", { "words": true }],
+		"space-unary-ops": [
+			"error",
+			{
+				"words": true
+			}
+		],
 		"linebreak-style": "off",
-		"quotes": ["off"],
+		"quotes": [
+			"off"
+		],
 		"semi": "off",
 		"camelcase": "off",
 		"no-unused-vars": "off",
-		"no-console": ["warn"],
-		"no-extra-boolean-cast": ["off"],
-		"no-control-regex": ["off"],
+		"no-console": [
+			"warn"
+		],
+		"no-extra-boolean-cast": [
+			"off"
+		],
+		"no-control-regex": [
+			"off"
+		]
 	},
 	"root": true,
 	"globals": {
 		"frappe": true,
 		"Vue": true,
 		"SetVueGlobals": true,
+		"ref": true,
+		"reactive": true,
+		"computed": true,
+		"onMounted": true,
+		"onUnmounted": true,
+		"onBeforeUnmount": true,
+		"watch": true,
+		"nextTick": true,
+		"defineProps": true,
+		"defineEmits": true,
+		"useSlots": true,
+		"useAttrs": true,
 		"__": true,
 		"repl": true,
 		"Class": true,
@@ -55,6 +83,9 @@
 		"format_currency": true,
 		"comment_when": true,
 		"open_url_post": true,
+		"flexirule": true,
+		"erpnext": true,
+		"QUnit": true,
 		"toTitle": true,
 		"lstrip": true,
 		"rstrip": true,
@@ -116,9 +147,12 @@
 		"context": true,
 		"before": true,
 		"beforeEach": true,
-		"after": true,
 		"qz": true,
 		"localforage": true,
-		"extend_cscript": true
+		"extend_cscript": true,
+		"txt": true,
+		"get_party_type_party_master_rules": true,
+		"get_print_settings": true,
+		"uph": true
 	}
 }

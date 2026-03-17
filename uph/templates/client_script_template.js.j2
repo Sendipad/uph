@@ -19,12 +19,12 @@ frappe.ui.form.on("{{ doctype }}", {
         {% if date_fieldname%}
         {{date_fieldname}}:function(frm) {
             uph.party.check_duplicate_party_master(frm);
-    
+
         },
         {% endif %}
         before_submit:function(frm){
             uph.party.check_duplicate_party_master(frm,true);
-    
+
         }
     {% endif %}
 
@@ -35,7 +35,7 @@ frappe.ui.form.on("{{ child_doctype }}", {
         {{ event }}: function(frm) {
             // Custom logic for {{ doctype }}
             {% if event == 'refresh' %}
-    
+
             {% endif %}
         },
         {% endfor %}

@@ -1,4 +1,4 @@
-if (typeof frappe !== 'undefined') {
+if (typeof frappe !== "undefined") {
 	frappe.provide("uph");
 	frappe.provide("uph.party");
 }
@@ -21,7 +21,12 @@ const PURCHASE_DOCTYPES = [
 let uphdialog = null;
 
 uph.party = {
-	show_party_selection_dialog_callback: function (frm, party_master, force_show = false, callback) {
+	show_party_selection_dialog_callback: function (
+		frm,
+		party_master,
+		force_show = false,
+		callback
+	) {
 		if (frm.in_show_party_selection) return;
 		let filters = { party_master: party_master };
 		if (frm.is_single_party_type && frm.party_type) {
@@ -94,7 +99,7 @@ uph.party = {
 					uphdialog.set_df_property(
 						"party",
 						"options",
-						parties.map((p) => p.party),
+						parties.map((p) => p.party)
 					);
 					let default_party = parties.find((p) => p.is_default === 1);
 					let selected_party = default_party || parties[0];
@@ -119,7 +124,7 @@ uph.party = {
 						uphdialog.set_df_property("party_type", "options", party_type);
 						uphdialog.set_value("party_type", party_type[0]);
 						/*uphdialog.fields_dict.party_type.df.onchange=function(){
-				    
+
 							let selected_pt = uphdialog.get_value("party_type");
 							let party_data = parties.filter(p => p.party_type === selected_pt);
 							if (party_data) {
@@ -173,7 +178,7 @@ uph.party = {
 			return frm.pm_on_child_fieldname;
 		}
 		const child_field = frm.meta.fields.find(
-			(df) => df.fieldtype === "Table" && df.options === child_doctype,
+			(df) => df.fieldtype === "Table" && df.options === child_doctype
 		);
 		return child_field ? child_field.fieldname : null;
 	},
@@ -194,10 +199,9 @@ uph.party = {
 		return frm.doc.party_master || this.get_party_master_from_child(frm);
 	},
 
-
 	// ✅ NEW: Create party from tree node (fetches doc then calls dialog)
 	create_party_for_party_master_from_node: function (party_master_name) {
-		frappe.db.get_doc('Party Master', party_master_name).then(doc => {
+		frappe.db.get_doc("Party Master", party_master_name).then((doc) => {
 			uph.party.create_party_for_party_master_dialog_from_doc(doc);
 		});
 	},
@@ -233,20 +237,43 @@ uph.party = {
 							dialog.set_df_property("rule_field_value", "reqd", 0);
 
 							if (rules && rules.allowed && rules.rule_fieldname) {
-								if (rules.rule_fieldname === "default_currency" || rules.rule_fieldname === "salary_currency") {
+								if (
+									rules.rule_fieldname === "default_currency" ||
+									rules.rule_fieldname === "salary_currency"
+								) {
 									// Fast path for Currency
-									dialog.set_df_property("default_currency", "label", rules.rule_fieldname === "salary_currency" ? __("Salary Currency") : __("Default Currency"));
+									dialog.set_df_property(
+										"default_currency",
+										"label",
+										rules.rule_fieldname === "salary_currency"
+											? __("Salary Currency")
+											: __("Default Currency")
+									);
 									dialog.set_df_property("default_currency", "hidden", 0);
 									dialog.set_df_property("default_currency", "reqd", 1);
 								} else {
 									// Dynamic path for other fields
 									frappe.model.with_doctype(selected, () => {
 										const meta = frappe.get_meta(selected);
-										const field = meta.fields.find(f => f.fieldname === rules.rule_fieldname);
+										const field = meta.fields.find(
+											(f) => f.fieldname === rules.rule_fieldname
+										);
 										if (field) {
-											dialog.set_df_property("rule_field_value", "label", field.label);
-											dialog.set_df_property("rule_field_value", "fieldtype", field.fieldtype);
-											dialog.set_df_property("rule_field_value", "options", field.options);
+											dialog.set_df_property(
+												"rule_field_value",
+												"label",
+												field.label
+											);
+											dialog.set_df_property(
+												"rule_field_value",
+												"fieldtype",
+												field.fieldtype
+											);
+											dialog.set_df_property(
+												"rule_field_value",
+												"options",
+												field.options
+											);
 											dialog.set_df_property("rule_field_value", "hidden", 0);
 											dialog.set_df_property("rule_field_value", "reqd", 1);
 										}
@@ -274,11 +301,13 @@ uph.party = {
 					fieldtype: "Check",
 					label: __("Save"),
 					default: 1,
-					description: __("Check this if you want to save the party without routing to Edit"),
+					description: __(
+						"Check this if you want to save the party without routing to Edit"
+					),
 					onchange() {
 						const save = dialog.get_value("save");
 						dialog.get_primary_btn().text(save ? __("Save") : __("Edit Before Save"));
-					}
+					},
 				},
 			],
 			primary_action_label: __("Edit Before Save"),
@@ -353,8 +382,8 @@ uph.party = {
 					frappe.model.set_value(cdt, cdn, fieldname, values.party || values.name);
 
 					// Force ERPNext to fetch account if applicable
-					if (cdt === 'Journal Entry Account' && frm.script_manager) {
-						frm.script_manager.trigger('party', cdt, cdn);
+					if (cdt === "Journal Entry Account" && frm.script_manager) {
+						frm.script_manager.trigger("party", cdt, cdn);
 					}
 
 					const table_fieldname = frm.pm_on_child_table_fieldname;
@@ -398,7 +427,7 @@ uph.party = {
 		const can_set_project = frappe.meta.has_field(cdt, "project");
 		const can_set_party_analytic_accounting = frappe.meta.has_field(
 			cdt,
-			"party_analytic_accounting",
+			"party_analytic_accounting"
 		);
 
 		if (!can_set_cost_center && !can_set_project && !can_set_party_analytic_accounting) return;
@@ -428,13 +457,12 @@ uph.party = {
 						cdt,
 						cdn,
 						"party_analytic_accounting",
-						r.message.party_analytic_accounting,
+						r.message.party_analytic_accounting
 					);
 				}
 			},
 		});
 	},
-
 
 	get_fieldnames: function (frm) {
 		if (SALES_DOCTYPES.includes(frm.doc.doctype)) {
@@ -477,7 +505,10 @@ uph.party = {
 
 		if (frm.doc.roles && frm.doc.roles.length > 0) {
 			party_type = [
-				...new Set([frm.doc.party_type, ...frm.doc.roles.map((role) => role.party_type_role)]),
+				...new Set([
+					frm.doc.party_type,
+					...frm.doc.roles.map((role) => role.party_type_role),
+				]),
 			];
 		}
 
@@ -596,7 +627,7 @@ uph.party = {
 
 		// Re-apply on focus to ensure our filter wins against ERPNext overrides
 		if (frm.fields_dict[fieldname] && frm.fields_dict[fieldname].$input) {
-			frm.fields_dict[fieldname].$input.off('focus.uph_filter').on('focus.uph_filter', () => {
+			frm.fields_dict[fieldname].$input.off("focus.uph_filter").on("focus.uph_filter", () => {
 				set();
 			});
 		}
@@ -604,16 +635,22 @@ uph.party = {
 
 	get_default: function (frm, fn) {
 		fn = fn || this.get_fieldnames(frm);
-		if (!frm.get_default_partyRole || !frm.doc.party_master || !fn.default_role_fieldname) return;
+		if (!frm.get_default_partyRole || !frm.doc.party_master || !fn.default_role_fieldname)
+			return;
 
-		frappe.db.get_value("Party Master", frm.doc.party_master, fn.default_role_fieldname, (r) => {
-			if (r && r.message) {
-				frm.pass_selections_dialog = true;
-				frm.set_value(fn.party_fieldname, r.message[fn.default_role_fieldname]);
-				frm.refresh_field(fn.party_fieldname);
-				frm.pass_selections_dialog = false;
+		frappe.db.get_value(
+			"Party Master",
+			frm.doc.party_master,
+			fn.default_role_fieldname,
+			(r) => {
+				if (r && r.message) {
+					frm.pass_selections_dialog = true;
+					frm.set_value(fn.party_fieldname, r.message[fn.default_role_fieldname]);
+					frm.refresh_field(fn.party_fieldname);
+					frm.pass_selections_dialog = false;
+				}
 			}
-		});
+		);
 	},
 
 	get_dialog_field: function (frm, pm_details, fn) {
@@ -660,12 +697,9 @@ uph.party = {
 		const parties = pm_details.parties || [];
 
 		if (parties.length === 0) {
-			frappe.confirm(
-				__("Create Party for Party Master {0}?", [frm.doc.party_master]),
-				() => {
-					this.create_party_for_party_master_from_node(frm.doc.party_master);
-				}
-			);
+			frappe.confirm(__("Create Party for Party Master {0}?", [frm.doc.party_master]), () => {
+				this.create_party_for_party_master_from_node(frm.doc.party_master);
+			});
 			return;
 		}
 		if (frm.in_show_party_selections) return;
@@ -683,7 +717,7 @@ uph.party = {
 
 				// Find the selected party object
 				const selectedParty = parties.find(
-					(p) => `${p.name}${p.currency ? ` (${p.currency})` : ""}` === values.party,
+					(p) => `${p.name}${p.currency ? ` (${p.currency})` : ""}` === values.party
 				);
 
 				if (!selectedParty) {
@@ -714,7 +748,9 @@ uph.party = {
 										if (!save_res.exc) {
 											frappe.msgprint(__("Default set successfully"));
 										} else {
-											frappe.msgprint(__("Error saving document: {0}", [save_res.exc]));
+											frappe.msgprint(
+												__("Error saving document: {0}", [save_res.exc])
+											);
 										}
 									},
 								});
@@ -829,7 +865,7 @@ uph.party = {
 			frm.fields_dict[child_fieldname].grid.get_field("party_master").get_query = function (
 				doc,
 				cdt,
-				cdn,
+				cdn
 			) {
 				return {
 					query: "uph.party.controllers.queries.party_master_link_query",
@@ -842,7 +878,7 @@ uph.party = {
 			frm.fields_dict[child_fieldname].grid.get_field(fieldname).get_query = function (
 				doc,
 				cdt,
-				cdn,
+				cdn
 			) {
 				let row = locals[cdt][cdn];
 				return {
@@ -876,7 +912,10 @@ uph.party = {
 						);
 						return;
 					}
-					if (parties.length == 1 || (frm.is_single_party_type && parties[0].is_default == 1)) {
+					if (
+						parties.length == 1 ||
+						(frm.is_single_party_type && parties[0].is_default == 1)
+					) {
 						return callback(parties[0]);
 					}
 					let is_initializing_dialog = true;
@@ -982,7 +1021,8 @@ uph.party = {
 			condition: () => {
 				const has_pm = !!frm.doc.party_master;
 				const fieldnames = this.get_fieldnames(frm);
-				const has_no_party = fieldnames.party_fieldname && !frm.doc[fieldnames.party_fieldname];
+				const has_no_party =
+					fieldnames.party_fieldname && !frm.doc[fieldnames.party_fieldname];
 
 				// Optional: Check if focused on party_master field if we want to be specific
 				// but let's relax it for testing
@@ -1004,7 +1044,12 @@ uph.party = {
 			return;
 		}
 		frm.__pm_history_shortcut_registered = true;
-		const resolve_frm = () => (cur_frm && cur_frm.doc ? cur_frm : frm);
+		const resolve_frm = () => {
+			const route = frappe.get_route();
+			const is_form = route && route[0] === "Form";
+			const active_frm = is_form ? frappe.get_doc_view() : null;
+			return active_frm && active_frm.doc?.name === frm.doc?.name ? active_frm : frm;
+		};
 		const shortcut_action = () => {
 			const active_frm = resolve_frm();
 			const party_master = this.get_party_master_for_history(active_frm);
@@ -1017,10 +1062,12 @@ uph.party = {
 		};
 
 		const condition = () => {
-			if (!cur_frm || cur_frm.doc?.name !== frm.doc?.name) {
+			const route = frappe.get_route();
+			if (!route || route[0] !== "Form" || route[2] !== frm.doc?.name) {
 				return false;
 			}
-			const has_pm = !!this.get_party_master_for_history(cur_frm);
+			const active_frm = frappe.get_doc_view();
+			const has_pm = active_frm && !!this.get_party_master_for_history(active_frm);
 			console.log("[UPH] History shortcut condition checked, result:", has_pm);
 			return has_pm;
 		};
@@ -1080,10 +1127,18 @@ uph.party = {
 					`;
 
 					stats.forEach((s) => {
-						const si = `${s.sales_invoice_count}<br><small class="text-muted">${s.sales_invoice_last_date || "-"}</small>`;
-						const pi = `${s.purchase_invoice_count}<br><small class="text-muted">${s.purchase_invoice_last_date || "-"}</small>`;
-						const pe = `${s.payment_entry_count}<br><small class="text-muted">${s.payment_entry_last_date || "-"}</small>`;
-						const je = `${s.journal_entry_count}<br><small class="text-muted">${s.journal_entry_last_date || "-"}</small>`;
+						const si = `${s.sales_invoice_count}<br><small class="text-muted">${
+							s.sales_invoice_last_date || "-"
+						}</small>`;
+						const pi = `${s.purchase_invoice_count}<br><small class="text-muted">${
+							s.purchase_invoice_last_date || "-"
+						}</small>`;
+						const pe = `${s.payment_entry_count}<br><small class="text-muted">${
+							s.payment_entry_last_date || "-"
+						}</small>`;
+						const je = `${s.journal_entry_count}<br><small class="text-muted">${
+							s.journal_entry_last_date || "-"
+						}</small>`;
 
 						html += `
 							<tr>
@@ -1104,17 +1159,17 @@ uph.party = {
 							{
 								fieldtype: "HTML",
 								fieldname: "history_html",
-								options: html
-							}
+								options: html,
+							},
 						],
 						primary_action_label: __("Close"),
-						primary_action: () => d.hide()
+						primary_action: () => d.hide(),
 					});
 					d.show();
 				} else {
 					frappe.msgprint(__("No linked parties found for this Party Master."));
 				}
-			}
+			},
 		});
 	},
 	check_duplicate_voucher_for_party_master: function (frm, triggered_before_submit = false) {
@@ -1144,22 +1199,22 @@ uph.party = {
 					if (duplicates.length > 0) {
 						const msg = __(
 							"Found {0} existing document(s) with the same Party Master and posting date:",
-							[duplicates.length],
+							[duplicates.length]
 						);
 						const list = duplicates
 							.map(
 								(d) => `
 						<li style="margin-bottom: 5px;">
                                 <a href="/app/${frappe.router.slug(
-									frm.doctype,
-								)}/${encodeURIComponent(d.name)}" 
+									frm.doctype
+								)}/${encodeURIComponent(d.name)}"
                                    target="_blank">
                                     ${d.name}
                                 </a>
                                 <span class="text-muted">
                                 (${d.party || ""}) (${d.total || ""})</span>
                             </li>
-						`,
+						`
 							)
 							.join("");
 
@@ -1168,9 +1223,8 @@ uph.party = {
 								title: __("Duplicate Forbidden"),
 								indicator: "red",
 								message: `${__(
-									"Submission is not allowed for duplicate vouchers.",
-								)
-									} <br><ul>${list}</ul>`,
+									"Submission is not allowed for duplicate vouchers."
+								)} <br><ul>${list}</ul>`,
 								as_html: true,
 							});
 							frm.isCheckingDuplicate = false;
@@ -1229,8 +1283,10 @@ uph.party = {
 									if (values.posting_date) {
 										if (values.posting_date === frm.doc.posting_date) {
 											frm.set_intro(
-												`${__("There Are Some Duplicate:")} ${duplicates.length} <ul>${list}</ul>`,
-												"red",
+												`${__("There Are Some Duplicate:")} ${
+													duplicates.length
+												} <ul>${list}</ul>`,
+												"red"
 											);
 										} else {
 											frm.set_value("posting_date", values.posting_date);
@@ -1284,8 +1340,8 @@ erpnext.queries.get_filtered_dimensions = function (doc, child_fields, dimension
 			filters: {
 				party_master: doc.party_master,
 				party: party_value,
-				company: company
-			}
+				company: company,
+			},
 		};
 	}
 

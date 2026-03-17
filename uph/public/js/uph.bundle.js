@@ -1,6 +1,6 @@
 //file:apps/uph/uph/public/js/uph.bundle.js
-if (typeof frappe !== 'undefined') {
-    frappe.provide("uph");
+if (typeof frappe !== "undefined") {
+	frappe.provide("uph");
 }
 
 import "./utils/party.js";
@@ -18,25 +18,29 @@ import "./utils/field_option_helper.js";
 //import "./utils/rule__js";
 //import "./rule_form";
 
-$(document).on('app_ready', function () {
-    if (!frappe.session || !frappe.boot) return;
-    const isAdmin = frappe.session.user === 'Administrator' || (frappe.user_roles || []).includes('System Manager');
-    if (isAdmin && frappe.boot.uph_setup_needed) {
-        const route = frappe.get_route();
-        if (!route) return;
+$(document).on("app_ready", function () {
+	if (!frappe.session || !frappe.boot) return;
+	const isAdmin =
+		frappe.session.user === "Administrator" ||
+		(frappe.user_roles || []).includes("System Manager");
+	if (isAdmin && frappe.boot.uph_setup_needed) {
+		const route = frappe.get_route();
+		if (!route) return;
 
-        // Target UPH Form and Tree views for enforcement
-        const isFormView = route[0] === 'Form' && ['Party Master', 'Party Issue', 'Party Master Settings'].includes(route[1]);
-        const isTreeView = route[0] === 'Tree' && route[1] === 'Party Master';
+		// Target UPH Form and Tree views for enforcement
+		const isFormView =
+			route[0] === "Form" &&
+			["Party Master", "Party Issue", "Party Master Settings"].includes(route[1]);
+		const isTreeView = route[0] === "Tree" && route[1] === "Party Master";
 
-        if ((isFormView || isTreeView) && route[0] !== 'uph-setup-wizard') {
-            frappe.show_alert({
-                message: __('UPH Setup is required. Redirecting to Setup Wizard...'),
-                indicator: 'orange'
-            });
-            setTimeout(() => {
-                frappe.set_route('uph-setup-wizard');
-            }, 1000);
-        }
-    }
+		if ((isFormView || isTreeView) && route[0] !== "uph-setup-wizard") {
+			frappe.show_alert({
+				message: __("UPH Setup is required. Redirecting to Setup Wizard..."),
+				indicator: "orange",
+			});
+			setTimeout(() => {
+				frappe.set_route("uph-setup-wizard");
+			}, 1000);
+		}
+	}
 });
